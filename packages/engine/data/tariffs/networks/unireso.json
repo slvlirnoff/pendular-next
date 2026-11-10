@@ -1,0 +1,196 @@
+{
+ "network": "unireso",
+ "alliance": "unireso",
+ "origin": "tariff",
+ "year": 2026,
+ "validFrom": "2025-12-14",
+ "source": "https://www.unireso.com/wp-content/uploads/2026/06/CGV-unireso-Juin-2026-1.pdf",
+ "currency": "CHF",
+ "notes": [
+  "CURRENT prices: tariff T651.11 (Conditions générales de vente unireso), edition 01.06.2026, chapter 9. Identical on unireso.com/titres-de-transport and tpg.ch/fr/tarifs-titres-de-transport (read 10.11.2026) and in the leaflet 'Plan de zones tarifaires' marked 'Valable dès le 14.12.2025' (the 'validFrom' used here).",
+  "No change of the unireso zone-10 prices on 13.12.2026 was found: nothing on unireso.com (news, tariff page), tpg.ch or the Alliance SwissPass 'Tarifmassnahmen' page on 10.11.2026. Frimobil and Onde Verte each announced their increase in a press release of 31.03.2026; no such announcement was found for unireso. The prices are therefore expected to stay, but no document dated for 2027 confirms it; 'year' stays 2026.",
+  "One zone: zone 10 'Tout Genève' is the whole network (canton of Geneva except Céligny, T651.11 2.1). The single price is stored under '1' and under 'all'.",
+  "No adult weekly pass and no FlexiAbo. The junior pass exists in 2nd class only (T651.11 3.2: a 1st class pass is bought in the adult category). The senior price is also that of AI pensioners.",
+  "Not stored: 'Saut de puce' (3 stops, CHF 2.0 / 1.8 reduced, 2nd class, tpg lines only), day pass from 9 a.m. (8.0 / 13.6; reduced 5.6 / 9.6), Adulte Duo, Jeune famille and transferable passes (900 / 1530 a year, 100 / 170 a month).",
+  "Transcribed by script from the pdftotext -layout output; checks in SOURCES.md. State subsidies are listed under 'discounts' and not applied."
+ ],
+ "passPlan": "unireso-abo-amp-billett-zone-10",
+ "ticketPlan": "unireso-abo-amp-billett-zone-10",
+ "rules": {
+  "together": [],
+  "minZones": {
+   "pass": 1,
+   "ticket": 1
+  },
+  "allZonesFrom": 1,
+  "countBy": "zones",
+  "text": [
+   "The unireso tariff applies to trips entirely on the services of zone 10 (T651.11 1.1.2). Tickets are valid from the first to the last stop in zone 10 (2.1).",
+   "Single ticket 'Billet zone 10 Tout Genève': 60 minutes (T651.11 9.1.1). Day pass: until 5 a.m. the next day; at full price it is valid for two people on Saturdays and Sundays (3.1).",
+   "The annual pass is not a multiple of the monthly pass (adult 500 against 70 a month: 7.1 months).",
+   "Across the border the Léman Pass tariff T651.12 applies (T651.11 7.1): combinations of a route and zones (Z+P+Z), a route only (P), or adjoining zones on both sides of the border (Z+Z), inside the Léman Pass perimeter only; if the origin or the destination lies outside it, Léman Pass does not apply. A zone-10 ticket and a separate ticket for an adjoining French zone do not replace a Léman Pass ticket (0.1.3.1).",
+   "Holders of a unireso ticket or pass can add a 'billet complémentaire Léman Pass' for an adjoining French zone: 2nd class CHF 1.60 (zones 200, 210, 230, 240, 250; reduced 1.30, zone 210 1.60); 1st class in trains 2.90 (zone 210) or 2.30 (zones 230, 240) (T651.11 7.2.3, 7.2.4).",
+   "Chêne-Bourg – Annemasse by train is sold at the Swiss national tariff, Bellegarde – Genève-Cornavin at the French TER tariff (T651.11 7.1.1).",
+   "Reduced ticket price: children 6 to 15.99, seniors from AHV age, half-fare card holders (T651.11 3.1.1.2). The half-fare card gives no reduction on passes."
+  ]
+ },
+ "tickets": {
+  "single": {
+   "full": {
+    "2": {
+     "1": 3,
+     "all": 3
+    },
+    "1": {
+     "1": 5.4,
+     "all": 5.4
+    }
+   },
+   "half": {
+    "2": {
+     "1": 2,
+     "all": 2
+    },
+    "1": {
+     "1": 3.5,
+     "all": 3.5
+    }
+   }
+  }
+ },
+ "dayPass": {
+  "full": {
+   "2": {
+    "1": 10,
+    "all": 10
+   },
+   "1": {
+    "1": 17,
+    "all": 17
+   }
+  },
+  "half": {
+   "2": {
+    "1": 7.3,
+    "all": 7.3
+   },
+   "1": {
+    "1": 12.5,
+    "all": 12.5
+   }
+  }
+ },
+ "passes": {
+  "week": {
+   "junior": {
+    "2": {
+     "1": 23,
+     "all": 23
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 23,
+     "all": 23
+    },
+    "1": {
+     "1": 40,
+     "all": 40
+    }
+   }
+  },
+  "month": {
+   "adult": {
+    "2": {
+     "1": 70,
+     "all": 70
+    },
+    "1": {
+     "1": 119,
+     "all": 119
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 45,
+     "all": 45
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 45,
+     "all": 45
+    },
+    "1": {
+     "1": 77,
+     "all": 77
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "2": {
+     "1": 500,
+     "all": 500
+    },
+    "1": {
+     "1": 850,
+     "all": 850
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 400,
+     "all": 400
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 400,
+     "all": 400
+    },
+    "1": {
+     "1": 680,
+     "all": 680
+    }
+   }
+  }
+ },
+ "ages": {
+  "junior": "6–24.99 at the start of validity (T651.11 3.2.1.1)",
+  "adult": "from 25 (3.2.1.2)",
+  "senior": "64+ (women) / 65+ (men) at the start of validity (3.2.1.3); AI pensioners of any age pay the same price (3.2.1.4)",
+  "tickets": "full price from 16; reduced: children 6–15.99, seniors from AHV age, half-fare card holders; under 6 free"
+ },
+ "discounts": [
+  {
+   "id": "ge-youth-100",
+   "label": "State of Geneva: youth pass paid in full",
+   "factor": 0,
+   "appliesTo": [
+    "passes.year",
+    "passes.month"
+   ],
+   "ageGroups": [
+    "child",
+    "youth"
+   ],
+   "condition": "one of: under 18 and resident of the canton of Geneva; 18 to 24 and resident of Geneva, in education (in or outside the canton) or with an income up to CHF 50 000 a year; 6 to 24, resident outside Geneva and in education in Geneva. Covers CHF 400 on the unireso zone-10 junior pass.",
+   "source": "https://www.unireso.com/titres-de-transport/"
+  },
+  {
+   "id": "ge-avs-ai-50",
+   "label": "State of Geneva: half of the pass paid for AHV and AI pensioners",
+   "factor": 0.5,
+   "appliesTo": [
+    "passes.year",
+    "passes.month"
+   ],
+   "ageGroups": [
+    "senior"
+   ],
+   "condition": "AHV pensioner or AI beneficiary (any age) resident of the canton of Geneva; CHF 200 off the annual senior/AI pass (400 to 200)",
+   "source": "https://www.unireso.com/prise-en-charge-avs-ai/"
+  }
+ ]
+}

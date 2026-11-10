@@ -1,0 +1,147 @@
+{
+ "network": "Tarifverbund Davos",
+ "alliance": "tarifverbund-davos",
+ "origin": "nova",
+ "year": 2026,
+ "validFrom": null,
+ "source": "https://lindas.admin.ch/query (graph https://lindas.admin.ch/sbb/nova), published through opentransportdata.swiss",
+ "currency": "CHF",
+ "confidence": "consistent",
+ "notes": [
+  "Prices as held in NOVA on 2026-11-10, 2026 tariff year. NOVA carries no validity date: it shows the prices in force on the day of the import.",
+  "NOVA does not link a zone price to a product; the link is derived from the order of the entries (price-ladders/README.md) and, inside a product, from the rank of the prices: more zones never cost less.",
+  "Not checked against a published tariff: all four products found, complete and never falling with the number of zones.",
+  "Senior prices are given only where NOVA shows them; without one, seniors may pay the adult price or the reduced one, NOVA does not say. Flexi and weekly passes are not read."
+ ],
+ "passPlan": "davos-abo-amp-billett",
+ "ticketPlan": "davos-abo-amp-billett",
+ "rules": {
+  "together": [],
+  "minZones": {
+   "pass": 1,
+   "ticket": 1
+  },
+  "countBy": "factor",
+  "text": [
+   "Read from NOVA pay levels: passes from 1 zone(s), all zones from 3; tickets from 1 zone(s), all zones from 5.",
+   "Zones sold together, city-zone and short-trip prices and overlap rules of the tariff are not in this file."
+  ]
+ },
+ "tickets": {
+  "single": {
+   "full": {
+    "1": {
+     "1": 5.2,
+     "2": 9.2,
+     "3": 13.4,
+     "4": 17.4,
+     "all": 22.6
+    },
+    "2": {
+     "1": 3,
+     "2": 5.4,
+     "3": 7.8,
+     "4": 10.2,
+     "all": 13.2
+    }
+   },
+   "half": {
+    "1": {
+     "1": 3.8,
+     "2": 4.6,
+     "3": 6.7,
+     "4": 8.7,
+     "all": 11.3
+    },
+    "2": {
+     "1": 2.2,
+     "2": 2.7,
+     "3": 3.9,
+     "4": 5.1,
+     "all": 6.6
+    }
+   }
+  }
+ },
+ "dayPass": {
+  "full": {
+   "1": {
+    "1": 10.4,
+    "2": 18.4,
+    "3": 26.8,
+    "all": 27.2
+   },
+   "2": {
+    "1": 6,
+    "2": 10.8,
+    "3": 15.6,
+    "all": 16
+   }
+  },
+  "half": {
+   "1": {
+    "1": 7.6,
+    "2": 9.2,
+    "3": 13.4,
+    "all": 13.6
+   },
+   "2": {
+    "1": 4.4,
+    "2": 5.4,
+    "3": 7.8,
+    "all": 8
+   }
+  }
+ },
+ "passes": {
+  "month": {
+   "adult": {
+    "1": {
+     "1": 114,
+     "2": 137,
+     "all": 161
+    },
+    "2": {
+     "1": 69,
+     "2": 83,
+     "all": 97
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 51,
+     "2": 61,
+     "all": 71
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "1": {
+     "1": 1026,
+     "2": 1233,
+     "all": 1449
+    },
+    "2": {
+     "1": 621,
+     "2": 747,
+     "all": 873
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 459,
+     "2": 549,
+     "all": 639
+    }
+   }
+  }
+ },
+ "novaTarifs": {
+  "year": "740_JABO",
+  "month": "740_MABO",
+  "single": "412_EB",
+  "dayPass": "412_TK"
+ },
+ "assumedProducts": []
+}

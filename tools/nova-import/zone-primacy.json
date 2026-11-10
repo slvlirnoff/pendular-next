@@ -1,0 +1,30 @@
+{
+ "_about": "Hand-kept list: which tariff the networks' own tariff documents name for trips ENTIRELY inside a zone that two networks share. Read by tools/nova-import/derive.ts (step network-zones): for these zones the document decides the flag `own`, not the rule computed from the stops. Add an entry only with the paragraph it comes from. `zones` are the zones of `alliance`; `tariff` is the alliance whose tariff applies inside them.",
+ "sources": {
+  "T651.22": "Mobilis, Règlement tarifaire T651.22, 'dès le 01.06.2025', https://www.mobilis-vaud.ch/download/reglement-tarifaire-t651-22/ (fetched 2026-11-10)",
+  "T651.4": "Frimobil, Tarif T651.4, edition 01.06.2026, https://frimobil.ch/fileadmin/user_upload/public/Frimobil/T651.4_au_1er_juin_2026_FR.pdf (fetched 2026-11-10)",
+  "T651.3": "Onde Verte, Tarif T651.3, edition 01.06.2026, https://www.ondeverte.ch/fileadmin/pdf/T651.3_juillet_2026.pdf (fetched 2026-11-10)"
+ },
+ "open": [
+  "onde-verte 31 (La Ferrière/Sonvilier) and 66 (Cormoret/Chasseral), shared with Libero: T651.3 names only zones 42 and 65 as overlap zones 'sans primauté tarifaire' of Onde Verte, which suggests 31 and 66 are Onde Verte's own; no table says so and the Libero tariff T651.10 was not read. Left to the rule (not own).",
+  "libero 697 (Kerzers), all of its stops also Frimobil stops (zone 56): not in the list of T651.4 1.3.1; the Libero tariff T651.10 was not read. Left to the rule (not own).",
+  "mobilis 182 and 183 hold Les Avants, which Frimobil does not serve; they are marked not own because both tariffs give Frimobil the trips inside the shared part (Frimobil 23, 24).",
+  "Every other pair of networks (Libero, A-Welle, Passepartout, Zug, Schwyz, Ostwind, ZVV, Vagabond ...): no tariff read; flags come from the rule alone."
+ ],
+ "entries": [
+  {"alliance": "frimobil", "zones": [45, 47, 92, 93, 94, 95], "partner": "mobilis", "partnerZones": [103, 60, 62, 63, 72, 79], "tariff": "mobilis", "source": "T651.4 1.4.1; T651.22 1.2.1.2"},
+  {"alliance": "mobilis", "zones": [103, 60, 62, 63, 72, 79], "partner": "frimobil", "partnerZones": [45, 47, 92, 93, 94, 95], "tariff": "mobilis", "source": "T651.22 1.2.1.2; T651.4 1.4.1"},
+  {"alliance": "frimobil", "zones": [23, 24, 40, 49], "partner": "mobilis", "partnerZones": [183, 182, 160, 161], "tariff": "frimobil", "source": "T651.4 1.4.1; T651.22 1.2.1.2 (T651.4 pairs 23 with 182 and 24 with 183, T651.22 the other way round; the tariff named is the same)"},
+  {"alliance": "mobilis", "zones": [182, 183, 160, 161], "partner": "frimobil", "partnerZones": [24, 23, 40, 49], "tariff": "frimobil", "source": "T651.22 1.2.1.2 and 1.2.1.3; T651.4 1.4.1"},
+  {"alliance": "frimobil", "zones": [81, 86, 80, 85, 51, 57, 58, 59, 84, 87], "partner": "mobilis", "partnerZones": [100, 105, 106, 107, 130, 131, 132, 133, 134, 135], "tariff": "frimobil", "source": "T651.22 1.2.1.2 (not listed in T651.4)"},
+  {"alliance": "mobilis", "zones": [100, 105, 106, 107, 130, 131, 132, 133, 134, 135], "partner": "frimobil", "partnerZones": [81, 86, 80, 85, 51, 57, 58, 59, 84, 87], "tariff": "frimobil", "source": "T651.22 1.2.1.2"},
+  {"alliance": "frimobil", "zones": [14, 16, 55], "partner": "libero", "partnerZones": [699, 627, 696], "tariff": "libero", "source": "T651.4 1.3.1"},
+  {"alliance": "libero", "zones": [699, 627, 696], "partner": "frimobil", "partnerZones": [14, 16, 55], "tariff": "libero", "source": "T651.4 1.3.1"},
+  {"alliance": "mobilis", "zones": [126, 127], "partner": "onde-verte", "partnerZones": [15, 33], "tariff": "onde-verte", "source": "T651.22 1.2.2.2 (zone 15 'partiel')"},
+  {"alliance": "onde-verte", "zones": [15, 33], "partner": "mobilis", "partnerZones": [126, 127], "tariff": "onde-verte", "source": "T651.22 1.2.2.2"},
+  {"alliance": "onde-verte", "zones": [42], "partner": "vagabond", "partnerZones": [42], "tariff": "vagabond", "source": "T651.3 ch. 1 'Zones de chevauchement': passes at the Vagabond tariff, tickets at the national tariff"},
+  {"alliance": "vagabond", "zones": [42], "partner": "onde-verte", "partnerZones": [42], "tariff": "vagabond", "source": "T651.3 ch. 1 'Zones de chevauchement'"},
+  {"alliance": "onde-verte", "zones": [65], "partner": "libero", "partnerZones": [314, 315], "tariff": "libero", "source": "T651.3 ch. 1 'Zones de chevauchement' (Lignières – Le Landeron excepted: Onde Verte)"},
+  {"alliance": "libero", "zones": [314, 315], "partner": "onde-verte", "partnerZones": [65], "tariff": "libero", "source": "T651.3 ch. 1 'Zones de chevauchement'"}
+ ]
+}

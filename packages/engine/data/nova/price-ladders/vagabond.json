@@ -1,0 +1,112 @@
+{
+ "network": "Vagabond",
+ "alliance": "vagabond",
+ "origin": "nova",
+ "year": 2026,
+ "validFrom": null,
+ "source": "https://lindas.admin.ch/query (graph https://lindas.admin.ch/sbb/nova), published through opentransportdata.swiss",
+ "currency": "CHF",
+ "confidence": "partial",
+ "notes": [
+  "Prices as held in NOVA on 2026-11-10, 2026 tariff year. NOVA carries no validity date: it shows the prices in force on the day of the import.",
+  "NOVA does not link a zone price to a product; the link is derived from the order of the entries (price-ladders/README.md) and, inside a product, from the rank of the prices: more zones never cost less.",
+  "Not checked against a published tariff, and incomplete or resting on an assumption (see the notes below).",
+  "Senior prices are given only where NOVA shows them; without one, seniors may pay the adult price or the reduced one, NOVA does not say. Flexi and weekly passes are not read.",
+  "Junior and senior pass prices are told apart by counting entries (NOVA marks both \"reduced\"): one entry is read as the junior price, two as the senior price. Categories concerned here: senior.",
+  "Not found or not usable: single, dayPass."
+ ],
+ "passPlan": "vagabond-abo",
+ "ticketPlan": "vagabond-abo",
+ "rules": {
+  "together": [],
+  "minZones": {
+   "pass": 1,
+   "ticket": 1
+  },
+  "allZonesFrom": 5,
+  "countBy": "factor",
+  "text": [
+   "Read from NOVA pay levels: passes from 1 zone(s), all zones from 5.",
+   "Zones sold together, city-zone and short-trip prices and overlap rules of the tariff are not in this file."
+  ]
+ },
+ "passes": {
+  "month": {
+   "adult": {
+    "1": {
+     "1": 121,
+     "2": 129,
+     "3": 185,
+     "4": 245,
+     "all": 299
+    },
+    "2": {
+     "1": 73,
+     "2": 78,
+     "3": 112,
+     "4": 148,
+     "all": 181
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 55,
+     "2": 59,
+     "3": 84,
+     "4": 111,
+     "all": 136
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 55,
+     "2": 59,
+     "3": 84,
+     "4": 111,
+     "all": 136
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "1": {
+     "1": 1089,
+     "2": 1161,
+     "3": 1665,
+     "4": 2205,
+     "all": 2691
+    },
+    "2": {
+     "1": 657,
+     "2": 702,
+     "3": 1008,
+     "4": 1332,
+     "all": 1629
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 495,
+     "2": 531,
+     "3": 756,
+     "4": 999,
+     "all": 1224
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 495,
+     "2": 531,
+     "3": 756,
+     "4": 999,
+     "all": 1224
+    }
+   }
+  }
+ },
+ "novaTarifs": {
+  "year": "479_JABO",
+  "month": "479_MABO"
+ },
+ "assumedProducts": []
+}

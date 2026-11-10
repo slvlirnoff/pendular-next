@@ -244,9 +244,9 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 32,
-   "cheapestYearly": 2061,
-   "cheapestProduct": "routePassYearly",
-   "tariffKm": 31
+   "cheapestYearly": 2308,
+   "cheapestProduct": "zonePassYearly",
+   "zones": 6
   },
   "car": {
    "count": 1,

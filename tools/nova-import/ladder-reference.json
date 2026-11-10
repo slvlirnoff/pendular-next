@@ -1,0 +1,8 @@
+{
+ "_about": "Known prices of the tariff year NOVA currently holds, used by tools/nova-import/derive.ts to validate the price ladders it derives. Networks with a grid under packages/engine/data/tariffs/networks/ are compared with that grid (its `previous` block, or the grid itself when its `year` is the ladder's year); this file is for networks whose grid lives elsewhere.",
+ "mobilis": {
+  "year": 2026,
+  "source": "packages/engine/data/nova/COMPARISON.md (b): prices quoted by sbb.ch on 10.11.2026 for validity in 2026 (7, 9, 10 zones, all zones), and the 3- and 4-zone prices, unchanged in the grid valid from 13.12.2026",
+  "passes": { "year": { "adult": { "2": { "3": 1008, "4": 1305, "7": 1989, "9": 2313, "10": 2376, "all": 2475 } } } }
+ }
+}

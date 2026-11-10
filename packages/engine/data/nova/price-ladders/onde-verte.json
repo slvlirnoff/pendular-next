@@ -1,0 +1,200 @@
+{
+ "network": "Onde Verte",
+ "alliance": "onde-verte",
+ "origin": "nova",
+ "year": 2026,
+ "validFrom": null,
+ "source": "https://lindas.admin.ch/query (graph https://lindas.admin.ch/sbb/nova), published through opentransportdata.swiss",
+ "currency": "CHF",
+ "confidence": "validated",
+ "notes": [
+  "Prices as held in NOVA on 2026-11-10, 2026 tariff year. NOVA carries no validity date: it shows the prices in force on the day of the import.",
+  "NOVA does not link a zone price to a product; the link is derived from the order of the entries (price-ladders/README.md) and, inside a product, from the rank of the prices: more zones never cost less.",
+  "Checked against tariffs/networks/onde-verte.json: 88 cells equal, 0 different.",
+  "Senior prices are given only where NOVA shows them; without one, seniors may pay the adult price or the reduced one, NOVA does not say. Flexi and weekly passes are not read.",
+  "single (436_EB): the tarif has 3 level(s) that are not a number of zones (kurzstrecke, zone-10, zone-20).",
+  "single (436_EB): 1 level(s) sold in one class only set aside.",
+  "single (436_EB): one level with the same prices as another set aside.",
+  "single (436_EB): 1 cheapest level(s) set aside.",
+  "dayPass (436_24H): the tarif has 2 level(s) that are not a number of zones (zone-10, zone-20).",
+  "dayPass (436_24H): one level with the same prices as another set aside.",
+  "dayPass (436_24H): 1 cheapest level(s) set aside.",
+  "Junior and senior pass prices are told apart by counting entries (NOVA marks both \"reduced\"): one entry is read as the junior price, two as the senior price. Categories concerned here: senior."
+ ],
+ "passPlan": "onde-verte-abo-abo",
+ "ticketPlan": "onde-verte-billett-billett",
+ "rules": {
+  "together": [],
+  "minZones": {
+   "pass": 1,
+   "ticket": 1
+  },
+  "countBy": "factor",
+  "text": [
+   "Read from NOVA pay levels: passes from 1 zone(s), all zones from 5; tickets from 1 zone(s), all zones from 6.",
+   "Zones sold together, city-zone and short-trip prices and overlap rules of the tariff are not in this file."
+  ]
+ },
+ "tickets": {
+  "single": {
+   "full": {
+    "1": {
+     "1": 7.6,
+     "2": 7.6,
+     "3": 11.4,
+     "4": 15,
+     "5": 18.8,
+     "all": 22.6
+    },
+    "2": {
+     "1": 4.4,
+     "2": 4.4,
+     "3": 6.6,
+     "4": 8.8,
+     "5": 11,
+     "all": 13.2
+    }
+   },
+   "half": {
+    "1": {
+     "1": 3.8,
+     "2": 3.8,
+     "3": 5.7,
+     "4": 7.5,
+     "5": 9.4,
+     "all": 11.3
+    },
+    "2": {
+     "1": 2.3,
+     "2": 2.3,
+     "3": 3.3,
+     "4": 4.4,
+     "5": 5.5,
+     "all": 6.6
+    }
+   }
+  }
+ },
+ "dayPass": {
+  "full": {
+   "1": {
+    "1": 19,
+    "2": 19,
+    "3": 22.8,
+    "4": 30,
+    "5": 37.6,
+    "all": 45.2
+   },
+   "2": {
+    "1": 11,
+    "2": 11,
+    "3": 13.2,
+    "4": 17.6,
+    "5": 22,
+    "all": 26.4
+   }
+  },
+  "half": {
+   "1": {
+    "1": 9.5,
+    "2": 9.5,
+    "3": 11.4,
+    "4": 15,
+    "5": 18.8,
+    "all": 22.6
+   },
+   "2": {
+    "1": 5.8,
+    "2": 5.8,
+    "3": 6.6,
+    "4": 8.8,
+    "5": 11,
+    "all": 13.2
+   }
+  }
+ },
+ "passes": {
+  "month": {
+   "adult": {
+    "1": {
+     "1": 130,
+     "2": 130,
+     "3": 187,
+     "4": 242,
+     "all": 293
+    },
+    "2": {
+     "1": 76,
+     "2": 76,
+     "3": 110,
+     "4": 142,
+     "all": 172
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 57,
+     "2": 57,
+     "3": 83,
+     "4": 107,
+     "all": 129
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 57,
+     "2": 57,
+     "3": 83,
+     "4": 107,
+     "all": 129
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "1": {
+     "1": 1170,
+     "2": 1170,
+     "3": 1683,
+     "4": 2178,
+     "all": 2637
+    },
+    "2": {
+     "1": 684,
+     "2": 684,
+     "3": 990,
+     "4": 1278,
+     "all": 1548
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 513,
+     "2": 513,
+     "3": 747,
+     "4": 963,
+     "all": 1161
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 513,
+     "2": 513,
+     "3": 747,
+     "4": 963,
+     "all": 1161
+    }
+   }
+  }
+ },
+ "novaTarifs": {
+  "year": "441_JABO",
+  "month": "441_MABO",
+  "single": "436_EB",
+  "dayPass": "436_24H"
+ },
+ "assumedProducts": [
+  "single",
+  "dayPass"
+ ]
+}

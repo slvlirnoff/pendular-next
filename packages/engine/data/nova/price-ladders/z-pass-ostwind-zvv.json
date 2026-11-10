@@ -1,0 +1,227 @@
+{
+ "network": "Z-Pass OSTWIND-ZVV",
+ "alliance": "z-pass-ostwind-zvv",
+ "origin": "nova",
+ "year": 2026,
+ "validFrom": null,
+ "source": "https://lindas.admin.ch/query (graph https://lindas.admin.ch/sbb/nova), published through opentransportdata.swiss",
+ "currency": "CHF",
+ "confidence": "consistent",
+ "notes": [
+  "Prices as held in NOVA on 2026-11-10, 2026 tariff year. NOVA carries no validity date: it shows the prices in force on the day of the import.",
+  "NOVA does not link a zone price to a product; the link is derived from the order of the entries (price-ladders/README.md) and, inside a product, from the rank of the prices: more zones never cost less.",
+  "Not checked against a published tariff: all four products found, complete and never falling with the number of zones.",
+  "Senior prices are given only where NOVA shows them; without one, seniors may pay the adult price or the reduced one, NOVA does not say. Flexi and weekly passes are not read."
+ ],
+ "passPlan": "z-pass-ostwind-zvv-abo-amp-billett",
+ "ticketPlan": "z-pass-ostwind-zvv-abo-amp-billett",
+ "rules": {
+  "together": [],
+  "minZones": {
+   "pass": 2,
+   "ticket": 2
+  },
+  "countBy": "factor",
+  "text": [
+   "Read from NOVA pay levels: passes from 2 zone(s), all zones from 10; tickets from 2 zone(s), all zones from 11.",
+   "Zones sold together, city-zone and short-trip prices and overlap rules of the tariff are not in this file."
+  ]
+ },
+ "tickets": {
+  "single": {
+   "full": {
+    "1": {
+     "2": 10.8,
+     "3": 12.6,
+     "4": 17.4,
+     "5": 22.2,
+     "6": 25.8,
+     "7": 30.6,
+     "8": 36.4,
+     "9": 41.4,
+     "10": 45.6,
+     "all": 49.6
+    },
+    "2": {
+     "2": 6.4,
+     "3": 7.4,
+     "4": 10.2,
+     "5": 13,
+     "6": 15.2,
+     "7": 18,
+     "8": 21.4,
+     "9": 24.4,
+     "10": 26.8,
+     "all": 29.2
+    }
+   },
+   "half": {
+    "1": {
+     "2": 5.4,
+     "3": 6.3,
+     "4": 8.7,
+     "5": 11.1,
+     "6": 12.9,
+     "7": 15.3,
+     "8": 18.2,
+     "9": 20.7,
+     "10": 22.8,
+     "all": 24.8
+    },
+    "2": {
+     "2": 3.2,
+     "3": 3.7,
+     "4": 5.1,
+     "5": 6.5,
+     "6": 7.6,
+     "7": 9,
+     "8": 10.7,
+     "9": 12.2,
+     "10": 13.4,
+     "all": 14.6
+    }
+   }
+  }
+ },
+ "dayPass": {
+  "full": {
+   "1": {
+    "2": 21.6,
+    "3": 25.2,
+    "4": 34.8,
+    "5": 44.4,
+    "6": 51.6,
+    "7": 61.2,
+    "8": 72.8,
+    "9": 82.8,
+    "10": 91.2,
+    "all": 99.2
+   },
+   "2": {
+    "2": 12.8,
+    "3": 14.8,
+    "4": 20.4,
+    "5": 26,
+    "6": 30.4,
+    "7": 36,
+    "8": 42.8,
+    "9": 48.8,
+    "10": 53.6,
+    "all": 58.4
+   }
+  },
+  "half": {
+   "1": {
+    "2": 10.8,
+    "3": 12.6,
+    "4": 17.4,
+    "5": 22.2,
+    "6": 25.8,
+    "7": 30.6,
+    "8": 36.4,
+    "9": 41.4,
+    "10": 45.6,
+    "all": 49.6
+   },
+   "2": {
+    "2": 6.4,
+    "3": 7.4,
+    "4": 10.2,
+    "5": 13,
+    "6": 15.2,
+    "7": 18,
+    "8": 21.4,
+    "9": 24.4,
+    "10": 26.8,
+    "all": 29.2
+   }
+  }
+ },
+ "passes": {
+  "month": {
+   "adult": {
+    "1": {
+     "2": 165,
+     "3": 236,
+     "4": 303,
+     "5": 369,
+     "6": 418,
+     "7": 462,
+     "8": 507,
+     "9": 542,
+     "all": 575
+    },
+    "2": {
+     "2": 97,
+     "3": 139,
+     "4": 178,
+     "5": 217,
+     "6": 246,
+     "7": 272,
+     "8": 298,
+     "9": 319,
+     "all": 338
+    }
+   },
+   "junior": {
+    "2": {
+     "2": 71,
+     "3": 101,
+     "4": 130,
+     "5": 158,
+     "6": 180,
+     "7": 199,
+     "8": 218,
+     "9": 233,
+     "all": 247
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "1": {
+     "2": 1485,
+     "3": 2124,
+     "4": 2727,
+     "5": 3321,
+     "6": 3762,
+     "7": 4158,
+     "8": 4563,
+     "9": 4878,
+     "all": 5175
+    },
+    "2": {
+     "2": 873,
+     "3": 1251,
+     "4": 1602,
+     "5": 1953,
+     "6": 2214,
+     "7": 2448,
+     "8": 2682,
+     "9": 2871,
+     "all": 3042
+    }
+   },
+   "junior": {
+    "2": {
+     "2": 639,
+     "3": 909,
+     "4": 1170,
+     "5": 1422,
+     "6": 1620,
+     "7": 1791,
+     "8": 1962,
+     "9": 2097,
+     "all": 2223
+    }
+   }
+  }
+ },
+ "novaTarifs": {
+  "year": "466_JABO",
+  "month": "466_MABO",
+  "single": "466_EB",
+  "dayPass": "466_TK"
+ },
+ "assumedProducts": []
+}

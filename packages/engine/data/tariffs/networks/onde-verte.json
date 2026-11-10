@@ -1,0 +1,308 @@
+{
+ "network": "Onde Verte",
+ "alliance": "onde-verte",
+ "origin": "tariff",
+ "year": 2026,
+ "validFrom": "2026-06-01",
+ "source": "https://www.ondeverte.ch/fileadmin/pdf/T651.3_juillet_2026.pdf",
+ "currency": "CHF",
+ "notes": [
+  "CURRENT prices, not those of the 2027 timetable year: tariff T651.3, edition 01.06.2026, chapter 8; the tables on ondeverte.ch read on 10.11.2026 are identical. 'validFrom' is the edition date of the tariff, not the date the prices were introduced.",
+  "Prices WILL change on 13.12.2026: press release of 31.03.2026 (ondeverte.ch/fileadmin/pdf/ONDE_VERTE_communique-presse_2026-03-31.pdf) announces an average increase of 3.9 %; the detailed 2027 prices were not published on ondeverte.ch on 10.11.2026 and the Alliance SwissPass page 'Tarife der Verbünde' only links back to ondeverte.ch. Replace this file when the new edition of T651.3 appears.",
+  "The tariff prints one price for '1 - 2 zones'; it is stored under both '1' and '2'. Passes: '5 zones et plus' is stored as 'all'; tickets and day passes: '6 zones et plus' is stored as 'all', and '5' is a numbered column.",
+  "Junior ('Enfant/Jeune') and senior passes exist in 2nd class only and cost the same. The half-fare card gives no reduction on passes (ondeverte.ch, abonnements).",
+  "Not in the zone tables (see 'extras'): the urban-zone ticket and day pass for zone 10 (Neuchâtel) or zone 20 (La Chaux-de-Fonds) alone, and the short-trip ticket.",
+  "Transcribed by script from the pdftotext -layout output; checks in SOURCES.md. Cantonal subsidies are listed under 'discounts' and not applied."
+ ],
+ "passPlan": "onde-verte-abo-abo",
+ "ticketPlan": "onde-verte-billett-billett",
+ "rules": {
+  "together": [],
+  "minZones": {
+   "pass": 2,
+   "ticket": 1
+  },
+  "countBy": "zones",
+  "text": [
+   "The price follows the number of zones travelled through, the zone of departure included, except for the short-trip ticket (T651.3 ch. 2 'Généralités'). Every zone counts once: all zone factors are 1 in NOVA.",
+   "All zones: a pass for 5 zones is valid in the whole network; for tickets and day passes 6 zones are, zone 42 excepted (T651.3 ch. 2 'Généralités'). 'allZonesFrom' is therefore left out: it is 5 for passes and 6 for tickets; the 'all' column starts after the last numbered column of each table.",
+   "Passes are sold for 2, 3, 4 or 5 zones, minimum 2 zones (ondeverte.ch/abonnements/abonnements-onde-verte); the tariff's first price step is '1 - 2 zones' for passes and tickets alike.",
+   "Annual pass = 9 monthly passes (ondeverte.ch, same page; holds on every cell). FlexiAbo: 100 days of travel within one year, = 5 monthly passes on every cell.",
+   "Single ticket validity: urban zone 45 min, 1-2 zones 60 min, 3 zones 90 min, 4 zones and more 120 min (T651.3 ch. 3 and 8).",
+   "Overlap zones (T651.3 ch. 1 'Zones de chevauchement'): zones 42 (with Vagabond) and 65 (with Libero 314/315) carry no Onde Verte primacy. Trips entirely inside zone 42: passes at the Vagabond tariff, tickets at the national tariff; from or to zone 42: Onde Verte passes, national tickets (zone 42 is on the pass plan only). Trips entirely inside zone 65: Libero tariff; from or to zone 65: Onde Verte tariff; Lignières – Le Landeron only: Onde Verte tariff.",
+   "Overlap with Mobilis (Mobilis tariff T651.22 1.2.2.2): trips entirely inside Mobilis zones 126 (Onde Verte 15, in part) and 127 (Onde Verte 33) are sold at the Onde Verte tariff.",
+   "Reduced ticket price: half-fare card holders and children 6 to 15.99 (T651.3 ch. 0 'Prix réduit')."
+  ]
+ },
+ "tickets": {
+  "single": {
+   "full": {
+    "2": {
+     "1": 4.4,
+     "2": 4.4,
+     "3": 6.6,
+     "4": 8.8,
+     "5": 11,
+     "all": 13.2
+    },
+    "1": {
+     "1": 7.6,
+     "2": 7.6,
+     "3": 11.4,
+     "4": 15,
+     "5": 18.8,
+     "all": 22.6
+    }
+   },
+   "half": {
+    "2": {
+     "1": 2.3,
+     "2": 2.3,
+     "3": 3.3,
+     "4": 4.4,
+     "5": 5.5,
+     "all": 6.6
+    },
+    "1": {
+     "1": 3.8,
+     "2": 3.8,
+     "3": 5.7,
+     "4": 7.5,
+     "5": 9.4,
+     "all": 11.3
+    }
+   }
+  }
+ },
+ "dayPass": {
+  "full": {
+   "2": {
+    "1": 11,
+    "2": 11,
+    "3": 13.2,
+    "4": 17.6,
+    "5": 22,
+    "all": 26.4
+   },
+   "1": {
+    "1": 19,
+    "2": 19,
+    "3": 22.8,
+    "4": 30,
+    "5": 37.6,
+    "all": 45.2
+   }
+  },
+  "half": {
+   "2": {
+    "1": 5.8,
+    "2": 5.8,
+    "3": 6.6,
+    "4": 8.8,
+    "5": 11,
+    "all": 13.2
+   },
+   "1": {
+    "1": 9.5,
+    "2": 9.5,
+    "3": 11.4,
+    "4": 15,
+    "5": 18.8,
+    "all": 22.6
+   }
+  }
+ },
+ "passes": {
+  "month": {
+   "adult": {
+    "2": {
+     "1": 76,
+     "2": 76,
+     "3": 110,
+     "4": 142,
+     "all": 172
+    },
+    "1": {
+     "1": 130,
+     "2": 130,
+     "3": 187,
+     "4": 242,
+     "all": 293
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 57,
+     "2": 57,
+     "3": 83,
+     "4": 107,
+     "all": 129
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 57,
+     "2": 57,
+     "3": 83,
+     "4": 107,
+     "all": 129
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "2": {
+     "1": 684,
+     "2": 684,
+     "3": 990,
+     "4": 1278,
+     "all": 1548
+    },
+    "1": {
+     "1": 1170,
+     "2": 1170,
+     "3": 1683,
+     "4": 2178,
+     "all": 2637
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 513,
+     "2": 513,
+     "3": 747,
+     "4": 963,
+     "all": 1161
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 513,
+     "2": 513,
+     "3": 747,
+     "4": 963,
+     "all": 1161
+    }
+   }
+  },
+  "flexi": {
+   "adult": {
+    "2": {
+     "1": 380,
+     "2": 380,
+     "3": 550,
+     "4": 710,
+     "all": 860
+    },
+    "1": {
+     "1": 650,
+     "2": 650,
+     "3": 935,
+     "4": 1210,
+     "all": 1465
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 285,
+     "2": 285,
+     "3": 415,
+     "4": 535,
+     "all": 645
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 285,
+     "2": 285,
+     "3": 415,
+     "4": 535,
+     "all": 645
+    }
+   }
+  }
+ },
+ "extras": {
+  "urbanZone": {
+   "zones": [
+    10,
+    20
+   ],
+   "note": "Ticket (45 min) and day pass valid in zone 10 or in zone 20 only (T651.3 ch. 8 'Zone urbaine (10 ou 20)')",
+   "single": {
+    "full": {
+     "2": 2.4,
+     "1": 4.2
+    },
+    "half": {
+     "2": 2.2,
+     "1": 2.6
+    }
+   },
+   "dayPass": {
+    "full": {
+     "2": 8.4,
+     "1": 14.8
+    },
+    "half": {
+     "2": 5.5,
+     "1": 7.4
+    }
+   }
+  },
+  "shortTrip": {
+   "note": "'Court parcours': one trip, 30 min, 2nd class only (T651.3 ch. 8)",
+   "single": {
+    "full": {
+     "2": 2.4
+    },
+    "half": {
+     "2": 2.2
+    }
+   }
+  }
+ },
+ "ages": {
+  "junior": "6–24.99 (T651.3 ch. 0: Enfant 6–15.99 and Jeune 16–24.99, both at the price \"Enfant/Jeune\"; a pass started before the 25th birthday runs to its end)",
+  "adult": "25 to 63.99 (women) / 64.99 (men)",
+  "senior": "64+ (women) / 65+ (men) (T651.3 ch. 0 \"Senior\")",
+  "tickets": "full price from 16; reduced: children 6–15.99 and half-fare card holders; under 6 free"
+ },
+ "discounts": [
+  {
+   "id": "ne-youth-66",
+   "label": "Canton and communes of Neuchâtel: 66 % of youth passes paid",
+   "factor": 0.34,
+   "appliesTo": [
+    "passes.year",
+    "passes.month",
+    "passes.flexi"
+   ],
+   "ageGroups": [
+    "child",
+    "youth"
+   ],
+   "condition": "resident of the canton of Neuchâtel; pass in the category Enfant/Jeune; since 1 July 2026; obtained through guichetunique.ch",
+   "source": "https://www.ondeverte.ch/actualites/subvention-a-hauteur-de-66-les-abonnements-jeunes-onde-verte"
+  },
+  {
+   "id": "ne-all-zones-at-4",
+   "label": "Canton of Neuchâtel: all-zones pass at the price of 4 zones",
+   "rule": {
+    "zones": "all",
+    "pricedAsZones": 4
+   },
+   "appliesTo": [
+    "passes.year",
+    "passes.month",
+    "passes.flexi"
+   ],
+   "ageGroups": [
+    "adult",
+    "senior"
+   ],
+   "condition": "resident of the canton of Neuchâtel; adult or senior pass for all zones (annual, monthly or FlexiAbo); since 1 January 2025; obtained through guichetunique.ch. Not a factor: the 4-zone price of the same table replaces the all-zones price.",
+   "source": "https://www.ondeverte.ch/abonnements/abonnements-onde-verte"
+  }
+ ]
+}

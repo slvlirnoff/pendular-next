@@ -1,0 +1,551 @@
+{
+ "network": "Frimobil",
+ "alliance": "frimobil",
+ "origin": "tariff",
+ "year": 2027,
+ "validFrom": "2026-12-13",
+ "source": "https://frimobil.ch/fileadmin/user_upload/public/Abonnement/GRILLE_TARIFAIRE_FRIMOBIL_2027.pdf",
+ "currency": "CHF",
+ "notes": [
+  "Grid 'GRILLE_TARIFAIRE_FRIMOBIL_2027.pdf', labelled on frimobil.ch/abonnements/abonnement-adulte 'valable dès le 13 décembre 2026' (PDF created 07.10.2026). Complete: single tickets, day passes, weekly / monthly / annual passes and FlexiAbo 100 days.",
+  "Zone column '7+' of the grid is stored as 'all' (T651.4 ch. 8: '7 et +'; frimobil.ch: '7 zones = toutes zones').",
+  "'previous' holds the grid in force until 12.12.2026 (GRILLE_TARIFAIRE_FRIMOBIL_2024.pdf, same values as T651.4 chapter 8, edition 01.06.2026); the NOVA snapshot of 10.11.2026 carries exactly these prices.",
+  "Junior and senior passes exist in 2nd class only (T651.4 2.2: a 1st class pass is bought in the adult category). No weekly pass and no FlexiAbo for seniors.",
+  "passes.week is an addition to the contract (the Mobilis grid has it too): weekly pass.",
+  "1st class is offered in trains of TPF, SBB, BLS and MOB only (grid footnote).",
+  "Transcribed by script from the pdftotext -layout output; checks in SOURCES.md. No cantonal or communal subsidy is applied in this table."
+ ],
+ "passPlan": "frimobil-billett-amp-abo",
+ "ticketPlan": "frimobil-billett-amp-abo",
+ "rules": {
+  "together": [],
+  "minZones": {
+   "pass": 1,
+   "ticket": 1
+  },
+  "allZonesFrom": 7,
+  "countBy": "zones",
+  "text": [
+   "The price follows the number of zones travelled through, the zone of departure included (T651.4 2.1.1 and 2.1.10). Every zone counts once: all zone factors are 1 in NOVA.",
+   "7 zones and more: one price, valid in all zones (T651.4 ch. 8 '7 et +'; frimobil.ch abonnement-adulte: '7 zones = toutes zones').",
+   "Single ticket validity: 1 zone 60 min, 2 to 6 zones 120 min, 7 zones and more 180 min (T651.4 2.1.2). Day pass valid until 5 a.m. the next day (2.1.3).",
+   "Annual pass = 9 monthly passes (frimobil.ch abonnement-adulte, '12 mois pour le prix de 9'; holds on every cell of the grid).",
+   "Overlap with Libero (T651.4 1.3): trips entirely inside Frimobil zone 14 (Libero 699), 16 (Libero 627) or 55 (Libero 696) are sold at the Libero tariff; trips from or to these zones inside the Frimobil area at the Frimobil tariff.",
+   "Overlap with Mobilis (T651.4 1.4): trips entirely inside the overlap zones are sold at the Frimobil tariff for Frimobil zones 23, 24, 40, 49 (Mobilis 182, 183, 160, 161) and at the Mobilis tariff for Frimobil zones 45, 47, 92, 93, 94, 95 (Mobilis 103, 60, 62, 63, 72, 79); trips from or to these zones inside the Frimobil area at the Frimobil tariff. The Mobilis tariff T651.22 1.2.1.2 adds the Broye zones (Frimobil 51, 57, 58, 59, 80, 81, 84, 85, 86, 87: Frimobil tariff).",
+   "Reduced ticket price: children 6 to 15.99 and holders of a half-fare card (T651.4 0.2.2). The half-fare card gives no reduction on passes."
+  ]
+ },
+ "tickets": {
+  "single": {
+   "full": {
+    "2": {
+     "1": 3.2,
+     "2": 5.6,
+     "3": 8.2,
+     "4": 10.8,
+     "5": 13.2,
+     "6": 15.8,
+     "all": 18
+    },
+    "1": {
+     "1": 5.4,
+     "2": 9.6,
+     "3": 14,
+     "4": 18.4,
+     "5": 22.4,
+     "6": 26.8,
+     "all": 30.6
+    }
+   },
+   "half": {
+    "2": {
+     "1": 2.4,
+     "2": 3.3,
+     "3": 4.1,
+     "4": 5.4,
+     "5": 6.6,
+     "6": 7.9,
+     "all": 9
+    },
+    "1": {
+     "1": 3.9,
+     "2": 5.4,
+     "3": 7,
+     "4": 9.2,
+     "5": 11.2,
+     "6": 13.4,
+     "all": 15.3
+    }
+   }
+  }
+ },
+ "dayPass": {
+  "full": {
+   "2": {
+    "1": 9.2,
+    "2": 11.8,
+    "3": 16.4,
+    "4": 21.6,
+    "5": 26.4,
+    "6": 31.6,
+    "all": 36
+   },
+   "1": {
+    "1": 15.6,
+    "2": 20,
+    "3": 27.8,
+    "4": 36.8,
+    "5": 44.8,
+    "6": 53.8,
+    "all": 61.2
+   }
+  },
+  "half": {
+   "2": {
+    "1": 5.9,
+    "2": 6.7,
+    "3": 8.2,
+    "4": 10.8,
+    "5": 13.2,
+    "6": 15.8,
+    "all": 18
+   },
+   "1": {
+    "1": 9.8,
+    "2": 11.2,
+    "3": 13.9,
+    "4": 18.4,
+    "5": 22.4,
+    "6": 26.9,
+    "all": 30.6
+   }
+  }
+ },
+ "passes": {
+  "week": {
+   "adult": {
+    "2": {
+     "1": 37,
+     "2": 42,
+     "3": 61,
+     "4": 81,
+     "5": 101,
+     "6": 120,
+     "all": 140
+    },
+    "1": {
+     "1": 62,
+     "2": 70,
+     "3": 101,
+     "4": 134,
+     "5": 167,
+     "6": 198,
+     "all": 231
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 28,
+     "2": 32,
+     "3": 46,
+     "4": 61,
+     "5": 76,
+     "6": 90,
+     "all": 105
+    }
+   }
+  },
+  "month": {
+   "adult": {
+    "2": {
+     "1": 74,
+     "2": 84,
+     "3": 122,
+     "4": 161,
+     "5": 201,
+     "6": 239,
+     "all": 279
+    },
+    "1": {
+     "1": 123,
+     "2": 139,
+     "3": 202,
+     "4": 266,
+     "5": 332,
+     "6": 395,
+     "all": 461
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 56,
+     "2": 63,
+     "3": 92,
+     "4": 121,
+     "5": 151,
+     "6": 180,
+     "all": 210
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 60,
+     "2": 68,
+     "3": 98,
+     "4": 129,
+     "5": 161,
+     "6": 192,
+     "all": 224
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "2": {
+     "1": 666,
+     "2": 756,
+     "3": 1098,
+     "4": 1449,
+     "5": 1809,
+     "6": 2151,
+     "all": 2511
+    },
+    "1": {
+     "1": 1107,
+     "2": 1251,
+     "3": 1818,
+     "4": 2394,
+     "5": 2988,
+     "6": 3555,
+     "all": 4149
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 504,
+     "2": 567,
+     "3": 828,
+     "4": 1089,
+     "5": 1359,
+     "6": 1620,
+     "all": 1890
+    }
+   },
+   "senior": {
+    "2": {
+     "1": 540,
+     "2": 612,
+     "3": 882,
+     "4": 1161,
+     "5": 1449,
+     "6": 1728,
+     "all": 2016
+    }
+   }
+  },
+  "flexi": {
+   "adult": {
+    "2": {
+     "1": 341,
+     "2": 389,
+     "3": 567,
+     "4": 749,
+     "5": 936,
+     "6": 1113,
+     "all": 1296
+    },
+    "1": {
+     "1": 567,
+     "2": 644,
+     "3": 936,
+     "4": 1238,
+     "5": 1545,
+     "6": 1837,
+     "all": 2140
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 260,
+     "2": 293,
+     "3": 428,
+     "4": 562,
+     "5": 706,
+     "6": 836,
+     "all": 974
+    }
+   }
+  }
+ },
+ "ages": {
+  "junior": "6–24.99 (T651.4 0.3.1 Enfant 6–15.99, 0.3.2 Jeune up to 24.99; one price table \"Enfant/Jeune\"; a pass started before the 25th birthday runs to its end, 3.6.3)",
+  "adult": "25 to AHV age (0.3.3)",
+  "senior": "AHV age (0.3.4; grid: \"Age AVS / AHV-Alter\")",
+  "tickets": "full price from 16; reduced: children 6–15.99 and half-fare card holders (0.2.1, 0.2.2); under 6 free (2.1.1)"
+ },
+ "discounts": [
+  {
+   "id": "frimobil-jobabo",
+   "label": "JobAbo annuel (employer scheme)",
+   "factor": 0.8,
+   "appliesTo": [
+    "passes.year"
+   ],
+   "ageGroups": [
+    "adult",
+    "youth",
+    "senior"
+   ],
+   "condition": "employee of a company with a JobAbo contract: 10 % paid by Frimobil and at least 10 % by the employer (T651.4 4.2.1, \"JobAbo annuel : 10% (fixe) pris en charge par Frimobil et minimum 10% pris en charge par l'employeur\"); the factor is the maximum price for the employee",
+   "source": "https://frimobil.ch/fileadmin/user_upload/public/Frimobil/T651.4_au_1er_juin_2026_FR.pdf"
+  }
+ ],
+ "previous": {
+  "validFrom": "2023-12-10",
+  "validTo": "2026-12-12",
+  "source": "https://frimobil.ch/fileadmin/user_upload/public/Abonnement/GRILLE_TARIFAIRE_FRIMOBIL_2024.pdf",
+  "note": "Grid labelled 'valable jusqu'au 12 décembre 2026' on frimobil.ch; the press release of 31.03.2026 dates the last change to December 2023 (validFrom is the timetable change of 10.12.2023).",
+  "tickets": {
+   "single": {
+    "full": {
+     "2": {
+      "1": 3,
+      "2": 5.4,
+      "3": 7.8,
+      "4": 10.4,
+      "5": 12.8,
+      "6": 15.2,
+      "all": 17.4
+     },
+     "1": {
+      "1": 5.2,
+      "2": 9.2,
+      "3": 13.2,
+      "4": 17.6,
+      "5": 21.8,
+      "6": 25.8,
+      "all": 29.6
+     }
+    },
+    "half": {
+     "2": {
+      "1": 2.3,
+      "2": 3.2,
+      "3": 3.9,
+      "4": 5.2,
+      "5": 6.4,
+      "6": 7.6,
+      "all": 8.7
+     },
+     "1": {
+      "1": 3.8,
+      "2": 5.2,
+      "3": 6.6,
+      "4": 8.8,
+      "5": 10.9,
+      "6": 12.9,
+      "all": 14.8
+     }
+    }
+   }
+  },
+  "dayPass": {
+   "full": {
+    "2": {
+     "1": 9,
+     "2": 11.4,
+     "3": 15.6,
+     "4": 20.8,
+     "5": 25.6,
+     "6": 30.4,
+     "all": 34.8
+    },
+    "1": {
+     "1": 15.4,
+     "2": 19.4,
+     "3": 26.6,
+     "4": 35.4,
+     "5": 43.6,
+     "6": 51.6,
+     "all": 59.2
+    }
+   },
+   "half": {
+    "2": {
+     "1": 5.8,
+     "2": 6.5,
+     "3": 7.8,
+     "4": 10.4,
+     "5": 12.8,
+     "6": 15.2,
+     "all": 17.4
+    },
+    "1": {
+     "1": 9.7,
+     "2": 10.9,
+     "3": 13.3,
+     "4": 17.7,
+     "5": 21.8,
+     "6": 25.8,
+     "all": 29.6
+    }
+   }
+  },
+  "passes": {
+   "week": {
+    "adult": {
+     "2": {
+      "1": 36,
+      "2": 41,
+      "3": 59,
+      "4": 78,
+      "5": 98,
+      "6": 116,
+      "all": 135
+     },
+     "1": {
+      "1": 60,
+      "2": 68,
+      "3": 98,
+      "4": 129,
+      "5": 162,
+      "6": 192,
+      "all": 223
+     }
+    },
+    "junior": {
+     "2": {
+      "1": 27,
+      "2": 31,
+      "3": 45,
+      "4": 59,
+      "5": 74,
+      "6": 87,
+      "all": 102
+     }
+    }
+   },
+   "month": {
+    "adult": {
+     "2": {
+      "1": 71,
+      "2": 81,
+      "3": 118,
+      "4": 156,
+      "5": 195,
+      "6": 232,
+      "all": 270
+     },
+     "1": {
+      "1": 118,
+      "2": 134,
+      "3": 195,
+      "4": 258,
+      "5": 322,
+      "6": 383,
+      "all": 446
+     }
+    },
+    "junior": {
+     "2": {
+      "1": 54,
+      "2": 61,
+      "3": 89,
+      "4": 117,
+      "5": 147,
+      "6": 174,
+      "all": 203
+     }
+    },
+    "senior": {
+     "2": {
+      "1": 57,
+      "2": 65,
+      "3": 95,
+      "4": 125,
+      "5": 156,
+      "6": 186,
+      "all": 216
+     }
+    }
+   },
+   "year": {
+    "adult": {
+     "2": {
+      "1": 639,
+      "2": 729,
+      "3": 1062,
+      "4": 1404,
+      "5": 1755,
+      "6": 2088,
+      "all": 2430
+     },
+     "1": {
+      "1": 1062,
+      "2": 1206,
+      "3": 1755,
+      "4": 2322,
+      "5": 2898,
+      "6": 3447,
+      "all": 4014
+     }
+    },
+    "junior": {
+     "2": {
+      "1": 486,
+      "2": 549,
+      "3": 801,
+      "4": 1053,
+      "5": 1323,
+      "6": 1566,
+      "all": 1827
+     }
+    },
+    "senior": {
+     "2": {
+      "1": 513,
+      "2": 585,
+      "3": 855,
+      "4": 1125,
+      "5": 1404,
+      "6": 1674,
+      "all": 1944
+     }
+    }
+   },
+   "flexi": {
+    "adult": {
+     "2": {
+      "1": 328,
+      "2": 374,
+      "3": 545,
+      "4": 720,
+      "5": 900,
+      "6": 1071,
+      "all": 1247
+     },
+     "1": {
+      "1": 545,
+      "2": 619,
+      "3": 900,
+      "4": 1191,
+      "5": 1487,
+      "6": 1768,
+      "all": 2059
+     }
+    },
+    "junior": {
+     "2": {
+      "1": 250,
+      "2": 282,
+      "3": 411,
+      "4": 540,
+      "5": 679,
+      "6": 804,
+      "all": 937
+     }
+    }
+   }
+  }
+ }
+}

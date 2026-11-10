@@ -3,13 +3,14 @@
  * packages/engine/data/nova. Re-runnable; pages are cached under tools/nova-import/cache so an
  * interrupted run resumes. Prints what changed against the snapshot already in the repository.
  *
- *   pnpm tsx tools/nova-import/import.ts [--only=zones,relations,prices] [--alliance=mobilis,frimobil] [--fresh] [--dry-run]
+ *   pnpm tsx tools/nova-import/import.ts [--only=zones,relations,prices] [--alliance=mobilis,frimobil] [--fresh] [--dry-run] [--no-derive]
  */
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadNova, type NovaData, type NovaManifest, type NovaPlanType } from '../../packages/engine/src/fares/nova.js';
+import { ZONE_PRICE_PAGE, ZONE_PRICE_QUERY, runDerived } from './derive.js';
 import { BASE, DIDOK_GRAPH, ENDPOINT, NOVA_GRAPH, createSparql } from './sparql.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -482,10 +483,8 @@ GROUP BY ?t ?p ?von ?bis ?class ?fahrart ?dv ?du ?price ?cur ORDER BY ?t ?p`,
   records.push(...twRecs);
   const zone = (await sparql.paged(
     'prices-zone',
-    `SELECT ${tail('?p', 'zoningpricecharacteristic/', 'id')} ?price ?cur ?class ?freq (GROUP_CONCAT(DISTINCT STRAFTER(STR(?seg), "${BASE}customersegment/"); separator="|") AS ?segs) ${FROM}
-WHERE { ?p a otd:ZoningPriceCharacteristic OPTIONAL { ?p schema:price ?price } OPTIONAL { ?p schema:currency ?cur } OPTIONAL { ?p otd:class ?class } OPTIONAL { ?p otd:frequencyCode ?freq } OPTIONAL { ?p otd:customerSegment ?seg } }
-GROUP BY ?p ?price ?cur ?class ?freq ORDER BY ?p`,
-    10000,
+    ZONE_PRICE_QUERY,
+    ZONE_PRICE_PAGE,
   )) as [string, string, string, string, string, string][];
   let unpriced = 0;
   const zoneRecs: unknown[][] = [];
@@ -806,6 +805,13 @@ async function main() {
   rmSync(join(OUT, 'zones'), { recursive: true, force: true });
   for (const f of readdirSync(NEXT)) cpSync(join(NEXT, f), join(OUT, f), { recursive: true });
   log(`\nwritten to ${OUT}`);
+
+  // Files derived from the snapshot just written: price ladders (they need the zone price entries of
+  // the same day as the pay levels) and the networks' own zones (see derive.ts). --no-derive skips them.
+  if (!args.includes('--no-derive')) {
+    const steps = [...(only.includes('prices') ? ['ladders'] : []), ...(only.includes('zones') && !onlyAlliances ? ['network-zones'] : [])];
+    if (steps.length) await runDerived({ novaDir: OUT, sparql, today, log, only: steps });
+  }
 }
 
 main().catch((e) => {

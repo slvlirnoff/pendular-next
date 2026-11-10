@@ -13,6 +13,7 @@ pnpm tsx tools/nova-import/import.ts --only=relations                 # tariff k
 pnpm tsx tools/nova-import/import.ts --only=prices
 pnpm tsx tools/nova-import/import.ts --dry-run                        # build and compare, write nothing
 pnpm tsx tools/nova-import/import.ts --fresh                          # ignore cached pages
+pnpm tsx tools/nova-import/import.ts --no-derive                      # snapshot only, no derived files
 ```
 
 No key is needed. Behind a proxy that Node's `fetch` does not pick up by itself, run with
@@ -90,8 +91,43 @@ Decisions taken while packing:
 - 47 zone price entries without a price are left out. 500 stop numbers have no name in DiDok
   (they stay usable, `stopName` returns undefined).
 
+## Derived files (`derive.ts`)
+
+After the snapshot is written, `import.ts` runs two more steps on it (skip them with `--no-derive`):
+
+| Step | Runs when | Writes |
+| --- | --- | --- |
+| `ladders` | the `prices` section was imported | `packages/engine/data/nova/price-ladders/<alliance>.json` and `REPORT.md` there: zone-count price ladders per network, in the format of `data/tariffs/networks/*.json` |
+| `network-zones` | the `zones` section was imported for all alliances | `packages/engine/data/nova/network-zones.json` and `NETWORK-ZONES.md`: per zone, the stops shared with a neighbouring network and the flag `own` |
+
+Alone, on the snapshot in the repository:
+
+```
+pnpm tsx tools/nova-import/derive.ts                       # both
+pnpm tsx tools/nova-import/derive.ts --only=network-zones
+pnpm tsx tools/nova-import/derive.ts --only=ladders --dry-run   # prints the report, writes nothing
+```
+
+- `ladders` reads the zone price entries again, **with** those that have no price (the snapshot
+  leaves 47 out), from the importer's cached pages (same query, `ZONE_PRICE_QUERY`), and matches them
+  with the pay levels in `meta.jsonl` by counting. It must therefore run on the pages of the same
+  import as the snapshot: run alone on another day it fetches today's entries (3 requests) and, if
+  the source changed in between, stops with "cannot be matched by counting" and writes no ladder.
+  How the matching works and how it is checked: `packages/engine/data/nova/price-ladders/README.md`.
+- `network-zones` adds one query on the DiDok graph (canton of every stop, 2 pages, 27 040 rows).
+- Two hand-kept inputs live here: `ladder-reference.json` (known prices a ladder is validated
+  against, for networks whose grid is not under `data/tariffs/networks/`) and `zone-primacy.json`
+  (what the networks' tariffs say about shared zones; it overrides the computed flag `own`).
+- Running `derive.ts` alone when the page cache is older than 20 hours empties the cache first, like
+  any import.
+
+What to check before committing them: `price-ladders/REPORT.md` (no alliance marked NOT WRITTEN, the
+validated networks still validated, counts of blocks and pay levels equal) and the head of
+`NETWORK-ZONES.md` (on how many tariff-documented zones the rule agrees; the four tables of zones).
+
 ## Files here
 
 - `import.ts` – the import. `sparql.ts` – cached, polite SPARQL client and CSV reader.
+- `derive.ts` – price ladders and the networks' own zones, derived from the snapshot (above); `ladder-reference.json`, `zone-primacy.json` – its hand-kept inputs.
 - `compare.ts` – compares the snapshot with the engine's Mobilis zone table and price files;
   prints the tables of COMPARISON.md.

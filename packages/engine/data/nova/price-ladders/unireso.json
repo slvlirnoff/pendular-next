@@ -1,0 +1,154 @@
+{
+ "network": "unireso",
+ "alliance": "unireso",
+ "origin": "nova",
+ "year": 2026,
+ "validFrom": null,
+ "source": "https://lindas.admin.ch/query (graph https://lindas.admin.ch/sbb/nova), published through opentransportdata.swiss",
+ "currency": "CHF",
+ "confidence": "validated",
+ "notes": [
+  "Prices as held in NOVA on 2026-11-10, 2026 tariff year. NOVA carries no validity date: it shows the prices in force on the day of the import.",
+  "NOVA does not link a zone price to a product; the link is derived from the order of the entries (price-ladders/README.md) and, inside a product, from the rank of the prices: more zones never cost less.",
+  "Checked against tariffs/networks/unireso.json: 36 cells equal, 0 different.",
+  "Senior prices are given only where NOVA shows them; without one, seniors may pay the adult price or the reduced one, NOVA does not say. Flexi and weekly passes are not read.",
+  "year (447_JABO_GE): the tarif has one named zone (zonen-tout-ge) and no levels by number of zones: taken as the price of the whole network.",
+  "month (447_MABO_GE): the tarif has one named zone (zonen-tout-ge) and no levels by number of zones: taken as the price of the whole network.",
+  "single (439_EB_GE): the tarif has 1 level(s) that are not a number of zones (kurzstrecke).",
+  "single (439_EB_GE): the tarif has one named zone (zonen-tout-ge) and no levels by number of zones: taken as the price of the whole network.",
+  "single (439_EB_GE): 1 level(s) sold in one class only set aside.",
+  "dayPass (439_TK_GE): the tarif has one named zone (zonen-tout-ge) and no levels by number of zones: taken as the price of the whole network.",
+  "Junior and senior pass prices are told apart by counting entries (NOVA marks both \"reduced\"): one entry is read as the junior price, two as the senior price. Categories concerned here: senior."
+ ],
+ "passPlan": "unireso-abo-amp-billett-zone-10",
+ "ticketPlan": "unireso-abo-amp-billett-zone-10",
+ "rules": {
+  "together": [],
+  "minZones": {
+   "pass": 1,
+   "ticket": 1
+  },
+  "allZonesFrom": 1,
+  "countBy": "factor",
+  "text": [
+   "Read from NOVA pay levels: passes from 1 zone(s), all zones from 1; tickets from 1 zone(s), all zones from 1.",
+   "Zones sold together, city-zone and short-trip prices and overlap rules of the tariff are not in this file."
+  ]
+ },
+ "tickets": {
+  "single": {
+   "full": {
+    "1": {
+     "1": 5.4,
+     "all": 5.4
+    },
+    "2": {
+     "1": 3,
+     "all": 3
+    }
+   },
+   "half": {
+    "1": {
+     "1": 3.5,
+     "all": 3.5
+    },
+    "2": {
+     "1": 2,
+     "all": 2
+    }
+   }
+  }
+ },
+ "dayPass": {
+  "full": {
+   "1": {
+    "1": 17,
+    "all": 17
+   },
+   "2": {
+    "1": 10,
+    "all": 10
+   }
+  },
+  "half": {
+   "1": {
+    "1": 12.5,
+    "all": 12.5
+   },
+   "2": {
+    "1": 7.3,
+    "all": 7.3
+   }
+  }
+ },
+ "passes": {
+  "month": {
+   "adult": {
+    "1": {
+     "1": 119,
+     "all": 119
+    },
+    "2": {
+     "1": 70,
+     "all": 70
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 45,
+     "all": 45
+    }
+   },
+   "senior": {
+    "1": {
+     "1": 77,
+     "all": 77
+    },
+    "2": {
+     "1": 45,
+     "all": 45
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "1": {
+     "1": 850,
+     "all": 850
+    },
+    "2": {
+     "1": 500,
+     "all": 500
+    }
+   },
+   "junior": {
+    "2": {
+     "1": 400,
+     "all": 400
+    }
+   },
+   "senior": {
+    "1": {
+     "1": 680,
+     "all": 680
+    },
+    "2": {
+     "1": 400,
+     "all": 400
+    }
+   }
+  }
+ },
+ "novaTarifs": {
+  "year": "447_JABO_GE",
+  "month": "447_MABO_GE",
+  "single": "439_EB_GE",
+  "dayPass": "439_TK_GE"
+ },
+ "assumedProducts": [
+  "year",
+  "month",
+  "single",
+  "dayPass"
+ ]
+}
