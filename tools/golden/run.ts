@@ -69,9 +69,18 @@ function snapshot(r: CompareResult): Snapshot {
 // ---------------------------------------------------------------------------------------------
 async function post(c: Commute): Promise<CompareResult> {
   const { name: _n, variantOf: _v, variant: _vv, expectTransit: _e, ...body } = c;
-  const res = await fetch(`${API}/api/compare`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  return (await res.json()) as CompareResult;
+  let last: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(`${API}/api/compare`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(120_000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return (await res.json()) as CompareResult;
+    } catch (e) {
+      last = e;
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+  throw last;
 }
 
 function sanity(c: Commute, r: CompareResult) {
