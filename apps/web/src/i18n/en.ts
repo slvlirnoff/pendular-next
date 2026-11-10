@@ -215,7 +215,7 @@ export const en: Dict = {
   'car.kind.cityCentre': "city centre",
   'car.kind.townCentre': "town centre",
   'car.kind.elsewhere': "outside the centre",
-  'm.cost.car.time': "Car time = driving time × rush-hour factor + time to park. The rush-hour factor is an assumption, not a measurement. The time to park depends on the number of residents and jobs within 1 km of the workplace: 15 min in a city centre, 10 min in a town centre, 5 min elsewhere.",
+  'm.cost.car.time': "Car time = driving time × rush-hour factor + time to park. The rush-hour factor is an assumption, not a measurement: from 1.1 in open country to 1.7 in city centres, by the number of residents and jobs along the route. The time to park depends on the number of residents and jobs within 1 km of the workplace: 15 min in a city centre, 10 min in a town centre, 5 min elsewhere.",
   'm.options.i4': "A P+Rail whose parking price is not known is not offered.",
   'm.options.i5': "Options are compared departure by departure. An option is listed if at least one of its departures is not matched by an option that is at least as cheap, has as many changes or fewer, leaves no earlier and arrives no later.",
 };

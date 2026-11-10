@@ -214,7 +214,7 @@ export const fr = {
   'car.kind.cityCentre': "centre-ville",
   'car.kind.townCentre': "centre de localité",
   'car.kind.elsewhere': "hors centre",
-  'm.cost.car.time': "Temps en voiture = temps de roulage × facteur de trafic de pointe + temps pour se garer. Le facteur de trafic de pointe est une hypothèse, pas une mesure. Le temps pour se garer dépend du nombre d’habitants et d’emplois dans un rayon de 1 km autour du lieu de travail : 15 min en centre-ville, 10 min au centre d’une localité, 5 min ailleurs.",
+  'm.cost.car.time': "Temps en voiture = temps de roulage × facteur de trafic de pointe + temps pour se garer. Le facteur de trafic de pointe est une hypothèse, pas une mesure : de 1,1 en rase campagne à 1,7 en centre-ville, selon le nombre d’habitants et d’emplois le long du trajet. Le temps pour se garer dépend du nombre d’habitants et d’emplois dans un rayon de 1 km autour du lieu de travail : 15 min en centre-ville, 10 min au centre d’une localité, 5 min ailleurs.",
   'm.options.i4': "Un P+Rail dont le prix du parking n’est pas connu n’est pas proposé.",
   'm.options.i5': "Les options sont comparées départ par départ. Une option figure dans la liste si au moins un de ses départs n’est pas égalé par une option au moins aussi bon marché, avec autant de changements ou moins, qui ne part pas plus tôt et n’arrive pas plus tard.",
 } as const;
