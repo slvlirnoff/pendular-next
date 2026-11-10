@@ -3,6 +3,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { compare, type CommuteRequest } from '@pendular/engine';
 import { buildDeps, readConfig } from './deps.js';
+import { httpGet } from './httpGet.js';
 import { parseRequest } from './validate.js';
 
 const cfg = readConfig();
@@ -20,8 +21,8 @@ app.get('/api/places', async (c) => {
   const url = new URL('/api/v1/geocode', cfg.motisUrl);
   url.searchParams.set('text', q);
   url.searchParams.set('language', c.req.query('lang') ?? 'fr');
-  const res = await fetch(url);
-  if (!res.ok) return c.json({ error: 'geocoder unavailable' }, 502);
+  const res = await httpGet(url).catch(() => null);
+  if (!res?.ok) return c.json({ error: 'geocoder unavailable' }, 502);
   const matches = (await res.json()) as {
     type: string; name: string; id: string; lat: number; lon: number; street?: string; houseNumber?: string; zip?: string;
     areas?: { name: string; adminLevel: number; default?: boolean }[];
@@ -61,5 +62,8 @@ app.use('/*', serveStatic({ root: '../web/dist' }));
 // Pages of the single-page site (/fr/, /de/method…) all load the same shell.
 app.get('/:lang{fr|de|it|en}/*', serveStatic({ root: '../web/dist', path: 'index.html' }));
 app.get('/:lang{fr|de|it|en}', serveStatic({ root: '../web/dist', path: 'index.html' }));
+
+// A failed call to the routing engine must never take the server down.
+process.on('unhandledRejection', (e) => console.error('unhandled rejection', e));
 
 serve({ fetch: app.fetch, port: cfg.port }, (info) => console.log(`pendular api on :${info.port}, motis ${cfg.motisUrl}`));

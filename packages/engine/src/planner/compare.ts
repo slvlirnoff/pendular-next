@@ -11,6 +11,7 @@ import type {
   OptionCost,
   OptionKind,
   PricedProduct,
+  ReachableStop,
   Provenance,
   RoutingProvider,
   RuleSet,
@@ -60,6 +61,11 @@ export interface EngineDeps {
   parkingVersion?: string;
   now?: () => Date;
 }
+
+/** Longest public transport time considered from an access station to work, minutes. */
+const REACH_MAX_MIN = 120;
+/** A station is searched when its estimate is within this many minutes of public transport from home. */
+const REACH_MARGIN_MIN = 20;
 
 /** Minutes a car or bike access must save on public transport from home to be shown. */
 const ACCESS_MIN_SAVING = 5;
@@ -190,19 +196,51 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     ? deps.cityParkRide.filter((s) => haversineKm(req.work, s) <= 8 && haversineKm(req.work, s) >= rules.accessMinKmFromWork)
     : [];
 
-  const [direct, car, bike, ebike, walk, prDrive, cityDrive, brRide] = await Promise.all([
+  // No street search for a ride or walk that cannot fit its time limit even in a straight line
+  // at a good pace (km/h): those searches are the slowest of all.
+  const crow = haversineKm(req.home, req.work);
+  const tooFar = {
+    walk: crow > (rules.walkAllWayMaxMin / 60) * 6,
+    bike: crow > (rules.bikeAllWayMaxMin / 60) * 25,
+    ebike: crow > (rules.ebikeAllWayMaxMin / 60) * 30,
+  };
+  const anyAccess = prCand.length + brCand.length + cityCand.length > 0;
+  const [direct, car, bike, ebike, walk, prDrive, cityDrive, brRide, reach] = await Promise.all([
     want('transit') || prCand.length || brCand.length ? transitFromHome() : Promise.resolve([] as Itinerary[]),
     street('car'),
-    want('bike') ? street('bike') : Promise.resolve(null),
-    want('ebike') ? street('ebike') : Promise.resolve(null),
-    want('walk') ? street('walk') : Promise.resolve(null),
+    want('bike') && !tooFar.bike ? street('bike') : Promise.resolve(null),
+    want('ebike') && !tooFar.ebike ? street('ebike') : Promise.resolve(null),
+    want('walk') && !tooFar.walk ? street('walk') : Promise.resolve(null),
     safe(routing.streetMatrix({ points: prCand, anchor: req.home, profile: 'car', direction: 'fromAnchor', maxMin: rules.parkRailMaxDriveMin }), prCand.map(() => null)),
-    safe(routing.streetMatrix({ points: cityCand, anchor: req.home, profile: 'car', direction: 'fromAnchor', maxMin: 180 }), cityCand.map(() => null)),
+    // A handful of sites far from home: one route each costs less than a matrix, which explores
+    // every road within its time limit.
+    Promise.all(cityCand.map((site) => safe(routing.street({ from: req.home, to: site, profile: 'car' }), null))),
     safe(routing.streetMatrix({ points: brCand, anchor: req.home, profile: 'ebike', direction: 'fromAnchor', maxMin: rules.bikeRideMaxMin }), brCand.map(() => null)),
+    // Public transport time from every stop to work, in one call: it tells which stations are
+    // worth a full search.
+    anyAccess && routing.reachability
+      ? safe(routing.reachability({ to: req.work, date, time: req.arrival.to, maxMin: REACH_MAX_MIN }), null as ReachableStop[] | null)
+      : Promise.resolve(null as ReachableStop[] | null),
   ]);
+
+  /** Minutes by public transport from a site to work: its nearest reachable stop, plus the walk to it. */
+  const onward = (site: LatLon): number | null => {
+    if (!reach) return null;
+    let best: number | null = null;
+    for (const r of reach) {
+      if (Math.abs(r.lat - site.lat) > 0.006 || Math.abs(r.lon - site.lon) > 0.009) continue;
+      const walkMin = (haversineKm(site, r) * 1000) / 75;
+      if (walkMin > 8) continue;
+      if (best === null || r.minutes + walkMin < best) best = r.minutes + walkMin;
+    }
+    return best;
+  };
 
   const drafts: Draft[] = [];
   const leftOut: CompareResult['leftOut'] = [];
+  for (const kind of ['walk', 'bike', 'ebike'] as const) {
+    if (want(kind) && tooFar[kind]) leftOut.push({ kind, title: kind, code: 'tooLong' });
+  }
 
   // --- 2. Public transport door to door -----------------------------------------------------
   // A connection taking more than twice the fastest (plus half an hour) is not an alternative.
@@ -232,10 +270,19 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       .filter((c) => kind !== 'cityParkRide' || c.route.durationMin * rules.carPeakFactor <= carMin * rules.cityParkRideMaxDetour)
       .filter((c) => kind !== 'parkRail' || c.route.durationMin * rules.carPeakFactor <= carMin * rules.parkRailMaxDriveShare)
       .filter((c) => kind !== 'bikeRide' || c.route.durationMin >= rules.bikeRideMinMin)
-      // Cheap pre-selection: access time plus a straight-line guess of the onward trip.
-      .map((c) => ({ ...c, guess: c.route.durationMin + (haversineKm(c.site, req.work) / 55) * 60 }))
+      // Rank by access time plus the public transport time from the site to work. That time
+      // comes from the one-to-all answer; without it, from a straight-line guess.
+      .map((c) => {
+        const pt = onward(c.site);
+        return { ...c, known: pt !== null, guess: c.route.durationMin * (legMode === 'car' ? rules.carPeakFactor : 1) + transferMin + (pt ?? (haversineKm(c.site, req.work) / 55) * 60) };
+      })
+      // With real times: a site with no public transport to work within the limit is out, and so
+      // is one that cannot come near the fastest public transport from home (the one-to-all time
+      // includes waiting, hence the margin).
+      .filter((c) => !reach || c.known)
+      .filter((c) => !reach || !Number.isFinite(quickest) || c.guess <= quickest + REACH_MARGIN_MIN)
       .sort((a, b) => a.guess - b.guess)
-      .slice(0, kind === 'cityParkRide' ? cands.length : rules.accessCandidates);
+      .slice(0, rules.accessCandidates);
 
     const results = await Promise.all(reachable.map((c) => transitTo(c.site)));
     reachable.forEach((c, i) => {
@@ -405,7 +452,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
 
   // --- 7. First and last trip home for what is shown --------------------------------------------
   const returnCache = new Map<string, Promise<Itinerary[]>>();
-  await Promise.all(
+  const returns = Promise.all(
     kept.map(async (o) => {
       if (!o.itinerary.legs.some(isTransit)) return;
       const target: LatLon = o.access ?? req.home;
@@ -429,7 +476,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   );
 
   // --- 8. Geometry for the access legs of kept options ----------------------------------------
-  await Promise.all(
+  const shapes = Promise.all(
     kept.map(async (o) => {
       const first = o.itinerary.legs[0];
       if (!o.access || !first || first.geometry) return;
@@ -437,6 +484,8 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       if (r?.geometry) first.geometry = r.geometry;
     }),
   );
+  // Both only read the kept options: run them together.
+  await Promise.all([returns, shapes]);
 
   for (const o of kept) delete (o as { _arrivals?: unknown })._arrivals;
   kept.sort((a, b) => a.cost.yearly - b.cost.yearly);

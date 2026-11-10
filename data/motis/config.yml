@@ -22,3 +22,7 @@ reverse_geocoding: true
 # Vector tiles are built separately (slow); enable for the map:
 # tiles:
 #   profile: bin/tiles-profiles/full.lua
+limits:
+  # Pendular asks for the public transport time from every stop to the workplace (one-to-all)
+  # to choose park-and-ride and bike-and-ride stations; the default limit is 90 minutes.
+  onetoall_max_travel_minutes: 180

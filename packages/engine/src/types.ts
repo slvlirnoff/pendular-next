@@ -249,7 +249,17 @@ export interface RoutingProvider {
     direction: 'toAnchor' | 'fromAnchor';
     maxMin: number;
   }): Promise<(StreetRoute | null)[]>;
+  /**
+   * Public transport time from every stop to `to`, arriving by `time` on `date` (one call for
+   * the whole network). Used to choose which stations are worth a full search.
+   */
+  reachability?(q: { to: LatLon; date: string; time: string; maxMin: number }): Promise<ReachableStop[]>;
   versions(): Promise<DataVersions>;
+}
+
+export interface ReachableStop extends LatLon {
+  /** Minutes from this stop to the destination, waiting included. */
+  minutes: number;
 }
 
 // ---------------------------------------------------------------------------------------------

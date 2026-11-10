@@ -203,4 +203,5 @@ export const en: Dict = {
   'method.link': 'Method, sources and limits',
   'opt.lastHomeShort': 'last trip home leaves {last}, arrives {arrival}',
   'answer.vsCar': 'That is {chf} a year less than driving.',
+  'left.tooFar': 'too far for this mode',
 };

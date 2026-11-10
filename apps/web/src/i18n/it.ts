@@ -203,4 +203,5 @@ export const it: Dict = {
   'method.link': 'Metodo, fonti e limiti',
   'opt.lastHomeShort': 'ultimo ritorno: partenza {last}, arrivo {arrival}',
   'answer.vsCar': 'Sono {chf} all’anno in meno rispetto all’auto.',
+  'left.tooFar': 'troppo lontano per questo mezzo',
 };

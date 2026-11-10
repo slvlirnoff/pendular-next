@@ -202,6 +202,7 @@ export const fr = {
   'method.link': 'Méthode, sources et limites',
   'opt.lastHomeShort': 'dernier retour : départ {last}, arrivée {arrival}',
   'answer.vsCar': 'C’est {chf} de moins par an qu’en voiture.',
+  'left.tooFar': 'trop loin pour ce mode',
 } as const;
 
 export type Key = keyof typeof fr;

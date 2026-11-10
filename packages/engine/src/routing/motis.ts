@@ -4,13 +4,14 @@ import type {
   LatLon,
   Leg,
   LegMode,
+  ReachableStop,
   RoutingProvider,
   StopPoint,
   StreetProfile,
   StreetRoute,
   TimeWindow,
 } from '../types.js';
-import { minutesBetween, windowToUtc } from '../time.js';
+import { localToUtc, minutesBetween, windowToUtc } from '../time.js';
 
 /** Minimal shapes of the MOTIS v2 API responses that the adapter reads. */
 interface MotisPlace {
@@ -277,25 +278,37 @@ export class MotisRouting implements RoutingProvider {
     const mode = q.profile === 'car' ? 'CAR' : q.profile === 'walk' ? 'WALK' : 'BIKE';
     // E-bikes use the bike network; MOTIS's matrix has no speed setting, so scale afterwards.
     const speedUp = q.profile === 'ebike' ? EBIKE_MATRIX_SPEEDUP : 1;
-    const out: (StreetRoute | null)[] = [];
-    for (let i = 0; i < q.points.length; i += 120) {
-      const chunk = q.points.slice(i, i + 120);
-      const res = await this.get<{ duration?: number; distance?: number }[]>('/api/v1/one-to-many', {
-        one: `${q.anchor.lat};${q.anchor.lon}`,
-        many: chunk.map((p) => `${p.lat};${p.lon}`).join(','),
-        mode,
-        max: Math.round(q.maxMin * 60 * speedUp),
-        maxMatchingDistance: 250,
-        arriveBy: q.direction === 'toAnchor',
-        withDistance: true,
-      });
-      for (const d of res) {
-        out.push(
-          d.duration === undefined || d.duration === null
-            ? null
-            : { durationMin: d.duration / 60 / speedUp, distanceM: d.distance ?? 0 },
-        );
-      }
+    const chunks: LatLon[][] = [];
+    for (let i = 0; i < q.points.length; i += 120) chunks.push(q.points.slice(i, i + 120));
+    const answers = await Promise.all(
+      chunks.map((chunk) =>
+        this.get<{ duration?: number; distance?: number }[]>('/api/v1/one-to-many', {
+          one: `${q.anchor.lat};${q.anchor.lon}`,
+          many: chunk.map((p) => `${p.lat};${p.lon}`).join(','),
+          mode,
+          max: Math.round(q.maxMin * 60 * speedUp),
+          maxMatchingDistance: 250,
+          arriveBy: q.direction === 'toAnchor',
+          withDistance: true,
+        }),
+      ),
+    );
+    const out = answers.flat().map((d) =>
+      d.duration === undefined || d.duration === null ? null : { durationMin: d.duration / 60 / speedUp, distanceM: d.distance ?? 0 },
+    );
+    return out;
+  }
+
+  async reachability(q: { to: LatLon; date: string; time: string; maxMin: number }): Promise<ReachableStop[]> {
+    const res = await this.get<{ all?: { place?: MotisPlace; duration?: number }[] }>('/api/v6/one-to-all', {
+      one: place(q.to),
+      time: localToUtc(q.date, q.time, this.o.timezone).toISOString(),
+      arriveBy: true,
+      maxTravelTime: q.maxMin,
+    });
+    const out: ReachableStop[] = [];
+    for (const r of res.all ?? []) {
+      if (r.place && typeof r.duration === 'number') out.push({ lat: r.place.lat, lon: r.place.lon, minutes: r.duration });
     }
     return out;
   }

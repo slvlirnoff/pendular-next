@@ -25,7 +25,7 @@ export function LeftOutList({ items }: { items: LeftOut[] }) {
             <li key={i}>
               <strong>{title}</strong>
               <span>
-                {t(`left.${l.code}`, { against: l.against ?? '', delta: delta(l.delta), min: l.durationMin ? duration(l.durationMin) : '' })}
+                {t(l.code === 'tooLong' && !l.durationMin ? 'left.tooFar' : `left.${l.code}`, { against: l.against ?? '', delta: delta(l.delta), min: l.durationMin ? duration(l.durationMin) : '' })}
               </span>
             </li>
           );

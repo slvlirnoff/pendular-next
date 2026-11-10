@@ -14,6 +14,7 @@ import {
   type ZoneIndex,
   type ZoneTable,
 } from '@pendular/engine';
+import { httpGet } from './httpGet.js';
 import { co2Factor } from '../../../packages/engine/src/environment/co2.js';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
@@ -88,6 +89,7 @@ export function buildDeps(cfg: Config): EngineDeps {
   return {
     routing: new MotisRouting({
       baseUrl: cfg.motisUrl,
+      fetch: httpGet,
       timezone: PENDULAR_RULES.timezone,
       // Calibrated on Lausanne–Bern, Vevey–Genève and Aigle–Lausanne (straight-line 78, 74, 37 km
       // against about 97, 87 and 52 km of track): a rough correction until legs follow the tracks.
