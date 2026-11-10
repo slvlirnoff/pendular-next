@@ -9,15 +9,15 @@
   },
   "cityParkRide": {
    "count": 1,
-   "bestDurationMin": 44,
-   "cheapestYearly": 10629,
+   "bestDurationMin": 49,
+   "cheapestYearly": 10439,
    "cheapestProduct": "zonePassYearly",
    "zones": 2
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 26,
-   "cheapestYearly": 13611,
+   "bestDurationMin": 49,
+   "cheapestYearly": 13388,
    "cheapestProduct": null
   }
  },
@@ -31,8 +31,8 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 15,
-   "cheapestYearly": 8511,
+   "bestDurationMin": 35,
+   "cheapestYearly": 8397,
    "cheapestProduct": null
   }
  },
@@ -40,28 +40,28 @@
   "bike": {
    "count": 1,
    "bestDurationMin": 26,
-   "cheapestYearly": 156,
+   "cheapestYearly": 153,
    "cheapestProduct": null,
    "tariffKm": 6.6
   },
   "ebike": {
    "count": 1,
    "bestDurationMin": 18,
-   "cheapestYearly": 718,
+   "cheapestYearly": 703,
    "cheapestProduct": null,
    "tariffKm": 6.6
   },
   "transit": {
    "count": 1,
-   "bestDurationMin": 28,
+   "bestDurationMin": 33,
    "cheapestYearly": 1305,
    "cheapestProduct": "zonePassYearly",
    "zones": 4
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 8,
-   "cheapestYearly": 5351,
+   "bestDurationMin": 20,
+   "cheapestYearly": 5304,
    "cheapestProduct": null
   }
  },
@@ -75,8 +75,8 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 51,
-   "cheapestYearly": 33245,
+   "bestDurationMin": 81,
+   "cheapestYearly": 32614,
    "cheapestProduct": null
   }
  },
@@ -90,8 +90,8 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 59,
-   "cheapestYearly": 39574,
+   "bestDurationMin": 92,
+   "cheapestYearly": 38809,
    "cheapestProduct": null
   }
  },
@@ -104,30 +104,31 @@
    "zones": 5
   },
   "cityParkRide": {
-   "count": 2,
-   "bestDurationMin": 39,
-   "cheapestYearly": 7189,
-   "cheapestProduct": "zonePassMonthly"
+   "count": 1,
+   "bestDurationMin": 42,
+   "cheapestYearly": 7663,
+   "cheapestProduct": "zonePassYearly",
+   "zones": 2
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 21,
-   "cheapestYearly": 10780,
+   "bestDurationMin": 42,
+   "cheapestYearly": 10617,
    "cheapestProduct": null
   }
  },
  "yverdon-lausanne": {
   "transit": {
-   "count": 1,
-   "bestDurationMin": 37,
+   "count": 2,
+   "bestDurationMin": 35,
    "cheapestYearly": 2376,
    "cheapestProduct": "zonePassYearly",
    "zones": 9
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 24,
-   "cheapestYearly": 16064,
+   "bestDurationMin": 46,
+   "cheapestYearly": 15788,
    "cheapestProduct": null
   }
  },
@@ -141,23 +142,23 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 19,
-   "cheapestYearly": 12718,
+   "bestDurationMin": 40,
+   "cheapestYearly": 12524,
    "cheapestProduct": null
   }
  },
  "aigle-lausanne": {
   "transit": {
-   "count": 2,
-   "bestDurationMin": 44,
+   "count": 1,
+   "bestDurationMin": 47,
    "cheapestYearly": 2475,
    "cheapestProduct": "zonePassYearly",
    "zones": 10
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 30,
-   "cheapestYearly": 18355,
+   "bestDurationMin": 54,
+   "cheapestYearly": 18031,
    "cheapestProduct": null
   }
  },
@@ -171,28 +172,28 @@
   "bike": {
    "count": 1,
    "bestDurationMin": 11,
-   "cheapestYearly": 63,
+   "cheapestYearly": 62,
    "cheapestProduct": null,
    "tariffKm": 2.7
   },
   "ebike": {
    "count": 1,
    "bestDurationMin": 8,
-   "cheapestYearly": 296,
+   "cheapestYearly": 290,
    "cheapestProduct": null,
    "tariffKm": 2.7
   },
   "transit": {
    "count": 1,
-   "bestDurationMin": 20,
+   "bestDurationMin": 24,
    "cheapestYearly": 729,
    "cheapestProduct": "zonePassYearly",
    "zones": 2
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 4,
-   "cheapestYearly": 4194,
+   "bestDurationMin": 20,
+   "cheapestYearly": 4171,
    "cheapestProduct": null
   }
  },
@@ -200,19 +201,19 @@
   "bike": {
    "count": 1,
    "bestDurationMin": 21,
-   "cheapestYearly": 125,
+   "cheapestYearly": 122,
    "cheapestProduct": null,
    "tariffKm": 5.3
   },
   "ebike": {
    "count": 1,
    "bestDurationMin": 15,
-   "cheapestYearly": 573,
+   "cheapestYearly": 561,
    "cheapestProduct": null,
    "tariffKm": 5.3
   },
   "transit": {
-   "count": 1,
+   "count": 2,
    "bestDurationMin": 25,
    "cheapestYearly": 729,
    "cheapestProduct": "zonePassYearly",
@@ -220,23 +221,23 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 8,
-   "cheapestYearly": 5261,
+   "bestDurationMin": 26,
+   "cheapestYearly": 5216,
    "cheapestProduct": null
   }
  },
  "bulle-fribourg": {
   "transit": {
-   "count": 2,
+   "count": 3,
    "bestDurationMin": 56,
    "cheapestYearly": 1953,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 30
+   "tariffKm": 29
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 21,
-   "cheapestYearly": 13770,
+   "bestDurationMin": 37,
+   "cheapestYearly": 13543,
    "cheapestProduct": null
   }
  },
@@ -248,92 +249,85 @@
    "cheapestProduct": "routePassYearly",
    "tariffKm": 27
   },
-  "bikeRide": {
-   "count": 1,
-   "bestDurationMin": 27,
-   "cheapestYearly": 2002,
-   "cheapestProduct": "routePassYearly",
-   "tariffKm": 25
-  },
   "car": {
    "count": 1,
-   "bestDurationMin": 19,
-   "cheapestYearly": 11170,
+   "bestDurationMin": 34,
+   "cheapestYearly": 10983,
    "cheapestProduct": null
   }
  },
  "yverdon-lausanne-youth": {
   "transit": {
-   "count": 1,
-   "bestDurationMin": 37,
+   "count": 2,
+   "bestDurationMin": 35,
    "cheapestYearly": 833,
    "cheapestProduct": "zonePassYearly",
    "zones": 9
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 24,
-   "cheapestYearly": 16064,
+   "bestDurationMin": 46,
+   "cheapestYearly": 15788,
    "cheapestProduct": null
   }
  },
  "yverdon-lausanne-senior": {
   "transit": {
-   "count": 1,
-   "bestDurationMin": 37,
+   "count": 2,
+   "bestDurationMin": 35,
    "cheapestYearly": 1071,
    "cheapestProduct": "zonePassYearly",
    "zones": 9
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 24,
-   "cheapestYearly": 16064,
+   "bestDurationMin": 46,
+   "cheapestYearly": 15788,
    "cheapestProduct": null
   }
  },
  "yverdon-lausanne-halffare": {
   "transit": {
-   "count": 1,
-   "bestDurationMin": 37,
+   "count": 2,
+   "bestDurationMin": 35,
    "cheapestYearly": 2376,
    "cheapestProduct": "zonePassYearly",
    "zones": 9
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 24,
-   "cheapestYearly": 16064,
+   "bestDurationMin": 46,
+   "cheapestYearly": 15788,
    "cheapestProduct": null
   }
  },
  "yverdon-lausanne-first-class": {
   "transit": {
-   "count": 1,
-   "bestDurationMin": 37,
+   "count": 2,
+   "bestDurationMin": 35,
    "cheapestYearly": 4041,
    "cheapestProduct": "zonePassYearly",
    "zones": 9
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 24,
-   "cheapestYearly": 16064,
+   "bestDurationMin": 46,
+   "cheapestYearly": 15788,
    "cheapestProduct": null
   }
  },
  "yverdon-lausanne-part-time-2d": {
   "transit": {
-   "count": 1,
-   "bestDurationMin": 37,
+   "count": 2,
+   "bestDurationMin": 35,
    "cheapestYearly": 1320,
    "cheapestProduct": "flexiPass",
    "zones": 9
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 24,
-   "cheapestYearly": 8297,
+   "bestDurationMin": 46,
+   "cheapestYearly": 8242,
    "cheapestProduct": null
   }
  }

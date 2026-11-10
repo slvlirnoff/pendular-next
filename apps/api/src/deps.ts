@@ -8,6 +8,8 @@ import {
   stopSequenceKey,
   createZoneIndex,
   loadCityParkRide,
+  loadDensity,
+  parkingByDensity,
   loadParking,
   priceTransit,
   type AccessCandidate,
@@ -94,6 +96,7 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
   const quoteKey = (legs: Leg[], cls: 1 | 2, half: boolean) => `${stopSequenceKey(legs)}#${cls}#${half ? 'h' : 'f'}`;
   const FARE_BUDGET_MS = 1500;
 
+  const density = loadDensity();
   const gtfs = resolve(ROOT, 'data/raw/gtfs.zip');
   const osm = resolve(ROOT, 'data/raw/switzerland.osm.pbf');
   return {
@@ -108,6 +111,10 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
       versions: { timetable: `GTFS 2027, fetched ${readVersion(gtfs) ?? '?'}`, streets: `OSM, fetched ${readVersion(osm) ?? '?'}`, engine: 'MOTIS 2' },
     }),
     rules: PENDULAR_RULES,
+    parkingAt: (p) => {
+      const d = density.around(p);
+      return { ...parkingByDensity(d), residents: d.residents, jobs: d.jobs };
+    },
     priceTransit: (legs, ctx) =>
       priceTransit(legs, ctx, {
         zones,

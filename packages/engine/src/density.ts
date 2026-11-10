@@ -143,3 +143,23 @@ export function densityFromFile(f: DensityFile): DensityIndex {
     file: { cellM: f.cellM, radiusM: f.radiusM, sources: f.sources, cells: count },
   };
 }
+
+/**
+ * Limits on residents + jobs within 1 km, for places with few residents and many jobs (a
+ * station district, a hospital, a campus). Assumptions, chosen so that Bern station
+ * (18,000 residents, 85,000 jobs) counts as a city centre and EPFL (7,500 and 10,600) as a
+ * town centre, without moving Aigle or Lucens.
+ */
+export const COMBINED_PARKING_THRESHOLDS: ParkingThresholds = {
+  measure: 'residentsAndJobs',
+  cityCentre: { minDensity: 60_000, minutes: 15 },
+  townCentre: { minDensity: 15_000, minutes: 10 },
+  elsewhere: { minutes: 5 },
+};
+
+/** The default rule: by residents, or by residents and jobs together, whichever says denser. */
+export function parkingByDensity(d: DensityAround): { minutes: number; kind: ParkingKind } {
+  const a = parkingAt(d);
+  const b = parkingAt(d, COMBINED_PARKING_THRESHOLDS);
+  return b.minutes > a.minutes ? b : a;
+}
