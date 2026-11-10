@@ -200,7 +200,7 @@ export const fr = {
   'form.edit': 'Modifier',
   'form.summary': '{home} → {work}',
   'method.link': 'Méthode, sources et limites',
-  'opt.lastHomeShort': 'dernier retour à {last}',
+  'opt.lastHomeShort': 'dernier retour : départ {last}, arrivée {arrival}',
   'answer.vsCar': 'C’est {chf} de moins par an qu’en voiture.',
 } as const;
 

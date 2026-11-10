@@ -201,6 +201,6 @@ export const en: Dict = {
   'form.edit': 'Edit',
   'form.summary': '{home} → {work}',
   'method.link': 'Method, sources and limits',
-  'opt.lastHomeShort': 'last trip home at {last}',
+  'opt.lastHomeShort': 'last trip home leaves {last}, arrives {arrival}',
   'answer.vsCar': 'That is {chf} a year less than driving.',
 };

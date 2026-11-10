@@ -201,6 +201,6 @@ export const it: Dict = {
   'form.edit': 'Modificare',
   'form.summary': '{home} → {work}',
   'method.link': 'Metodo, fonti e limiti',
-  'opt.lastHomeShort': 'ultimo ritorno alle {last}',
+  'opt.lastHomeShort': 'ultimo ritorno: partenza {last}, arrivo {arrival}',
   'answer.vsCar': 'Sono {chf} all’anno in meno rispetto all’auto.',
 };

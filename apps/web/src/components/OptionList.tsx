@@ -72,8 +72,8 @@ function Products({ products }: { products: PricedProduct[] }) {
 
 function Timeline({ legs: allLegs }: { legs: Leg[] }) {
   const { t } = useI18n();
-  // A one- or two-minute walk between two vehicles is part of the change, not a step.
-  const legs = allLegs.filter((l, i) => !(l.mode === 'walk' && l.durationMin <= 2 && i > 0 && i < allLegs.length - 1));
+  // A one- or two-minute walk to, from or between vehicles is not a step worth a line.
+  const legs = allLegs.filter((l, i) => !(l.mode === 'walk' && l.durationMin <= 2 && allLegs.length > 1));
   return (
     <div className="detail-block">
       <h4>{t('opt.trip')}</h4>
@@ -139,7 +139,7 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
           </span>
           {frequency && <span>{frequency}</span>}
           <span>{t('opt.co2short', { kg: num(o.co2KgPerYear, lang) })}</span>
-          {early && o.returnTrips && <span className="warn">{t('opt.lastHomeShort', { last: o.returnTrips.last })}</span>}
+          {early && o.returnTrips && <span className="warn">{t('opt.lastHomeShort', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}</span>}
         </span>
       </button>
       </h3>
@@ -149,7 +149,6 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
             {t('opt.hours', { h: num(o.hoursPerYear, lang) })}
             {saved !== undefined && saved > 0 && props.hasCar && <> · <span className="good">{t('opt.saved', { kg: num(saved, lang) })}</span></>}
           </p>
-          {o.returnTrips && early && <p className="detail-facts warn">{t('opt.lastHomeEarly', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}</p>}
           {o.returnTrips === null && <p className="detail-facts warn">{t('opt.noReturn')}</p>}
           <Products products={o.cost.products} />
           {o.cost.extras.length > 0 && (
