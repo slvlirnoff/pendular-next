@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { CommuteOption, CostComponent, Leg, PricedProduct, Provenance } from '@pendular/engine/types';
 import { useI18n, type Key } from '../i18n/index.js';
 import { chf, chf2, duration, hhmm, num } from '../lib/format.js';
@@ -96,9 +97,11 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
   const { t, lang } = useI18n();
   const { o } = props;
   const saved = o.co2SavedKgPerYear;
+  const detailId = useId();
   return (
     <li className={`option card${props.selected ? ' is-selected' : ''}`}>
-      <button type="button" className="option-head" aria-expanded={props.selected} onClick={props.onSelect}>
+      <h3>
+      <button type="button" className="option-head" aria-expanded={props.selected} aria-controls={props.selected ? detailId : undefined} onClick={props.onSelect}>
         <span className="option-main">
           <span className="option-title">{optionName(o, t)}</span>
           <ModeChain legs={o.itinerary.legs} />
@@ -123,8 +126,9 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
           </span>
         </span>
       </button>
+      </h3>
       {props.selected && (
-        <div className="option-detail">
+        <div className="option-detail" id={detailId}>
           <p className="detail-facts">
             {t('opt.hours', { h: num(o.hoursPerYear, lang) })}
             {o.firstArrival && o.lastArrival && ` · ${t('opt.arrivals', { first: o.firstArrival, last: o.lastArrival })}`}
@@ -165,9 +169,9 @@ export function OptionList(props: { options: CommuteOption[]; selected: string |
   const sorted = [...props.options].sort((a, b) => f(a) - f(b));
   const hasCar = props.options.some((o) => o.kind === 'car');
   return (
-    <section className="options">
+    <section className="options" id="options" aria-labelledby="options-h">
       <header className="options-head">
-        <h2>{t('list.title')}</h2>
+        <h2 id="options-h">{t('list.title')}</h2>
         <div className="segmented" role="group" aria-label={t('list.sort')}>
           {(['cost', 'time', 'co2'] as const).map((k) => (
             <button key={k} type="button" aria-pressed={props.sort === k} className={props.sort === k ? 'is-on' : undefined} onClick={() => props.onSort(k)}>

@@ -92,7 +92,7 @@ export function MapPanel(props: { home: Place; work: Place; options: CommuteOpti
       const lons = coords.map((c) => c[0]);
       const lats = coords.map((c) => c[1]);
       const bounds: LngLatBoundsLike = [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
-      m.fitBounds(bounds, { padding: 48, maxZoom: 14, duration: 400 });
+      m.fitBounds(bounds, { padding: 48, maxZoom: 14, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 400 });
     };
     if (ready.current) apply();
     else m.once('pendular:data', apply);

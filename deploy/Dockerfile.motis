@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 WORKDIR /dl
 RUN curl -fsSL --retry 4 -o motis.tar.bz2 \
       "https://github.com/motis-project/motis/releases/download/${MOTIS_VERSION}/motis-linux-amd64.tar.bz2" \
-    && tar -xjf motis.tar.bz2 motis && chmod 0755 motis && ./motis --version
+    && tar -xjf motis.tar.bz2 ./motis && chmod 0755 motis && ./motis --version
 
 # Shared with Dockerfile.data (copied from here by the compose build).
 FROM scratch AS binary

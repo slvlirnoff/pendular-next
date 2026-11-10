@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { CommuteOption } from '@pendular/engine/types';
 import { useI18n } from '../i18n/index.js';
 import { chf, duration } from '../lib/format.js';
@@ -33,12 +33,13 @@ function marker(shape: string, x: number, y: number, r: number) {
 export function TradeoffChart(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string) => void }) {
   const { t, lang } = useI18n();
   const os = props.options;
+  const uid = useId();
   // The drawing follows the width of its card, so text keeps its size on a phone.
   const box = useRef<HTMLElement>(null);
   const [W, setW] = useState(960);
   useEffect(() => {
     if (!box.current) return;
-    const ro = new ResizeObserver(([e]) => e && setW(Math.max(300, Math.round(e.contentRect.width))));
+    const ro = new ResizeObserver(([e]) => e && setW(Math.max(280, Math.round(e.contentRect.width))));
     ro.observe(box.current);
     return () => ro.disconnect();
   }, [os.length < 2]);
@@ -76,23 +77,26 @@ export function TradeoffChart(props: { options: CommuteOption[]; selected: strin
 
   return (
     <section className="card chart" ref={box}>
-      <h2>{t('chart.title')}</h2>
-      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={t('chart.title')}>
+      <h2 id={`${uid}-t`}>{t('chart.title')}</h2>
+      <p id={`${uid}-d`} className="sr-only">
+        {t('chart.desc')}
+      </p>
+      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-labelledby={`${uid}-t`} aria-describedby={`${uid}-d`}>
         {yT.map((v) => (
           <g key={`y${v}`}>
             <line x1={M.l} x2={W - M.r} y1={Y(v)} y2={Y(v)} className="grid" />
-            <text x={M.l - 8} y={Y(v) + 4} textAnchor="end" className="tick">
+            <text x={M.l - 8} y={Y(v) + 4} textAnchor="end" className="tick" aria-hidden="true">
               {chf(v, lang)}
             </text>
           </g>
         ))}
         {xT.map((v) => (
-          <text key={`x${v}`} x={X(v)} y={H - M.b + 18} textAnchor="middle" className="tick">
+          <text key={`x${v}`} x={X(v)} y={H - M.b + 18} textAnchor="middle" className="tick" aria-hidden="true">
             {duration(v)}
           </text>
         ))}
         <line x1={M.l} x2={W - M.r} y1={H - M.b} y2={H - M.b} className="axis" />
-        <text x={W - M.r} y={H - 4} textAnchor="end" className="axis-title">
+        <text x={W - M.r} y={H - 4} textAnchor="end" className="axis-title" aria-hidden="true">
           {t('chart.x')}
         </text>
         {frontier.length > 1 && <polyline className="frontier" points={frontier.map((o) => `${X(o.durationMin)},${Y(o.cost.yearly)}`).join(' ')} />}
@@ -122,7 +126,7 @@ export function TradeoffChart(props: { options: CommuteOption[]; selected: strin
           );
         })}
         {placed.map((p) => (
-          <text key={p.id} x={p.x} y={p.y} textAnchor={p.anchor} className={`mark-label${p.id === props.selected ? ' is-selected' : ''}`} onClick={() => props.onSelect(p.id)}>
+          <text key={p.id} x={p.x} y={p.y} textAnchor={p.anchor} className={`mark-label${p.id === props.selected ? ' is-selected' : ''}`} aria-hidden="true" onClick={() => props.onSelect(p.id)}>
             {p.text}
           </text>
         ))}

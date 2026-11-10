@@ -24,7 +24,10 @@ export function Verdict(props: { result: CompareResult; onSelect: (id: string) =
 
   const rate = verdict.costPerHourSaved[fastest.id];
   return (
-    <section className="verdict" aria-label={t('verdict.cheapest')}>
+    <section className="verdict" aria-labelledby="verdict-h">
+      <h2 id="verdict-h" className="sr-only">
+        {t('verdict.title')}
+      </h2>
       <div className="verdict-tiles">
         {tile(t('verdict.cheapest'), cheapest, chf(cheapest.cost.yearly, lang), t('verdict.perYear'))}
         {tile(t('verdict.fastest'), fastest, duration(fastest.durationMin), t('verdict.perTrip'))}
