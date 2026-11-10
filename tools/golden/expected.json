@@ -7,13 +7,6 @@
    "cheapestProduct": "zonePassYearly",
    "zones": 7
   },
-  "parkRail": {
-   "count": 1,
-   "bestDurationMin": 64,
-   "cheapestYearly": 6608,
-   "cheapestProduct": "routePassYearly",
-   "tariffKm": 46
-  },
   "cityParkRide": {
    "count": 1,
    "bestDurationMin": 44,
@@ -186,13 +179,6 @@
    "cheapestProduct": null,
    "tariffKm": 21.9
   },
-  "bikeRide": {
-   "count": 1,
-   "bestDurationMin": 49,
-   "cheapestYearly": 2668,
-   "cheapestProduct": "routePassYearly",
-   "tariffKm": 32
-  },
   "parkRail": {
    "count": 1,
    "bestDurationMin": 31,
@@ -307,20 +293,6 @@
    "cheapestYearly": 729,
    "cheapestProduct": "zonePassYearly",
    "zones": 2
-  },
-  "bikeRide": {
-   "count": 2,
-   "bestDurationMin": 28,
-   "cheapestYearly": 896,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 2,
-   "tariffKm": 1.5
-  },
-  "cityParkRide": {
-   "count": 1,
-   "bestDurationMin": 30,
-   "cheapestYearly": 2666,
-   "cheapestProduct": "zonePassMonthly"
   },
   "car": {
    "count": 1,

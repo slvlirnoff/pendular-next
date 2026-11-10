@@ -231,12 +231,15 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       const accessMin = c.route.durationMin * factor + transferMin;
       const total = Math.round(accessMin + g.typicalMin);
       // Keep only when it improves on public transport from home in some respect.
-      if (
-        bestTransit &&
-        total >= bestTransit.typicalMin &&
-        g.changes >= bestTransit.changes &&
-        g.departures <= bestTransit.departures
-      ) {
+      // Faster than public transport from home; or about as fast (within ten minutes) with
+      // fewer changes or at least twice the departures. More departures alone do not justify
+      // a clearly slower trip that also needs a car or a bike.
+      const slower = bestTransit ? total - bestTransit.typicalMin : -1;
+      const improves =
+        !bestTransit ||
+        slower < 0 ||
+        (slower <= 10 && (g.changes < bestTransit.changes || g.departures >= 2 * bestTransit.departures));
+      if (bestTransit && !improves) {
         leftOut.push({
           kind,
           title: label,
