@@ -57,10 +57,25 @@ describe('zones', () => {
     expect(r.zones).toEqual([1]);
     expect(r.exact).toBe(true);
   });
-  it('bridges zones crossed without a stop and marks the result as not exact', () => {
+  it('adds the zones crossed without a stop, by the zone graph', () => {
     const r = zones.zonesForLegs([rail(STATION, CITY, '07:15', '07:40', 'IR 1')])!;
     expect(r.zones).toEqual([2, 3, 4]);
-    expect(r.exact).toBe(false);
+    // A rule checked against SBB's shop: the result stays certain, with a note.
+    expect(r.exact).toBe(true);
+    expect(r.notes.join(' ')).toContain('crossed without a stop');
+  });
+  it('is uncertain only when a stop has no reliable zone', () => {
+    const idx = createZoneIndex({
+      ...TABLE,
+      stops: [
+        ...TABLE.stops.map((s) => ({ ...s, gtfs: s.gtfs!.map((g) => ({ ...g, name: s.label, lat: 46.6, lon: 6.7 })) })),
+        { label: 'Farside', zones: [3], confidence: 'high' as const, gtfs: [{ stopId: '500', name: 'Farside', lat: 46.6, lon: 6.72 }] },
+      ],
+    });
+    // 300 m from drawn stops that all sit at the same place but in different zones: a guess.
+    const between = { name: 'Nowhere, croisée', stopId: '777', lat: 46.6, lon: 6.71 };
+    expect(idx.zonesOfStop(between)?.confident).toBe(false);
+    expect(idx.zonesForLegs([rail(HOME, between, '07:00', '07:10', 'R1')])!.exact).toBe(false);
   });
   it('always counts Lausanne zones 11 and 12 together', () => {
     const centre = stop('Centre', '400');
@@ -107,12 +122,11 @@ describe('priceTransit', () => {
     expect(products[0]!.yearly).toBe(Math.min(...products.map((p) => p.yearly)));
     expect(byKind.ga).toBeDefined();
   });
-  it('halves the annual pass for young Vaud residents and marks estimated zones', () => {
+  it('halves the annual pass for young Vaud residents', () => {
     const legs = [rail(STATION, CITY, '07:15', '07:40', 'IR 1')];
     const youth = priceTransit(legs, ctx({ ageGroup: 'youth' }), { zones }).find((p) => p.kind === 'zonePassYearly')!;
     expect(youth.yearly).toBe(Math.round(mobilisPass('year', 3, { category: 'junior', travelClass: 2 })! / 2));
-    expect(youth.provenance).toBe('estimated');
-    expect(youth.range!.low).toBeLessThan(youth.yearly);
+    expect(youth.provenance).toBe('tariff');
   });
   it('uses the distance tariff outside the zone table', () => {
     const products = priceTransit([rail(HOME, stop('Elsewhere', '999'), '07:00', '08:00', 'IC 1', 60)], ctx(), { zones });

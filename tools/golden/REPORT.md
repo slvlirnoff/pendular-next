@@ -1,6 +1,6 @@
 # Golden commutes report
 
-Generated 2026-11-10T15:01:42.347Z against http://127.0.0.1:8787.
+Generated 2026-11-10T15:14:47.139Z against http://127.0.0.1:8787.
 Timetable GTFS 2027, fetched 2026-11-10, tariffs Mobilis 13.12.2026; GA/Half Fare 13.12.2026; T601/T650 edition 01.06.2026, engine MOTIS 2, reference day 2027-01-19.
 
 Checks: 444 PASS, 0 WARN, 0 FAIL.
@@ -8,7 +8,7 @@ Checks: 444 PASS, 0 WARN, 0 FAIL.
 | Commute | Cheapest | Fastest | Greenest | Options | Left out |
 |---|---|---|---|---|---|
 | lucens-lausanne-gare | Lucens, centre → Lausanne, gare, 361 · m2 (2'052 CHF, 59 min) | car (13'611 CHF, 26 min) | Lucens → Lausanne, R8/R9 (2'376 CHF, 55 min), 181 kg CO2 | 4 (transit, cityParkRide, car) | 11 |
-| echallens-lausanne-flon | Echallens → Lausanne-Flon, R20/R25 (1'305 CHF, 35 min) | car (8'511 CHF, 15 min) | Echallens → Lausanne-Flon, R20/R25 (1'305 CHF, 35 min), 68 kg CO2 | 2 (transit, car) | 10 |
+| echallens-lausanne-flon | Echallens → Lausanne-Flon, R20/R25 (1'305 CHF, 35 min) | car (8'511 CHF, 15 min) | Echallens → Lausanne-Flon, R20/R25 (1'305 CHF, 35 min), 68 kg CO2 | 2 (transit, car) | 6 |
 | morges-epfl | bike (156 CHF, 26 min) | car (5'351 CHF, 8 min) | bike (156 CHF, 26 min), 17 kg CO2 | 4 (bike, ebike, transit, car) | 3 |
 | vevey-geneve | Vevey → Genève, IR90/IR95/RE33 (3'303 CHF, 74 min) | car (33'245 CHF, 51 min) | Vevey → Genève, IR90/IR95/RE33 (3'303 CHF, 74 min), 349 kg CO2 | 2 (transit, car) | 9 |
 | lausanne-bern | Lausanne → Bern, IC1/IR15 (3'375 CHF, 75 min) | car (39'574 CHF, 59 min) | Lausanne → Bern, IC1/IR15 (3'375 CHF, 75 min), 369 kg CO2 | 2 (transit, car) | 8 |
@@ -18,7 +18,7 @@ Checks: 444 PASS, 0 WARN, 0 FAIL.
 | aigle-lausanne | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min) | car (18'355 CHF, 30 min) | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min), 176 kg CO2 | 3 (transit, car) | 11 |
 | chailly-flon | walk (0 CHF, 35 min) | car (4'194 CHF, 4 min) | walk (0 CHF, 35 min), 0 kg CO2 | 5 (walk, bike, ebike, transit, car) | 10 |
 | renens-chuv | bike (125 CHF, 21 min) | car (5'261 CHF, 8 min) | bike (125 CHF, 21 min), 14 kg CO2 | 4 (bike, ebike, transit, car) | 8 |
-| bulle-fribourg | Bulle, gare routière → Fribourg, Tilleul/Cathédrale, 234 · 10 · 6 (1'953 CHF, 63 min) | car (13'770 CHF, 21 min) | Bulle → Fribourg, Tilleul/Cathédrale, R/RE2/RE3 · 123/182/2 (2'457 CHF, 56 min), 233 kg CO2 | 3 (transit, car) | 9 |
+| bulle-fribourg | Bulle, gare routière → Fribourg, Tilleul/Cathédrale, 234 · 10 · 6 (1'953 CHF, 63 min) | car (13'770 CHF, 21 min) | Bulle → Fribourg, Tilleul/Cathédrale, R/RE2/RE3 · 123/182/2 (2'457 CHF, 56 min), 233 kg CO2 | 3 (transit, car) | 6 |
 | zurich-hb-winterthur | Zürich HB → Winterthur, IC1/IR13/IR75… (1'881 CHF, 32 min) | car (11'170 CHF, 19 min) | Zürich HB → Winterthur, IC1/IR13/IR75… (1'881 CHF, 32 min), 102 kg CO2 | 3 (transit, bikeRide, car) | 9 |
 | yverdon-lausanne-youth | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (833 CHF, 37 min) | car (16'064 CHF, 24 min) | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (833 CHF, 37 min), 151 kg CO2 | 2 (transit, car) | 13 |
 | yverdon-lausanne-senior | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (1'071 CHF, 37 min) | car (16'064 CHF, 24 min) | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (1'071 CHF, 37 min), 151 kg CO2 | 2 (transit, car) | 13 |

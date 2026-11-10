@@ -31,7 +31,7 @@ export interface ZoneResult {
 
 export interface ZoneIndex {
   /** Zones a stop lies in (two or more for a stop on a border); null when unknown. */
-  zonesOfStop(stop: StopPoint): { zones: number[]; confident: boolean } | null;
+  zonesOfStop(stop: StopPoint): { zones: number[]; confident: boolean; candidates?: number[] } | null;
   /** Zones needed for the trip, or null when it is not (entirely) inside the network. */
   zonesForLegs(legs: Leg[]): ZoneResult | null;
   neighbours(zone: number): number[];
@@ -72,7 +72,9 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
       // it is named after ("Lucens"): a label equal to the stop's own name outranks everything.
       const sameName = g.name !== undefined && norm(g.name) === norm(s.label);
       const rank = (sameName ? 100 : 0) + (RANK[g.match ?? 'exact'] ?? 0) * 10 + (s.confidence === 'high' ? 2 : s.confidence === 'medium' ? 1 : 0);
-      const specific = sameName || (g.match !== 'locality' && g.match !== 'fuzzy');
+      // A village label stands for every stop of the village; that is reliable unless the
+      // village sits on a zone border.
+      const specific = sameName || (g.match !== 'fuzzy' && (g.match !== 'locality' || s.zones.length === 1));
       const entry = { zones: s.zones, confident: s.confidence !== 'low' && specific, rank };
       const prev = byId.get(k);
       if (!prev || rank > prev.rank) byId.set(k, entry);
@@ -95,8 +97,11 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
   }
   const km = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) =>
     Math.hypot((a.lat - b.lat) * 111.2, (a.lon - b.lon) * 111.2 * Math.cos((a.lat * Math.PI) / 180));
-  /** The zone most common among the nearest drawn stops, when they are close enough. */
-  function nearestZones(p: { lat: number; lon: number }, fromOutside = false): number[] | null {
+  /**
+   * The zone most common among the nearest drawn stops. Certain when a drawn stop is within
+   * a kilometre or all the nearest ones agree; otherwise a guess.
+   */
+  function nearestZones(p: { lat: number; lon: number }, fromOutside = false): { zones: number[]; confident: boolean; candidates?: number[] } | null {
     const max = fromOutside ? NEAREST_OUTSIDE_MAX_KM : NEAREST_MAX_KM;
     const near = located
       .filter((l) => !fromOutside || l.outside)
@@ -108,7 +113,11 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
     const votes = new Map<number, number>();
     for (const n of near) for (const z of n.l.zones) votes.set(z, (votes.get(z) ?? 0) + 1 / (0.2 + n.d));
     const best = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]!;
-    return [best[0]];
+    const unanimous = near.every((n) => n.l.zones.includes(best[0]));
+    // Close: a drawn stop within a kilometre, and no drawn stop about as near that says otherwise.
+    const close = near[0]!.d <= 1 && near.filter((n) => n.d <= near[0]!.d + 0.3).every((n) => n.l.zones.includes(best[0]));
+    // When unsure, remember every zone the nearby stops suggest.
+    return { zones: [best[0]], confident: unanimous || close, candidates: [...votes.keys()] };
   }
 
   const adj = new Map<number, number[]>();
@@ -122,13 +131,11 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
       if (hit) return hit;
     }
     if (outside(stop)) {
-      const shared = nearestZones(stop, true);
-      return shared ? { zones: shared, confident: false } : null;
+      return nearestZones(stop, true);
     }
     const byLabel = byName.get(norm(stop.name));
     if (byLabel) return { zones: byLabel.zones, confident: false };
-    const guess = nearestZones(stop);
-    return guess ? { zones: guess, confident: false } : null;
+    return nearestZones(stop);
   }
 
   /** Shortest chain of zones from any zone in `from` to any zone in `to`, exclusive of the ends. */
@@ -158,6 +165,8 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
     let exact = true;
     const used = new Set<number>();
     let guessed = 0;
+    /** Candidate zones of stops whose zone is not reliable. */
+    const unsure: number[][] = [];
     for (const leg of legs) {
       const stops = [leg.from, ...(leg.intermediateStops ?? []), leg.to];
       const known: { zones: number[] }[] = [];
@@ -171,10 +180,9 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
           guessed++;
           continue;
         }
-        if (!z.confident) {
-          exact = false;
-          guessed++;
-        }
+        // Zones 11 and 12 are always sold together, so which of the two a stop is in never matters.
+        const grandLausanne = z.zones.every((x) => x === 11 || x === 12);
+        if (!z.confident && !grandLausanne) unsure.push(('candidates' in z ? z.candidates : undefined) ?? z.zones);
         known.push(z);
       }
       // Walk along the leg. A stop on a border counts in the zone already in use when
@@ -204,7 +212,6 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
             notes.push('zones not connected in the zone graph');
           } else if (via.length) {
             for (const z of via) used.add(z);
-            exact = false;
             notes.push(`zones crossed without a stop, by shortest path: ${via.join(', ')}`);
           }
         }
@@ -213,6 +220,12 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
       });
     }
     if (used.size === 0) return null;
+    // An unreliable stop matters only if it could bring in a zone the trip does not already use.
+    for (const candidates of unsure) {
+      if (candidates.every((z) => used.has(z))) continue;
+      exact = false;
+      guessed++;
+    }
     if (guessed) notes.unshift(`zone of ${guessed} stop(s) not drawn on the plan taken from nearby stops`);
     // Lausanne's zones 11 and 12 ("Grand Lausanne") always go together: SBB's shop lists both
     // for any pass that reaches either (checked on Lucens – Lausanne, 10.11.2026).

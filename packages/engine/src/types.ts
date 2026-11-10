@@ -232,10 +232,12 @@ export interface RoutingProvider {
     /** 'arrive': window is on arrival at `to`; 'depart': on departure from `from`. */
     by: 'arrive' | 'depart';
     /**
-     * Leave trains out. The engine returns the fastest connections only; a bus route that is
-     * as good but crosses fewer fare zones shows up only when asked for.
+     * Ask for the other answer where two connections tie. The engine optimises departure,
+     * arrival and number of changes, and returns one connection per tie; with this flag it
+     * resolves ties differently, so merging both calls shows both routes (a bus and a train
+     * that feed the same metro, for instance).
      */
-    withoutRail?: boolean;
+    alternateTies?: boolean;
   }): Promise<Itinerary[]>;
   street(q: { from: LatLon; to: LatLon; profile: StreetProfile }): Promise<StreetRoute | null>;
   /** Many origins to one destination (or one origin to many destinations with `reverse`). */

@@ -205,7 +205,7 @@ export class MotisRouting implements RoutingProvider {
     date: string;
     window: TimeWindow;
     by: 'arrive' | 'depart';
-    withoutRail?: boolean;
+    alternateTies?: boolean;
   }): Promise<Itinerary[]> {
     const { start, end } = windowToUtc(q.date, q.window, this.o.timezone);
     const arriveBy = q.by === 'arrive';
@@ -224,7 +224,7 @@ export class MotisRouting implements RoutingProvider {
         directModes: 'WALK',
         maxItineraries: 40,
         detailedTransfers: false,
-        ...(q.withoutRail ? { transitModes: NON_RAIL_MODES } : {}),
+        ...(q.alternateTies ? { algorithm: TIE_ALGORITHM } : {}),
         ...(cursor ? { pageCursor: cursor } : {}),
       });
       let outside = 0;
@@ -305,7 +305,12 @@ export class MotisRouting implements RoutingProvider {
   }
 }
 
-const NON_RAIL_MODES = 'BUS,COACH,TRAM,SUBWAY,FERRY,FUNICULAR,AERIAL_LIFT';
+/**
+ * MOTIS has three search algorithms that give the same optimal times but pick differently
+ * between tied connections. The default one is used for every search; this one for the
+ * second look (checked on Lovatens – EPFL: default returns the train, this one the bus).
+ */
+const TIE_ALGORITHM = 'RAPTOR';
 
 /** Ratio of e-bike to plain bike cruising speed used to scale matrix times. */
 const EBIKE_MATRIX_SPEEDUP = 1.35;

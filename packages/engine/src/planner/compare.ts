@@ -166,15 +166,18 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     }
     return its;
   };
-  const transitTo = (from: LatLon & { name?: string }, window: TimeWindow = req.arrival, withoutRail = false) =>
+  const transitTo = (from: LatLon & { name?: string }, window: TimeWindow = req.arrival, alternateTies = false) =>
     safe(
-      routing.transit({ from, to: req.work, date, window, by: 'arrive', withoutRail }).then((its) => relabel(its, from.name, work.name)),
+      routing.transit({ from, to: req.work, date, window, by: 'arrive', alternateTies }).then((its) => relabel(its, from.name, work.name)),
       [] as Itinerary[],
     );
-  /** From home, also without trains: the cheaper route is not always among the fastest. */
+  /**
+   * From home the search runs twice, the second time resolving ties the other way: two routes
+   * with the same times and changes can differ in price, and only one of them comes back per call.
+   */
   const transitFromHome = async () => {
-    const [fastest, busOnly] = await Promise.all([transitTo(home), transitTo(home, req.arrival, true)]);
-    return [...fastest, ...busOnly];
+    const [first, second] = await Promise.all([transitTo(home), transitTo(home, req.arrival, true)]);
+    return [...first, ...second];
   };
   const street = (profile: StreetProfile) => safe(routing.street({ from: req.home, to: req.work, profile }), null);
 
