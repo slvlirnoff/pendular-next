@@ -10,6 +10,13 @@ Prices on sbb.ch are those valid on the day of the check; Pendular uses the grid
 | 2026-11-10 | Lucens → Lausanne | direct (train R8/R9) | 9: 11, 12, 19, 60, 61, 62, 63, 64, 103 | CHF 2313 | 9 | CHF 2376 |
 | 2026-11-10 | Lucens → Lausanne, validity from 04.01.2027 | via Epalinges, Croisettes | 7 | CHF 2052 | 7 | CHF 2052 |
 | 2026-11-10 | Lucens → Lausanne, validity from 04.01.2027 | direct | 9 | CHF 2376 | 9 | CHF 2376 |
+| 2026-11-10 | Echallens → Lausanne, Flon, validity from 04.01.2027 | direct (LEB) | 4: 11, 12, 16, 50 | CHF 1305 | 4 | CHF 1305 |
+| 2026-11-10 | Chapelle-sur-Moudon, poste → Lausanne, validity from 04.01.2027 | via Epalinges, Croisettes (bus 435 + m2) | 5: 11, 12, 18, 57, 58 | CHF 1575 | 5 | CHF 1575 |
+
+For Chapelle-sur-Moudon SBB also offers 6 zones via Sugnens or Poliez-Pittet (CHF 1827), 8 zones via
+Thierrens – Bercher – Lausanne, Flon (CHF 2232), 10 zones via Thierrens – Moudon (CHF 2475) and
+11 zones with a connecting ticket for zone 71 (CHF 2547). FlexiAbo 100 days: from CHF 725
+(Echallens) and CHF 875 (Chapelle), equal to the grid's 4- and 5-zone prices.
 
 With a validity date in the 2027 tariff year the prices agree to the franc; SBB also shows all
 zones at CHF 2583 and FlexiAbo 100 days from CHF 1140, both equal to the grid used by Pendular.

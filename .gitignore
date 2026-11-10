@@ -8,3 +8,4 @@ data/motis/input/
 *.log
 .env
 data/build/
+*.whl
