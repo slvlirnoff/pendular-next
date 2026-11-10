@@ -357,7 +357,10 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       if (!returnCache.has(key)) {
         returnCache.set(key, safe(routing.transit({ from: req.work, to: target, date, window: rules.returnWindow, by: 'depart' }), []));
       }
-      const back = (await returnCache.get(key)!).filter((it) => it.legs.some(isTransit));
+      // A "trip home" that waits for the first bus of the next morning is not a trip home:
+      // keep only connections of a duration comparable with the morning trip.
+      const longest = o.durationMin * 2 + 30;
+      const back = (await returnCache.get(key)!).filter((it) => it.legs.some(isTransit) && it.durationMin <= longest);
       o.returnTrips = back.length
         ? { first: localHHMM(back[0]!.departure, tz), last: localHHMM(back[back.length - 1]!.departure, tz), count: back.length }
         : null;
