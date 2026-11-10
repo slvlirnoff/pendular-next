@@ -43,7 +43,7 @@ def main(markers_p, gtfs_p, modes_p, out):
         if not (LAT[0] <= lat <= LAT[1] and LON[0] <= lon <= LON[1]): continue
         name = s['stop_name']; town = name.split(', ')[0] if ', ' in name else name
         mt = modes.get(s['stop_id'], {})
-        st.append(dict(stopId=s['didok'], gtfsId=s['stop_id'], name=name, lat=lat, lon=lon, nn=norm(name), nt=norm(town), rail=railish(mt), served=bool(mt)))
+        st.append(dict(stopId=s['didok'], gtfsId=s['stop_id'], name=name, lat=lat, lon=lon, nn=norm(name), nt=norm(town), rail=railish(mt), bus=any(t[0] in '78' or t == '900' for t in mt), served=bool(mt)))
     print('stations in bbox', len(st), 'served', sum(s['served'] for s in st), 'rail', sum(s['rail'] for s in st))
     by_full = collections.defaultdict(list); by_town = collections.defaultdict(list); by_raw = collections.defaultdict(list); by_part = collections.defaultdict(list); by_full2 = collections.defaultdict(list)
     for s in st:
@@ -54,59 +54,117 @@ def main(markers_p, gtfs_p, modes_p, out):
             for k in town_keys(s['name']): by_full2[k].append(s)
         if ', ' in s['name']: by_part[norm(s['name'].split(', ', 1)[1])].append(s)
     names = [s['nn'] for s in st]
-    def cand(s, match, score): return dict(stopId=s['stopId'], gtfsId=s['gtfsId'], name=s['name'], lat=s['lat'], lon=s['lon'], match=match, score=round(score, 3), rail=s['rail'], served=s['served'])
-    def lookup(text, kind):
-        """returns list of candidate dicts for one text variant"""
-        res = []
-        if text in by_raw: res = [cand(s, 'exact', 1.0) for s in by_raw[text]]
-        if not res:
-            n = norm(text)
-            if n in by_full: res = [cand(s, 'normalised', 0.97) for s in by_full[n]]
-            if not res and n in by_full2: res = [cand(s, 'normalised', 0.95) for s in by_full2[n]]   # differs only by canton tag / parenthesis, e.g. Renens -> 'Renens VD'
-            if not res and n in by_town:
-                ss = sorted(by_town[n], key=lambda s: (not (s['rail'] if kind == 'rail' else True), ', ' in s['name'], pref_rank(s['name']), len(s['name'])))
-                if kind == 'rail' and any(s['rail'] for s in ss): ss = [s for s in ss if s['rail']]
-                res = [dict(cand(s, 'locality', 0.75 if len(ss) == 1 else 0.6), via='town') for s in ss[:10]]
-            if not res and n in by_part:
-                ss = sorted(by_part[n], key=lambda s: (not (s['rail'] if kind == 'rail' else True), len(s['name'])))
-                res = [dict(cand(s, 'locality', 0.7 if len(ss) == 1 else 0.55), via='stop-part') for s in ss[:10]]
-            if not res:
-                hits = process.extract(n, names, scorer=fuzz.ratio, limit=5, score_cutoff=86)
-                if hits:
-                    top = hits[0][1]
-                    res = [cand(st[i], 'fuzzy', sc / 100) for _, sc, i in hits if sc >= top - 1.5]
-        if kind == 'rail':
-            r = [c for c in res if c['rail']]
-            if r: res = r
-        else:
-            # bus marker: prefer stations that are actually served
-            r = [c for c in res if c['served']]
-            if r and modes: res = r
+    def cand(s, match, score): return dict(stopId=s['stopId'], gtfsId=s['gtfsId'], name=s['name'], lat=s['lat'], lon=s['lon'], match=match, score=round(score, 3), rail=s['rail'], bus=s['bus'], served=s['served'])
+    TIER = {'exact': 4, 'normalised': 3, 'locality': 2, 'fuzzy': 1}
+    def okkind(c, kind):
+        return c['rail'] if kind == 'rail' else (c['bus'] if c['served'] else False)
+    def tiers(text, kind, excl):
+        """candidate lists per tier, best tier first. Whole-name equality only for exact/normalised."""
+        n = norm(text); out = []
+        ok = lambda s: s['stopId'] not in excl
+        r = [cand(s, 'exact', 1.0) for s in by_raw.get(text, []) if ok(s)]
+        if r: out.append(r)
+        r = [cand(s, 'normalised', 0.97) for s in by_full.get(n, []) if ok(s) and s['name'] != text]
+        if r: out.append(r)
+        # differs only by canton tag / parenthesis from the whole name, e.g. Renens -> 'Renens VD'
+        r = [cand(s, 'normalised', 0.95) for s in by_full2.get(n, []) if ok(s) and s['nn'] != n]
+        if r: out.append(r)
+        # 'Locality, stop' names: label equals the locality part
+        ss = [s for s in by_town.get(n, []) if ', ' in s['name'] and ok(s)]
+        ss.sort(key=lambda s: (not (s['rail'] if kind == 'rail' else s['bus']), pref_rank(s['name']), len(s['name'])))
+        if kind == 'rail' and any(s['rail'] for s in ss): ss = [s for s in ss if s['rail']]
+        if ss: out.append([dict(cand(s, 'locality', 0.75 if len(ss) == 1 else 0.6), via='town') for s in ss[:10]])
+        # label equals the stop part of 'Town, Stop'
+        ss = [s for s in by_part.get(n, []) if ok(s)]
+        ss.sort(key=lambda s: (not (s['rail'] if kind == 'rail' else s['bus']), len(s['name'])))
+        if ss: out.append([dict(cand(s, 'locality', 0.7 if len(ss) == 1 else 0.55), via='stop-part') for s in ss[:10]])
+        hits = [(sc, i) for _, sc, i in process.extract(n, names, scorer=fuzz.ratio, limit=5, score_cutoff=86) if ok(st[i])]
+        if hits:
+            top = hits[0][0]; out.append([cand(st[i], 'fuzzy', sc / 100) for sc, i in hits if sc >= top - 1.5])
+        return out
+    def lookup(text, kind, excl=frozenset()):
+        ts = tiers(text, kind, excl)
+        if not ts: return []
+        # first tier that offers a station of the right kind (rail marker: railway station; bus marker: bus-served stop)
+        for t in ts:
+            r = [c for c in t if okkind(c, kind)]
+            if r: return r
+        return ts[0]
+    def variants_for(m):
+        l = L[m['label']]
+        v = [(l['text'], 1.0)]
+        if l.get('canton'): v.insert(0, (l['text'] + ' ' + l['canton'], 1.0))
+        return v
+    def line_variants(m):
+        """lines of a stacked label that are complete words (not hyphen-split), used only as weak locality hints"""
+        l = L[m['label']]; ls = l['lines']; res = []
+        if len(ls) > 1:
+            for i, t in enumerate(ls):
+                if len(t) <= 3 or t.endswith('-') or (i > 0 and ls[i - 1].endswith('-')) or t.endswith(','): continue
+                res.append(t)
         return res
+    def resolve(m, excl):
+        best = []; used = None; bs = -1
+        for t, f in variants_for(m):
+            r = lookup(t, m['kind'], excl)
+            if not r: continue
+            sc = TIER[r[0]['match']] * f
+            if sc > bs: best, bs, used = r, sc, t
+        if not best:
+            # weak fallback: whole lines of the label, never better than locality, never an exact/normalised claim
+            for t in line_variants(m):
+                ts = [x for x in tiers(t, m['kind'], excl)]
+                ts = [[dict(c, match='locality', score=min(c['score'], 0.6), via='label-line') for c in x] for x in ts]
+                for x in ts:
+                    r = [c for c in x if okkind(c, m['kind'])] or x
+                    if r: best, used = r[:10], t; break
+                if best: break
+        seen = set(); cands = []
+        for c in best:
+            if c['stopId'] in seen: continue
+            seen.add(c['stopId']); cands.append(c)
+        return cands, (used if best else None)
     out_m = []
     for m in M:
         o = dict(m)
-        if 'label' in m:
-            l = L[m['label']]
-            variants = [(l['text'], 1.0)]
-            if l.get('canton'): variants.insert(0, (l['text'] + ' ' + l['canton'], 1.0))
-            if len(l['lines']) > 1: variants += [(t, 0.9) for t in l['lines'] if len(t) > 3]
-            rank = {'exact': 4, 'normalised': 3, 'locality': 2, 'fuzzy': 1}
-            best = []; bs = -1
-            for t, f in variants:
-                r = lookup(t, m['kind'])
-                if not r: continue
-                s = rank[r[0]['match']] * f
-                if s > bs: best, bs = r, s; used = t
-            # dedupe
-            seen = set(); cands = []
-            for c in best:
-                if c['stopId'] in seen: continue
-                seen.add(c['stopId']); cands.append(c)
-            o['cands'] = cands; o['label_used'] = used if best else None
+        if 'label' in m: o['cands'], o['label_used'] = resolve(m, frozenset())
         out_m.append(o)
-    json.dump(dict(markers=out_m, labels=L, stations=len(st), border_hist=D['border_hist']), open(out, 'w'))
+    # each station may be claimed by only one marker with a specific (exact/normalised) match
+    def specific(o): return o.get('cands') and o['cands'][0]['match'] in ('exact', 'normalised')
+    def strength(o):
+        c = o['cands'][0]; l = L[o['label']]
+        return (TIER[c['match']], c['score'], okkind(c, o['kind']), norm(l['text']) == norm(c['name']), -o['label_dist'])
+    excl = collections.defaultdict(set); demoted = []
+    for it in range(8):
+        claims = collections.defaultdict(list)
+        for i, o in enumerate(out_m):
+            if specific(o):
+                for c in o['cands']:
+                    if c['match'] in ('exact', 'normalised'): claims[c['stopId']].append(i)
+        conf = {sid: v for sid, v in claims.items() if len(v) > 1}
+        if not conf: break
+        for sid, v in conf.items():
+            v.sort(key=lambda i: strength(out_m[i]), reverse=True)
+            for i in v[1:]:
+                excl[i].add(sid); demoted.append((i, sid))
+        for i in {i for v in conf.values() for i in v[1:]}:
+            o = out_m[i]; o['cands'], o['label_used'] = resolve(o, frozenset(excl[i]))
+            # same-name duplicate: keep the station as a (weaker) locality candidate instead of losing it
+            for sid in excl[i]:
+                s_ = next(x for x in st if x['stopId'] == sid)
+                if norm(L[o['label']]['text']) == s_['nn'] and not any(c['stopId'] == sid for c in o['cands']):
+                    o['cands'] = o['cands'] + [dict(cand(s_, 'locality', 0.5), via='duplicate-marker')] if o['cands'] and o['cands'][0]['match'] in ('exact','normalised','locality') else [dict(cand(s_, 'locality', 0.5), via='duplicate-marker')] + o['cands']
+    remaining = []
+    claims = collections.defaultdict(list)
+    for i, o in enumerate(out_m):
+        if specific(o):
+            for c in o['cands']:
+                if c['match'] in ('exact', 'normalised'): claims[c['stopId']].append(i)
+    for sid, v in claims.items():
+        if len(v) > 1: remaining.append(dict(stopId=sid, labels=[L[out_m[i]['label']]['text'] for i in v]))
+    conflicts = dict(demoted=[dict(stopId=sid, label=L[out_m[i]['label']]['text'], kind=out_m[i]['kind'], zones=out_m[i]['zones']) for i, sid in demoted], remaining=remaining)
+    json.dump(dict(markers=out_m, labels=L, conflicts=conflicts, stations=len(st), border_hist=D['border_hist']), open(out, 'w'))
     c = collections.Counter((m['cands'][0]['match'] if m.get('cands') else ('nomatch' if 'label' in m else 'nolabel')) for m in out_m)
-    print(c)
+    print(c); print('demoted', len(demoted), 'remaining conflicts', len(remaining))
 
 main(*sys.argv[1:5])

@@ -32,3 +32,13 @@ Tables in T601 and T650 are images in the PDFs; they were transcribed by reading
 - Image transcription (only consistency-checked, no second source).
 - Half-fare minimum 2.20/2.60 applied to all short trips by `distanceSingle` (T601 11.2.1 wording).
 - Senior GA/Halbtax mapped from AgeGroup 'senior' (AHV age); the 25-year tier is exposed separately as `gaYearly25`.
+
+## Second pass (2026-11-10)
+Independent re-read of both tables, done before looking at the JSON values. Both tables are embedded raster images (T601 page 35, 607x690 px; T650 page 12, 564x1021 px), so text extraction was not possible. The images were extracted at native resolution (`pdfimages -png`), upscaled 3-4x and cropped into strips of about 10 rows; every cell was transcribed by eye into `data/raw/tariffs/second-pass/` (git-ignored), then diffed programmatically against `previous.distanceSingle` and `previous.routePass`.
+
+- T601 `distanceSingle`: 93 rows x (kmFrom, kmTo, 2nd, 1st) compared. Corrections needed: none.
+- T650 `routePass`: 53 rows x (kmFrom, kmTo, 6 price columns) compared. Corrections needed: none.
+- Total 796 cells compared, 0 mismatches, 0 cells unverified.
+- Source-logic checks re-run on my transcription: bands contiguous from 1 km, prices non-decreasing in every column, T650 year = 9 x month in all 53 rows (adult 2nd, adult 1st, junior), T601 1st/2nd ratio within 1.6-1.75 on all rows.
+- Validity printed: T650 table headed "Gültig ab 10.12.2023" (4.2.1); the T601 table image carries no validity date, only the footer "Gen 5005 rst20230424" (document edition 01.06.2026).
+- Observation: the T601 image table ends at 981-1000 km; the return-trip columns ('<=>') were not transcribed because they are not stored.

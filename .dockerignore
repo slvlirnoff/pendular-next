@@ -1,0 +1,13 @@
+# Keep build contexts small: raw/built data and the MOTIS binary never go into an image.
+**/node_modules
+**/dist
+**/.vite
+**/*.log
+.env
+.env.*
+data/raw
+data/build
+data/motis/bin
+data/motis/data
+data/motis/input
+deploy/.env
