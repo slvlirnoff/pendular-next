@@ -47,3 +47,9 @@ Lessons:
   or as an "abo modulable" (route pass plus the zones of Lausanne). The modulable pass is not
   modelled yet.
 - Last trip home on 04.01.2027: bus 475 from Lucens at 19:19, Lovatens 19:32.
+
+## Cross-border zones (10.11.2026, validity from 04.01.2027)
+
+| Trip | SBB offer | SBB price | Pendular |
+| --- | --- | --- | --- |
+| Estavayer-le-Lac → Yverdon-les-Bains | Mobilis, 6 zones via direct (40, 54, 106, 107, 108, 109) | CHF 1827 | 6 zones, CHF 1827 (S30/S31; zones 54 and 109 crossed without a stop) |

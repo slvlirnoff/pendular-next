@@ -83,6 +83,7 @@ export const fr = {
   'product.flexiPass': 'FlexiAbo (100 jours)',
   'product.zonePassMonthly': 'Abonnement mensuel de zones',
   'product.zonePassYearly': 'Abonnement annuel de zones',
+  'product.zonePassAllYearly': 'Abonnement annuel toutes zones Mobilis',
   'product.routePassMonthly': 'Abonnement de parcours mensuel',
   'product.routePassYearly': 'Abonnement de parcours annuel',
   'product.ga': 'AG',

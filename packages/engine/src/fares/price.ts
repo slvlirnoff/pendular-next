@@ -137,6 +137,17 @@ function mobilisProducts(n: number, exact: boolean, ctx: FareContext, notes: str
     1,
     false,
   );
+  // The pass for the whole network: rarely the cheapest for one commute, but it shows what
+  // unlimited travel in the canton costs next to the pass for this trip.
+  const all = mobilisPass('year', 'all', { category, travelClass: cls });
+  const own = mobilisPass('year', z, { category, travelClass: cls });
+  if (all != null && own != null && all > own) {
+    out.push(
+      product('zonePassAllYearly', [
+        { key: discount < 1 ? 'mobilis.year.all.vaudDiscount' : 'mobilis.year.all', yearly: all * discount, provenance: 'tariff', source: src },
+      ]),
+    );
+  }
   return out.filter((p): p is PricedProduct => p !== null);
 }
 

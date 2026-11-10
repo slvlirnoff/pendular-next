@@ -84,6 +84,7 @@ export const de: Dict = {
   'product.flexiPass': 'FlexiAbo (100 Tage)',
   'product.zonePassMonthly': 'Zonen-Monatsabo',
   'product.zonePassYearly': 'Zonen-Jahresabo',
+  'product.zonePassAllYearly': 'Jahresabo alle Mobilis-Zonen',
   'product.routePassMonthly': 'Streckenabonnement monatlich',
   'product.routePassYearly': 'Streckenabonnement jährlich',
   'product.ga': 'GA',

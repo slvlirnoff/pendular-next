@@ -267,6 +267,7 @@ export type ProductKind =
   | 'flexiPass'
   | 'zonePassMonthly'
   | 'zonePassYearly'
+  | 'zonePassAllYearly'
   | 'routePassMonthly'
   | 'routePassYearly'
   | 'ga';
