@@ -168,6 +168,9 @@ function fakeRouting(): RoutingProvider {
     async streetMatrix(q) {
       return q.points.map(() => ({ durationMin: q.profile === 'car' ? 8 : 15, distanceM: 6000 }));
     },
+    async lastTrip() {
+      return trip(rail(CITY, HOME, '22:35', '23:15', 'R1'));
+    },
     async versions() {
       return { timetable: 'test' };
     },
@@ -215,7 +218,7 @@ describe('compare', () => {
     // Cheapest parking: the yearly pass (500) beats 12 × 60 and 235 × 5.
     expect(pr.cost.extras.find((e) => e.key === 'parking.year')!.yearly).toBe(500);
     expect(pr.cost.extras.some((e) => e.key === 'car.distance')).toBe(true);
-    expect(pr.returnTrips).toEqual({ first: '17:05', last: '22:35', lastArrival: '23:15', count: 2 });
+    expect(pr.returnTrips).toEqual({ last: '22:35', lastArrival: '23:15' });
 
     const car = r.options.find((o) => o.kind === 'car')!;
     expect(car.cost.yearly).toBe(Math.round(30 * 470 * 0.74) + 260 * 12);

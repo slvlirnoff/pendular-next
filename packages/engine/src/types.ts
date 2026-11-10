@@ -124,8 +124,11 @@ export interface RuleSet {
   maxOptionsPerKind: number;
   /** Size of the arrival slices used by the "only way to arrive at that time" rule, minutes. */
   arrivalSliceMin: number;
-  /** Departure window home used for the first/last return trip. */
-  returnWindow: TimeWindow;
+  /**
+   * The last trip home is the latest connection arriving by this time, "HH:MM"; a time before
+   * noon is on the following day.
+   */
+  lastTripHomeBy: string;
   /** TCS reference values, CHF per km. */
   carFullCostPerKm: number;
   carRunningCostPerKm: number;
@@ -250,6 +253,11 @@ export interface RoutingProvider {
     maxMin: number;
   }): Promise<(StreetRoute | null)[]>;
   /**
+   * The latest door-to-door connection arriving by `time` ("YYYY-MM-DD", "HH:MM"): one search,
+   * where a whole evening of departures would be many times the work.
+   */
+  lastTrip?(q: { from: LatLon; to: LatLon; date: string; time: string }): Promise<Itinerary | null>;
+  /**
    * Public transport time from every stop to `to`, arriving by `time` on `date` (one call for
    * the whole network). Used to choose which stations are worth a full search.
    */
@@ -339,11 +347,8 @@ export interface CommuteOption {
   departuresInWindow?: number;
   firstArrival?: string;
   lastArrival?: string;
-  /**
-   * First and last trip home in the return window: "HH:MM" departures from work, and when the
-   * last one arrives.
-   */
-  returnTrips?: { first: string; last: string; lastArrival: string; count: number } | null;
+  /** The last trip home: its departure from work and its arrival, "HH:MM". Null when there is none. */
+  returnTrips?: { last: string; lastArrival: string } | null;
   /** Kilometres per one-way trip by leg mode. */
   kmByMode: Partial<Record<LegMode, number>>;
   cost: OptionCost;

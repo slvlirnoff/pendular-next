@@ -27,7 +27,7 @@ export const PENDULAR_RULES: RuleSet = {
   accessCandidates: 4,
   maxOptionsPerKind: 3,
   arrivalSliceMin: 30,
-  returnWindow: { from: '16:00', to: '23:59' },
+  lastTripHomeBy: '02:00',
   carFullCostPerKm: 0.74,
   carRunningCostPerKm: 0.276,
   // Rounded from the model in data/factors/BIKE-COST-SOURCES.md (3,520 km a year):

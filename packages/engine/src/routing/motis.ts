@@ -301,6 +301,23 @@ export class MotisRouting implements RoutingProvider {
     return out;
   }
 
+  async lastTrip(q: { from: LatLon; to: LatLon; date: string; time: string }): Promise<Itinerary | null> {
+    // Not a timetable view: "arrive by T" alone returns the connections that leave last.
+    const res = await this.get<MotisPlanResponse>('/api/v6/plan', {
+      fromPlace: place(q.from),
+      toPlace: place(q.to),
+      time: localToUtc(q.date, q.time, this.o.timezone).toISOString(),
+      arriveBy: true,
+      timetableView: false,
+      directModes: 'WALK',
+      detailedTransfers: false,
+    });
+    const its = (res.itineraries ?? []).filter((it) => it.legs.some((l) => !['WALK', 'BIKE', 'CAR'].includes(l.mode)));
+    if (its.length === 0) return null;
+    const last = its.reduce((a, b) => (b.startTime > a.startTime ? b : a));
+    return this.toItinerary(last);
+  }
+
   async reachability(q: { to: LatLon; date: string; time: string; maxMin: number }): Promise<ReachableStop[]> {
     const res = await this.get<{ all?: { place?: MotisPlace; duration?: number }[] }>('/api/v6/one-to-all', {
       one: place(q.to),

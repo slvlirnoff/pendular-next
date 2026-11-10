@@ -72,6 +72,12 @@ const ACCESS_MIN_SAVING = 5;
 
 const isTransit = (l: Leg) => (TRANSIT_MODES as readonly string[]).includes(l.mode);
 
+function nextDay(date: string): string {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 function haversineKm(a: LatLon, b: LatLon): number {
   const R = 6371.0088;
   const r = (d: number) => (d * Math.PI) / 180;
@@ -204,13 +210,15 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     bike: crow > (rules.bikeAllWayMaxMin / 60) * 25,
     ebike: crow > (rules.ebikeAllWayMaxMin / 60) * 30,
   };
-  // Trips home are searched once per place the traveller returns to. The search to the home
-  // itself is needed whenever public transport is in play: start it with the first round.
-  const returnCache = new Map<string, Promise<Itinerary[]>>();
+  // The last trip home is searched once per place the traveller returns to. The search to the
+  // home itself is needed whenever public transport is in play: start it with the first round.
+  const [hh] = rules.lastTripHomeBy.split(':').map(Number) as [number];
+  const lastBy = { date: hh < 12 ? nextDay(date) : date, time: rules.lastTripHomeBy };
+  const returnCache = new Map<string, Promise<Itinerary | null>>();
   const returnTo = (target: LatLon) => {
     const key = `${target.lat},${target.lon}`;
     if (!returnCache.has(key)) {
-      returnCache.set(key, safe(routing.transit({ from: req.work, to: target, date, window: rules.returnWindow, by: 'depart' }), []));
+      returnCache.set(key, routing.lastTrip ? safe(routing.lastTrip({ from: req.work, to: target, ...lastBy }), null) : Promise.resolve(null));
     }
     return returnCache.get(key)!;
   };
@@ -469,15 +477,11 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       // A "trip home" that waits for the first bus of the next morning is not a trip home:
       // keep only connections of a duration comparable with the morning trip.
       const longest = o.durationMin * 2 + 30;
-      const back = (await returnTo(target)).filter((it) => it.legs.some(isTransit) && it.durationMin <= longest);
-      o.returnTrips = back.length
-        ? {
-            first: localHHMM(back[0]!.departure, tz),
-            last: localHHMM(back[back.length - 1]!.departure, tz),
-            lastArrival: localHHMM(back[back.length - 1]!.arrival, tz),
-            count: back.length,
-          }
-        : null;
+      const back = await returnTo(target);
+      o.returnTrips =
+        back && back.durationMin <= longest
+          ? { last: localHHMM(back.departure, tz), lastArrival: localHHMM(back.arrival, tz) }
+          : null;
     }),
   );
 
