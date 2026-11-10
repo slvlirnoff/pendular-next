@@ -11,6 +11,7 @@ export function Verdict(props: { result: CompareResult; onSelect: (id: string) =
   const fastest = byId(verdict.fastest);
   const greenest = byId(verdict.greenest);
   if (!cheapest || !fastest || !greenest) return null;
+  const car = options.find((o) => o.kind === 'car');
 
   const tile = (label: string, o: CommuteOption, figure: string, unit: string) => (
     <button type="button" className="verdict-tile" onClick={() => props.onSelect(o.id)}>
@@ -34,6 +35,9 @@ export function Verdict(props: { result: CompareResult; onSelect: (id: string) =
           month: chf(cheapest.cost.yearly / 12, lang),
           time: duration(cheapest.durationMin),
         })}
+        {car && car.id !== cheapest.id && car.cost.yearly - cheapest.cost.yearly >= 100 && (
+          <span className="answer-more"> {t('answer.vsCar', { chf: chf(car.cost.yearly - cheapest.cost.yearly, lang) })}</span>
+        )}
       </p>
       <div className="verdict-tiles">
         {tile(t('verdict.cheapest'), cheapest, chf(cheapest.cost.yearly, lang), t('verdict.perYear'))}

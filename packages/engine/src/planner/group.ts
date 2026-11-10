@@ -20,11 +20,17 @@ export interface RouteGroup {
   arrivals: string[];
 }
 
+/**
+ * One route = the same kinds of vehicle in the same order between the same first and last stop.
+ * Where the change happens (Lucens or Moudon for the same two buses) and which of two
+ * alternating lines runs (R8 or R9) do not make it another route for a commuter.
+ */
 export function signature(it: Itinerary): string {
-  return it.legs
-    .filter(isTransit)
-    .map((l) => `${l.mode}@${l.from.stopId ?? l.from.name}>${l.to.stopId ?? l.to.name}`)
-    .join('|');
+  const legs = it.legs.filter(isTransit);
+  if (legs.length === 0) return '';
+  const first = legs[0]!.from;
+  const last = legs[legs.length - 1]!.to;
+  return `${legs.map((l) => l.mode).join('>')}@${first.stopId ?? first.name}>${last.stopId ?? last.name}`;
 }
 
 /** "Lucens → Lausanne, R8/R9": the lines of all connections of the route, leg by leg. */

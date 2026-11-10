@@ -254,3 +254,5 @@ details.chart:not([open]) { padding: 12px 0; }
   .verdict-tile .figure { font-size: 18px; grid-column: 2; grid-row: 1 / span 2; align-self: center; text-align: right; }
   .verdict-tile .verdict-name { grid-column: 1; }
 }
+
+.answer-more { font-weight: 400; color: var(--text-muted); }

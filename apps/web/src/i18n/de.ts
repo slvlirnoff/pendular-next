@@ -202,4 +202,5 @@ export const de: Dict = {
   'form.summary': '{home} → {work}',
   'method.link': 'Methode, Quellen und Grenzen',
   'opt.lastHomeShort': 'letzte Heimfahrt um {last}',
+  'answer.vsCar': 'Das sind {chf} pro Jahr weniger als mit dem Auto.',
 };

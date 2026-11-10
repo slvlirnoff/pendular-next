@@ -61,6 +61,9 @@ export interface EngineDeps {
   now?: () => Date;
 }
 
+/** Minutes a car or bike access must save on public transport from home to be shown. */
+const ACCESS_MIN_SAVING = 5;
+
 const isTransit = (l: Leg) => (TRANSIT_MODES as readonly string[]).includes(l.mode);
 
 function haversineKm(a: LatLon, b: LatLon): number {
@@ -163,11 +166,16 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     }
     return its;
   };
-  const transitTo = (from: LatLon & { name?: string }, window: TimeWindow = req.arrival) =>
+  const transitTo = (from: LatLon & { name?: string }, window: TimeWindow = req.arrival, withoutRail = false) =>
     safe(
-      routing.transit({ from, to: req.work, date, window, by: 'arrive' }).then((its) => relabel(its, from.name, work.name)),
+      routing.transit({ from, to: req.work, date, window, by: 'arrive', withoutRail }).then((its) => relabel(its, from.name, work.name)),
       [] as Itinerary[],
     );
+  /** From home, also without trains: the cheaper route is not always among the fastest. */
+  const transitFromHome = async () => {
+    const [fastest, busOnly] = await Promise.all([transitTo(home), transitTo(home, req.arrival, true)]);
+    return [...fastest, ...busOnly];
+  };
   const street = (profile: StreetProfile) => safe(routing.street({ from: req.home, to: req.work, profile }), null);
 
   // --- 1. Everything that does not depend on anything else, in parallel -----------------------
@@ -177,7 +185,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const cityCand = want('cityParkRide') ? deps.cityParkRide.filter((s) => haversineKm(req.work, s) <= 8) : [];
 
   const [direct, car, bike, ebike, walk, prDrive, cityDrive, brRide] = await Promise.all([
-    want('transit') || prCand.length || brCand.length ? transitTo(home) : Promise.resolve([] as Itinerary[]),
+    want('transit') || prCand.length || brCand.length ? transitFromHome() : Promise.resolve([] as Itinerary[]),
     street('car'),
     want('bike') ? street('bike') : Promise.resolve(null),
     want('ebike') ? street('ebike') : Promise.resolve(null),
@@ -197,7 +205,6 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       drafts.push({ kind: 'transit', title: g.title, itinerary: g.typical, durationMin: g.typicalMin, changes: g.changes, group: g });
     }
   }
-  const bestTransit = [...transitGroups].sort((a, b) => a.typicalMin - b.typicalMin)[0];
 
   // --- 3. Access options: drive or ride to a station, then public transport -------------------
   const window = req.arrival;
@@ -231,25 +238,6 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       const accessMin = c.route.durationMin * factor + transferMin;
       const total = Math.round(accessMin + g.typicalMin);
       // Keep only when it improves on public transport from home in some respect.
-      // Faster than public transport from home; or about as fast (within ten minutes) with
-      // fewer changes or at least twice the departures. More departures alone do not justify
-      // a clearly slower trip that also needs a car or a bike.
-      const slower = bestTransit ? total - bestTransit.typicalMin : -1;
-      const improves =
-        !bestTransit ||
-        slower < 0 ||
-        (slower <= 10 && (g.changes < bestTransit.changes || g.departures >= 2 * bestTransit.departures));
-      if (bestTransit && !improves) {
-        leftOut.push({
-          kind,
-          title: label,
-          code: 'noBetterThanTransit',
-          against: bestTransit.title,
-          delta: { minutes: total - bestTransit.typicalMin },
-          durationMin: total,
-        });
-        return;
-      }
       const boardAt = new Date(new Date(g.typical.departure).getTime());
       const accessLeg = streetLeg(legMode, home, { ...c.site, name: c.site.name }, { ...c.route, durationMin: c.route.durationMin * factor }, boardAt, 0);
       // The access leg ends `transferMin` before the first departure.
@@ -354,6 +342,30 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const carOption = options.find((o) => o.kind === 'car');
   for (const o of options) {
     if (carOption && o !== carOption) o.co2SavedKgPerYear = carOption.co2KgPerYear - o.co2KgPerYear;
+  }
+
+  // --- 5b. A car or a bike to the station has to earn its place -------------------------------
+  // Kept only when it saves at least five minutes on the fastest public transport from home,
+  // or costs less than the cheapest one.
+  const pt = options.filter((o) => o.kind === 'transit');
+  if (pt.length) {
+    const fastestPt = pt.reduce((a, b) => (b.durationMin < a.durationMin ? b : a));
+    const cheapestPt = pt.reduce((a, b) => (b.cost.yearly < a.cost.yearly ? b : a));
+    for (let i = options.length - 1; i >= 0; i--) {
+      const o = options[i]!;
+      if (o.kind !== 'parkRail' && o.kind !== 'cityParkRide' && o.kind !== 'bikeRide') continue;
+      if (o.durationMin <= fastestPt.durationMin - ACCESS_MIN_SAVING || o.cost.yearly < cheapestPt.cost.yearly) continue;
+      options.splice(i, 1);
+      leftOut.push({
+        kind: o.kind,
+        title: o.access?.name ?? o.title,
+        code: 'noBetterThanTransit',
+        against: fastestPt.title,
+        delta: { minutes: o.durationMin - fastestPt.durationMin, chfPerYear: o.cost.yearly - cheapestPt.cost.yearly },
+        durationMin: o.durationMin,
+        yearly: o.cost.yearly,
+      });
+    }
   }
 
   // --- 6. Prune, rank ------------------------------------------------------------------------

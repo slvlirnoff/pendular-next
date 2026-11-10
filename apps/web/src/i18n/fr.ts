@@ -201,6 +201,7 @@ export const fr = {
   'form.summary': '{home} → {work}',
   'method.link': 'Méthode, sources et limites',
   'opt.lastHomeShort': 'dernier retour à {last}',
+  'answer.vsCar': 'C’est {chf} de moins par an qu’en voiture.',
 } as const;
 
 export type Key = keyof typeof fr;

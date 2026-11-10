@@ -227,6 +227,11 @@ export interface RoutingProvider {
     window: TimeWindow;
     /** 'arrive': window is on arrival at `to`; 'depart': on departure from `from`. */
     by: 'arrive' | 'depart';
+    /**
+     * Leave trains out. The engine returns the fastest connections only; a bus route that is
+     * as good but crosses fewer fare zones shows up only when asked for.
+     */
+    withoutRail?: boolean;
   }): Promise<Itinerary[]>;
   street(q: { from: LatLon; to: LatLon; profile: StreetProfile }): Promise<StreetRoute | null>;
   /** Many origins to one destination (or one origin to many destinations with `reverse`). */
