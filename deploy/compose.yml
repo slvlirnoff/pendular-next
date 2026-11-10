@@ -1,0 +1,96 @@
+# Pendular on one VM:  caddy (TLS) -> app (site + API) -> motis (routing).
+# Run from this directory:  docker compose up -d      (see README.md)
+name: pendular
+
+services:
+  motis:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.motis
+      args:
+        MOTIS_VERSION: ${MOTIS_VERSION:-v2.11.4}
+    image: pendular-motis:local
+    restart: unless-stopped
+    # Internal only: no ports are published, only the app reaches it.
+    expose: ["8080"]
+    mem_limit: 1536m        # measured ~0.8 GB resident for the Swiss dataset
+    memswap_limit: 1536m
+    volumes:
+      - type: bind
+        source: ${DATA_DIR:-./data}/current/motis
+        target: /data
+        read_only: true
+        bind: { create_host_path: false }
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    logging: &logging
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.app
+    image: pendular-app:local
+    restart: unless-stopped
+    depends_on:
+      motis: { condition: service_healthy }
+    environment:
+      MOTIS_URL: http://motis:8080
+      PARKING_PATH: /data/parking.json
+      PORT: "8787"
+      # ZONES_PATH is left at its default: the zone table is part of the image (packages/engine/data).
+    expose: ["8787"]
+    mem_limit: 512m
+    volumes:
+      - type: bind
+        source: ${DATA_DIR:-./data}/current
+        target: /data
+        read_only: true
+        bind: { create_host_path: false }
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    logging: *logging
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on:
+      app: { condition: service_healthy }
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # certificates: worth keeping, otherwise re-issued (rate limits)
+      - caddy_config:/config
+    mem_limit: 128m
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+
+  # One-off data tooling, never started by `up`. Used by update-data.sh.
+  data:
+    profiles: ["tools"]
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.data
+      additional_contexts:
+        motis_image: service:motis
+    image: pendular-data:local
+    entrypoint: []
+    network_mode: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+# One-off data tooling: runs fetch.sh, build-parking.ts and `motis import` so the host needs only Docker.
+# Not a service: started by update-data.sh through the "tools" compose profile.
+# The MOTIS binary is taken from the motis image (compose passes it as the "motis_image" build
+# context), so the index is written by exactly the version that will serve it.
+
+FROM node:22-bookworm-slim
+ARG TSX_VERSION=4.23.15
+ARG OSMIUM_VERSION=4.3.2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      curl ca-certificates bzip2 unzip python3 python3-venv \
+    && rm -rf /var/lib/apt/lists/* \
+    && python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir "osmium==${OSMIUM_VERSION}" \
+    && npm install -g "tsx@${TSX_VERSION}" \
+    && corepack enable
+ENV PATH="/opt/venv/bin:${PATH}" HOME=/tmp
+COPY --from=motis_image /usr/local/bin/motis /usr/local/bin/motis
+
+# Same layout as the repository, so the scripts find their paths. The scripts and config.yml are
+# bind-mounted from the checkout at run time (no rebuild needed when they change); raw/, build/ and
+# motis/data are mounted from the staging directory.
+WORKDIR /pipeline/data/motis
+RUN mkdir -p /pipeline/data/scripts /pipeline/data/raw /pipeline/data/build /pipeline/data/motis/data /pipeline/data/motis/input \
+    && ln -s ../../raw/gtfs.zip input/gtfs.zip \
+    && ln -s ../../raw/switzerland.osm.pbf input/switzerland.osm.pbf \
+    && chmod -R a+rwX /pipeline

@@ -1,0 +1,28 @@
+# SITE_ADDRESS is a bare domain (e.g. pendular.example.ch) -> automatic Let's Encrypt certificate,
+# or "localhost" (default) -> Caddy's own local CA. Set it in .env.
+{$SITE_ADDRESS:localhost} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Permissions-Policy "geolocation=(), camera=(), microphone=()"
+		# Everything is served from this origin; MapLibre needs blob: workers, React sets inline styles.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	reverse_proxy app:8787 {
+		# Route computations can take a while; MOTIS itself times out at 90 s.
+		transport http {
+			response_header_timeout 100s
+		}
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
