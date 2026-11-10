@@ -17,3 +17,4 @@ tools/address-test/out/
 # Trial MOTIS instance (route shapes)
 data/motis-shapes/*
 !data/motis-shapes/RECOMMENDED.md
+data/motis-shapes-*/
