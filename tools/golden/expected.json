@@ -10,9 +10,9 @@
   "parkRail": {
    "count": 1,
    "bestDurationMin": 64,
-   "cheapestYearly": 6527,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 9
+   "cheapestYearly": 6608,
+   "cheapestProduct": "routePassYearly",
+   "tariffKm": 46
   },
   "cityParkRide": {
    "count": 1,

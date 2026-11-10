@@ -1,6 +1,6 @@
 # Golden commutes report
 
-Generated 2026-11-10T14:16:56.798Z against http://127.0.0.1:8787.
+Generated 2026-11-10T14:23:54.262Z against http://127.0.0.1:8787.
 Timetable GTFS 2027, fetched 2026-11-10, tariffs Mobilis 13.12.2026; GA/Half Fare 13.12.2026; T601/T650 edition 01.06.2026, engine MOTIS 2, reference day 2027-01-19.
 
 Checks: 562 PASS, 0 WARN, 0 FAIL.
@@ -29,8 +29,7 @@ Checks: 562 PASS, 0 WARN, 0 FAIL.
 ## Automatic flags (heuristics, may be noise)
 
 - **lucens-lausanne-gare**: transit-0 "Lucens → Lausanne, R8/R9": 9 zone(s) (zonePassYearly, 2'376 CHF)
-- **lucens-lausanne-gare**: parkRail-2 "Romont FR → Lausanne, IR15/S30/S31": 9 zone(s) (zonePassYearly, 2'376 CHF)
-- **lucens-lausanne-gare**: parkRail "Romont FR → Lausanne, IR15/S30/S31" costs 6'527 vs transit 2'052
+- **lucens-lausanne-gare**: parkRail "Romont FR → Lausanne, IR15/S30/S31" costs 6'608 vs transit 2'052
 - **lucens-lausanne-gare**: cityParkRide "Lausanne, Vennes → Lausanne, gare, m2" costs 10'629 vs transit 2'052
 - **echallens-lausanne-flon**: cityParkRide "Lausanne, Parc Vélodrome → Lausanne, Bel-Air, 1" costs 6'047 vs transit 1'305
 - **echallens-lausanne-flon**: cityParkRide "Lausanne, Vennes → Lausanne, Flon, m2" costs 6'982 vs transit 1'305
