@@ -1,0 +1,693 @@
+[
+ {
+  "name": "lucens-lausanne-gare",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Lucens",
+   "lat": 46.708447,
+   "lon": 6.8389766
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "echallens-lausanne-flon",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Echallens",
+   "lat": 46.6381163,
+   "lon": 6.6346951
+  },
+  "work": {
+   "label": "Lausanne, Flon",
+   "lat": 46.520798680000006,
+   "lon": 6.63033935
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "morges-epfl",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Morges",
+   "lat": 46.5093268,
+   "lon": 6.498317
+  },
+  "work": {
+   "label": "Ecublens VD, EPFL",
+   "lat": 46.52219562,
+   "lon": 6.56613675
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "vevey-geneve",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 300
+  },
+  "home": {
+   "label": "Vevey",
+   "lat": 46.4630044,
+   "lon": 6.84344668
+  },
+  "work": {
+   "label": "Genève",
+   "lat": 46.21021156,
+   "lon": 6.14245533
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "lausanne-bern",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 300
+  },
+  "home": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "work": {
+   "label": "Bern",
+   "lat": 46.94883109,
+   "lon": 7.43912853
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "chapelle-sur-moudon-lausanne",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Chapelle-sur-Moudon, Montanaire",
+   "lat": 46.6691282,
+   "lon": 6.736023
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "yverdon-lausanne",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Yverdon-les-Bains",
+   "lat": 46.7785711,
+   "lon": 6.6409158
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "nyon-geneve",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 300
+  },
+  "home": {
+   "label": "Nyon",
+   "lat": 46.3820585,
+   "lon": 6.2402791
+  },
+  "work": {
+   "label": "Genève",
+   "lat": 46.21021156,
+   "lon": 6.14245533
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "aigle-lausanne",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Aigle",
+   "lat": 46.3179006,
+   "lon": 6.9688929
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "chailly-flon",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Lausanne, Chailly",
+   "lat": 46.525195,
+   "lon": 6.6544537
+  },
+  "work": {
+   "label": "Lausanne, Flon",
+   "lat": 46.520798680000006,
+   "lon": 6.63033935
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "renens-chuv",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Renens VD",
+   "lat": 46.5349093,
+   "lon": 6.5928442
+  },
+  "work": {
+   "label": "Lausanne, CHUV",
+   "lat": 46.52640477,
+   "lon": 6.64148744
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "bulle-fribourg",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": false
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Bulle",
+   "lat": 46.6190969,
+   "lon": 7.0581152
+  },
+  "work": {
+   "label": "Fribourg",
+   "lat": 46.8055656,
+   "lon": 7.1612669
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "zurich-hb-winterthur",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": false
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 200
+  },
+  "home": {
+   "label": "Zürich HB",
+   "lat": 47.3781762,
+   "lon": 8.54021154
+  },
+  "work": {
+   "label": "Winterthur",
+   "lat": 47.50033307,
+   "lon": 8.7238182
+  },
+  "expectTransit": true
+ },
+ {
+  "name": "yverdon-lausanne-youth",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "youth",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Yverdon-les-Bains",
+   "lat": 46.7785711,
+   "lon": 6.6409158
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true,
+  "variantOf": "yverdon-lausanne",
+  "variant": "youth"
+ },
+ {
+  "name": "yverdon-lausanne-senior",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "senior",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Yverdon-les-Bains",
+   "lat": 46.7785711,
+   "lon": 6.6409158
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true,
+  "variantOf": "yverdon-lausanne",
+  "variant": "senior"
+ },
+ {
+  "name": "yverdon-lausanne-halffare",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": true,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Yverdon-les-Bains",
+   "lat": 46.7785711,
+   "lon": 6.6409158
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true,
+  "variantOf": "yverdon-lausanne",
+  "variant": "halffare"
+ },
+ {
+  "name": "yverdon-lausanne-first-class",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 1,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Yverdon-les-Bains",
+   "lat": 46.7785711,
+   "lon": 6.6409158
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true,
+  "variantOf": "yverdon-lausanne",
+  "variant": "first-class"
+ },
+ {
+  "name": "yverdon-lausanne-part-time-2d",
+  "arrival": {
+   "from": "07:30",
+   "to": "08:30"
+  },
+  "pattern": {
+   "weekdays": [
+    "tue",
+    "thu"
+   ],
+   "weeksOff": 5
+  },
+  "traveller": {
+   "ageGroup": "adult",
+   "travelClass": 2,
+   "halfFare": false,
+   "vaudResident": true
+  },
+  "car": {
+   "costPerKm": 0.74,
+   "parkingAtWorkPerMonth": 260
+  },
+  "home": {
+   "label": "Yverdon-les-Bains",
+   "lat": 46.7785711,
+   "lon": 6.6409158
+  },
+  "work": {
+   "label": "Lausanne, gare",
+   "lat": 46.5167931,
+   "lon": 6.62909069
+  },
+  "expectTransit": true,
+  "variantOf": "yverdon-lausanne",
+  "variant": "part-time-2d"
+ }
+]
