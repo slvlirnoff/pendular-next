@@ -77,6 +77,21 @@ describe('zones', () => {
     expect(inside.zonesOfStop(beyond)).toBeNull();
     expect(inside.zonesForLegs([rail(HOME, CITY, '07:00', '07:40', 'IR 1', 20, [beyond])])).toBeNull();
   });
+  it('lets a stop outside the territory borrow a zone from a drawn stop that is outside too', () => {
+    const shared = createZoneIndex(
+      {
+        ...TABLE,
+        stops: [
+          ...TABLE.stops.map((s) => ({ ...s, gtfs: s.gtfs!.map((g) => ({ ...g, name: s.label, lat: 46.6, lon: 6.7 })) })),
+          { label: 'Sharedtown', zones: [3], confidence: 'high' as const, gtfs: [{ stopId: '900', name: 'Sharedtown', lat: 46.9, lon: 7.0 }] },
+        ],
+      },
+      { inNetwork: (id) => !id.startsWith('9') },
+    );
+    // 500 m from the drawn cross-border stop: same zone. Next to drawn stops inside only: none.
+    expect(shared.zonesOfStop({ name: 'Sharedtown, école', stopId: '901', lat: 46.9045, lon: 7.0 })?.zones).toEqual([3]);
+    expect(shared.zonesOfStop({ name: 'Otherton FR', stopId: '999', lat: 46.6, lon: 6.7 })).toBeNull();
+  });
   it('returns null when a trip ends outside the table', () => {
     expect(zones.zonesForLegs([rail(HOME, stop('Elsewhere', '999'), '07:00', '08:00', 'IC 1')])).toBeNull();
   });

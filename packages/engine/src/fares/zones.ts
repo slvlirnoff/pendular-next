@@ -15,6 +15,11 @@ export interface ZoneTable {
 
 /** A stop not drawn on the plan takes the zone of drawn stops within this distance. */
 const NEAREST_MAX_KM = 2.5;
+/**
+ * The network has zones beyond its home territory (shared with neighbouring networks). A stop
+ * outside the territory borrows a zone only from drawn stops that are outside it too, and close.
+ */
+const NEAREST_OUTSIDE_MAX_KM = 1.5;
 
 export interface ZoneResult {
   zones: number[];
@@ -79,22 +84,24 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
     if (n && !byName.has(n)) byName.set(n, entry);
   }
   // Stops with a position, for stops the plan does not draw (most bus stops).
-  const located: { lat: number; lon: number; zones: number[] }[] = [];
+  const located: { lat: number; lon: number; zones: number[]; outside: boolean }[] = [];
   for (const s of table.stops) {
     if (!s.zones?.length || s.confidence === 'low') continue;
     for (const g of s.gtfs ?? []) {
       // Only the claim that won the stop id.
       const won = byId.get(stationKey(g.stopId));
-      if (g.lat != null && g.lon != null && won?.zones === s.zones) located.push({ lat: g.lat, lon: g.lon, zones: s.zones });
+      if (g.lat != null && g.lon != null && won?.zones === s.zones) located.push({ lat: g.lat, lon: g.lon, zones: s.zones, outside: !!options.inNetwork && !options.inNetwork(stationKey(g.stopId)) });
     }
   }
   const km = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) =>
     Math.hypot((a.lat - b.lat) * 111.2, (a.lon - b.lon) * 111.2 * Math.cos((a.lat * Math.PI) / 180));
   /** The zone most common among the nearest drawn stops, when they are close enough. */
-  function nearestZones(p: { lat: number; lon: number }): number[] | null {
+  function nearestZones(p: { lat: number; lon: number }, fromOutside = false): number[] | null {
+    const max = fromOutside ? NEAREST_OUTSIDE_MAX_KM : NEAREST_MAX_KM;
     const near = located
+      .filter((l) => !fromOutside || l.outside)
       .map((l) => ({ l, d: km(p, l) }))
-      .filter((x) => x.d <= NEAREST_MAX_KM)
+      .filter((x) => x.d <= max)
       .sort((a, b) => a.d - b.d)
       .slice(0, 3);
     if (near.length === 0) return null;
@@ -114,7 +121,10 @@ export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}
       const hit = byId.get(stationKey(stop.stopId));
       if (hit) return hit;
     }
-    if (outside(stop)) return null;
+    if (outside(stop)) {
+      const shared = nearestZones(stop, true);
+      return shared ? { zones: shared, confident: false } : null;
+    }
     const byLabel = byName.get(norm(stop.name));
     if (byLabel) return { zones: byLabel.zones, confident: false };
     const guess = nearestZones(stop);
