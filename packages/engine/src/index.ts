@@ -9,3 +9,4 @@ export { MotisRouting, decodePolyline, type MotisOptions } from './routing/motis
 export * as mobilis from './fares/mobilis.js';
 export * as national from './fares/national.js';
 export { loadParking, loadCityParkRide, type ParkingSite, type CityParkRide } from './places/parking.js';
+export { createOjpFareClient, stopSequenceKey, type FareQuote, type OjpFareClient } from './fares/ojpFare.js';

@@ -10,8 +10,12 @@ export const PENDULAR_RULES: RuleSet = {
   referenceDate: '2027-01-19',
   timezone: 'Europe/Zurich',
   weeksPerYear: 52,
-  carPeakFactor: 1,
-  carParkingMin: 0,
+  // Assumption (no traffic data yet): rush-hour driving takes 30 % longer than on empty roads.
+  carPeakFactor: 1.3,
+  carParkingMin: null,
+  // Vaud, timetable year 2027: 1 and 2 January, Good Friday, Easter Monday, Ascension,
+  // Whit Monday, 1 August, Monday of the Jeûne fédéral, Christmas.
+  publicHolidays: ['2027-01-01', '2027-01-02', '2027-03-26', '2027-03-29', '2027-05-06', '2027-05-17', '2027-08-01', '2027-09-20', '2027-12-25'],
   parkTransferMin: 5,
   bikeTransferMin: 3,
   walkAllWayMaxMin: 45,
@@ -22,6 +26,8 @@ export const PENDULAR_RULES: RuleSet = {
   cityParkRideMaxDetour: 1,
   parkRailMaxDriveShare: 0.5,
   bikeRideMinMin: 4,
+  accessMinKmFromHome: 0.8,
+  sameVehicleMinSaving: 5,
   accessMinKmFromWork: 2,
   walkInsteadOfBikeMaxMin: 15,
   accessCandidates: 4,
@@ -48,9 +54,17 @@ export function resolveRules(base: RuleSet, overrides?: Partial<RuleSet>): RuleS
   return changed && !overrides.id ? { ...merged, id: `${base.id}+custom` } : merged;
 }
 
+const DAY_NAMES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+
+/**
+ * Selected weekdays × weeks worked, less the public holidays that fall on a selected weekday
+ * (in proportion to the weeks worked: some holidays fall in the weeks off).
+ */
 export function workingDaysPerYear(pattern: WorkPattern, rules: RuleSet): number {
   const weeks = Math.max(0, rules.weeksPerYear - pattern.weeksOff);
-  return new Set(pattern.weekdays).size * weeks;
+  const selected = new Set<string>(pattern.weekdays);
+  const holidays = (rules.publicHolidays ?? []).filter((d) => selected.has(DAY_NAMES[new Date(`${d}T12:00:00Z`).getUTCDay()]!)).length;
+  return Math.max(0, selected.size * weeks - Math.round((holidays * weeks) / rules.weeksPerYear));
 }
 
 /** One trip to work and one home per working day. */

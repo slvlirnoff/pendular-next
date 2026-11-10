@@ -46,24 +46,64 @@ export function routeTitle(its: Itinerary[]): string {
   return `${first[0]!.from.name} → ${first[first.length - 1]!.to.name}, ${lines.join(' · ')}`;
 }
 
-export function groupItineraries(its: Itinerary[]): RouteGroup[] {
+/** Where the changes happen: the stops of every public transport leg. */
+const stopsKey = (it: Itinerary) =>
+  it.legs
+    .filter(isTransit)
+    .map((l) => `${l.from.stopId ?? l.from.name}>${l.to.stopId ?? l.to.name}`)
+    .join('|');
+
+/**
+ * `fareKey` tells which connections need the same ticket: a route never mixes two tickets, so
+ * that each option has one price (a bus through one more zone is another option than the train).
+ */
+export function groupItineraries(its: Itinerary[], fareKey?: (it: Itinerary) => string): RouteGroup[] {
   const by = new Map<string, Itinerary[]>();
   for (const it of its) {
-    const sig = signature(it);
-    if (!sig) continue;
+    const route = signature(it);
+    if (!route) continue;
+    const sig = fareKey ? `${fareKey(it)}#${route}` : route;
     const list = by.get(sig) ?? [];
     // The same vehicles reached by a different walk are one departure.
     if (!list.some((x) => x.arrival === it.arrival && x.departure === it.departure)) list.push(it);
     by.set(sig, list);
   }
+  // The same lines taken to or from a neighbouring stop (a bus left one stop earlier, with a
+  // longer walk) are the same route: merge such groups when they need the same ticket.
+  const linesOf = (list: Itinerary[]) => {
+    const n = list[0]!.legs.filter(isTransit).length;
+    return Array.from({ length: n }, (_, i) => new Set(list.map((it) => it.legs.filter(isTransit)[i]?.line?.name ?? '')));
+  };
+  const prefix = (sig: string) => sig.slice(0, sig.lastIndexOf('@'));
+  const keys = [...by.keys()];
+  for (let i = 0; i < keys.length; i++) {
+    const a = by.get(keys[i]!);
+    if (!a) continue;
+    for (let j = i + 1; j < keys.length; j++) {
+      const b = by.get(keys[j]!);
+      if (!b || prefix(keys[i]!) !== prefix(keys[j]!)) continue;
+      const la = linesOf(a);
+      const lb = linesOf(b);
+      if (!la.every((set, k) => [...set].some((name) => name !== '' && lb[k]!.has(name)))) continue;
+      for (const it of b) if (!a.some((x) => x.arrival === it.arrival && x.departure === it.departure)) a.push(it);
+      by.delete(keys[j]!);
+    }
+  }
   const groups: RouteGroup[] = [];
   for (const [sig, list] of by) {
     const byDur = [...list].sort((a, b) => a.durationMin - b.durationMin);
-    const typical = byDur[Math.floor((byDur.length - 1) / 2)]!;
+    // The typical connection: median duration, among those changing where most of them change.
+    const counts = new Map<string, number>();
+    for (const i of list) counts.set(stopsKey(i), (counts.get(stopsKey(i)) ?? 0) + 1);
+    const usual = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]![0];
+    const usualByDur = byDur.filter((i) => stopsKey(i) === usual);
+    const typical = usualByDur[Math.floor((usualByDur.length - 1) / 2)]!;
     const arrivals = list.map((i) => i.arrival).sort();
     groups.push({
       signature: sig,
-      title: routeTitle(list),
+      // Named after the typical connection and those that change at the same stops: a title
+      // mixing the lines of two different ways through would describe a trip nobody makes.
+      title: routeTitle(list.filter((i) => stopsKey(i) === stopsKey(typical))),
       itineraries: list,
       typical,
       typicalMin: typical.durationMin,

@@ -29,6 +29,7 @@ interface MotisLeg {
   startTime: string;
   endTime: string;
   distance?: number;
+  tripId?: string;
   headsign?: string;
   category?: { id: string; name: string; shortName: string };
   agencyName?: string;
@@ -185,6 +186,7 @@ export class MotisRouting implements RoutingProvider {
             headsign: l.headsign,
           }
         : undefined,
+      tripId: transit ? l.tripId : undefined,
       intermediateStops: transit ? l.intermediateStops?.map(toStop) : undefined,
       geometry,
     };

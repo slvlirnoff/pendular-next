@@ -46,8 +46,8 @@ const ctx = (over: Partial<CommuteRequest['traveller']> = {}) => ({
 describe('rules', () => {
   it('counts working days and trips', () => {
     const p = { weekdays: ['mon', 'tue', 'wed', 'thu', 'fri'] as const, weeksOff: 5 };
-    expect(workingDaysPerYear({ ...p, weekdays: [...p.weekdays] }, PENDULAR_RULES)).toBe(235);
-    expect(tripsPerYear({ ...p, weekdays: [...p.weekdays] }, PENDULAR_RULES)).toBe(470);
+    expect(workingDaysPerYear({ ...p, weekdays: [...p.weekdays] }, PENDULAR_RULES)).toBe(230);
+    expect(tripsPerYear({ ...p, weekdays: [...p.weekdays] }, PENDULAR_RULES)).toBe(460);
   });
 });
 
@@ -212,32 +212,32 @@ describe('compare', () => {
     expect(r.leftOut.some((l) => l.kind === 'walk' && l.code === 'tooLong')).toBe(true);
 
     const pr = r.options.find((o) => o.kind === 'parkRail')!;
-    // 8 min drive + 5 min transfer + 15 min train.
-    expect(pr.durationMin).toBe(28);
+    // 8 min drive × 1.3 peak factor + 5 min transfer + 15 min train = 30.4, rounded to 30.
+    expect(pr.durationMin).toBe(30);
     expect(pr.departuresInWindow).toBe(4);
-    // Cheapest parking: the yearly pass (500) beats 12 × 60 and 235 × 5.
+    // Cheapest parking: the yearly pass (500) beats 12 × 60 and 230 × 5.
     expect(pr.cost.extras.find((e) => e.key === 'parking.year')!.yearly).toBe(500);
     expect(pr.cost.extras.some((e) => e.key === 'car.distance')).toBe(true);
     expect(pr.returnTrips).toEqual({ last: '22:35', lastArrival: '23:15' });
 
     const car = r.options.find((o) => o.kind === 'car')!;
-    expect(car.cost.yearly).toBe(Math.round(30 * 470 * 0.74) + 260 * 12);
+    expect(car.cost.yearly).toBe(Math.round(30 * 460 * 0.74) + 260 * 12);
     expect(pr.co2SavedKgPerYear).toBeGreaterThan(0);
 
     expect(r.verdict.fastest).toBe(pr.id);
-    expect(r.stamp.tripsPerYear).toBe(470);
+    expect(r.stamp.tripsPerYear).toBe(460);
     expect(r.stamp.rules.id).toBe('pendular-2027');
   });
 
   it('charges bike and e-bike kilometres at the rule set rates', async () => {
     const r = await compare({ ...REQUEST, kinds: ['bike', 'ebike', 'car'], rules: { ebikeAllWayMaxMin: 120, bikeAllWayMaxMin: 120 } }, deps());
     const ebike = r.options.find((o) => o.kind === 'ebike')!;
-    expect(ebike.cost.yearly).toBe(Math.round(30 * 470 * PENDULAR_RULES.ebikeFullCostPerKm));
+    expect(ebike.cost.yearly).toBe(Math.round(30 * 460 * PENDULAR_RULES.ebikeFullCostPerKm));
     const bike = r.options.find((o) => o.kind === 'bike')!;
     expect(bike.cost.extras[0]!.key).toBe('bike.distance');
-    expect(bike.cost.yearly).toBe(Math.round(30 * 470 * PENDULAR_RULES.bikeFullCostPerKm));
+    expect(bike.cost.yearly).toBe(Math.round(30 * 460 * PENDULAR_RULES.bikeFullCostPerKm));
     const owned = await compare({ ...REQUEST, kinds: ['ebike', 'car'], bike: { ebikeCostPerKm: PENDULAR_RULES.ebikeRunningCostPerKm }, rules: { ebikeAllWayMaxMin: 120 } }, deps());
-    expect(owned.options.find((o) => o.kind === 'ebike')!.cost.yearly).toBe(Math.round(30 * 470 * 0.09));
+    expect(owned.options.find((o) => o.kind === 'ebike')!.cost.yearly).toBe(Math.round(30 * 460 * 0.09));
   });
 
   it('drops an e-bike ride that public transport beats on both time and cost', async () => {

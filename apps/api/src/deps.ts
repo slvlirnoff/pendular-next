@@ -4,6 +4,8 @@ import {
   MotisRouting,
   PENDULAR_RULES,
   coveredByZones,
+  createOjpFareClient,
+  stopSequenceKey,
   createZoneIndex,
   loadCityParkRide,
   loadParking,
@@ -50,7 +52,7 @@ function co2KgPerYear(legs: Leg[], trips: number): number {
   return (g * trips) / 1000;
 }
 
-export function buildDeps(cfg: Config): EngineDeps {
+export function buildDeps(cfg: Config, env = process.env): EngineDeps {
   const sites = existsSync(cfg.parkingPath) ? loadParking(cfg.parkingPath) : [];
   const toCandidate = (s: (typeof sites)[number]): AccessCandidate => ({
     id: s.id,
@@ -84,6 +86,14 @@ export function buildDeps(cfg: Config): EngineDeps {
     zones = createZoneIndex(JSON.parse(readFileSync(cfg.zonesPath, 'utf8')) as ZoneTable, vaud ? { inNetwork: (id) => vaud.has(id) } : {});
   }
 
+  // Quoted single-ticket prices (OJP Fare). Off unless OJP_FARE=1 and OJP_FARE_TOKEN are set:
+  // the service has not answered since this was written, so the path is untested live. Quotes
+  // that arrive within the time budget are used; later ones serve the next search.
+  const fare = env.OJP_FARE === '1' ? createOjpFareClient() : null;
+  const quotes = new Map<string, { single: number; travelClass: 1 | 2; half: boolean }>();
+  const quoteKey = (legs: Leg[], cls: 1 | 2, half: boolean) => `${stopSequenceKey(legs)}#${cls}#${half ? 'h' : 'f'}`;
+  const FARE_BUDGET_MS = 1500;
+
   const gtfs = resolve(ROOT, 'data/raw/gtfs.zip');
   const osm = resolve(ROOT, 'data/raw/switzerland.osm.pbf');
   return {
@@ -98,7 +108,24 @@ export function buildDeps(cfg: Config): EngineDeps {
       versions: { timetable: `GTFS 2027, fetched ${readVersion(gtfs) ?? '?'}`, streets: `OSM, fetched ${readVersion(osm) ?? '?'}`, engine: 'MOTIS 2' },
     }),
     rules: PENDULAR_RULES,
-    priceTransit: (legs, ctx) => priceTransit(legs, ctx, { zones }),
+    priceTransit: (legs, ctx) =>
+      priceTransit(legs, ctx, {
+        zones,
+        quote: fare ? (l) => quotes.get(quoteKey(l, ctx.traveller.travelClass, ctx.traveller.halfFare)) ?? null : undefined,
+      }),
+    prepareFares: fare
+      ? async (trips, ctx) => {
+          const { travelClass, halfFare } = ctx.traveller;
+          const pending = trips
+            .filter((legs) => !quotes.has(quoteKey(legs, travelClass, halfFare)))
+            .map((legs) =>
+              fare.quote(legs, { travelClass, halfFare }).then((q) => {
+                if (q) quotes.set(quoteKey(legs, travelClass, halfFare), { single: q.single, travelClass: q.travelClass, half: q.half });
+              }),
+            );
+          await Promise.race([Promise.allSettled(pending), new Promise((r) => setTimeout(r, FARE_BUDGET_MS))]);
+        }
+      : undefined,
     coveredByZones: (legs, z) => coveredByZones(legs, z, zones),
     co2KgPerYear,
     parkRail: sites.filter((s) => s.kind === 'parkRail').map(toCandidate),

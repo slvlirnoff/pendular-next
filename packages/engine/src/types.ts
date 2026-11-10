@@ -93,10 +93,18 @@ export interface RuleSet {
   referenceDate: string;
   timezone: string;
   weeksPerYear: number;
-  /** Multiplier on street-network car time (1 = plain route time). */
+  /**
+   * Multiplier on street-network car time (1 = empty roads). An assumption: the street network
+   * knows nothing about rush-hour traffic.
+   */
   carPeakFactor: number;
-  /** Minutes added to car trips for parking at the destination. */
-  carParkingMin: number;
+  /**
+   * Minutes to find a space and walk to the door at the destination. Null = by how dense the
+   * area is (residents and jobs within 1 km); a number = set by hand (employer car park…).
+   */
+  carParkingMin: number | null;
+  /** Public holidays of the timetable year, "YYYY-MM-DD": no commuting on those days. */
+  publicHolidays: string[];
   /** Minutes to park and walk to the platform at a P+Rail or P+R site. */
   parkTransferMin: number;
   /** Minutes to lock a bike and walk to the platform. */
@@ -114,6 +122,13 @@ export interface RuleSet {
   parkRailMaxDriveShare: number;
   /** Shortest ride for which a bike-and-ride option is worth showing, minutes. */
   bikeRideMinMin: number;
+  /** A site this close to home is reached on foot, not by car. Kilometres. */
+  accessMinKmFromHome: number;
+  /**
+   * Driving to the station to board the very train or bus that public transport from home
+   * reaches anyway is worth showing only when one leaves home at least this much later. Minutes.
+   */
+  sameVehicleMinSaving: number;
   /** A site this close to work is not park and ride: one drives to work. Kilometres. */
   accessMinKmFromWork: number;
   /** When walking takes at most this long, bike and e-bike are not offered. Minutes. */
@@ -194,6 +209,8 @@ export interface Leg {
   durationMin: number;
   distanceM: number;
   line?: Line;
+  /** Timetable run of the vehicle, when the routing engine gives one. */
+  tripId?: string;
   intermediateStops?: StopPoint[];
   /** [lon, lat] pairs. */
   geometry?: [number, number][];
@@ -345,6 +362,13 @@ export interface CommuteOption {
   changes: number;
   /** Distinct departures arriving in the window (transit part); undefined for street-only options. */
   departuresInWindow?: number;
+  /** Every connection in the window, door to door: when to leave home, when one arrives ("HH:MM"). */
+  connections?: { departure: string; arrival: string; durationMin: number; changes: number }[];
+  /**
+   * Options with the same key need the same ticket (same zones, same route pass): the list
+   * shows them together.
+   */
+  fareKey?: string;
   firstArrival?: string;
   lastArrival?: string;
   /** The last trip home: its departure from work and its arrival, "HH:MM". Null when there is none. */
@@ -386,8 +410,20 @@ export interface Verdict {
   costPerHourSaved: Record<string, number>;
 }
 
+/** What the car time assumes on top of the street network's own time. */
+export interface CarAssumptions {
+  peakFactor: number;
+  parkingMin: number;
+  /** False when the parking time was set by hand. */
+  parkingAuto: boolean;
+  parkingKind?: 'cityCentre' | 'townCentre' | 'elsewhere';
+  residents1km?: number;
+  jobs1km?: number | null;
+}
+
 export interface ResultStamp {
   generatedAt: string;
+  car?: CarAssumptions;
   data: DataVersions;
   rules: RuleSet;
   tripsPerYear: number;

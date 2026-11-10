@@ -1,5 +1,6 @@
 import type {
   AccessSite,
+  CarAssumptions,
   CommuteOption,
   CommuteRequest,
   CompareResult,
@@ -24,7 +25,7 @@ import { TRANSIT_MODES } from '../types.js';
 import { resolveRules, tripsPerYear, workingDaysPerYear } from '../rules.js';
 import { localHHMM } from '../time.js';
 import { groupItineraries, type RouteGroup } from './group.js';
-import { prune } from './prune.js';
+import { prune, type Conn } from './prune.js';
 import { verdict } from './verdict.js';
 
 export interface FareContext {
@@ -50,10 +51,21 @@ export interface EngineDeps {
   rules: RuleSet;
   /** Ticket products for the public transport legs of one trip, cheapest first. */
   priceTransit: (legs: Leg[], ctx: FareContext) => PricedProduct[];
+  /**
+   * Called once with the public transport legs of every option before pricing, so that an
+   * implementation can fetch quoted prices (it must come back quickly and never throw away
+   * the table prices: `priceTransit` stays the fallback).
+   */
+  prepareFares?: (trips: Leg[][], ctx: FareContext) => Promise<void>;
   /** True when all legs lie inside the given Mobilis zones (for passes that include transit). */
   coveredByZones?: (legs: Leg[], zones: number[]) => boolean;
   /** kg CO₂-eq per year for the given kilometres per one-way trip. */
   co2KgPerYear: (legs: Leg[], trips: number) => number;
+  /**
+   * Minutes to find a parking space and walk to the door at a place, from how dense the area
+   * is. Without it, the car is given five minutes.
+   */
+  parkingAt?: (p: LatLon) => { minutes: number; kind: 'cityCentre' | 'townCentre' | 'elsewhere'; residents: number; jobs: number | null };
   parkRail: AccessCandidate[];
   bikeParking: AccessCandidate[];
   cityParkRide: AccessCandidate[];
@@ -138,7 +150,21 @@ function streetLeg(mode: LegMode, from: LatLon & { name: string }, to: LatLon & 
   };
 }
 
+/** The vehicles of a connection: timetable run where known, else line and arrival at its last stop. */
+const vehiclesOf = (it: Itinerary) =>
+  it.legs.filter(isTransit).map((l) => l.tripId ?? `${l.line?.name}|${l.arrival}|${l.to.stopId ?? l.to.name}`);
+/** The vehicle one spends the longest in. */
+function mainVehicle(it: Itinerary): string | undefined {
+  const legs = it.legs.filter(isTransit);
+  if (legs.length === 0) return undefined;
+  const main = legs.reduce((a, b) => (b.durationMin > a.durationMin ? b : a));
+  return main.tripId ?? `${main.line?.name}|${main.arrival}|${main.to.stopId ?? main.to.name}`;
+}
+const ms = (iso: string) => new Date(iso).getTime();
+
 interface Draft {
+  conns?: Conn[];
+  fareKey?: string;
   kind: OptionKind;
   title: string;
   itinerary: Itinerary;
@@ -166,6 +192,38 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const home = { ...req.home, name: req.home.label };
   const work = { ...req.work, name: req.work.label };
   const tz = rules.timezone;
+
+  // The street network gives the time on empty roads, door to door with a space at the door.
+  // Two assumptions make the car comparable: a rush-hour factor, and time to park and walk.
+  const density = rules.carParkingMin === null ? deps.parkingAt?.(req.work) : undefined;
+  const carAssumptions: CarAssumptions = {
+    peakFactor: rules.carPeakFactor,
+    parkingMin: rules.carParkingMin ?? density?.minutes ?? 5,
+    parkingAuto: rules.carParkingMin === null,
+    parkingKind: density?.kind,
+    residents1km: density?.residents,
+    jobs1km: density?.jobs,
+  };
+
+  // Which connections need the same ticket. Zone tickets: same products at the same prices.
+  // Tickets priced by distance: same first and last stop (two trains between the same stations
+  // must not become two options because their estimated distances differ by a kilometre).
+  const priceCache = new Map<string, PricedProduct[]>();
+  const priceLegs = (legs: Leg[]): PricedProduct[] => {
+    const key = legs.map((l) => [l.mode, l.from.stopId ?? l.from.name, ...(l.intermediateStops ?? []).map((x) => x.stopId ?? x.name), l.to.stopId ?? l.to.name].join('>')).join('|');
+    let hit = priceCache.get(key);
+    if (!hit) priceCache.set(key, (hit = deps.priceTransit(legs, ctx)));
+    return hit;
+  };
+  const fareKey = (it: Itinerary): string => {
+    const legs = it.legs.filter(isTransit);
+    const cheapest = priceLegs(legs)[0];
+    if (!cheapest) return 'none';
+    if (cheapest.components.some((c) => c.key.startsWith('national.'))) {
+      return `route:${legs[0]!.from.stopId ?? legs[0]!.from.name}>${legs[legs.length - 1]!.to.stopId ?? legs[legs.length - 1]!.to.name}`;
+    }
+    return `${cheapest.kind}:${cheapest.components.map((c) => `${c.key}:${c.params?.zones ?? ''}:${c.yearly}`).join(',')}`;
+  };
 
   const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
   /** The routing engine names free coordinates START and END: use the places' own labels. */
@@ -196,10 +254,15 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   // --- 1. Everything that does not depend on anything else, in parallel -----------------------
   const near = (sites: AccessCandidate[], km: number) =>
     sites.filter((s) => haversineKm(req.home, s) <= km && haversineKm(req.work, s) >= rules.accessMinKmFromWork);
-  const prCand = want('parkRail') ? near(deps.parkRail, rules.parkRailMaxDriveMin * 1.1) : [];
+  // A car park is offered only with a known price above zero: a price of CHF 0 in the source
+  // is far more often a gap than a free car park.
+  const priced = (s: AccessCandidate) => (parkingPerYear(s, days)?.yearly ?? 0) > 0;
+  const prCand = want('parkRail')
+    ? near(deps.parkRail, rules.parkRailMaxDriveMin * 1.1).filter((s) => priced(s) && haversineKm(req.home, s) >= rules.accessMinKmFromHome)
+    : [];
   const brCand = want('bikeRide') ? near(deps.bikeParking, rules.bikeRideMaxMin * 0.4) : [];
   const cityCand = want('cityParkRide')
-    ? deps.cityParkRide.filter((s) => haversineKm(req.work, s) <= 8 && haversineKm(req.work, s) >= rules.accessMinKmFromWork)
+    ? deps.cityParkRide.filter((s) => priced(s) && haversineKm(req.work, s) <= 8 && haversineKm(req.work, s) >= rules.accessMinKmFromWork)
     : [];
 
   // No street search for a ride or walk that cannot fit its time limit even in a straight line
@@ -265,15 +328,24 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   // A connection taking more than twice the fastest (plus half an hour) is not an alternative.
   const withTransit = direct.filter((it) => it.legs.some(isTransit));
   const quickest = Math.min(...withTransit.map((it) => it.durationMin));
-  const transitGroups = groupItineraries(withTransit.filter((it) => it.durationMin <= quickest * 2 + 30));
+  const usable = withTransit.filter((it) => it.durationMin <= quickest * 2 + 30);
+  const transitGroups = groupItineraries(usable, fareKey);
+  const toConn = (it: Itinerary, leadMs = 0): Conn => ({
+    dep: ms(it.departure) - leadMs,
+    arr: ms(it.arrival),
+    min: Math.round((ms(it.arrival) - ms(it.departure) + leadMs) / 60000),
+    changes: it.changes,
+    vehicles: vehiclesOf(it),
+  });
+  /** Every connection from home, to recognise a drive to a train one could have walked to. */
+  const fromHome = usable.map((it) => toConn(it));
   if (want('transit')) {
     for (const g of transitGroups) {
-      drafts.push({ kind: 'transit', title: g.title, itinerary: g.typical, durationMin: g.typicalMin, changes: g.changes, group: g });
+      drafts.push({ kind: 'transit', title: g.title, itinerary: g.typical, durationMin: g.typicalMin, changes: g.changes, group: g, conns: g.itineraries.map((it) => toConn(it)), fareKey: fareKey(g.typical) });
     }
   }
 
   // --- 3. Access options: drive or ride to a station, then public transport -------------------
-  const window = req.arrival;
   async function accessOptions(
     kind: 'parkRail' | 'cityParkRide' | 'bikeRide',
     cands: AccessCandidate[],
@@ -305,28 +377,47 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
 
     const results = await Promise.all(reachable.map((c) => transitTo(c.site)));
     reachable.forEach((c, i) => {
-      const groups = groupItineraries((results[i] ?? []).filter((it) => it.legs.some(isTransit)));
+      const groups = groupItineraries((results[i] ?? []).filter((it) => it.legs.some(isTransit)), fareKey);
       const g = [...groups].sort((a, b) => a.typicalMin - b.typicalMin)[0];
-      const label = c.site.name;
       if (!g) return;
       const factor = legMode === 'car' ? rules.carPeakFactor : 1;
-      const accessMin = c.route.durationMin * factor + transferMin;
-      const total = Math.round(accessMin + g.typicalMin);
-      // Keep only when it improves on public transport from home in some respect.
-      const boardAt = new Date(new Date(g.typical.departure).getTime());
+      const rideMs = c.route.durationMin * factor * 60000;
+      // The search from the site already walks from the car park to the platform: parking and
+      // that walk together take the transfer time, or the walk itself when it is longer.
+      const leadOf = (it: Itinerary) => {
+        const first = it.legs[0]!;
+        const walkMs = isTransit(first) ? 0 : ms(first.arrival) - ms(first.departure);
+        return rideMs + Math.max(0, transferMin * 60000 - walkMs);
+      };
+      // Each departure on its own. Boarding the very vehicle that public transport from home
+      // reaches anyway is kept only when one leaves home clearly later.
+      const timed = g.itineraries
+        .map((it) => ({ it, conn: toConn(it, leadOf(it)) }))
+        .filter(({ it, conn }) => {
+          const main = mainVehicle(it);
+          const same = fromHome.filter((h) => main !== undefined && h.vehicles?.includes(main));
+          return same.every((h) => conn.dep - h.dep >= rules.sameVehicleMinSaving * 60000);
+        })
+        .sort((a, b) => a.conn.min - b.conn.min);
+      if (timed.length === 0) {
+        leftOut.push({ kind, title: c.site.name, code: 'noBetterThanTransit' });
+        return;
+      }
+      const typical = timed[Math.floor((timed.length - 1) / 2)]!;
+      const total = typical.conn.min;
+      const boardAt = new Date(ms(typical.it.departure) - Math.max(0, leadOf(typical.it) - rideMs));
       const accessLeg = streetLeg(legMode, home, { ...c.site, name: c.site.name }, { ...c.route, durationMin: c.route.durationMin * factor }, boardAt, 0);
-      // The access leg ends `transferMin` before the first departure.
-      const shift = transferMin * 60000;
-      accessLeg.departure = new Date(new Date(accessLeg.departure).getTime() - shift).toISOString();
-      accessLeg.arrival = new Date(new Date(accessLeg.arrival).getTime() - shift).toISOString();
       const itinerary: Itinerary = {
         departure: accessLeg.departure,
-        arrival: g.typical.arrival,
+        arrival: typical.it.arrival,
         durationMin: total,
-        changes: g.changes,
-        legs: [accessLeg, ...g.typical.legs],
+        changes: typical.it.changes,
+        legs: [accessLeg, ...typical.it.legs],
       };
-      drafts.push({ kind, title: g.title, itinerary, durationMin: total, changes: g.changes, group: g, access: c.site, accessRoute: c.route });
+      const kept: RouteGroup = { ...g, itineraries: timed.map((x) => x.it), departures: timed.length, arrivals: timed.map((x) => x.it.arrival).sort() };
+      kept.firstArrival = kept.arrivals[0]!;
+      kept.lastArrival = kept.arrivals[kept.arrivals.length - 1]!;
+      drafts.push({ kind, title: g.title, itinerary, durationMin: total, changes: typical.it.changes, group: kept, access: c.site, accessRoute: c.route, conns: timed.map((x) => x.conn), fareKey: fareKey(typical.it) });
     });
   }
   await Promise.all([
@@ -356,14 +447,19 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   directOption('walk', walk, rules.walkAllWayMaxMin);
   directOption('bike', bike, rules.bikeAllWayMaxMin);
   directOption('ebike', ebike, rules.ebikeAllWayMaxMin);
-  directOption('car', car, Infinity, rules.carParkingMin, rules.carPeakFactor);
+  directOption('car', car, Infinity, carAssumptions.parkingMin, rules.carPeakFactor);
 
   // --- 5. Price, CO₂ --------------------------------------------------------------------------
+  if (deps.prepareFares) {
+    const trips = drafts.map((d) => d.itinerary.legs.filter(isTransit)).filter((l) => l.length > 0);
+    await safe(deps.prepareFares(trips, ctx), undefined);
+    priceCache.clear();
+  }
   const options: CommuteOption[] = drafts.map((d, i) => {
     const legs = d.itinerary.legs;
     const transitLegs = legs.filter(isTransit);
     const extras: CostComponent[] = [];
-    let products: PricedProduct[] = transitLegs.length ? deps.priceTransit(transitLegs, ctx) : [];
+    let products: PricedProduct[] = transitLegs.length ? priceLegs(transitLegs) : [];
 
     if (d.access && (d.kind === 'parkRail' || d.kind === 'cityParkRide')) {
       const p = parkingPerYear(d.access, days);
@@ -409,8 +505,12 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       co2KgPerYear: Math.round(deps.co2KgPerYear(legs, trips)),
       hoursPerYear: Math.round((d.durationMin * trips) / 60),
       access: d.access ? { id: d.access.id, name: d.access.name, kind: d.access.kind, lat: d.access.lat, lon: d.access.lon } : undefined,
-      // Arrival slices this option covers, used by pruning only.
-      ...(g ? { _arrivals: g.arrivals } : {}),
+      connections: d.conns
+        ? [...d.conns].sort((a, b) => a.dep - b.dep).map((c) => ({ departure: localHHMM(new Date(c.dep).toISOString(), tz), arrival: localHHMM(new Date(c.arr).toISOString(), tz), durationMin: c.min, changes: c.changes }))
+        : undefined,
+      fareKey: d.fareKey,
+      // Used by pruning only.
+      ...(d.conns ? { _conns: d.conns } : {}),
     } as CommuteOption;
   });
 
@@ -467,7 +567,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   }
 
   // --- 6. Prune, rank ------------------------------------------------------------------------
-  const kept = prune(options, leftOut, rules, window, date);
+  const kept = prune(options, leftOut, rules);
 
   // --- 7. First and last trip home for what is shown --------------------------------------------
   const returns = Promise.all(
@@ -497,7 +597,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   // Both only read the kept options: run them together.
   await Promise.all([returns, shapes]);
 
-  for (const o of kept) delete (o as { _arrivals?: unknown })._arrivals;
+  for (const o of kept) delete (o as { _conns?: unknown })._conns;
   kept.sort((a, b) => a.cost.yearly - b.cost.yearly);
 
   return {
@@ -506,6 +606,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     verdict: verdict(kept),
     stamp: {
       generatedAt: (deps.now?.() ?? new Date()).toISOString(),
+      car: carAssumptions,
       data: { ...(await routing.versions()), tariffs: deps.tariffVersion, parking: deps.parkingVersion },
       rules,
       tripsPerYear: trips,
