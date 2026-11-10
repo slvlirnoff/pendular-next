@@ -14,6 +14,8 @@ export function translator(lang: Lang): T {
   const dict = DICTS[lang];
   return (key, params) => {
     let s: string = dict[key] ?? fr[key] ?? key;
+    // "1 change|{n} changes": the first form for n = 1, the second otherwise.
+    if (s.includes('|') && params && typeof params.n === 'number') s = (params.n === 1 ? s.split('|')[0] : s.split('|')[1]) ?? s;
     if (params) for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, String(v));
     return s;
   };

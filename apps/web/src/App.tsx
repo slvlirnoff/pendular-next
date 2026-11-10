@@ -11,6 +11,19 @@ import { LeftOutList } from './components/LeftOutList.js';
 import { MapPanel } from './components/MapPanel.js';
 import { MethodPage } from './components/MethodPage.js';
 
+function windowMinutes(s: SearchState): number {
+  const [fh, fm] = s.from.split(':').map(Number) as [number, number];
+  const [th, tm] = s.to.split(':').map(Number) as [number, number];
+  const m = th * 60 + tm - (fh * 60 + fm);
+  return m > 0 ? m : m + 24 * 60;
+}
+
+const EXAMPLES = [
+  { label: 'Lucens → Lausanne', query: 'h=46.70777,6.84215,Lucens&w=46.51679,6.62909,Lausanne%2C%20gare&a=0700-0900&d=12345' },
+  { label: 'Echallens → Lausanne-Flon', query: 'h=46.64120,6.63390,Echallens&w=46.52080,6.63030,Lausanne%2C%20Flon&a=0700-0900&d=12345' },
+  { label: 'Lovatens → EPFL', query: 'h=46.69181,6.86419,Lovatens&w=46.52034,6.56847,EPFL%2C%20Ecublens&a=0700-0900&d=12345' },
+];
+
 type Status = 'idle' | 'loading' | 'done' | 'error';
 type Page = 'search' | 'method';
 
@@ -28,6 +41,7 @@ export function App() {
   const [sort, setSort] = useState<SortKey>('cost');
   const [page, setPage] = useState<Page>(() => pageFromPath(location.pathname));
   const [tab, setTab] = useState<'list' | 'map'>('list');
+  const [editing, setEditing] = useState(false);
   const abort = useRef<AbortController | null>(null);
   const lastQuery = useRef('');
   const firstPage = useRef(true);
@@ -130,10 +144,40 @@ export function App() {
         ) : (
           <>
         <h1 tabIndex={-1}>{t('app.tagline')}</h1>
-        <SearchForm state={state} onChange={setState} onSubmit={() => run(state, true)} busy={status === 'loading'} />
+        {result && searched?.home && searched.work && !editing && (
+          <div className="search-summary card">
+            <span>{t('form.summary', { home: searched.home.label, work: searched.work.label })}</span>
+            <button type="button" className="link-button" onClick={() => setEditing(true)}>
+              {t('form.edit')}
+            </button>
+          </div>
+        )}
+        <div className={result && !editing ? 'search-wrap is-collapsed' : 'search-wrap'}>
+          <SearchForm
+            state={state}
+            onChange={setState}
+            onSubmit={() => {
+              setEditing(false);
+              run(state, true);
+            }}
+            busy={status === 'loading'}
+          />
+        </div>
 
         <div role="status" aria-live="polite" aria-atomic="true">
-          {status === 'idle' && <p className="hint">{t('state.empty')}</p>}
+          {status === 'idle' && (
+            <div className="hint">
+              <p>{t('state.empty')}</p>
+              <p className="examples">
+                <span>{t('empty.title')} :</span>
+                {EXAMPLES.map((e) => (
+                  <a key={e.label} href={`/${lang}/?${e.query}`}>
+                    {e.label}
+                  </a>
+                ))}
+              </p>
+            </div>
+          )}
           {status === 'loading' && <p className="hint is-busy">{t('state.loading')}</p>}
           {status === 'error' && (
             <p className="hint is-error" role="alert">
@@ -158,7 +202,7 @@ export function App() {
             </div>
             <div className={`split show-${tab}`}>
               <div className="split-list">
-                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} />
+                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} windowMin={windowMinutes(searched)} />
                 <LeftOutList items={result.leftOut} />
               </div>
               <div className="split-map">
@@ -166,20 +210,12 @@ export function App() {
               </div>
             </div>
             {stamp && (
-              <section className="method" aria-labelledby="method-note">
-                <h2 id="method-note">
-                  <a href={`/${lang}/method`} onClick={link('method')}>
-                    {t('method.title')}
-                  </a>
-                </h2>
-                <p>
-                  {t('method.trips', { trips: stamp.tripsPerYear, days: stamp.workingDaysPerYear })}{' '}
-                  {t('method.data', { timetable: stamp.data.timetable ?? '–', streets: stamp.data.streets ?? '–', tariffs: stamp.data.tariffs ?? '–' })}
-                </p>
-                <p>
-                  {t('method.zoneNote')} {t('method.parkingNote')} {t('method.bikeNote')}
-                </p>
-              </section>
+              <p className="method">
+                {t('method.trips', { trips: stamp.tripsPerYear, days: stamp.workingDaysPerYear })}{' '}
+                <a href={`/${lang}/method`} onClick={link('method')}>
+                  {t('method.link')}
+                </a>
+              </p>
             )}
           </div>
         )}

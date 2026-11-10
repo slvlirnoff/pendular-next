@@ -100,5 +100,7 @@ export function toRequest(s: SearchState): CommuteRequest | null {
       vaudResident: s.vaudResident,
     },
     car: { costPerKm: CAR_COST[s.carCost], parkingAtWorkPerMonth: s.parkingPerMonth },
+    // Owning the vehicle already: running costs only, for the bike as for the car.
+    bike: s.carCost === 'running' ? { costPerKm: 0.03, ebikeCostPerKm: 0.09 } : undefined,
   };
 }

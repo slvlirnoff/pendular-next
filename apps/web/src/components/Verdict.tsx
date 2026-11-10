@@ -22,30 +22,24 @@ export function Verdict(props: { result: CompareResult; onSelect: (id: string) =
     </button>
   );
 
-  const rate = verdict.costPerHourSaved[fastest.id];
   return (
     <section className="verdict" aria-labelledby="verdict-h">
       <h2 id="verdict-h" className="sr-only">
         {t('verdict.title')}
       </h2>
+      <p className="answer">
+        {t('answer.cheapest', {
+          name: optionName(cheapest, t),
+          chf: chf(cheapest.cost.yearly, lang),
+          month: chf(cheapest.cost.yearly / 12, lang),
+          time: duration(cheapest.durationMin),
+        })}
+      </p>
       <div className="verdict-tiles">
         {tile(t('verdict.cheapest'), cheapest, chf(cheapest.cost.yearly, lang), t('verdict.perYear'))}
         {tile(t('verdict.fastest'), fastest, duration(fastest.durationMin), t('verdict.perTrip'))}
         {tile(t('verdict.greenest'), greenest, `${num(greenest.co2KgPerYear, lang)} kg CO₂`, t('verdict.perYear'))}
       </div>
-      <p className="verdict-line">
-        {fastest.id === cheapest.id || rate === undefined
-          ? fastest.id === cheapest.id
-            ? t('verdict.same')
-            : null
-          : t('verdict.tradeoff', {
-              fast: optionName(fastest, t),
-              cheap: optionName(cheapest, t),
-              hours: num(cheapest.hoursPerYear - fastest.hoursPerYear, lang),
-              chf: chf(fastest.cost.yearly - cheapest.cost.yearly, lang),
-              rate: chf(rate, lang),
-            })}
-      </p>
     </section>
   );
 }

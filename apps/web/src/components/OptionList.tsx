@@ -1,23 +1,14 @@
-import { useId } from 'react';
-import type { CommuteOption, CostComponent, Leg, PricedProduct, Provenance } from '@pendular/engine/types';
+import { useId, useState } from 'react';
+import type { CommuteOption, CostComponent, Leg, PricedProduct } from '@pendular/engine/types';
 import { useI18n, type Key } from '../i18n/index.js';
 import { chf, chf2, duration, hhmm, num } from '../lib/format.js';
 import { optionName } from '../lib/names.js';
 import { LegBadge, ModeChain } from './ModeChain.js';
 
-function ProvenanceTag({ p }: { p: Provenance }) {
-  const { t } = useI18n();
-  return (
-    <span className={`prov prov-${p}`} title={t(`prov.${p}.help`)}>
-      {t(`prov.${p}`)}
-    </span>
-  );
-}
-
 function componentLabel(c: CostComponent, t: ReturnType<typeof useI18n>['t'], lang: string): string {
   const p = c.params ?? {};
   const known = `cost.${c.key}` as Key;
-  const unit = typeof p.unit === 'number' && typeof p.times === 'number' ? `${p.times} × ${chf2(p.unit, lang)}` : '';
+  const unit = typeof p.unit === 'number' && typeof p.times === 'number' && p.times > 1 ? `${p.times} × ${chf2(p.unit, lang)}` : '';
   const where = typeof p.zones === 'number' ? t('product.zones', { n: p.zones }) : typeof p.km === 'number' && !c.key.startsWith('car') ? t('product.km', { km: p.km }) : '';
   if (c.key.startsWith('mobilis.') || c.key.startsWith('national.') || c.key.startsWith('ga.')) {
     return [where, unit, c.key.endsWith('vaudDiscount') ? t('cost.vaudDiscount') : ''].filter(Boolean).join(' · ');
@@ -26,38 +17,63 @@ function componentLabel(c: CostComponent, t: ReturnType<typeof useI18n>['t'], la
   return text === known ? c.key : text;
 }
 
+function ticketDetail(p: PricedProduct, t: ReturnType<typeof useI18n>['t'], lang: string): string {
+  return p.components.map((c) => componentLabel(c, t, lang)).filter(Boolean).join(' + ');
+}
+
+/** The ticket to buy, stated once; the alternatives stay one click away. */
 function Products({ products }: { products: PricedProduct[] }) {
   const { t, lang } = useI18n();
-  if (products.length === 0) return null;
+  const best = products[0];
+  if (!best) return null;
+  // A day pass at the price of two singles adds nothing to read.
+  const others = products.slice(1).filter((p, i, list) => !(p.kind.includes('DayPass') && list.some((q) => q !== p && q.yearly === p.yearly)));
+  const estimated = best.provenance === 'estimated';
+  const byKm = best.components.some((c) => typeof c.params?.km === 'number');
   return (
     <div className="detail-block">
-      <h4>{t('opt.tickets')}</h4>
-      <table className="products">
-        <tbody>
-          {products.map((p, i) => (
-            <tr key={p.kind} className={i === 0 ? 'is-best' : undefined}>
-              <th scope="row">
-                {t(`product.${p.kind}`)}
-                {i === 0 && <span className="best-tag">{t('product.cheapest')}</span>}
-                <span className="sub">
-                  {p.components.map((c) => componentLabel(c, t, lang)).filter(Boolean).join(' + ')}
-                  {p.range && ` · ${t('opt.range', { low: chf(p.range.low, lang), high: chf(p.range.high, lang) })}`}
-                </span>
-              </th>
-              <td>
-                <ProvenanceTag p={p.provenance} />
-              </td>
-              <td className="amount">{chf(p.yearly, lang)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h4>{t('ticket.buy')}</h4>
+      <p className="ticket">
+        <span className="ticket-name">{t(`product.${best.kind}`)}</span>
+        <span className="ticket-price">
+          {chf(best.yearly, lang)} <small>{t('verdict.perYear')}</small>
+        </span>
+        <span className="ticket-sub">
+          {ticketDetail(best, t, lang)}
+          {best.yearly > 0 && ` · ${t('ticket.perMonth', { chf: chf(best.yearly / 12, lang) })}`}
+        </span>
+      </p>
+      {estimated && (
+        <p className="ticket-note">
+          {byKm ? t('ticket.estimateKm') : t('ticket.estimate')}
+        </p>
+      )}
+      {others.length > 0 && (
+        <details className="ticket-others">
+          <summary>{t('ticket.others', { n: others.length })}</summary>
+          <table className="products">
+            <tbody>
+              {others.map((p) => (
+                <tr key={p.kind}>
+                  <th scope="row">
+                    {t(`product.${p.kind}`)}
+                    <span className="sub">{ticketDetail(p, t, lang)}</span>
+                  </th>
+                  <td className="amount">{chf(p.yearly, lang)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )}
     </div>
   );
 }
 
-function Timeline({ legs }: { legs: Leg[] }) {
+function Timeline({ legs: allLegs }: { legs: Leg[] }) {
   const { t } = useI18n();
+  // A one- or two-minute walk between two vehicles is part of the change, not a step.
+  const legs = allLegs.filter((l, i) => !(l.mode === 'walk' && l.durationMin <= 2 && i > 0 && i < allLegs.length - 1));
   return (
     <div className="detail-block">
       <h4>{t('opt.trip')}</h4>
@@ -93,11 +109,15 @@ function Timeline({ legs }: { legs: Leg[] }) {
   );
 }
 
-function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () => void; hasCar: boolean }) {
+function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () => void; hasCar: boolean; windowMin: number }) {
   const { t, lang } = useI18n();
   const { o } = props;
   const saved = o.co2SavedKgPerYear;
   const detailId = useId();
+  // "every 30 min" reads better than a count of departures in a window.
+  const n = o.departuresInWindow;
+  const frequency = n === undefined ? null : n <= 1 ? t('opt.once') : t('opt.every', { n: Math.round(props.windowMin / n / 5) * 5 || 5 });
+  const early = o.returnTrips ? o.returnTrips.last < '19:30' : false;
   return (
     <li className={`option card${props.selected ? ' is-selected' : ''}`}>
       <h3>
@@ -111,19 +131,15 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
             {chf(o.cost.yearly, lang)}
             <small>{t('verdict.perYear')}</small>
           </span>
-          <ProvenanceTag p={o.cost.provenance} />
         </span>
         <span className="option-meta">
           <span>
-            <strong>{duration(o.durationMin)}</strong> · {o.changes === 0 ? t('opt.direct') : t('opt.changes', { n: o.changes })}
+            <strong>{duration(o.durationMin)}</strong>
+            {o.itinerary.legs.some((l) => l.line) && <> · {o.changes === 0 ? t('opt.direct') : t('opt.changes', { n: o.changes })}</>}
           </span>
-          {o.departuresInWindow !== undefined && <span>{t('opt.departures', { n: o.departuresInWindow })}</span>}
-          <span>
-            {t('opt.co2', { kg: num(o.co2KgPerYear, lang) })}
-            {props.hasCar && saved !== undefined && saved !== 0 && (
-              <em className={saved > 0 ? 'good' : 'warn'}> · {saved > 0 ? t('opt.saved', { kg: num(saved, lang) }) : t('opt.more', { kg: num(-saved, lang) })}</em>
-            )}
-          </span>
+          {frequency && <span>{frequency}</span>}
+          <span>{t('opt.co2short', { kg: num(o.co2KgPerYear, lang) })}</span>
+          {early && o.returnTrips && <span className="warn">{t('opt.lastHomeShort', { last: o.returnTrips.last })}</span>}
         </span>
       </button>
       </h3>
@@ -131,10 +147,10 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
         <div className="option-detail" id={detailId}>
           <p className="detail-facts">
             {t('opt.hours', { h: num(o.hoursPerYear, lang) })}
-            {o.firstArrival && o.lastArrival && ` · ${t('opt.arrivals', { first: o.firstArrival, last: o.lastArrival })}`}
-            {o.returnTrips && ` · ${t('opt.return', { first: o.returnTrips.first, last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}`}
-            {o.returnTrips === null && <span className="warn"> · {t('opt.noReturn')}</span>}
+            {saved !== undefined && saved > 0 && props.hasCar && <> · <span className="good">{t('opt.saved', { kg: num(saved, lang) })}</span></>}
           </p>
+          {o.returnTrips && early && <p className="detail-facts warn">{t('opt.lastHomeEarly', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}</p>}
+          {o.returnTrips === null && <p className="detail-facts warn">{t('opt.noReturn')}</p>}
           <Products products={o.cost.products} />
           {o.cost.extras.length > 0 && (
             <div className="detail-block">
@@ -144,9 +160,6 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
                   {o.cost.extras.map((c, i) => (
                     <tr key={i}>
                       <th scope="row">{componentLabel(c, t, lang)}</th>
-                      <td>
-                        <ProvenanceTag p={c.provenance} />
-                      </td>
                       <td className="amount">{chf(c.yearly, lang)}</td>
                     </tr>
                   ))}
@@ -163,11 +176,16 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
 
 export type SortKey = 'cost' | 'time' | 'co2';
 
-export function OptionList(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string | null) => void; sort: SortKey; onSort: (s: SortKey) => void }) {
+export function OptionList(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string | null) => void; sort: SortKey; onSort: (s: SortKey) => void; windowMin: number }) {
   const { t } = useI18n();
   const f = { cost: (o: CommuteOption) => o.cost.yearly, time: (o: CommuteOption) => o.durationMin, co2: (o: CommuteOption) => o.co2KgPerYear }[props.sort];
   const sorted = [...props.options].sort((a, b) => f(a) - f(b));
   const hasCar = props.options.some((o) => o.kind === 'car');
+  const [all, setAll] = useState(false);
+  // Five options answer the question; the rest, and the selected one, stay within reach.
+  const LIMIT = 5;
+  const shown = all ? sorted : sorted.filter((o, i) => i < LIMIT || o.id === props.selected);
+  const hidden = sorted.length - shown.length;
   return (
     <section className="options" id="options" aria-labelledby="options-h">
       <header className="options-head">
@@ -181,10 +199,15 @@ export function OptionList(props: { options: CommuteOption[]; selected: string |
         </div>
       </header>
       <ul>
-        {sorted.map((o) => (
-          <OptionRow key={o.id} o={o} hasCar={hasCar} selected={o.id === props.selected} onSelect={() => props.onSelect(o.id === props.selected ? null : o.id)} />
+        {shown.map((o) => (
+          <OptionRow key={o.id} o={o} hasCar={hasCar} windowMin={props.windowMin} selected={o.id === props.selected} onSelect={() => props.onSelect(o.id === props.selected ? null : o.id)} />
         ))}
       </ul>
+      {hidden > 0 && (
+        <button type="button" className="link-button more-options" onClick={() => setAll(true)}>
+          {t('list.more', { n: hidden })}
+        </button>
+      )}
     </section>
   );
 }

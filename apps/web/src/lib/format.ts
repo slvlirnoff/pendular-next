@@ -1,7 +1,7 @@
 const LOCALE: Record<string, string> = { fr: 'fr-CH', de: 'de-CH', it: 'it-CH', en: 'en-GB' };
 
 export const chf = (n: number, lang: string) =>
-  `CHF ${new Intl.NumberFormat(LOCALE[lang] ?? 'fr-CH', { maximumFractionDigits: 0 }).format(Math.round(n))}`;
+  `CHF\u00a0${new Intl.NumberFormat(LOCALE[lang] ?? 'fr-CH', { maximumFractionDigits: 0 }).format(Math.round(n))}`;
 
 export const chf2 = (n: number, lang: string) =>
   `CHF ${new Intl.NumberFormat(LOCALE[lang] ?? 'fr-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)}`;
@@ -12,7 +12,8 @@ export const num = (n: number, lang: string, digits = 0) =>
 /** 95 → "1 h 35", 42 → "42 min". */
 export function duration(min: number): string {
   const m = Math.round(min);
-  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}`;
+  // Non-breaking spaces: "59 min" and "1 h 26" never split across lines.
+  return m < 60 ? `${m}\u00a0min` : `${Math.floor(m / 60)}\u00a0h\u00a0${String(m % 60).padStart(2, '0')}`;
 }
 
 export const hhmm = (iso: string) =>

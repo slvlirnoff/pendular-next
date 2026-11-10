@@ -215,3 +215,42 @@ input[type='number'] { width: 96px; }
 .prose dd { margin: 6px 0 0; }
 .prose dt .prov { font-size: 14px; }
 .prose p + .bullets { margin-top: 12px; }
+
+/* --- Ticket to buy, examples ----------------------------------------------------------------- */
+.ticket { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.ticket-name { font-weight: 700; }
+.ticket-price { font-weight: 700; white-space: nowrap; }
+.ticket-sub { grid-column: 1 / -1; font-size: 13px; color: var(--text-muted); }
+.ticket-note { margin-top: 6px; font-size: 13px; color: var(--text-muted); }
+.ticket-others { margin-top: 8px; }
+.ticket-others summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); min-height: 24px; }
+.ticket-others .products { margin-top: 4px; }
+.examples { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; }
+.examples a { color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; min-height: 24px; }
+.detail-facts.warn { color: var(--signal); font-weight: 600; }
+
+/* --- Second pass: answer line, chart toggle, compact form ----------------------------------- */
+.answer { font-size: clamp(17px, 2.2vw, 21px); line-height: 1.35; font-weight: 600; max-width: 46em; margin-bottom: 16px; text-wrap: pretty; }
+details.chart > summary { cursor: pointer; padding: 0 20px; font-weight: 600; color: var(--accent); min-height: 24px; }
+details.chart:not([open]) { padding: 12px 0; }
+.more-options { margin-top: 8px; min-height: 44px; }
+.method { font-size: 13px; color: var(--text-muted); display: block; }
+.method a { color: var(--accent); }
+.search-summary { display: none; }
+@media (max-width: 860px) {
+  .search-summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 16px; font-weight: 600; }
+  .search-summary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .search-wrap.is-collapsed { display: none; }
+}
+
+/* --- Third pass ------------------------------------------------------------------------------ */
+.option-title { white-space: normal; overflow: visible; text-wrap: balance; line-height: 1.3; }
+.verdict-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; }
+.option-meta .warn { font-weight: 600; }
+@media (max-width: 860px) {
+  .verdict-tiles { gap: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+  .verdict-tile { border: 0; border-radius: 0; padding: 12px 16px; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 12px; }
+  .verdict-tile + .verdict-tile { border-top: 1px solid var(--border); }
+  .verdict-tile .figure { font-size: 18px; grid-column: 2; grid-row: 1 / span 2; align-self: center; text-align: right; }
+  .verdict-tile .verdict-name { grid-column: 1; }
+}

@@ -65,7 +65,7 @@ export function TradeoffChart(props: { options: CommuteOption[]; selected: strin
 
   // Labels: place right of the mark, flip left near the right edge, nudge apart vertically.
   const placed: { id: string; x: number; y: number; anchor: 'start' | 'end'; text: string }[] = [];
-  for (const o of [...os].sort((a, b) => a.cost.yearly - b.cost.yearly)) {
+  for (const o of [...os].filter((x) => onFrontier.has(x.id) || x.id === props.selected).sort((a, b) => a.cost.yearly - b.cost.yearly)) {
     const text = optionName(o, t);
     const short = text.length > (narrow ? 22 : 38) ? `${text.slice(0, narrow ? 21 : 37)}…` : text;
     const px = X(o.durationMin);
@@ -76,8 +76,8 @@ export function TradeoffChart(props: { options: CommuteOption[]; selected: strin
   }
 
   return (
-    <section className="card chart" ref={box}>
-      <h2 id={`${uid}-t`}>{t('chart.title')}</h2>
+    <details className="card chart" ref={box as React.RefObject<HTMLDetailsElement>}>
+      <summary id={`${uid}-t`}>{t('chart.show')}</summary>
       <p id={`${uid}-d`} className="sr-only">
         {t('chart.desc')}
       </p>
@@ -131,9 +131,7 @@ export function TradeoffChart(props: { options: CommuteOption[]; selected: strin
           </text>
         ))}
       </svg>
-      <p className="chart-key">
-        <span className="key-line" aria-hidden="true" /> {t('chart.frontier')}
-      </p>
-    </section>
+
+    </details>
   );
 }

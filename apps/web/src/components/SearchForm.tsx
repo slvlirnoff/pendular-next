@@ -7,12 +7,28 @@ import { PlaceInput } from './PlaceInput.js';
 const DAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const AGES: AgeGroup[] = ['child', 'youth', 'adult', 'senior'];
 
+const TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`);
+
+/** A 24-hour time in half-hour steps: the same on every device, whatever its locale. */
+function TimeSelect(props: { label: string; value: string; onChange: (v: string) => void }) {
+  const options = TIMES.includes(props.value) ? TIMES : [...TIMES, props.value].sort();
+  return (
+    <select aria-label={props.label} value={props.value} onChange={(e) => props.onChange(e.target.value)}>
+      {options.map((v) => (
+        <option key={v} value={v}>
+          {v}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export function SearchForm(props: { state: SearchState; onChange: (s: SearchState) => void; onSubmit: () => void; busy: boolean }) {
   const { t, lang } = useI18n();
   const moreId = useId();
   const s = props.state;
   const set = <K extends keyof SearchState>(k: K, v: SearchState[K]) => props.onChange({ ...s, [k]: v });
-  const [more, setMore] = useState(s.carCost !== 'full' || s.parkingPerMonth !== 260 || s.weeksOff !== 5 || !s.vaudResident);
+  const [more, setMore] = useState(s.carCost !== 'full' || s.parkingPerMonth !== 260 || s.weeksOff !== 5 || !s.vaudResident || s.firstClass);
   const ready = !!s.home && !!s.work && s.weekdays.length > 0;
 
   return (
@@ -36,9 +52,9 @@ export function SearchForm(props: { state: SearchState; onChange: (s: SearchStat
         <fieldset className="field">
           <legend>{t('form.arrival')}</legend>
           <div className="inline">
-            <input type="time" aria-label={t('form.arrivalFrom')} value={s.from} onChange={(e) => set('from', e.target.value)} required />
+            <TimeSelect label={t('form.arrivalFrom')} value={s.from} onChange={(v) => set('from', v)} />
             <span aria-hidden="true">{t('form.and')}</span>
-            <input type="time" aria-label={t('form.arrivalTo')} value={s.to} onChange={(e) => set('to', e.target.value)} required />
+            <TimeSelect label={t('form.arrivalTo')} value={s.to} onChange={(v) => set('to', v)} />
           </div>
         </fieldset>
         <fieldset className="field">
@@ -69,10 +85,6 @@ export function SearchForm(props: { state: SearchState; onChange: (s: SearchStat
             <input type="checkbox" checked={s.halfFare} onChange={(e) => set('halfFare', e.target.checked)} />
             {t('form.halfFare')}
           </label>
-          <label className="check">
-            <input type="checkbox" checked={s.firstClass} onChange={(e) => set('firstClass', e.target.checked)} />
-            {t('form.firstClass')}
-          </label>
         </div>
       </div>
 
@@ -92,20 +104,21 @@ export function SearchForm(props: { state: SearchState; onChange: (s: SearchStat
             <input type="number" min={0} max={51} value={s.weeksOff} onChange={(e) => set('weeksOff', Math.max(0, Math.min(51, Number(e.target.value) || 0)))} />
           </label>
           <label className="field">
-            <span>{t('form.carCost')}</span>
-            <select value={s.carCost} onChange={(e) => set('carCost', e.target.value as SearchState['carCost'])}>
-              <option value="full">{t('form.carCost.full')}</option>
-              <option value="running">{t('form.carCost.running')}</option>
-            </select>
-          </label>
-          <label className="field">
             <span>{t('form.parking')}</span>
             <input type="number" min={0} max={2000} step={10} value={s.parkingPerMonth} onChange={(e) => set('parkingPerMonth', Math.max(0, Math.min(2000, Number(e.target.value) || 0)))} />
           </label>
           <div className="field checks">
             <label className="check">
+              <input type="checkbox" checked={s.firstClass} onChange={(e) => set('firstClass', e.target.checked)} />
+              {t('form.firstClass')}
+            </label>
+            <label className="check">
               <input type="checkbox" checked={s.vaudResident} onChange={(e) => set('vaudResident', e.target.checked)} />
               {t('form.vaud')}
+            </label>
+            <label className="check">
+              <input type="checkbox" checked={s.carCost === 'running'} onChange={(e) => set('carCost', e.target.checked ? 'running' : 'full')} />
+              {t('form.owned')}
             </label>
           </div>
         </div>
