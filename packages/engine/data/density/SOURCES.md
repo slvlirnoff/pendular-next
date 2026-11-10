@@ -65,12 +65,28 @@ Coordinates are approximate station or centre points.
 
 Observations: the residents figures here (2025) are close to the earlier prototype for Lausanne gare (33,743 against about 33,600) but lower for Morges (11,789 against about 13,100, probably another year or reference point). On the combined sum, EPFL (18,060) lands next to Morges (18,732) and below Nyon (20,756), so a combined limit that puts EPFL in "townCentre" at about 18,000 would also pull in every town centre of Morges size; Bern HB, which is a clear car-hostile centre, only reaches 10 by residents but 103,000 combined.
 
-## Rush-hour factor along the route (assumption)
+## Rush-hour factor along the route (assumption, fitted on six drives)
 
 The car's street time is multiplied by a factor worked out per route: the route is sampled every
 250 m, each sample takes the factor of its surroundings (residents + jobs within 1 km), and
 samples weigh by the time spent there (speed assumed on empty roads). Values in `TRAFFIC_CLASSES`
-(`src/density.ts`): 30,000 and more: x1.7 at 30 km/h; 10,000: x1.5 at 45; 2,000: x1.3 at 60;
-below: x1.1 at 80. These are assumptions, not measurements; a motorway through open country that
-is busy in the morning is under-counted. Examples (10.11.2026): Yverdon-Bern x1.23,
-Lucens-Lausanne gare x1.33, Lovatens-EPFL x1.32, Echallens-Lausanne Flon x1.42.
+(`src/density.ts`): 30,000 and more: x3 at 30 km/h; 10,000: x1.5 at 45; 2,000: x1.3 at 60;
+below: x1.1 at 80.
+
+Fitted by hand on 10.11.2026 against the typical driving time shown by Google Maps for a weekday
+departure at 08:06 (read by the product owner; headline value, range in brackets). Reproduce the
+breakdown with `pnpm tsx tools/calibrate/car-traffic.ts`.
+
+| Drive | Street time | Google typical | Ours (driving only) |
+|---|---|---|---|
+| Lucens - Lausanne gare | 26 min | 45 (35-60) | 42 |
+| Lucens - EPFL | 31 min | 45 (35-60) | 47 |
+| Lucens - Lausanne Flon | 26 min | 45 (35-60) | 41 |
+| Echallens - Lausanne Flon | 15 min | 35 (24-45) | 29 |
+| Echallens - EPFL | 17 min | 26 (22-30) | 26 |
+| Lovatens - Romont (07:06) | 6 min | 7 | 7 |
+
+Limits: six drives, all around Lausanne; the factor of 3 in city centres also makes up for the
+street network ignoring traffic lights (a closer fit to the Lausanne-bound drives, x4, made trips
+inside the city too slow: Renens - CHUV 33 min of driving); a busy motorway through open country is under-counted
+(counting stations of the federal roads office could fix that). Parking time comes on top.

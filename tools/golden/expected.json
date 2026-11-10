@@ -16,7 +16,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 50,
+   "bestDurationMin": 57,
    "cheapestYearly": 13388,
    "cheapestProduct": null
   }
@@ -31,7 +31,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 37,
+   "bestDurationMin": 44,
    "cheapestYearly": 8397,
    "cheapestProduct": null
   }
@@ -75,7 +75,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 83,
+   "bestDurationMin": 86,
    "cheapestYearly": 32614,
    "cheapestProduct": null
   }
@@ -90,7 +90,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 93,
+   "bestDurationMin": 102,
    "cheapestYearly": 38809,
    "cheapestProduct": null
   }
@@ -111,7 +111,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 43,
+   "bestDurationMin": 51,
    "cheapestYearly": 10617,
    "cheapestProduct": null
   }
@@ -126,7 +126,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 47,
+   "bestDurationMin": 52,
    "cheapestYearly": 15788,
    "cheapestProduct": null
   }
@@ -141,7 +141,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 40,
+   "bestDurationMin": 44,
    "cheapestYearly": 12524,
    "cheapestProduct": null
   }
@@ -156,7 +156,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 56,
+   "bestDurationMin": 59,
    "cheapestYearly": 18031,
    "cheapestProduct": null
   }
@@ -191,7 +191,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 22,
+   "bestDurationMin": 27,
    "cheapestYearly": 4171,
    "cheapestProduct": null
   }
@@ -220,7 +220,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 29,
+   "bestDurationMin": 40,
    "cheapestYearly": 5216,
    "cheapestProduct": null
   }
@@ -235,7 +235,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 37,
+   "bestDurationMin": 38,
    "cheapestYearly": 13543,
    "cheapestProduct": null
   }
@@ -250,7 +250,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 39,
+   "bestDurationMin": 50,
    "cheapestYearly": 10983,
    "cheapestProduct": null
   }
@@ -265,7 +265,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 47,
+   "bestDurationMin": 52,
    "cheapestYearly": 15788,
    "cheapestProduct": null
   }
@@ -280,7 +280,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 47,
+   "bestDurationMin": 52,
    "cheapestYearly": 15788,
    "cheapestProduct": null
   }
@@ -295,7 +295,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 47,
+   "bestDurationMin": 52,
    "cheapestYearly": 15788,
    "cheapestProduct": null
   }
@@ -310,7 +310,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 47,
+   "bestDurationMin": 52,
    "cheapestYearly": 15788,
    "cheapestProduct": null
   }
@@ -325,7 +325,7 @@
   },
   "car": {
    "count": 1,
-   "bestDurationMin": 47,
+   "bestDurationMin": 52,
    "cheapestYearly": 8242,
    "cheapestProduct": null
   }

@@ -166,11 +166,14 @@ export function parkingByDensity(d: DensityAround): { minutes: number; kind: Par
 
 /**
  * Rush-hour slow-down by how built-up the surroundings of the road are (residents + jobs
- * within 1 km), with the speed assumed on empty roads there. Assumptions, not measurements:
- * open country flows almost freely, city streets and the motorways around a city do not.
+ * within 1 km), with the speed assumed on empty roads there (used only to weigh the classes by
+ * time). The factors were fitted on six weekday 08:00 drives around Lausanne against the
+ * typical times of a navigation service (see data/density/SOURCES.md): the street network's
+ * time is close to reality in open country and much too short in a city centre, where it knows
+ * neither queues nor traffic lights. Assumptions, not measurements.
  */
 export const TRAFFIC_CLASSES: { minDensity: number; factor: number; freeKmh: number }[] = [
-  { minDensity: 30_000, factor: 1.7, freeKmh: 30 },
+  { minDensity: 30_000, factor: 3, freeKmh: 30 },
   { minDensity: 10_000, factor: 1.5, freeKmh: 45 },
   { minDensity: 2_000, factor: 1.3, freeKmh: 60 },
   { minDensity: 0, factor: 1.1, freeKmh: 80 },

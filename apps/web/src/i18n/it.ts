@@ -215,7 +215,7 @@ export const it: Dict = {
   'car.kind.cityCentre': "centro città",
   'car.kind.townCentre': "centro della località",
   'car.kind.elsewhere': "fuori dal centro",
-  'm.cost.car.time': "Tempo in auto = tempo di guida × fattore di traffico dell’ora di punta + tempo per parcheggiare. Il fattore di traffico è un’ipotesi, non una misura: da 1,1 in aperta campagna a 1,7 in centro città, secondo il numero di abitanti e di posti di lavoro lungo il percorso. Il tempo per parcheggiare dipende dal numero di abitanti e di posti di lavoro entro 1 km dal luogo di lavoro: 15 min in centro città, 10 min nel centro di una località, 5 min altrove.",
+  'm.cost.car.time': "Tempo in auto = tempo di guida × fattore di traffico dell’ora di punta + tempo per parcheggiare. Il fattore di traffico è un’ipotesi, non una misura: da 1,1 in aperta campagna a 3 nelle strade del centro città, secondo il numero di abitanti e di posti di lavoro lungo il percorso. Il tempo per parcheggiare dipende dal numero di abitanti e di posti di lavoro entro 1 km dal luogo di lavoro: 15 min in centro città, 10 min nel centro di una località, 5 min altrove.",
   'm.options.i4': "Un P+Rail di cui non si conosce il prezzo del parcheggio non viene proposto.",
   'm.options.i5': "Le opzioni sono confrontate partenza per partenza. Un’opzione compare nell’elenco se almeno una delle sue partenze non è eguagliata da un’opzione che costa uguale o meno, ha altrettanti cambi o meno, non parte prima e non arriva dopo.",
 };

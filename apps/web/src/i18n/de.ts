@@ -215,7 +215,7 @@ export const de: Dict = {
   'car.kind.cityCentre': "Stadtzentrum",
   'car.kind.townCentre': "Ortszentrum",
   'car.kind.elsewhere': "ausserhalb des Zentrums",
-  'm.cost.car.time': "Fahrzeit mit dem Auto = reine Fahrzeit × Stosszeitenfaktor + Zeit für die Parkplatzsuche. Der Stosszeitenfaktor ist eine Annahme, keine Messung: von 1,1 auf dem Land bis 1,7 im Stadtzentrum, je nach Zahl der Einwohner und Arbeitsplätze entlang der Strecke. Die Parkplatzsuche hängt von der Zahl der Einwohner und Arbeitsplätze im Umkreis von 1 km um den Arbeitsort ab: 15 Min. im Stadtzentrum, 10 Min. im Ortszentrum, 5 Min. sonst.",
+  'm.cost.car.time': "Fahrzeit mit dem Auto = reine Fahrzeit × Stosszeitenfaktor + Zeit für die Parkplatzsuche. Der Stosszeitenfaktor ist eine Annahme, keine Messung: von 1,1 auf dem Land bis 3 auf Strassen im Stadtzentrum, je nach Zahl der Einwohner und Arbeitsplätze entlang der Strecke. Die Parkplatzsuche hängt von der Zahl der Einwohner und Arbeitsplätze im Umkreis von 1 km um den Arbeitsort ab: 15 Min. im Stadtzentrum, 10 Min. im Ortszentrum, 5 Min. sonst.",
   'm.options.i4': "Ein P+Rail, dessen Parkpreis nicht bekannt ist, wird nicht angeboten.",
   'm.options.i5': "Die Optionen werden Abfahrt für Abfahrt verglichen. Eine Option erscheint in der Liste, wenn mindestens eine ihrer Abfahrten nicht von einer Option erreicht wird, die höchstens gleich viel kostet, höchstens gleich viele Umsteigen hat, nicht früher abfährt und nicht später ankommt.",
 };
