@@ -44,6 +44,7 @@ export function MethodPage(props: { searchHref: string; onBack: () => void }) {
         <p>{t('m.cost.pt.p')}</p>
         <h3>{t('m.cost.car.h')}</h3>
         <p>{t('m.cost.car.p')}</p>
+        <p>{t('m.cost.car.time')}</p>
       </section>
 
       <section aria-labelledby="m-labels">
@@ -67,6 +68,8 @@ export function MethodPage(props: { searchHref: string; onBack: () => void }) {
           <li>{t('m.options.i1')}</li>
           <li>{t('m.options.i2')}</li>
           <li>{t('m.options.i3')}</li>
+          <li>{t('m.options.i4')}</li>
+          <li>{t('m.options.i5')}</li>
         </ul>
       </section>
 

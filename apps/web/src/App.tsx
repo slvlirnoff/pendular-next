@@ -11,13 +11,6 @@ import { LeftOutList } from './components/LeftOutList.js';
 import { MapPanel } from './components/MapPanel.js';
 import { MethodPage } from './components/MethodPage.js';
 
-function windowMinutes(s: SearchState): number {
-  const [fh, fm] = s.from.split(':').map(Number) as [number, number];
-  const [th, tm] = s.to.split(':').map(Number) as [number, number];
-  const m = th * 60 + tm - (fh * 60 + fm);
-  return m > 0 ? m : m + 24 * 60;
-}
-
 const EXAMPLES = [
   { label: 'Lucens → Lausanne', query: 'h=46.70777,6.84215,Lucens&w=46.51679,6.62909,Lausanne%2C%20gare&a=0700-0900&d=12345' },
   { label: 'Echallens → Lausanne-Flon', query: 'h=46.64120,6.63390,Echallens&w=46.52080,6.63030,Lausanne%2C%20Flon&a=0700-0900&d=12345' },
@@ -202,7 +195,7 @@ export function App() {
             </div>
             <div className={`split show-${tab}`}>
               <div className="split-list">
-                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} windowMin={windowMinutes(searched)} />
+                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} car={stamp?.car} />
                 <LeftOutList items={result.leftOut} />
               </div>
               <div className="split-map">

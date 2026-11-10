@@ -1,8 +1,10 @@
 import { useId, useState } from 'react';
-import type { CommuteOption, CostComponent, Leg, PricedProduct } from '@pendular/engine/types';
+import type { CarAssumptions, CommuteOption, CostComponent, Leg, PricedProduct } from '@pendular/engine/types';
 import { useI18n, type Key } from '../i18n/index.js';
 import { chf, chf2, duration, hhmm, num } from '../lib/format.js';
 import { optionName } from '../lib/names.js';
+import { departuresSummary } from '../lib/schedule.js';
+import { carNote } from '../lib/carNote.js';
 import { LegBadge, ModeChain } from './ModeChain.js';
 
 function componentLabel(c: CostComponent, t: ReturnType<typeof useI18n>['t'], lang: string): string {
@@ -22,10 +24,19 @@ function ticketDetail(p: PricedProduct, t: ReturnType<typeof useI18n>['t'], lang
 }
 
 /** The ticket to buy, stated once; the alternatives stay one click away. */
-function Products({ products }: { products: PricedProduct[] }) {
+function Products({ products, sameAs }: { products: PricedProduct[]; sameAs?: string }) {
   const { t, lang } = useI18n();
   const best = products[0];
   if (!best) return null;
+  // Same pass as an option listed above: say so instead of repeating the block.
+  if (sameAs) {
+    return (
+      <div className="detail-block">
+        <h4>{t('ticket.buy')}</h4>
+        <p>{t('ticket.sameDetail', { name: sameAs, product: t(`product.${best.kind}`), chf: chf(best.yearly, lang) })}</p>
+      </div>
+    );
+  }
   // A day pass at the price of two singles adds nothing to read.
   const others = products.slice(1).filter((p, i, list) => !(p.kind.includes('DayPass') && list.some((q) => q !== p && q.yearly === p.yearly)));
   const estimated = best.provenance === 'estimated';
@@ -109,14 +120,14 @@ function Timeline({ legs: allLegs }: { legs: Leg[] }) {
   );
 }
 
-function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () => void; hasCar: boolean; windowMin: number }) {
+function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () => void; hasCar: boolean; car?: CarAssumptions; sameAs?: string }) {
   const { t, lang } = useI18n();
   const { o } = props;
   const saved = o.co2SavedKgPerYear;
   const detailId = useId();
-  // "every 30 min" reads better than a count of departures in a window.
-  const n = o.departuresInWindow;
-  const frequency = n === undefined ? null : n <= 1 ? t('opt.once') : t('opt.every', { n: Math.round(props.windowMin / n / 5) * 5 || 5 });
+  const frequency = departuresSummary(o, t);
+  const assumptions = o.kind === 'car' ? carNote(props.car, t) : null;
+  const conns = o.connections ?? [];
   const early = o.returnTrips ? o.returnTrips.last < '19:30' : false;
   return (
     <li className={`option card${props.selected ? ' is-selected' : ''}`}>
@@ -141,6 +152,8 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
           <span>{t('opt.co2short', { kg: num(o.co2KgPerYear, lang) })}</span>
           {early && o.returnTrips && <span className="warn">{t('opt.lastHomeShort', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}</span>}
         </span>
+        {props.sameAs && <span className="option-note">{t('ticket.same', { name: props.sameAs })}</span>}
+        {assumptions && <span className="option-note">{assumptions}</span>}
       </button>
       </h3>
       {props.selected && (
@@ -150,7 +163,19 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
             {saved !== undefined && saved > 0 && props.hasCar && <> · <span className="good">{t('opt.saved', { kg: num(saved, lang) })}</span></>}
           </p>
           {o.returnTrips === null && <p className="detail-facts warn">{t('opt.noReturn')}</p>}
-          <Products products={o.cost.products} />
+          {conns.length >= 2 && conns.length <= 4 && (
+            <div className="detail-block">
+              <h4>{t('opt.times')}</h4>
+              <p className="conn-times">
+                {conns.map((c) => (
+                  <span key={c.departure}>
+                    {c.departure} → {c.arrival}
+                  </span>
+                ))}
+              </p>
+            </div>
+          )}
+          <Products products={o.cost.products} sameAs={props.sameAs} />
           {o.cost.extras.length > 0 && (
             <div className="detail-block">
               <h4>{t('opt.extras')}</h4>
@@ -175,7 +200,7 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
 
 export type SortKey = 'cost' | 'time' | 'co2';
 
-export function OptionList(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string | null) => void; sort: SortKey; onSort: (s: SortKey) => void; windowMin: number }) {
+export function OptionList(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string | null) => void; sort: SortKey; onSort: (s: SortKey) => void; car?: CarAssumptions }) {
   const { t } = useI18n();
   const f = { cost: (o: CommuteOption) => o.cost.yearly, time: (o: CommuteOption) => o.durationMin, co2: (o: CommuteOption) => o.co2KgPerYear }[props.sort];
   const sorted = [...props.options].sort((a, b) => f(a) - f(b));
@@ -185,6 +210,16 @@ export function OptionList(props: { options: CommuteOption[]; selected: string |
   const LIMIT = 5;
   const shown = all ? sorted : sorted.filter((o, i) => i < LIMIT || o.id === props.selected);
   const hidden = sorted.length - shown.length;
+  // Options needing the same ticket at the same price: the first listed shows it, the others point to it.
+  const ticketOwner = new Map<string, CommuteOption>();
+  const sameAs = (o: CommuteOption): string | undefined => {
+    const best = o.cost.products[0];
+    if (!o.fareKey || !best) return undefined;
+    const key = `${o.fareKey}|${best.kind}|${Math.round(best.yearly)}`;
+    const owner = ticketOwner.get(key);
+    if (!owner) ticketOwner.set(key, o);
+    return owner && owner !== o ? optionName(owner, t) : undefined;
+  };
   return (
     <section className="options" id="options" aria-labelledby="options-h">
       <header className="options-head">
@@ -199,7 +234,7 @@ export function OptionList(props: { options: CommuteOption[]; selected: string |
       </header>
       <ul>
         {shown.map((o) => (
-          <OptionRow key={o.id} o={o} hasCar={hasCar} windowMin={props.windowMin} selected={o.id === props.selected} onSelect={() => props.onSelect(o.id === props.selected ? null : o.id)} />
+          <OptionRow key={o.id} o={o} hasCar={hasCar} car={props.car} sameAs={sameAs(o)} selected={o.id === props.selected} onSelect={() => props.onSelect(o.id === props.selected ? null : o.id)} />
         ))}
       </ul>
       {hidden > 0 && (

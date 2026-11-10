@@ -13,3 +13,7 @@ data/pg/
 tools/address-test/data/
 tools/address-test/cache/
 tools/address-test/out/
+
+# Trial MOTIS instance (route shapes)
+data/motis-shapes/*
+!data/motis-shapes/RECOMMENDED.md

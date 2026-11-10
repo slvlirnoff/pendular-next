@@ -2,6 +2,7 @@ import type { CommuteOption, CompareResult } from '@pendular/engine/types';
 import { useI18n } from '../i18n/index.js';
 import { chf, duration, num } from '../lib/format.js';
 import { optionName } from '../lib/names.js';
+import { carNote } from '../lib/carNote.js';
 
 export function Verdict(props: { result: CompareResult; onSelect: (id: string) => void }) {
   const { t, lang } = useI18n();
@@ -12,6 +13,9 @@ export function Verdict(props: { result: CompareResult; onSelect: (id: string) =
   const greenest = byId(verdict.greenest);
   if (!cheapest || !fastest || !greenest) return null;
   const car = options.find((o) => o.kind === 'car');
+  const vsCarShown = !!car && car.id !== cheapest.id && car.cost.yearly - cheapest.cost.yearly >= 100;
+  const carListed = !!car && [cheapest, fastest, greenest].some((o) => o.id === car.id);
+  const assumptions = vsCarShown || carListed ? carNote(props.result.stamp.car, t) : null;
 
   const tile = (label: string, o: CommuteOption, figure: string, unit: string) => (
     <button type="button" className="verdict-tile" onClick={() => props.onSelect(o.id)}>
@@ -35,7 +39,7 @@ export function Verdict(props: { result: CompareResult; onSelect: (id: string) =
           month: chf(cheapest.cost.yearly / 12, lang),
           time: duration(cheapest.durationMin),
         })}
-        {car && car.id !== cheapest.id && car.cost.yearly - cheapest.cost.yearly >= 100 && (
+        {car && vsCarShown && (
           <span className="answer-more"> {t('answer.vsCar', { chf: chf(car.cost.yearly - cheapest.cost.yearly, lang) })}</span>
         )}
       </p>
@@ -44,6 +48,7 @@ export function Verdict(props: { result: CompareResult; onSelect: (id: string) =
         {tile(t('verdict.fastest'), fastest, duration(fastest.durationMin), t('verdict.perTrip'))}
         {tile(t('verdict.greenest'), greenest, `${num(greenest.co2KgPerYear, lang)} kg CO₂`, t('verdict.perYear'))}
       </div>
+      {assumptions && <p className="car-note">{assumptions}</p>}
     </section>
   );
 }
