@@ -193,8 +193,12 @@ export function createZoneIndex(table: ZoneTable): ZoneIndex {
     }
     if (used.size === 0) return null;
     if (guessed) notes.unshift(`zone of ${guessed} stop(s) not drawn on the plan taken from nearby stops`);
-    // Zone 12 is only sold together with a neighbouring zone ("Grand Lausanne" = 11 + 12).
-    if (used.size === 1 && used.has(12)) used.add(11);
+    // Lausanne's zones 11 and 12 ("Grand Lausanne") always go together: SBB's shop lists both
+    // for any pass that reaches either (checked on Lucens – Lausanne, 10.11.2026).
+    if (used.has(11) || used.has(12)) {
+      used.add(11);
+      used.add(12);
+    }
     return { zones: [...used].sort((a, b) => a - b), exact, notes: [...new Set(notes)] };
   }
 

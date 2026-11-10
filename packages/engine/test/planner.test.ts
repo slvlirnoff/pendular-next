@@ -62,7 +62,7 @@ describe('zones', () => {
     expect(r.zones).toEqual([2, 3, 4]);
     expect(r.exact).toBe(false);
   });
-  it('sells zone 12 only with its neighbour', () => {
+  it('always counts Lausanne zones 11 and 12 together', () => {
     const centre = stop('Centre', '400');
     expect(zones.zonesForLegs([{ ...rail(centre, centre, '07:00', '07:05', 'm2'), mode: 'metro' }])!.zones).toEqual([11, 12]);
   });
