@@ -54,7 +54,7 @@ export const it: Dict = {
   'opt.saved': '{kg} kg in meno rispetto all\'auto',
   'opt.more': '{kg} kg in più rispetto all\'auto',
   'opt.hours': '{h} h all\'anno',
-  'opt.return': 'Ritorno: prima partenza {first}, ultima {last}',
+  'opt.return': 'Ritorno: prima partenza {first}, ultima partenza {last} (arrivo {arrival})',
   'opt.noReturn': 'Nessun ritorno trovato la sera',
   'opt.details': 'Dettagli',
   'opt.tickets': 'Titoli di trasporto confrontati',

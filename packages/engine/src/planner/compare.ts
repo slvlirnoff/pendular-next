@@ -371,7 +371,12 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       const longest = o.durationMin * 2 + 30;
       const back = (await returnCache.get(key)!).filter((it) => it.legs.some(isTransit) && it.durationMin <= longest);
       o.returnTrips = back.length
-        ? { first: localHHMM(back[0]!.departure, tz), last: localHHMM(back[back.length - 1]!.departure, tz), count: back.length }
+        ? {
+            first: localHHMM(back[0]!.departure, tz),
+            last: localHHMM(back[back.length - 1]!.departure, tz),
+            lastArrival: localHHMM(back[back.length - 1]!.arrival, tz),
+            count: back.length,
+          }
         : null;
     }),
   );

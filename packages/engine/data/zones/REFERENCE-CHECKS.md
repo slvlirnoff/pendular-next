@@ -28,3 +28,22 @@ What the check taught:
 - Lausanne's zones 11 and 12 are always counted together.
 - The train crosses zone 19 between Puidoux and Lausanne without stopping; it counts.
 - SBB prices the pass per route; the cheaper route (via Epalinges) is the default offer.
+
+## Lovatens → EPFL (10.11.2026, validity from 04.01.2027)
+
+| Trip as entered on sbb.ch | SBB offer | SBB price | Pendular |
+| --- | --- | --- | --- |
+| Lovatens, village → Ecublens VD, EPFL | Mobilis, 7 zones via Moudon, gare – Epalinges, Croisettes – Lausanne, Flon (11, 12, 18, 60, 61, 65, 103) | CHF 2052 | 7 zones, CHF 2052 (bus 361 + m2 + m1) |
+| same | Mobilis, 9 zones via Lucens – Renens VD, gare (11, 12, 19, 60, 61, 62, 63, 64, 103) | CHF 2376 | 9 zones, CHF 2376 (bus 475 + R8/R9 + m1) |
+| same | Mobilis, 11 zones via Lucens – Palézieux or Servion | CHF 2547 | not offered |
+| Lovatens, village → EPFL via Romont FR | Abo modulable via bus Prévonloup – Romont, incl. Lausanne zones 11, 12 | CHF 2660 | was wrongly priced as Mobilis 9 zones (CHF 2376): Romont is outside Mobilis |
+| same | Abonnement de parcours | from CHF 2637 | – |
+| Romont FR → Ecublens VD, EPFL | Abo modulable incl. Lausanne zones 11, 12 | CHF 2553 | was wrongly Mobilis; to be compared with the distance-table estimate |
+| same | Abonnement de parcours | from CHF 2511 | – |
+
+Lessons:
+- Lovatens and Lucens are in the same zone (103); the route decides the price, not the first stop.
+- Romont FR is in the canton of Fribourg, outside Mobilis. Trips through it are sold as a route pass,
+  or as an "abo modulable" (route pass plus the zones of Lausanne). The modulable pass is not
+  modelled yet.
+- Last trip home on 04.01.2027: bus 475 from Lucens at 19:19, Lovatens 19:32.

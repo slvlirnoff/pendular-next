@@ -77,7 +77,10 @@ export function buildDeps(cfg: Config): EngineDeps {
 
   let zones: ZoneIndex | undefined;
   if (existsSync(cfg.zonesPath)) {
-    zones = createZoneIndex(JSON.parse(readFileSync(cfg.zonesPath, 'utf8')) as ZoneTable);
+    // Stops of the canton of Vaud: the territory of the Mobilis network.
+    const vaudPath = resolve(cfg.zonesPath, '../vaud-stops.json');
+    const vaud = existsSync(vaudPath) ? new Set((JSON.parse(readFileSync(vaudPath, 'utf8')) as { stops: string[] }).stops) : null;
+    zones = createZoneIndex(JSON.parse(readFileSync(cfg.zonesPath, 'utf8')) as ZoneTable, vaud ? { inNetwork: (id) => vaud.has(id) } : {});
   }
 
   const gtfs = resolve(ROOT, 'data/raw/gtfs.zip');

@@ -66,6 +66,17 @@ describe('zones', () => {
     const centre = stop('Centre', '400');
     expect(zones.zonesForLegs([{ ...rail(centre, centre, '07:00', '07:05', 'm2'), mode: 'metro' }])!.zones).toEqual([11, 12]);
   });
+  it('gives no zone to a stop outside the network territory, even near drawn stops', () => {
+    const inside = createZoneIndex(
+      { ...TABLE, stops: TABLE.stops.map((s) => ({ ...s, gtfs: s.gtfs!.map((g) => ({ ...g, name: s.label, lat: 46.6, lon: 6.7 })) })) },
+      { inNetwork: (id) => id !== '999' },
+    );
+    const near = stop('Borderville', '998');
+    const beyond = stop('Otherton FR', '999');
+    expect(inside.zonesOfStop(near)).not.toBeNull();
+    expect(inside.zonesOfStop(beyond)).toBeNull();
+    expect(inside.zonesForLegs([rail(HOME, CITY, '07:00', '07:40', 'IR 1', 20, [beyond])])).toBeNull();
+  });
   it('returns null when a trip ends outside the table', () => {
     expect(zones.zonesForLegs([rail(HOME, stop('Elsewhere', '999'), '07:00', '08:00', 'IC 1')])).toBeNull();
   });
@@ -175,7 +186,7 @@ describe('compare', () => {
     // Cheapest parking: the yearly pass (500) beats 12 × 60 and 235 × 5.
     expect(pr.cost.extras.find((e) => e.key === 'parking.year')!.yearly).toBe(500);
     expect(pr.cost.extras.some((e) => e.key === 'car.distance')).toBe(true);
-    expect(pr.returnTrips).toEqual({ first: '17:05', last: '22:35', count: 2 });
+    expect(pr.returnTrips).toEqual({ first: '17:05', last: '22:35', lastArrival: '23:15', count: 2 });
 
     const car = r.options.find((o) => o.kind === 'car')!;
     expect(car.cost.yearly).toBe(Math.round(30 * 470 * 0.74) + 260 * 12);

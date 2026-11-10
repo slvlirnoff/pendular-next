@@ -43,7 +43,17 @@ const norm = (s: string) =>
 /** Station-level id: "8501120:0:1" → "8501120", "Parent8501120" → "8501120". */
 export const stationKey = (id: string) => id.replace(/^Parent/, '').split(':')[0]!;
 
-export function createZoneIndex(table: ZoneTable): ZoneIndex {
+export interface ZoneIndexOptions {
+  /**
+   * Whether a stop (station-level number) lies inside the fare network's territory. Stops the
+   * plan does not draw take a zone from nearby stops only when this says yes; a trip calling
+   * at a stop outside the territory is not a trip of this network.
+   */
+  inNetwork?: (stationNumber: string) => boolean;
+}
+
+export function createZoneIndex(table: ZoneTable, options: ZoneIndexOptions = {}): ZoneIndex {
+  const outside = (stop: StopPoint) => !!options.inNetwork && !!stop.stopId && !options.inNetwork(stationKey(stop.stopId));
   // A stop id can be claimed by several labels (a village label lists all stops of the village);
   // the most specific match wins.
   const RANK: Record<string, number> = { exact: 4, normalised: 3, fuzzy: 2, locality: 1 };
@@ -104,6 +114,7 @@ export function createZoneIndex(table: ZoneTable): ZoneIndex {
       const hit = byId.get(stationKey(stop.stopId));
       if (hit) return hit;
     }
+    if (outside(stop)) return null;
     const byLabel = byName.get(norm(stop.name));
     if (byLabel) return { zones: byLabel.zones, confident: false };
     const guess = nearestZones(stop);
@@ -145,7 +156,7 @@ export function createZoneIndex(table: ZoneTable): ZoneIndex {
         const isEnd = i === 0 || i === stops.length - 1;
         if (!z) {
           // Boarding or alighting outside the table: not a Mobilis trip.
-          if (isEnd) return null;
+          if (isEnd || outside(stops[i]!)) return null;
           exact = false;
           guessed++;
           continue;

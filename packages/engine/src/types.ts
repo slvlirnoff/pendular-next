@@ -317,8 +317,11 @@ export interface CommuteOption {
   departuresInWindow?: number;
   firstArrival?: string;
   lastArrival?: string;
-  /** First and last trip home in the return window, "HH:MM" departures. */
-  returnTrips?: { first: string; last: string; count: number } | null;
+  /**
+   * First and last trip home in the return window: "HH:MM" departures from work, and when the
+   * last one arrives.
+   */
+  returnTrips?: { first: string; last: string; lastArrival: string; count: number } | null;
   /** Kilometres per one-way trip by leg mode. */
   kmByMode: Partial<Record<LegMode, number>>;
   cost: OptionCost;

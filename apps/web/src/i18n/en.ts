@@ -54,7 +54,7 @@ export const en: Dict = {
   'opt.saved': '{kg} kg less than driving',
   'opt.more': '{kg} kg more than driving',
   'opt.hours': '{h} h per year',
-  'opt.return': 'Return: first departure {first}, last {last}',
+  'opt.return': 'Return: first departure {first}, last departure {last} (arriving {arrival})',
   'opt.noReturn': 'No return trip found in the evening',
   'opt.details': 'Details',
   'opt.tickets': 'Tickets compared',

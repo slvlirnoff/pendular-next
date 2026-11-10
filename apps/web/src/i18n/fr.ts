@@ -53,7 +53,7 @@ export const fr = {
   'opt.saved': '{kg} kg de moins que la voiture',
   'opt.more': '{kg} kg de plus que la voiture',
   'opt.hours': '{h} h par an',
-  'opt.return': 'Retour : premier départ {first}, dernier {last}',
+  'opt.return': 'Retour : premier départ {first}, dernier départ {last} (arrivée {arrival})',
   'opt.noReturn': 'Aucun retour trouvé le soir',
   'opt.details': 'Détails',
   'opt.tickets': 'Titres de transport comparés',

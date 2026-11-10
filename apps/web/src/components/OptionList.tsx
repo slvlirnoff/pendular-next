@@ -132,7 +132,7 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
           <p className="detail-facts">
             {t('opt.hours', { h: num(o.hoursPerYear, lang) })}
             {o.firstArrival && o.lastArrival && ` · ${t('opt.arrivals', { first: o.firstArrival, last: o.lastArrival })}`}
-            {o.returnTrips && ` · ${t('opt.return', { first: o.returnTrips.first, last: o.returnTrips.last })}`}
+            {o.returnTrips && ` · ${t('opt.return', { first: o.returnTrips.first, last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}`}
             {o.returnTrips === null && <span className="warn"> · {t('opt.noReturn')}</span>}
           </p>
           <Products products={o.cost.products} />

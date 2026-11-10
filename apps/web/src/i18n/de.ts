@@ -54,7 +54,7 @@ export const de: Dict = {
   'opt.saved': '{kg} kg weniger als mit dem Auto',
   'opt.more': '{kg} kg mehr als mit dem Auto',
   'opt.hours': '{h} h pro Jahr',
-  'opt.return': 'Rückweg: erste Abfahrt {first}, letzte {last}',
+  'opt.return': 'Rückweg: erste Abfahrt {first}, letzte Abfahrt {last} (Ankunft {arrival})',
   'opt.noReturn': 'Kein Rückweg am Abend gefunden',
   'opt.details': 'Details',
   'opt.tickets': 'Verglichene Fahrausweise',
