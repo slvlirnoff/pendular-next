@@ -22,6 +22,8 @@ export const PENDULAR_RULES: RuleSet = {
   cityParkRideMaxDetour: 1,
   parkRailMaxDriveShare: 0.5,
   bikeRideMinMin: 4,
+  accessMinKmFromWork: 2,
+  walkInsteadOfBikeMaxMin: 15,
   accessCandidates: 4,
   maxOptionsPerKind: 3,
   arrivalSliceMin: 30,

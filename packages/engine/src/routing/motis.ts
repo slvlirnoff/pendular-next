@@ -146,11 +146,17 @@ export class MotisRouting implements RoutingProvider {
   private async get<T>(path: string, params: Record<string, string | number | boolean>): Promise<T> {
     const url = new URL(path, this.o.baseUrl);
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
-    const res = await this.f(url);
-    if (!res.ok) {
-      throw new Error(`MOTIS ${path} ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    // One retry: a single failed call must not silently drop an option (the car, for instance).
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await this.f(url);
+        if (res.ok) return (await res.json()) as T;
+        if (res.status < 500 || attempt > 0) throw new Error(`MOTIS ${path} ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      } catch (e) {
+        if (attempt > 0 || (e instanceof Error && e.message.startsWith('MOTIS '))) throw e;
+      }
+      await new Promise((r) => setTimeout(r, 250));
     }
-    return (await res.json()) as T;
   }
 
   private toLeg(l: MotisLeg, streetAs?: LegMode): Leg {

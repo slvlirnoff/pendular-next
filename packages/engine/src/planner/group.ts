@@ -40,7 +40,8 @@ export function routeTitle(its: Itinerary[]): string {
   if (first.length === 0) return '';
   const lines = first.map((leg, i) => {
     const names = new Set(its.map((it) => legsOf(it)[i]?.line?.name || leg.mode));
-    return [...names].sort().join('/');
+    const sorted = [...names].sort();
+    return sorted.length > 3 ? `${sorted.slice(0, 3).join('/')}…` : sorted.join('/');
   });
   return `${first[0]!.from.name} → ${first[first.length - 1]!.to.name}, ${lines.join(' · ')}`;
 }

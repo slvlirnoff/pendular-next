@@ -114,6 +114,10 @@ export interface RuleSet {
   parkRailMaxDriveShare: number;
   /** Shortest ride for which a bike-and-ride option is worth showing, minutes. */
   bikeRideMinMin: number;
+  /** A site this close to work is not park and ride: one drives to work. Kilometres. */
+  accessMinKmFromWork: number;
+  /** When walking takes at most this long, bike and e-bike are not offered. Minutes. */
+  walkInsteadOfBikeMaxMin: number;
   /** Access stations tried per access type after the cheap pre-selection. */
   accessCandidates: number;
   /** Options kept per kind after pruning. */

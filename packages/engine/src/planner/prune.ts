@@ -26,7 +26,8 @@ function slices(o: WithArrivals, startMs: number, sliceMin: number): Set<number>
 
 /** Differences below these are noise, not a reason to keep two options apart. */
 const SAME_MINUTES = 2;
-const SAME_CO2_SHARE = 0.05;
+// CO₂ keeps a dearer or slower option only when it is clearly lower (train against bus).
+const SAME_CO2_SHARE = 0.3;
 
 /**
  * `b` is at least as good as `a` on cost, time and CO₂ (within the noise margins), and better
@@ -78,7 +79,10 @@ export function prune(
   for (const group of byType.values()) {
     const sliceOf = new Map(group.map((o) => [o.id, slices(o, startMs, rules.arrivalSliceMin)]));
     /** True when `o` arrives in a slice that no other option of `among` reaches. */
+    // ...unless it takes much longer than the best of its kind: then it is no real way to arrive.
+    const bestMin = Math.min(...group.map((o) => o.durationMin));
     const onlyWay = (o: WithArrivals, among: WithArrivals[]) =>
+      o.durationMin <= bestMin * 1.3 + 5 &&
       [...(sliceOf.get(o.id) ?? [])].some((s) => !among.some((x) => x !== o && sliceOf.get(x.id)?.has(s)));
 
     // 1. Dominance, unless the option is the only way to arrive at some time.

@@ -23,18 +23,11 @@
  },
  "echallens-lausanne-flon": {
   "transit": {
-   "count": 2,
+   "count": 1,
    "bestDurationMin": 35,
    "cheapestYearly": 1305,
    "cheapestProduct": "zonePassYearly",
    "zones": 4
-  },
-  "ebike": {
-   "count": 1,
-   "bestDurationMin": 41,
-   "cheapestYearly": 1623,
-   "cheapestProduct": null,
-   "tariffKm": 15
   },
   "car": {
    "count": 1,
@@ -110,13 +103,6 @@
    "cheapestProduct": "zonePassYearly",
    "zones": 5
   },
-  "ebike": {
-   "count": 1,
-   "bestDurationMin": 59,
-   "cheapestYearly": 2351,
-   "cheapestProduct": null,
-   "tariffKm": 21.7
-  },
   "cityParkRide": {
    "count": 2,
    "bestDurationMin": 39,
@@ -152,13 +138,6 @@
    "cheapestYearly": 1809,
    "cheapestProduct": "routePassYearly",
    "tariffKm": 26
-  },
-  "ebike": {
-   "count": 1,
-   "bestDurationMin": 60,
-   "cheapestYearly": 2370,
-   "cheapestProduct": null,
-   "tariffKm": 21.9
   },
   "car": {
    "count": 1,

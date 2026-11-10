@@ -213,14 +213,20 @@ describe('compare', () => {
   });
 
   it('charges bike and e-bike kilometres at the rule set rates', async () => {
-    const r = await compare({ ...REQUEST, rules: { ebikeAllWayMaxMin: 120, bikeAllWayMaxMin: 120 } }, deps());
+    const r = await compare({ ...REQUEST, kinds: ['bike', 'ebike', 'car'], rules: { ebikeAllWayMaxMin: 120, bikeAllWayMaxMin: 120 } }, deps());
     const ebike = r.options.find((o) => o.kind === 'ebike')!;
     expect(ebike.cost.yearly).toBe(Math.round(30 * 470 * PENDULAR_RULES.ebikeFullCostPerKm));
     const bike = r.options.find((o) => o.kind === 'bike')!;
     expect(bike.cost.extras[0]!.key).toBe('bike.distance');
     expect(bike.cost.yearly).toBe(Math.round(30 * 470 * PENDULAR_RULES.bikeFullCostPerKm));
-    const owned = await compare({ ...REQUEST, bike: { ebikeCostPerKm: PENDULAR_RULES.ebikeRunningCostPerKm }, rules: { ebikeAllWayMaxMin: 120 } }, deps());
+    const owned = await compare({ ...REQUEST, kinds: ['ebike', 'car'], bike: { ebikeCostPerKm: PENDULAR_RULES.ebikeRunningCostPerKm }, rules: { ebikeAllWayMaxMin: 120 } }, deps());
     expect(owned.options.find((o) => o.kind === 'ebike')!.cost.yearly).toBe(Math.round(30 * 470 * 0.09));
+  });
+
+  it('drops an e-bike ride that public transport beats on both time and cost', async () => {
+    const r = await compare({ ...REQUEST, rules: { ebikeAllWayMaxMin: 120 } }, deps());
+    expect(r.options.some((o) => o.kind === 'ebike')).toBe(false);
+    expect(r.leftOut.some((l) => l.kind === 'ebike' && l.code === 'dominated')).toBe(true);
   });
 
   it('never lets a car option remove public transport', async () => {

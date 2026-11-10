@@ -179,10 +179,13 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const street = (profile: StreetProfile) => safe(routing.street({ from: req.home, to: req.work, profile }), null);
 
   // --- 1. Everything that does not depend on anything else, in parallel -----------------------
-  const near = (sites: AccessCandidate[], km: number) => sites.filter((s) => haversineKm(req.home, s) <= km);
+  const near = (sites: AccessCandidate[], km: number) =>
+    sites.filter((s) => haversineKm(req.home, s) <= km && haversineKm(req.work, s) >= rules.accessMinKmFromWork);
   const prCand = want('parkRail') ? near(deps.parkRail, rules.parkRailMaxDriveMin * 1.1) : [];
   const brCand = want('bikeRide') ? near(deps.bikeParking, rules.bikeRideMaxMin * 0.4) : [];
-  const cityCand = want('cityParkRide') ? deps.cityParkRide.filter((s) => haversineKm(req.work, s) <= 8) : [];
+  const cityCand = want('cityParkRide')
+    ? deps.cityParkRide.filter((s) => haversineKm(req.work, s) <= 8 && haversineKm(req.work, s) >= rules.accessMinKmFromWork)
+    : [];
 
   const [direct, car, bike, ebike, walk, prDrive, cityDrive, brRide] = await Promise.all([
     want('transit') || prCand.length || brCand.length ? transitFromHome() : Promise.resolve([] as Itinerary[]),
@@ -199,7 +202,10 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const leftOut: CompareResult['leftOut'] = [];
 
   // --- 2. Public transport door to door -----------------------------------------------------
-  const transitGroups = groupItineraries(direct.filter((it) => it.legs.some(isTransit)));
+  // A connection taking more than twice the fastest (plus half an hour) is not an alternative.
+  const withTransit = direct.filter((it) => it.legs.some(isTransit));
+  const quickest = Math.min(...withTransit.map((it) => it.durationMin));
+  const transitGroups = groupItineraries(withTransit.filter((it) => it.durationMin <= quickest * 2 + 30));
   if (want('transit')) {
     for (const g of transitGroups) {
       drafts.push({ kind: 'transit', title: g.title, itinerary: g.typical, durationMin: g.typicalMin, changes: g.changes, group: g });
@@ -366,6 +372,29 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
         yearly: o.cost.yearly,
       });
     }
+  }
+
+  // --- 5c. Walking, cycling: only where they make sense -----------------------------------------
+  const walkOption = options.find((o) => o.kind === 'walk');
+  for (let i = options.length - 1; i >= 0; i--) {
+    const o = options[i]!;
+    if (o.kind !== 'bike' && o.kind !== 'ebike' && o.kind !== 'walk') continue;
+    // A walk of a quarter of an hour needs no bike.
+    const shortWalk = o.kind !== 'walk' && walkOption && walkOption.durationMin <= rules.walkInsteadOfBikeMaxMin ? walkOption : undefined;
+    // Public transport that is both faster and cheaper makes the ride pointless.
+    const better = pt.find((t) => t.durationMin < o.durationMin && t.cost.yearly < o.cost.yearly);
+    const against = shortWalk ?? better;
+    if (!against) continue;
+    options.splice(i, 1);
+    leftOut.push({
+      kind: o.kind,
+      title: o.kind,
+      code: 'dominated',
+      against: against.title,
+      delta: { minutes: o.durationMin - against.durationMin, chfPerYear: o.cost.yearly - against.cost.yearly },
+      durationMin: o.durationMin,
+      yearly: o.cost.yearly,
+    });
   }
 
   // --- 6. Prune, rank ------------------------------------------------------------------------
