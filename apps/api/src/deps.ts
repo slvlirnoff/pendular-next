@@ -104,7 +104,8 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
       baseUrl: cfg.motisUrl,
       fetch: httpGet,
       timezone: PENDULAR_RULES.timezone,
-      // Calibrated on Lausanne–Bern, Vevey–Genève and Aigle–Lausanne (straight-line 78, 74, 37 km
+      // Legs follow the tracks (MOTIS route shapes), so their length is the distance. Fallback
+      // for a leg without a shape, calibrated on Lausanne–Bern, Vevey–Genève, Aigle–Lausanne (78, 74, 37 km
       // against about 97, 87 and 52 km of track): a rough correction until legs follow the tracks.
       transitDistanceFactor: { rail: 1.25, other: 1.15 },
       referenceTime: `${PENDULAR_RULES.referenceDate}T11:00:00Z`,

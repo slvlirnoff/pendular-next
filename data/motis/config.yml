@@ -6,7 +6,16 @@ timetable:
   first_day: 2026-12-13
   num_days: 364
   railviz: false
-  with_shapes: false
+  # The GTFS has no shapes: MOTIS routes rail, tram, metro and bus lines over OpenStreetMap, so
+  # that legs follow the tracks and their length is the distance travelled (distance fares, CO2).
+  with_shapes: true
+  route_shapes:
+    mode: all
+    clasz:
+      COACH: false
+      AIR: false
+      SHIP: false
+      OTHER: false
   adjust_footpaths: true
   link_stop_distance: 100
   max_footpath_length: 15

@@ -69,9 +69,9 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 74,
-   "cheapestYearly": 3303,
+   "cheapestYearly": 3024,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 93
+   "tariffKm": 79
   },
   "car": {
    "count": 1,
@@ -86,7 +86,7 @@
    "bestDurationMin": 75,
    "cheapestYearly": 3375,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 98
+   "tariffKm": 97
   },
   "car": {
    "count": 1,
@@ -136,9 +136,9 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 31,
-   "cheapestYearly": 1809,
+   "cheapestYearly": 1674,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 26
+   "tariffKm": 22
   },
   "car": {
    "count": 1,
@@ -230,9 +230,9 @@
   "transit": {
    "count": 3,
    "bestDurationMin": 56,
-   "cheapestYearly": 1953,
+   "cheapestYearly": 1881,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 29
+   "tariffKm": 27
   },
   "car": {
    "count": 1,
@@ -245,9 +245,9 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 32,
-   "cheapestYearly": 1881,
+   "cheapestYearly": 1953,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 27
+   "tariffKm": 30
   },
   "car": {
    "count": 1,

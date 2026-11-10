@@ -176,7 +176,13 @@ export class MotisRouting implements RoutingProvider {
       distanceM: Math.round(
         l.distance ??
           (geometry ? pathLength(geometry) : 0) *
-            (transit ? (mode === 'rail' ? (this.o.transitDistanceFactor?.rail ?? 1) : (this.o.transitDistanceFactor?.other ?? 1)) : 1),
+            // A geometry with more points than stops follows the tracks: its length is the
+            // distance. A straight line from stop to stop is corrected by a factor.
+            (transit && !(geometry && geometry.length > (l.intermediateStops?.length ?? 0) + 2)
+              ? mode === 'rail'
+                ? (this.o.transitDistanceFactor?.rail ?? 1)
+                : (this.o.transitDistanceFactor?.other ?? 1)
+              : 1),
       ),
       line: transit
         ? {
