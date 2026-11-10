@@ -1,6 +1,6 @@
 // SBB pictogram lookup. Names are file names (without .svg) in /icons/sbb/.
 // Only names present in manifest.json are ever returned.
-import manifest from '../../public/icons/sbb/manifest.json' with { type: 'json' };
+import manifest from './sbb-manifest.json';
 
 const LINES: ReadonlySet<string> = new Set(manifest.lines);
 const ICONS: ReadonlySet<string> = new Set(manifest.icons);

@@ -1,19 +1,15 @@
-# Lausanne park-and-ride: sources
+# Lausanne city park and ride: sources
 
-Status: NOT FILLED. On 2026-11-10 every request to www.lausanne.ch (home page, robots.txt, sitemap.xml and
-guessed P+R page paths) returned "Request Rejected" (a web-application-firewall block, HTTP 334 body) with
-`curl -A 'Mozilla/5.0'` through the sandbox proxy. I did not try to get around the filter.
+Transcribed by hand from lausanne.ch on 2026-11-09 by the product owner (the site is not open data
+and refuses automated clients), then converted to `lausanne-pr.json`.
 
-Therefore `lausanne-pr.json` holds only the five site names from the product spec (Vennes, Bourdonnette,
-Vélodrome, Valmont, Mont-sur-Lausanne) with everything else null:
+- Overview: https://www.lausanne.ch/vie-pratique/mobilite/parkings-stationnement/les-parkings-a-lausanne/parking-relais.html
+- One page per site: see `sourceUrl` of each site.
 
-- coordinates / street address: not found
-- capacity: not found
-- daily price, monthly pass price: not found
-- whether day/month price includes public transport (Mobilis zones 11+12; Vennes parking only): spec claim, not confirmed
-- other sites the city lists (Ouchy, Provence, ...): not checked
-- nearest stop: not found
-
-No page URL was successfully fetched, so `sourceUrl` is null for all sites.
-
-To finish: fetch the city's "parkings relais" page from an unblocked network (or paste its text), then fill the JSON.
+Notes
+- Prices as published in November 2026; not confirmed for the timetable year from 13.12.2026.
+- Coordinates are approximate car park locations, not surveyed.
+- The monthly pass (CHF 130) includes a Mobilis Grand Lausanne pass (zones 11 + 12).
+- Vennes is parking only (annual subscription CHF 990); it needs a Mobilis pass for zones 11 + 12 and
+  an employer attestation, and its waiting list is closed.
+- No daily prices were transcribed.

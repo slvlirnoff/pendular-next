@@ -14,7 +14,7 @@ fetch() { # url dest
 }
 
 GTFS_URL="${GTFS_URL:-https://data.opentransportdata.swiss/dataset/timetable-2027-gtfs2020/permalink}"
-OSM_URL="${OSM_URL:-https://planet.osm.ch/switzerland-padded.osm.pbf}"
+OSM_URL="${OSM_URL:-https://download.openstreetmap.fr/extracts/europe/switzerland-latest.osm.pbf}"
 PARKING_URL="${PARKING_URL:-https://data.opentransportdata.swiss/dataset/bike-and-car-parking/permalink}"
 MOTIS_URL="${MOTIS_URL:-https://github.com/motis-project/motis/releases/latest/download/motis-linux-amd64.tar.bz2}"
 

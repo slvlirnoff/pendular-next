@@ -54,9 +54,17 @@ describe('sitesNear', () => {
 });
 
 describe('loadCityParkRide', () => {
-  it('lists the five spec sites, nothing invented', () => {
+  it('holds the five Lausanne sites as transcribed from lausanne.ch', () => {
     const c = loadCityParkRide();
-    expect(c.map((s) => s.name)).toContain('P+R Vennes');
-    for (const s of c) expect(s.prices).toEqual({ day: null, month: null, year: null });
+    expect(c).toHaveLength(5);
+    const vennes = c.find((s) => s.name === 'P+R Vennes')!;
+    // Vennes is parking only, sold by the year.
+    expect(vennes.prices).toEqual({ day: null, month: null, year: 990 });
+    expect(vennes.includesTransit.month).toBe(false);
+    for (const s of c.filter((x) => x !== vennes)) {
+      expect(s.prices).toEqual({ day: null, month: 130, year: null });
+      expect(s.includesTransit.month).toBe(true);
+      expect(s.zones).toEqual([11, 12]);
+    }
   });
 });

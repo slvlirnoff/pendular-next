@@ -1,121 +1,128 @@
 {
-  "source": "lausanne.ch (unreachable in this session; names from the product spec)",
-  "fetchedAt": null,
+  "source": "https://www.lausanne.ch/vie-pratique/mobilite/parkings-stationnement/les-parkings-a-lausanne/parking-relais.html (one page per site, linked from each feature)",
+  "fetchedAt": "2026-11-09",
+  "transcribed": "2026-11-09, by hand from lausanne.ch",
+  "priceValidity": "Prices as published in November 2026; not confirmed for the timetable year from 13.12.2026.",
+  "coordinates": "WGS 84, [lon, lat]; approximate car park locations, not surveyed",
+  "notes": [
+    "Not in the SBB P+Rail dataset (opentransportdata.swiss bike-and-car-parking): these are the city's own sites.",
+    "The monthly P+R pass includes a Mobilis Grand Lausanne public transport pass (zones 11 + 12), so no separate ticket is needed inside those zones; Vennes is parking only."
+  ],
   "sites": [
     {
       "id": "lausanne-pr-vennes",
       "name": "P+R Vennes",
-      "lat": null,
-      "lon": null,
-      "capacity": null,
+      "lat": 46.541,
+      "lon": 6.6582,
+      "capacity": 1132,
       "prices": {
         "day": null,
         "month": null,
-        "year": null
+        "year": 990
       },
       "includesTransit": {
-        "day": null,
-        "month": null
+        "day": false,
+        "month": false
       },
       "zones": [
         11,
         12
       ],
-      "nearestStop": null,
-      "sourceUrl": null,
-      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+      "nearestStop": "Next to the m2 metro (Vennes stop).",
+      "sourceUrl": "https://www.lausanne.ch/vie-pratique/mobilite/parkings-stationnement/les-parkings-a-lausanne/parking-relais/parking-vennes.html",
+      "notes": "Parking only: needs a Mobilis pass covering zones 11 + 12 and an employer attestation. The waiting list for subscriptions is closed. Next to the m2 metro (Vennes stop)."
     },
     {
       "id": "lausanne-pr-bourdonnette",
       "name": "P+R Bourdonnette",
-      "lat": null,
-      "lon": null,
-      "capacity": null,
+      "lat": 46.5233,
+      "lon": 6.5898,
+      "capacity": 170,
       "prices": {
         "day": null,
-        "month": null,
+        "month": 130,
         "year": null
       },
       "includesTransit": {
-        "day": null,
-        "month": null
+        "day": false,
+        "month": true
       },
       "zones": [
         11,
         12
       ],
-      "nearestStop": null,
-      "sourceUrl": null,
-      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+      "nearestStop": "Next to the m1 metro (Bourdonnette stop).",
+      "sourceUrl": "https://www.lausanne.ch/vie-pratique/mobilite/parkings-stationnement/les-parkings-a-lausanne/parking-relais/parking-bourdonnette.html",
+      "notes": "Monthly pass from the city parking office; free ID card required. Next to the m1 metro (Bourdonnette stop)."
     },
     {
       "id": "lausanne-pr-velodrome",
       "name": "P+R Vélodrome",
-      "lat": null,
-      "lon": null,
-      "capacity": null,
+      "lat": 46.5366,
+      "lon": 6.6231,
+      "capacity": 567,
       "prices": {
         "day": null,
-        "month": null,
+        "month": 130,
         "year": null
       },
       "includesTransit": {
-        "day": null,
-        "month": null
+        "day": false,
+        "month": true
       },
       "zones": [
         11,
         12
       ],
       "nearestStop": null,
-      "sourceUrl": null,
-      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+      "sourceUrl": "https://www.lausanne.ch/vie-pratique/mobilite/parkings-stationnement/les-parkings-a-lausanne/parking-relais/parking-velodrome.html",
+      "notes": "Monthly pass from the city parking office; free ID card required."
     },
     {
       "id": "lausanne-pr-valmont",
       "name": "P+R Valmont",
-      "lat": null,
-      "lon": null,
-      "capacity": null,
+      "lat": 46.5352,
+      "lon": 6.6554,
+      "capacity": 77,
       "prices": {
         "day": null,
-        "month": null,
+        "month": 130,
         "year": null
       },
       "includesTransit": {
-        "day": null,
-        "month": null
+        "day": false,
+        "month": true
       },
       "zones": [
         11,
         12
       ],
       "nearestStop": null,
-      "sourceUrl": null,
-      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+      "sourceUrl": "https://www.lausanne.ch/vie-pratique/mobilite/parkings-stationnement/les-parkings-a-lausanne/parking-relais/parking-valmont.html",
+      "notes": "Monthly pass from the city parking office; free ID card required."
     },
     {
-      "id": "lausanne-pr-mont-sur-lausanne",
-      "name": "P+R Mont-sur-Lausanne",
-      "lat": null,
-      "lon": null,
-      "capacity": null,
+      "id": "lausanne-pr-mont",
+      "name": "P+R Mont-sur-Lausanne (Grand-Mont)",
+      "lat": 46.563,
+      "lon": 6.6332,
+      "capacity": 46,
       "prices": {
         "day": null,
-        "month": null,
+        "month": 130,
         "year": null
       },
       "includesTransit": {
-        "day": null,
-        "month": null
+        "day": false,
+        "month": true
       },
       "zones": [
         11,
         12
       ],
       "nearestStop": null,
-      "sourceUrl": null,
-      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+      "sourceUrl": "https://www.lausanne.ch/vie-pratique/mobilite/parkings-stationnement/les-parkings-a-lausanne/parking-relais/parking-mont-sur-lausanne.html",
+      "notes": "Monthly pass from the city parking office; free ID card required."
     }
   ]
 }

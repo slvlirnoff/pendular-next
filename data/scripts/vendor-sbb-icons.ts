@@ -28,7 +28,8 @@ const ICON_BASES = [
   'clock', 'alarm-clock', 'arrow-change', 'arrow-change-horizontal', 'railway-switch', 'leaf',
   'cloud-co2', 'cloud-co2-arrow-down', 'circle-leaf-power-plug', 'coins', 'coin-stack', 'coin-dollar',
   'money-exchange', 'ticket-route', 'half-fare-card', 'route-circle-start', 'route-circle-end',
-  'timetable', 'switzerland-route',
+  'timetable', 'switzerland-route', 'house', 'location-pin', 'train-station', 'chevron-small-down',
+  'chevron-small-up', 'circle-information', 'sign-exclamation-point', 'list',
 ];
 
 interface Index { version: string; icons: { name: string }[] }
@@ -84,6 +85,7 @@ const manifest = {
   icons: icons.filter((n) => !failedNames.has(n)),
 };
 await writeFile(join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest) + '\n');
+await writeFile(join(OUT_DIR, '../../../src/lib/sbb-manifest.json'), JSON.stringify(manifest) + '\n');
 
 let bytes = 0;
 for (const n of [...manifest.lines, ...manifest.icons]) bytes += (await stat(join(OUT_DIR, `${n}.svg`))).size;
