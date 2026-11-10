@@ -80,7 +80,7 @@ function kmByMode(legs: Leg[]): Partial<Record<LegMode, number>> {
 }
 
 const worst = (ps: Provenance[]): Provenance =>
-  ps.includes('estimated') ? 'estimated' : ps.includes('tariff') ? 'tariff' : 'quoted';
+  ps.length === 0 || ps.includes('estimated') ? 'estimated' : ps.includes('tariff') ? 'tariff' : 'quoted';
 
 function buildCost(products: PricedProduct[], extras: CostComponent[]): OptionCost {
   const sorted = [...products].sort((a, b) => a.yearly - b.yearly);
@@ -153,8 +153,21 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const tz = rules.timezone;
 
   const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
-  const transitTo = (from: LatLon, window: TimeWindow = req.arrival) =>
-    safe(routing.transit({ from, to: req.work, date, window, by: 'arrive' }), [] as Itinerary[]);
+  /** The routing engine names free coordinates START and END: use the places' own labels. */
+  const relabel = (its: Itinerary[], fromName: string | undefined, toName: string | undefined) => {
+    for (const it of its) {
+      const first = it.legs[0];
+      const last = it.legs[it.legs.length - 1];
+      if (first && fromName && !first.from.stopId) first.from.name = fromName;
+      if (last && toName && !last.to.stopId) last.to.name = toName;
+    }
+    return its;
+  };
+  const transitTo = (from: LatLon & { name?: string }, window: TimeWindow = req.arrival) =>
+    safe(
+      routing.transit({ from, to: req.work, date, window, by: 'arrive' }).then((its) => relabel(its, from.name, work.name)),
+      [] as Itinerary[],
+    );
   const street = (profile: StreetProfile) => safe(routing.street({ from: req.home, to: req.work, profile }), null);
 
   // --- 1. Everything that does not depend on anything else, in parallel -----------------------
@@ -164,7 +177,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const cityCand = want('cityParkRide') ? deps.cityParkRide.filter((s) => haversineKm(req.work, s) <= 8) : [];
 
   const [direct, car, bike, ebike, walk, prDrive, cityDrive, brRide] = await Promise.all([
-    want('transit') || prCand.length || brCand.length ? transitTo(req.home) : Promise.resolve([] as Itinerary[]),
+    want('transit') || prCand.length || brCand.length ? transitTo(home) : Promise.resolve([] as Itinerary[]),
     street('car'),
     want('bike') ? street('bike') : Promise.resolve(null),
     want('ebike') ? street('ebike') : Promise.resolve(null),
@@ -209,7 +222,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     reachable.forEach((c, i) => {
       const groups = groupItineraries((results[i] ?? []).filter((it) => it.legs.some(isTransit)));
       const g = [...groups].sort((a, b) => a.typicalMin - b.typicalMin)[0];
-      const label = `${kind === 'bikeRide' ? 'Bike + ' : 'P+R '}${c.site.name}`;
+      const label = c.site.name;
       if (!g) return;
       const factor = legMode === 'car' ? rules.carPeakFactor : 1;
       const accessMin = c.route.durationMin * factor + transferMin;
@@ -244,7 +257,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
         changes: g.changes,
         legs: [accessLeg, ...g.typical.legs],
       };
-      drafts.push({ kind, title: `${label} → ${g.title}`, itinerary, durationMin: total, changes: g.changes, group: g, access: c.site, accessRoute: c.route });
+      drafts.push({ kind, title: g.title, itinerary, durationMin: total, changes: g.changes, group: g, access: c.site, accessRoute: c.route });
     });
   }
   await Promise.all([

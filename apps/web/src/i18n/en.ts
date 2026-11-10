@@ -36,7 +36,7 @@ export const en: Dict = {
   'verdict.greenest': 'Least CO₂',
   'verdict.perYear': 'per year',
   'verdict.perTrip': 'per trip',
-  'verdict.tradeoff': '{fast} saves you {hours} h a year over {cheap}, for {chf} more: {rate} per hour saved.',
+  'verdict.tradeoff': '{fast}: {hours} h less per year than “{cheap}”, for {chf} more, or {rate} per hour saved.',
   'verdict.same': 'The cheapest way is also the fastest.',
   'chart.title': 'Yearly cost and door-to-door time',
   'chart.x': 'Time per trip',
@@ -119,6 +119,7 @@ export const en: Dict = {
   'method.data': 'Timetable: {timetable}. Streets: {streets}. Tariffs: {tariffs}.',
   'method.parkingNote': 'P+Rail options assume a free space; occupancy is not known.',
   'method.zoneNote': 'Mobilis zones come from the published plan (edition of 14.12.2025); where in doubt the price is marked as an estimate.',
+  'method.bikeNote': 'Buying and maintaining a bike is not counted.',
   'credits': 'Data: opentransportdata.swiss · © OpenStreetMap contributors · OpenFreeMap / OpenMapTiles · Pictograms: SBB · A PathWorks Tech project, Lausanne.',
   'privacy': 'No accounts, no cookies, no trackers.',
 };

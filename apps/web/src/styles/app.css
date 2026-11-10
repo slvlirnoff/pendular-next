@@ -85,11 +85,12 @@ input[type='number'] { width: 96px; }
 .verdict-name { font-size: 14px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .verdict-line { margin-top: 12px; color: var(--text-muted); max-width: 70ch; }
 
-.chart { padding: 20px; }
+.chart { padding: 20px 0; }
+.chart h2, .chart-key { padding: 0 20px; }
 .chart svg { width: 100%; height: auto; display: block; margin-top: 8px; overflow: visible; }
 .chart .grid { stroke: var(--border); }
 .chart .axis { stroke: var(--border-strong); }
-.chart .tick, .chart .axis-title { font-size: 12px; fill: var(--text-subtle); }
+.chart .tick, .chart .axis-title { font-size: 13px; fill: var(--text-subtle); }
 .chart .frontier { fill: none; stroke: var(--slate); stroke-width: 1.5; stroke-dasharray: 4 4; }
 .chart .mark { cursor: pointer; fill: var(--surface); stroke: var(--slate); stroke-width: 2; }
 .chart .mark.is-frontier { fill: var(--slate); }
@@ -97,7 +98,7 @@ input[type='number'] { width: 96px; }
 .chart .mark .hit { fill: transparent; stroke: none; }
 .chart .mark:focus-visible { outline: none; }
 .chart .mark:focus-visible .hit { stroke: var(--focus); stroke-width: 3; }
-.chart .mark-label { font-size: 12px; fill: var(--text-muted); cursor: pointer; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.chart .mark-label { font-size: 13px; fill: var(--text-muted); cursor: pointer; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
 .chart .mark-label.is-selected { fill: var(--accent-dark); font-weight: 600; }
 .chart-key { font-size: 13px; color: var(--text-subtle); display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .key-line { width: 24px; border-top: 2px dashed var(--slate); }
@@ -175,4 +176,10 @@ input[type='number'] { width: 96px; }
   .split-map { position: static; }
   .map { height: 62vh; }
   .search-actions { flex-direction: column-reverse; align-items: stretch; }
+  .products tr { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; padding: 6px 0; }
+  .products th { grid-column: 1 / -1; padding: 0; }
+  .products td { padding: 2px 0 0; text-align: left; }
+  .products td.amount { text-align: right; }
+  .products tr + tr th, .products tr + tr td { border-top: 0; }
+  .products tr + tr { border-top: 1px solid var(--border); }
 }

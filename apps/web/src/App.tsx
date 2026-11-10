@@ -126,7 +126,7 @@ export function App() {
                   {t('method.data', { timetable: stamp.data.timetable ?? '–', streets: stamp.data.streets ?? '–', tariffs: stamp.data.tariffs ?? '–' })}
                 </p>
                 <p>
-                  {t('method.zoneNote')} {t('method.parkingNote')}
+                  {t('method.zoneNote')} {t('method.parkingNote')} {t('method.bikeNote')}
                 </p>
               </section>
             )}

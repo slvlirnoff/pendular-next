@@ -24,17 +24,28 @@ function slices(o: WithArrivals, startMs: number, sliceMin: number): Set<number>
   return out;
 }
 
-/** `b` is at least as good as `a` on cost, time and CO₂, and better on one of them. */
+/** Differences below these are noise, not a reason to keep two options apart. */
+const SAME_MINUTES = 2;
+const SAME_CO2_SHARE = 0.05;
+
+/**
+ * `b` is at least as good as `a` on cost, time and CO₂ (within the noise margins), and better
+ * on one of them or, when they tie, on changes and then on departures.
+ */
 function dominates(b: CommuteOption, a: CommuteOption): boolean {
-  const le = b.cost.yearly <= a.cost.yearly && b.durationMin <= a.durationMin && b.co2KgPerYear <= a.co2KgPerYear;
-  const lt = b.cost.yearly < a.cost.yearly || b.durationMin < a.durationMin || b.co2KgPerYear < a.co2KgPerYear;
-  return le && lt;
+  const co2Margin = Math.max(a.co2KgPerYear, b.co2KgPerYear) * SAME_CO2_SHARE;
+  const le = b.cost.yearly <= a.cost.yearly && b.durationMin <= a.durationMin + SAME_MINUTES && b.co2KgPerYear <= a.co2KgPerYear + co2Margin;
+  if (!le) return false;
+  const lt = b.cost.yearly < a.cost.yearly || b.durationMin < a.durationMin - SAME_MINUTES || b.co2KgPerYear < a.co2KgPerYear - co2Margin;
+  if (lt) return true;
+  if (b.changes !== a.changes) return b.changes < a.changes;
+  return (b.departuresInWindow ?? 0) > (a.departuresInWindow ?? 0);
 }
 
 function summary(o: CommuteOption, code: LeftOut['code'], against?: CommuteOption): LeftOut {
   return {
     kind: o.kind,
-    title: o.title,
+    title: o.access?.name ?? o.title,
     code,
     against: against?.title,
     delta: against

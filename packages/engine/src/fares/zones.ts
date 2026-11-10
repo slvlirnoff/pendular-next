@@ -9,9 +9,12 @@ export interface ZoneTable {
     zones: number[];
     border?: boolean;
     confidence?: 'high' | 'medium' | 'low';
-    gtfs?: { stopId: string; name?: string }[];
+    gtfs?: { stopId: string; name?: string; lat?: number; lon?: number; match?: string }[];
   }[];
 }
+
+/** A stop not drawn on the plan takes the zone of drawn stops within this distance. */
+const NEAREST_MAX_KM = 2.5;
 
 export interface ZoneResult {
   zones: number[];
@@ -41,20 +44,56 @@ const norm = (s: string) =>
 export const stationKey = (id: string) => id.replace(/^Parent/, '').split(':')[0]!;
 
 export function createZoneIndex(table: ZoneTable): ZoneIndex {
-  const byId = new Map<string, { zones: number[]; confident: boolean }>();
+  // A stop id can be claimed by several labels (a village label lists all stops of the village);
+  // the most specific match wins.
+  const RANK: Record<string, number> = { exact: 4, normalised: 3, fuzzy: 2, locality: 1 };
+  const byId = new Map<string, { zones: number[]; confident: boolean; rank: number }>();
   const byName = new Map<string, { zones: number[]; confident: boolean }>();
   for (const s of table.stops) {
     if (!s.zones?.length) continue;
-    const entry = { zones: s.zones, confident: s.confidence !== 'low' };
     for (const g of s.gtfs ?? []) {
       const k = stationKey(g.stopId);
+      // The table sometimes ties a village label ("Forel-sur-Lucens") to the station of the town
+      // it is named after ("Lucens"): a label equal to the stop's own name outranks everything.
+      const sameName = g.name !== undefined && norm(g.name) === norm(s.label);
+      const rank = (sameName ? 100 : 0) + (RANK[g.match ?? 'exact'] ?? 0) * 10 + (s.confidence === 'high' ? 2 : s.confidence === 'medium' ? 1 : 0);
+      const specific = sameName || (g.match !== 'locality' && g.match !== 'fuzzy');
+      const entry = { zones: s.zones, confident: s.confidence !== 'low' && specific, rank };
       const prev = byId.get(k);
-      // A stop matched by several labels keeps the more confident one.
-      if (!prev || (!prev.confident && entry.confident)) byId.set(k, entry);
+      if (!prev || rank > prev.rank) byId.set(k, entry);
+      // Two equally good claims with different zones: keep the first, but do not trust it.
+      else if (rank === prev.rank && prev.zones.join() !== s.zones.join()) prev.confident = false;
     }
+    const entry = { zones: s.zones, confident: s.confidence !== 'low' };
     const n = norm(s.label);
     if (n && !byName.has(n)) byName.set(n, entry);
   }
+  // Stops with a position, for stops the plan does not draw (most bus stops).
+  const located: { lat: number; lon: number; zones: number[] }[] = [];
+  for (const s of table.stops) {
+    if (!s.zones?.length || s.confidence === 'low') continue;
+    for (const g of s.gtfs ?? []) {
+      // Only the claim that won the stop id.
+      const won = byId.get(stationKey(g.stopId));
+      if (g.lat != null && g.lon != null && won?.zones === s.zones) located.push({ lat: g.lat, lon: g.lon, zones: s.zones });
+    }
+  }
+  const km = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) =>
+    Math.hypot((a.lat - b.lat) * 111.2, (a.lon - b.lon) * 111.2 * Math.cos((a.lat * Math.PI) / 180));
+  /** The zone most common among the nearest drawn stops, when they are close enough. */
+  function nearestZones(p: { lat: number; lon: number }): number[] | null {
+    const near = located
+      .map((l) => ({ l, d: km(p, l) }))
+      .filter((x) => x.d <= NEAREST_MAX_KM)
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 3);
+    if (near.length === 0) return null;
+    const votes = new Map<number, number>();
+    for (const n of near) for (const z of n.l.zones) votes.set(z, (votes.get(z) ?? 0) + 1 / (0.2 + n.d));
+    const best = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]!;
+    return [best[0]];
+  }
+
   const adj = new Map<number, number[]>();
   for (const [z, v] of Object.entries(table.zones)) adj.set(Number(z), v.neighbours.map(Number));
 
@@ -66,7 +105,9 @@ export function createZoneIndex(table: ZoneTable): ZoneIndex {
       if (hit) return hit;
     }
     const byLabel = byName.get(norm(stop.name));
-    return byLabel ? { zones: byLabel.zones, confident: false } : null;
+    if (byLabel) return { zones: byLabel.zones, confident: false };
+    const guess = nearestZones(stop);
+    return guess ? { zones: guess, confident: false } : null;
   }
 
   /** Shortest chain of zones from any zone in `from` to any zone in `to`, exclusive of the ends. */
@@ -95,6 +136,7 @@ export function createZoneIndex(table: ZoneTable): ZoneIndex {
     const notes: string[] = [];
     let exact = true;
     const used = new Set<number>();
+    let guessed = 0;
     for (const leg of legs) {
       const stops = [leg.from, ...(leg.intermediateStops ?? []), leg.to];
       const known: { zones: number[] }[] = [];
@@ -105,12 +147,12 @@ export function createZoneIndex(table: ZoneTable): ZoneIndex {
           // Boarding or alighting outside the table: not a Mobilis trip.
           if (isEnd) return null;
           exact = false;
-          notes.push(`stop not in zone table: ${stops[i]!.name}`);
+          guessed++;
           continue;
         }
         if (!z.confident) {
           exact = false;
-          notes.push(`uncertain zone match: ${stops[i]!.name}`);
+          guessed++;
         }
         known.push(z);
       }
@@ -122,6 +164,14 @@ export function createZoneIndex(table: ZoneTable): ZoneIndex {
         if (pick.length === 0) {
           const next = known[i + 1]?.zones ?? [];
           pick = k.zones.filter((z) => next.includes(z));
+        }
+        if (pick.length === 0 && k.zones.length > 1) {
+          // No zone in common with what comes next: take the side nearest to the next stop.
+          const next = known[i + 1]?.zones ?? current;
+          const ranked = k.zones
+            .map((z) => ({ z, d: next.length ? (bridge([z], next)?.length ?? Infinity) : 0 }))
+            .sort((a, b) => a.d - b.d);
+          pick = [ranked[0]!.z];
         }
         if (pick.length === 0) pick = [k.zones[0]!];
         const chosen = pick[0]!;
@@ -142,6 +192,7 @@ export function createZoneIndex(table: ZoneTable): ZoneIndex {
       });
     }
     if (used.size === 0) return null;
+    if (guessed) notes.unshift(`zone of ${guessed} stop(s) not drawn on the plan taken from nearby stops`);
     // Zone 12 is only sold together with a neighbouring zone ("Grand Lausanne" = 11 + 12).
     if (used.size === 1 && used.has(12)) used.add(11);
     return { zones: [...used].sort((a, b) => a - b), exact, notes: [...new Set(notes)] };

@@ -119,6 +119,7 @@ export const it: Dict = {
   'method.data': 'Orario: {timetable}. Rete stradale: {streets}. Tariffe: {tariffs}.',
   'method.parkingNote': 'Le opzioni P+Rail presuppongono un posto libero; il tasso di occupazione non è noto.',
   'method.zoneNote': 'Le zone Mobilis provengono dalla mappa pubblicata (edizione del 14.12.2025); in caso di dubbio, il prezzo è contrassegnato come stima.',
+  'method.bikeNote': "L'acquisto e la manutenzione della bicicletta non sono inclusi.",
   'credits': 'Dati: opentransportdata.swiss · © Collaboratori di OpenStreetMap · OpenFreeMap / OpenMapTiles · Pittogrammi: FFS · Un progetto PathWorks Tech, Losanna.',
   'privacy': 'Senza account, senza cookie, senza tracker.',
 };

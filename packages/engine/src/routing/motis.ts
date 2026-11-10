@@ -57,6 +57,8 @@ export interface MotisOptions {
   timezone: string;
   /** E-bike cruising speed, m/s (bike uses the MOTIS default). */
   ebikeSpeed?: number;
+  /** Any instant inside the loaded timetable (MOTIS rejects street queries outside it). */
+  referenceTime: string;
   /** Safety cap on result pages fetched per window. */
   maxPages?: number;
   versions?: DataVersions;
@@ -112,12 +114,18 @@ export function decodePolyline(points: string, precision: number): [number, numb
 
 const place = (p: LatLon) => `${p.lat.toFixed(6)},${p.lon.toFixed(6)}`;
 
-function stationId(p: MotisPlace): string | undefined {
+/**
+ * Station-level id as a Swiss stop number (DiDok/UIC, e.g. "8504121").
+ * MOTIS ids look like "ch_Parentch:1:sloid:4121" or "ch_ch:1:sloid:4121:1:2"; the number after
+ * "sloid" is the stop number without the country prefix 85.
+ */
+export function stationId(p: { stopId?: string; parentId?: string }): string | undefined {
   const raw = p.parentId ?? p.stopId;
   if (!raw) return undefined;
-  // MOTIS prefixes ids with the dataset tag ("ch_8501120:0:1"); keep the station number.
-  const id = raw.includes('_') ? raw.slice(raw.indexOf('_') + 1) : raw;
-  return id.replace(/^Parent/, '').split(':')[0];
+  const id = raw.replace(/^[a-z0-9]+_/i, '').replace(/^Parent/, '');
+  const sloid = /^ch:1:sloid:(\d+)/.exec(id);
+  if (sloid) return `85${sloid[1]!.padStart(5, '0')}`;
+  return id.split(':')[0];
 }
 
 function toStop(p: MotisPlace): StopPoint {
@@ -225,6 +233,7 @@ export class MotisRouting implements RoutingProvider {
       toPlace: place(q.to),
       directModes: mode,
       transitModes: '',
+      time: this.o.referenceTime,
       maxDirectTime: 4 * 3600,
       detailedTransfers: false,
       ...(q.profile === 'ebike' ? { cyclingSpeed: this.o.ebikeSpeed ?? 6.1 } : {}),

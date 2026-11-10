@@ -1,11 +1,10 @@
+import { useEffect, useRef, useState } from 'react';
 import type { CommuteOption } from '@pendular/engine/types';
 import { useI18n } from '../i18n/index.js';
 import { chf, duration } from '../lib/format.js';
 import { KIND_SHAPE, optionName } from '../lib/names.js';
 
-const W = 640;
-const H = 300;
-const M = { l: 64, r: 16, t: 16, b: 40 };
+const M = { l: 76, r: 20, t: 16, b: 44 };
 
 function niceStep(span: number, target: number): number {
   const raw = span / target;
@@ -17,7 +16,9 @@ function niceStep(span: number, target: number): number {
 function ticks(min: number, max: number, target: number): number[] {
   const step = niceStep(Math.max(max - min, 1), target);
   const out: number[] = [];
-  for (let v = Math.floor(min / step) * step; v <= max + step * 0.01; v += step) out.push(Math.round(v));
+  // The axis ends on the first step at or above the largest value, so no mark falls outside.
+  const end = Math.ceil(max / step) * step;
+  for (let v = Math.floor(min / step) * step; v <= end + step * 0.01; v += step) out.push(Math.round(v));
   return out;
 }
 
@@ -32,12 +33,23 @@ function marker(shape: string, x: number, y: number, r: number) {
 export function TradeoffChart(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string) => void }) {
   const { t, lang } = useI18n();
   const os = props.options;
+  // The drawing follows the width of its card, so text keeps its size on a phone.
+  const box = useRef<HTMLElement>(null);
+  const [W, setW] = useState(960);
+  useEffect(() => {
+    if (!box.current) return;
+    const ro = new ResizeObserver(([e]) => e && setW(Math.max(300, Math.round(e.contentRect.width))));
+    ro.observe(box.current);
+    return () => ro.disconnect();
+  }, [os.length < 2]);
+  const H = W < 560 ? 300 : 340;
+  const narrow = W < 560;
   if (os.length < 2) return null;
 
   const xs = os.map((o) => o.durationMin);
   const ys = os.map((o) => o.cost.yearly);
-  const xT = ticks(Math.max(0, Math.min(...xs) - 5), Math.max(...xs) + 5, 6);
-  const yT = ticks(0, Math.max(...ys) * 1.05, 5);
+  const xT = ticks(Math.max(0, Math.min(...xs) - 3), Math.max(...xs) + 1, narrow ? 3 : 6);
+  const yT = ticks(0, Math.max(...ys), narrow ? 3 : 5);
   const x0 = xT[0]!;
   const x1 = xT[xT.length - 1]!;
   const y1 = yT[yT.length - 1]!;
@@ -54,16 +66,16 @@ export function TradeoffChart(props: { options: CommuteOption[]; selected: strin
   const placed: { id: string; x: number; y: number; anchor: 'start' | 'end'; text: string }[] = [];
   for (const o of [...os].sort((a, b) => a.cost.yearly - b.cost.yearly)) {
     const text = optionName(o, t);
-    const short = text.length > 30 ? `${text.slice(0, 29)}…` : text;
+    const short = text.length > (narrow ? 22 : 38) ? `${text.slice(0, narrow ? 21 : 37)}…` : text;
     const px = X(o.durationMin);
-    const anchor: 'start' | 'end' = px > W - 220 ? 'end' : 'start';
-    let y = Y(o.cost.yearly) + 4;
-    for (let guard = 0; guard < 20 && placed.some((p) => Math.abs(p.y - y) < 14 && Math.abs(p.x - px) < 200); guard++) y -= 14;
+    const anchor: 'start' | 'end' = px > W * (narrow ? 0.5 : 0.72) ? 'end' : 'start';
+    let y = Y(o.cost.yearly) - 10;
+    for (let guard = 0; guard < 20 && placed.some((p) => Math.abs(p.y - y) < 14 && Math.abs(p.x - px) < 260); guard++) y -= 14;
     placed.push({ id: o.id, x: px + (anchor === 'start' ? 12 : -12), y: Math.max(M.t + 10, y), anchor, text: short });
   }
 
   return (
-    <section className="card chart">
+    <section className="card chart" ref={box}>
       <h2>{t('chart.title')}</h2>
       <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={t('chart.title')}>
         {yT.map((v) => (

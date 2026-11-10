@@ -23,17 +23,20 @@ export interface RouteGroup {
 export function signature(it: Itinerary): string {
   return it.legs
     .filter(isTransit)
-    .map((l) => `${l.line?.name ?? l.mode}@${l.from.stopId ?? l.from.name}>${l.to.stopId ?? l.to.name}`)
+    .map((l) => `${l.mode}@${l.from.stopId ?? l.from.name}>${l.to.stopId ?? l.to.name}`)
     .join('|');
 }
 
-export function routeTitle(it: Itinerary): string {
-  const legs = it.legs.filter(isTransit);
-  if (legs.length === 0) return '';
-  const first = legs[0]!;
-  const last = legs[legs.length - 1]!;
-  const lines = legs.map((l) => l.line?.name || l.mode).join(' · ');
-  return `${first.from.name} → ${last.to.name}, ${lines}`;
+/** "Lucens → Lausanne, R8/R9": the lines of all connections of the route, leg by leg. */
+export function routeTitle(its: Itinerary[]): string {
+  const legsOf = (it: Itinerary) => it.legs.filter(isTransit);
+  const first = legsOf(its[0]!);
+  if (first.length === 0) return '';
+  const lines = first.map((leg, i) => {
+    const names = new Set(its.map((it) => legsOf(it)[i]?.line?.name || leg.mode));
+    return [...names].sort().join('/');
+  });
+  return `${first[0]!.from.name} → ${first[first.length - 1]!.to.name}, ${lines.join(' · ')}`;
 }
 
 export function groupItineraries(its: Itinerary[]): RouteGroup[] {
@@ -53,7 +56,7 @@ export function groupItineraries(its: Itinerary[]): RouteGroup[] {
     const arrivals = list.map((i) => i.arrival).sort();
     groups.push({
       signature: sig,
-      title: routeTitle(typical),
+      title: routeTitle(list),
       itineraries: list,
       typical,
       typicalMin: typical.durationMin,

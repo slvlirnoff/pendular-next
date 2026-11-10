@@ -86,6 +86,7 @@ export function buildDeps(cfg: Config): EngineDeps {
     routing: new MotisRouting({
       baseUrl: cfg.motisUrl,
       timezone: PENDULAR_RULES.timezone,
+      referenceTime: `${PENDULAR_RULES.referenceDate}T11:00:00Z`,
       versions: { timetable: `GTFS 2027, fetched ${readVersion(gtfs) ?? '?'}`, streets: `OSM, fetched ${readVersion(osm) ?? '?'}`, engine: 'MOTIS 2' },
     }),
     rules: PENDULAR_RULES,

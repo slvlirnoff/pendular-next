@@ -35,7 +35,7 @@ export const fr = {
   'verdict.greenest': 'Le moins de CO₂',
   'verdict.perYear': 'par an',
   'verdict.perTrip': 'par trajet',
-  'verdict.tradeoff': '{fast} vous fait gagner {hours} h par an sur {cheap}, pour {chf} de plus : {rate} par heure gagnée.',
+  'verdict.tradeoff': '{fast} : {hours} h de moins par an que « {cheap} », pour {chf} de plus, soit {rate} par heure gagnée.',
   'verdict.same': 'Le trajet le moins cher est aussi le plus rapide.',
   'chart.title': 'Coût annuel et durée porte à porte',
   'chart.x': 'Durée par trajet',
@@ -118,6 +118,7 @@ export const fr = {
   'method.data': 'Horaire : {timetable}. Réseau routier : {streets}. Tarifs : {tariffs}.',
   'method.parkingNote': 'Les options P+Rail supposent une place libre ; le taux d’occupation n’est pas connu.',
   'method.zoneNote': 'Les zones Mobilis proviennent du plan publié (édition du 14.12.2025) ; en cas de doute, le prix est marqué comme estimation.',
+  'method.bikeNote': "L'achat et l'entretien du vélo ne sont pas comptés.",
   'credits': 'Données : opentransportdata.swiss · © Contributeurs OpenStreetMap · OpenFreeMap / OpenMapTiles · Pictogrammes : CFF · Un projet PathWorks Tech, Lausanne.',
   'privacy': 'Sans compte, sans cookies, sans traceurs.',
 } as const;

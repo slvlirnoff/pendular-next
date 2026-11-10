@@ -119,6 +119,7 @@ export const de: Dict = {
   'method.data': 'Fahrplan: {timetable}. Strassennetz: {streets}. Tarife: {tariffs}.',
   'method.parkingNote': 'Die P+Rail-Optionen setzen einen freien Platz voraus; die Auslastung ist nicht bekannt.',
   'method.zoneNote': 'Die Mobilis-Zonen stammen aus dem veröffentlichten Plan (Ausgabe vom 14.12.2025); im Zweifelsfall wird der Preis als Schätzung gekennzeichnet.',
+  'method.bikeNote': 'Kauf und Unterhalt des Velos sind nicht eingerechnet.',
   'credits': 'Daten: opentransportdata.swiss · © OpenStreetMap-Mitwirkende · OpenFreeMap / OpenMapTiles · Piktogramme: SBB · Ein Projekt von PathWorks Tech, Lausanne.',
   'privacy': 'Ohne Konto, ohne Cookies, ohne Tracker.',
 };
