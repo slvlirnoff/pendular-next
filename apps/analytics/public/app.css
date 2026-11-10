@@ -134,7 +134,9 @@ td.nowrap { white-space: nowrap; }
 .results small { color: var(--text-subtle); font-size: 13px; margin-left: 6px; }
 
 /* Candidates in edit panel */
-.edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px; }
+.edit-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 16px 24px; align-items: start; }
+.edit-grid > * { align-content: start; }
+@media (max-width: 900px) { .edit-grid { grid-template-columns: 1fr; } }
 .cand { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 6px 0; border-bottom: 1px solid var(--border-strong); }
 .cand .grow { min-width: 160px; }
 

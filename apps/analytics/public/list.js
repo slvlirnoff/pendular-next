@@ -9,7 +9,7 @@ const addrText = (p) => [p.address, [p.postcode, p.city].filter(Boolean).join(' 
 
 export function listView(root, ctx, id) {
   const lid = encodeURIComponent(id);
-  let list = null, tab = null, offset = 0, shown = null;
+  let list = null, tab = null, offset = 0, shown = null, autoTab = true;
   const open = new Set();
   const title = h('h1', { tabindex: '-1' }, 'List');
   const head = h('div', {});
@@ -75,7 +75,7 @@ export function listView(root, ctx, id) {
       h('div', { class: 'card-head' }, h('h2', { id: 'ppl-h' }, 'People'),
         list.byStatus.check > 0 ? h('button', { class: 'btn small', type: 'button', onclick: acceptAll }, `Accept all suggestions (${fmtInt(list.byStatus.check)})`) : null),
       h('div', { class: 'tabs', role: 'group', 'aria-label': 'Filter by address status' },
-        TABS.map(([k, label]) => h('button', { type: 'button', 'aria-pressed': String(tab === k), onclick: () => { tab = k; offset = 0; loadPeople(); } }, `${label} (${fmtInt(count(k))})`))),
+        TABS.map(([k, label]) => h('button', { type: 'button', 'aria-pressed': String(tab === k), onclick: () => { tab = k; autoTab = false; offset = 0; loadPeople(); } }, `${label} (${fmtInt(count(k))})`))),
       h('div', { class: 'ppl-msg', role: 'status' }),
       h('div', { class: 'ppl-body' }));
   }
@@ -243,7 +243,11 @@ export function listView(root, ctx, id) {
     if (p > 0) why = `Addresses are still being checked (${fmtInt(p)} pending). You can start once they are done.`;
     else if (usable <= 0) why = 'No person has a usable position yet. Fix the addresses above first.';
     startBtn.disabled = !!why;
-    clear(gateMsg, why || (nf > 0 ? `${fmtInt(nf)} ${nf === 1 ? 'person is' : 'people are'} “not found” and will be left out of the analysis.` : 'All people have a position.'));
+    const ck = list.byStatus.check;
+    clear(gateMsg, why || [
+      nf > 0 ? `${fmtInt(nf)} ${nf === 1 ? 'person is' : 'people are'} “not found” and will be left out of the analysis.` : '',
+      ck > 0 ? `${fmtInt(ck)} addresses still “to check” are analysed at the position of the best suggestion.` : '',
+      nf === 0 && ck === 0 ? 'All people have a position.' : ''].filter(Boolean).join(' '));
   }
 
   startBtn.addEventListener('click', async () => {
@@ -301,6 +305,7 @@ export function listView(root, ctx, id) {
         const before = JSON.stringify(list.byStatus);
         await refreshList();
         const changed = JSON.stringify(list.byStatus) !== before;
+        if (changed && autoTab && pending() === 0) { tab = chooseTab(); offset = 0; }
         if (changed && open.size === 0) await loadPeople();
         else if (changed) renderTabsOnly();
         more = pending() > 0 || busyAnalyses();
