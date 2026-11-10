@@ -22,7 +22,7 @@ const BOM = '﻿';
 
 export function resultsToCsv(
   rows: ResultRow[],
-  opts: { delimiter?: ',' | ';'; attributeColumns?: string[]; lang?: Lang } = {},
+  opts: { delimiter?: ',' | ';'; attributeColumns?: string[]; lang?: Lang; /** Lines stated once under the table, each starting with # */ notes?: string[] } = {},
 ): string {
   const delimiter = opts.delimiter ?? ',';
   const lang = opts.lang ?? 'en';
@@ -49,8 +49,8 @@ export function resultsToCsv(
       [
         text(r.extId),
         ...attrCols.map((c) => text(r.attrs[c])),
-        num(r.lat),
-        num(r.lon),
+        num(r.lat === null ? null : Math.round(r.lat * 1e6) / 1e6),
+        num(r.lon === null ? null : Math.round(r.lon * 1e6) / 1e6),
         num(r.ptMin),
         num(r.ptChanges),
         num(r.ptDepartures),
@@ -70,5 +70,6 @@ export function resultsToCsv(
       ].join(delimiter),
     );
   }
+  for (const n of opts.notes ?? []) lines.push(quote(`# ${n}`));
   return BOM + lines.join('\r\n') + '\r\n';
 }

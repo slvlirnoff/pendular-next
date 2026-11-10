@@ -36,13 +36,17 @@ export function summarise(r: CompareResult): RowFigures {
   const cheapest = min(pt, (o) => o.cost.yearly);
   const car = of('car')[0] as CommuteOption | undefined;
   const board = fastest?.itinerary.legs.find((l) => TRANSIT_LEG.has(l.mode));
-  const ptMin = fastest?.durationMin ?? null;
+  // Public transport the planner left out (for example because walking is as fast) still exists:
+  // its door-to-door time and yearly cost count for the indicators.
+  const ptLeft = r.leftOut.filter((l) => l.kind === 'transit' && typeof l.durationMin === 'number');
+  const ptLeftBest = ptLeft.length ? ptLeft.reduce((a, b) => (b.durationMin! < a.durationMin! ? b : a)) : null;
+  const ptMin = fastest?.durationMin ?? ptLeftBest?.durationMin ?? null;
   const carMin = car?.durationMin ?? null;
   return {
     ptMin,
     ptChanges: fastest?.changes ?? null,
     ptDepartures: fastest?.departuresInWindow ?? null,
-    ptCost: cheapest?.cost.yearly ?? null,
+    ptCost: cheapest?.cost.yearly ?? ptLeftBest?.yearly ?? null,
     ptProduct: cheapest?.cost.products[0]?.kind ?? null,
     boardStop: board?.from.name ?? null,
     carMin,

@@ -101,7 +101,7 @@ function compare(row) {
 addList('l1', 'Staff Lausanne 2026', 120, false);
 addList('l2', 'Pilot depot', 8, false);
 db.analyses.a1 = { id: 'a1', listId: 'l1', name: 'Lausanne site, mornings', site: places[1], arrival: { from: '07:00', to: '09:00' }, weekdays: ['mon', 'tue', 'wed', 'thu', 'fri'],
-  settings: { kinds: ['transit', 'car', 'bike', 'ebike', 'walk'] }, status: 'done', outdated: true, progress: 90, total: 90, error: null, createdAt: '2026-11-08T11:00:00Z', finishedAt: '2026-11-08T11:03:00Z' };
+  settings: { kinds: ['transit', 'car', 'bike', 'ebike', 'walk'] }, status: 'done', outdated: true, progress: 90, total: 90, error: null, stamp: { car: { peakFactor: 1.3, parkingMin: 5, parkingAuto: true }, data: null }, createdAt: '2026-11-08T11:00:00Z', finishedAt: '2026-11-08T11:03:00Z' };
 db.results.a1 = mkResults(db.analyses.a1);
 db.analyses.a1.total = db.analyses.a1.progress = db.results.a1.length;
 
@@ -134,7 +134,7 @@ export async function handle(method, path, body) {
     if (sub === 'accept-checks') { let n = 0; db.people[id].forEach((x) => { if (x.status === 'check') { x.status = 'exact'; x.reasons = []; n++; } }); return { accepted: n }; }
     if (sub === 'analyses') {
       const a = { id: 'a' + (Object.keys(db.analyses).length + 1), listId: id, name: body.name, site: body.site, arrival: body.arrival, weekdays: body.weekdays || ['mon', 'tue', 'wed', 'thu', 'fri'],
-        settings: { kinds: ['transit', 'car', 'bike', 'ebike', 'walk'], ...(body.settings || {}) }, status: 'queued', outdated: false, progress: 0, total: 0, error: null, createdAt: new Date().toISOString(), finishedAt: null };
+        settings: { kinds: ['transit', 'car', 'bike', 'ebike', 'walk'], ...(body.settings || {}) }, status: 'queued', outdated: false, progress: 0, total: 0, error: null, stamp: { car: { peakFactor: 1.3, parkingMin: 5, parkingAuto: true }, data: null }, createdAt: new Date().toISOString(), finishedAt: null };
       db.analyses[a.id] = a; return a;
     }
   }

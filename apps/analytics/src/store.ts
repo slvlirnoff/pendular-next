@@ -53,6 +53,7 @@ function toAnalysis(r: any): Analysis {
     progress: r.progress,
     total: r.total,
     error: r.error,
+    stamp: r.stamp ? { car: r.stamp.car ?? null, data: r.stamp.data ?? null } : null,
     createdAt: iso(r.created_at)!,
     finishedAt: iso(r.finished_at),
   };
@@ -215,7 +216,7 @@ export function createStore(db: Db) {
     /** Queue an analysis again from scratch. */
     async rerun(id: string): Promise<Analysis | null> {
       await db.query(`delete from results where analysis_id = $1`, [id]);
-      await db.query(`update analyses set status = 'queued', progress = 0, total = 0, error = null, started_at = null, finished_at = null, list_version = null where id = $1`, [id]);
+      await db.query(`update analyses set status = 'queued', progress = 0, total = 0, error = null, stamp = null, started_at = null, finished_at = null, list_version = null where id = $1`, [id]);
       return this.analysis(id);
     },
 
@@ -264,7 +265,12 @@ export function createStore(db: Db) {
     },
 
     async finishAnalysis(id: string, stamp: unknown, error?: string): Promise<void> {
-      await db.query(`update analyses set status = $2, stamp = $3, error = $4, finished_at = now() where id = $1`, [id, error ? 'failed' : 'done', JSON.stringify(stamp ?? null), error ?? null]);
+      await db.query(`update analyses set status = $2, stamp = coalesce(stamp, '{}'::jsonb) || $3::jsonb, error = $4, finished_at = now() where id = $1`, [id, error ? 'failed' : 'done', JSON.stringify(stamp ?? {}), error ?? null]);
+    },
+
+    /** The car assumptions of the analysis (the same for everybody: they depend on the site). */
+    async setCarStamp(id: string, car: unknown): Promise<void> {
+      await db.query(`update analyses set stamp = coalesce(stamp, '{}'::jsonb) || jsonb_build_object('car', $2::jsonb) where id = $1`, [id, JSON.stringify(car)]);
     },
 
     async results(analysisId: string, offset = 0, limit = 1_000_000): Promise<{ total: number; rows: ResultRow[] }> {

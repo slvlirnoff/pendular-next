@@ -36,6 +36,7 @@ export function startWorker(d: WorkerDeps) {
   let wake: (() => void) | null = null;
   let poked = false;
   let stopped = false;
+  const stamped = new Set<string>();
 
   /** One round of work. Returns false when there was nothing to do. */
   async function round(): Promise<boolean> {
@@ -57,6 +58,7 @@ export function startWorker(d: WorkerDeps) {
     const a = await d.store.nextAnalysis();
     if (!a) return false;
     if (a.status === 'queued') {
+      stamped.delete(a.id);
       await d.store.startAnalysis(a.id);
       log(`analysis ${a.id} started`);
     }
@@ -68,8 +70,12 @@ export function startWorker(d: WorkerDeps) {
       return true;
     }
     await pool(batch, d.analysisConcurrency ?? 4, async (p) => {
-      const { row, detail } = await analysePerson(p, a, d.engine);
+      const { row, detail, stamp } = await analysePerson(p, a, d.engine);
       await d.store.saveResult(a.id, p.id, row, detail);
+      if (stamp?.car && !stamped.has(a.id)) {
+        stamped.add(a.id);
+        await d.store.setCarStamp(a.id, stamp.car);
+      }
     });
     return true;
   }

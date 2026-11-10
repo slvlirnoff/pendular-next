@@ -93,6 +93,7 @@ export function analysisView(root, ctx, id) {
     const tableBox = h('div', {});
     clear(body,
       ind.analysed === 0 ? h('div', { class: 'msg warn', style: 'margin-bottom:16px' }, 'No person could be analysed. Check the addresses on the list page.') : null,
+      assumptions(),
       tiles(ind), reachCard(ind),
       h('div', { class: 'two', style: 'margin-bottom:16px' }, ratioCard(ind), stopsCard(ind)),
       segmentsCard(ind), groupBox, tableBox);
@@ -101,6 +102,12 @@ export function analysisView(root, ctx, id) {
     resultsTable(tableBox, attrSet, () => setAttrs(attrSet));
   }
 
+  function assumptions() {
+    const car = a.stamp?.car;
+    if (!car) return null;
+    return h('p', { class: 'subtle assumptions', style: 'margin-bottom:12px' },
+      `Car times assume rush-hour traffic (driving time × ${car.peakFactor}) and ${car.parkingMin} min to park at the destination, for everybody. Public transport and car times are door to door, for an arrival between ${a.arrival.from} and ${a.arrival.to}.`);
+  }
   const tile = (big, cap) => h('div', { class: 'tile' }, h('div', { class: 'big' }, big), h('div', { class: 'cap' }, cap));
   function tiles(i) {
     return h('div', { class: 'tiles' },

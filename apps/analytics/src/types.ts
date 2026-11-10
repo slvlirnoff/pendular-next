@@ -110,6 +110,22 @@ export interface AnalysisSettings {
   parkingAtWorkPerMonth: number;
 }
 
+/** Assumptions behind the car figures of one analysis; stated once, not per person. */
+export interface CarStamp {
+  /** Rush-hour factor applied to the car's driving time. */
+  peakFactor: number;
+  /** Minutes added at the destination to park and walk to the door. */
+  parkingMin: number;
+  /** False when the parking time was set by hand. */
+  parkingAuto: boolean;
+}
+
+export interface AnalysisStamp {
+  car: CarStamp | null;
+  /** Data versions used (timetable, streets, tariffs, parking). */
+  data: Record<string, string> | null;
+}
+
 export interface Analysis {
   id: string;
   listId: string;
@@ -124,6 +140,7 @@ export interface Analysis {
   progress: number;
   total: number;
   error: string | null;
+  stamp: AnalysisStamp | null;
   createdAt: string;
   finishedAt: string | null;
 }

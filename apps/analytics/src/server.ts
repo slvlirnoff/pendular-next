@@ -153,6 +153,18 @@ app.post('/api/lists/:id/analyses', async (c) => {
   return c.json(analysis, 201);
 });
 
+function carNote(car: { peakFactor: number; parkingMin: number } | null | undefined): string | null {
+  return car ? `Car minutes include a rush-hour factor of x${car.peakFactor} on the driving time and ${car.parkingMin} min to park at the destination.` : null;
+}
+function csvNotes(a: Awaited<ReturnType<typeof store.analysis>> & {}): string[] {
+  return [
+    `${a.name}: site ${a.site.label}, arrival ${a.arrival.from}-${a.arrival.to}, ${a.weekdays.join(' ')}`,
+    carNote(a.stamp?.car),
+    `Yearly costs: ${a.settings.weeksOff} weeks off, car ${a.settings.carCostPerKm} CHF/km, parking at work ${a.settings.parkingAtWorkPerMonth} CHF/month.`,
+    a.outdated ? 'The list changed after this analysis ran: figures may be out of date.' : null,
+  ].filter((x): x is string => !!x);
+}
+
 const indicatorsOf = async (analysisId: string, by?: string) => {
   const a = await store.analysis(analysisId);
   if (!a) return null;
@@ -185,7 +197,7 @@ app.get('/api/analyses/:id/export.csv', async (c) => {
   if (!a) return c.json({ error: 'not found' }, 404);
   const { rows } = await store.results(a.id);
   const name = a.name.replace(/[^\w.-]+/g, '_').slice(0, 60) || 'analysis';
-  return c.body(resultsToCsv(rows), 200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${name}.csv"` });
+  return c.body(resultsToCsv(rows, { notes: csvNotes(a) }), 200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${name}.csv"` });
 });
 
 app.post('/api/analyses/:id/rerun', async (c) => {
