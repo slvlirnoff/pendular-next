@@ -75,14 +75,20 @@ async function lookup(s: Station): Promise<Result> {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const matches: any[] = await res.json();
       let best: { d: number; m: any } | null = null;
+      let nearest: { d: number; m: any } | null = null;
       for (const m of matches) {
-        if (!Array.isArray(m.areas) || !m.areas.some((a: any) => a.adminLevel === 4)) continue;
         const d = dist(s.lat, s.lon, m.lat, m.lon);
+        if (!nearest || d < nearest.d) nearest = { d, m };
+        if (!Array.isArray(m.areas) || !m.areas.some((a: any) => a.adminLevel === 4)) continue;
         if (!best || d < best.d) best = { d, m };
       }
-      if (!best || best.d > MAX_MATCH_DIST_M) return { canton: null, country: null };
-      const a4 = best.m.areas.find((a: any) => a.adminLevel === 4);
-      return { canton: a4.name, country: best.m.country ?? null, via: best.m.name, d: Math.round(best.d) };
+      if (best && best.d <= MAX_MATCH_DIST_M) {
+        const a4 = best.m.areas.find((a: any) => a.adminLevel === 4);
+        return { canton: a4.name, country: best.m.country ?? null, via: best.m.name, d: Math.round(best.d) };
+      }
+      // French places come back without country and without a level-4 area (no canton there)
+      if (nearest && nearest.d <= MAX_MATCH_DIST_M && !nearest.m.country) return { canton: null, country: 'FR', via: nearest.m.name, d: Math.round(nearest.d) };
+      return { canton: null, country: null };
     } catch (e) {
       if (attempt >= 4) throw e;
       await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
@@ -114,6 +120,7 @@ async function main() {
   for (const s of stations) {
     const r = cache[s.id];
     if (r.canton) { final.set(s.id, { canton: r.canton, country: r.country }); continue; }
+    if (r.country === 'FR') { final.set(s.id, { canton: '', country: 'FR' }); continue; }
     let best: Station | null = null, bd = Infinity;
     for (const k of known) { const d = dist(s.lat, s.lon, k.lat, k.lon); if (d < bd) { bd = d; best = k; } }
     if (best) { final.set(s.id, { ...cache[best.id] } as any); inferred++; }

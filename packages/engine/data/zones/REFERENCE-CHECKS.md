@@ -36,9 +36,9 @@ What the check taught:
 | Lovatens, village → Ecublens VD, EPFL | Mobilis, 7 zones via Moudon, gare – Epalinges, Croisettes – Lausanne, Flon (11, 12, 18, 60, 61, 65, 103) | CHF 2052 | 7 zones, CHF 2052 (bus 361 + m2 + m1) |
 | same | Mobilis, 9 zones via Lucens – Renens VD, gare (11, 12, 19, 60, 61, 62, 63, 64, 103) | CHF 2376 | 9 zones, CHF 2376 (bus 475 + R8/R9 + m1) |
 | same | Mobilis, 11 zones via Lucens – Palézieux or Servion | CHF 2547 | not offered |
-| Lovatens, village → EPFL via Romont FR | Abo modulable via bus Prévonloup – Romont, incl. Lausanne zones 11, 12 | CHF 2660 | was wrongly priced as Mobilis 9 zones (CHF 2376): Romont is outside Mobilis |
+| Lovatens, village → EPFL via Romont FR | Abo modulable via bus Prévonloup – Romont, incl. Lausanne zones 11, 12 | CHF 2660 | after the fix: route pass estimate CHF 2628 (55 tariff km, distance table); before: wrongly Mobilis 9 zones, CHF 2376 |
 | same | Abonnement de parcours | from CHF 2637 | – |
-| Romont FR → Ecublens VD, EPFL | Abo modulable incl. Lausanne zones 11, 12 | CHF 2553 | was wrongly Mobilis; to be compared with the distance-table estimate |
+| Romont FR → Ecublens VD, EPFL | Abo modulable incl. Lausanne zones 11, 12 | CHF 2553 | after the fix: route pass estimate CHF 2628 (about 5 % above SBB's route pass at CHF 2511) |
 | same | Abonnement de parcours | from CHF 2511 | – |
 
 Lessons:
