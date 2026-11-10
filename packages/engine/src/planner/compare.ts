@@ -204,6 +204,17 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     bike: crow > (rules.bikeAllWayMaxMin / 60) * 25,
     ebike: crow > (rules.ebikeAllWayMaxMin / 60) * 30,
   };
+  // Trips home are searched once per place the traveller returns to. The search to the home
+  // itself is needed whenever public transport is in play: start it with the first round.
+  const returnCache = new Map<string, Promise<Itinerary[]>>();
+  const returnTo = (target: LatLon) => {
+    const key = `${target.lat},${target.lon}`;
+    if (!returnCache.has(key)) {
+      returnCache.set(key, safe(routing.transit({ from: req.work, to: target, date, window: rules.returnWindow, by: 'depart' }), []));
+    }
+    return returnCache.get(key)!;
+  };
+  if (want('transit')) void returnTo(req.home);
   const anyAccess = prCand.length + brCand.length + cityCand.length > 0;
   const [direct, car, bike, ebike, walk, prDrive, cityDrive, brRide, reach] = await Promise.all([
     want('transit') || prCand.length || brCand.length ? transitFromHome() : Promise.resolve([] as Itinerary[]),
@@ -451,19 +462,14 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const kept = prune(options, leftOut, rules, window, date);
 
   // --- 7. First and last trip home for what is shown --------------------------------------------
-  const returnCache = new Map<string, Promise<Itinerary[]>>();
   const returns = Promise.all(
     kept.map(async (o) => {
       if (!o.itinerary.legs.some(isTransit)) return;
       const target: LatLon = o.access ?? req.home;
-      const key = `${target.lat},${target.lon}`;
-      if (!returnCache.has(key)) {
-        returnCache.set(key, safe(routing.transit({ from: req.work, to: target, date, window: rules.returnWindow, by: 'depart' }), []));
-      }
       // A "trip home" that waits for the first bus of the next morning is not a trip home:
       // keep only connections of a duration comparable with the morning trip.
       const longest = o.durationMin * 2 + 30;
-      const back = (await returnCache.get(key)!).filter((it) => it.legs.some(isTransit) && it.durationMin <= longest);
+      const back = (await returnTo(target)).filter((it) => it.legs.some(isTransit) && it.durationMin <= longest);
       o.returnTrips = back.length
         ? {
             first: localHHMM(back[0]!.departure, tz),

@@ -223,7 +223,6 @@ export class MotisRouting implements RoutingProvider {
         arriveBy,
         searchWindow: Math.round((end.getTime() - start.getTime()) / 1000),
         directModes: 'WALK',
-        maxItineraries: 40,
         detailedTransfers: false,
         ...(q.alternateTies ? { algorithm: TIE_ALGORITHM } : {}),
         ...(cursor ? { pageCursor: cursor } : {}),
@@ -237,9 +236,12 @@ export class MotisRouting implements RoutingProvider {
         }
         out.set(`${it.startTime}|${it.endTime}|${it.legs.map((l) => l.tripShortName ?? l.mode).join('>')}`, this.toItinerary(it));
       }
-      // The first response covers the whole window; page on only while results keep landing in it.
+      // One call returns every connection of the window, plus one beyond it (checked on windows
+      // of two and eight hours, up to 104 connections; a result cap would force paging and
+      // paging never added anything). The loop goes on only if a very long response ends
+      // inside the window, which means the server cut it short.
       cursor = arriveBy ? res.previousPageCursor : res.nextPageCursor;
-      if (!cursor || outside > 0 || (res.itineraries ?? []).length === 0) break;
+      if (!cursor || outside > 0 || (res.itineraries ?? []).length < NEAR_RESULT_CAP) break;
     }
     return [...out.values()].sort((a, b) => a.arrival.localeCompare(b.arrival));
   }
@@ -317,6 +319,9 @@ export class MotisRouting implements RoutingProvider {
     return this.o.versions ?? {};
   }
 }
+
+/** MOTIS returns at most 256 connections per call; only an answer this long may be cut short. */
+const NEAR_RESULT_CAP = 200;
 
 /**
  * MOTIS has three search algorithms that give the same optimal times but pick differently
