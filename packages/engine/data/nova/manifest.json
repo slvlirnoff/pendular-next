@@ -1,0 +1,496 @@
+{
+ "version": 1,
+ "endpoint": "https://lindas.admin.ch/query",
+ "graphs": [
+  "https://lindas.admin.ch/sbb/nova",
+  "https://lindas.admin.ch/sbb/didok"
+ ],
+ "fetched": {
+  "meta": "2026-11-10",
+  "stops": "2026-11-10",
+  "zones": "2026-11-10",
+  "relations": "2026-11-10",
+  "prices": "2026-11-10"
+ },
+ "files": {
+  "edges.jsonl": {
+   "bytes": 2035912,
+   "records": 47968
+  },
+  "meta.jsonl": {
+   "bytes": 616820,
+   "records": 6523
+  },
+  "prices.jsonl": {
+   "bytes": 1457641,
+   "records": 29943
+  },
+  "relations-0.jsonl": {
+   "bytes": 4084624,
+   "records": 3166
+  },
+  "short-routes.jsonl": {
+   "bytes": 1058916,
+   "records": 8865
+  },
+  "stops.jsonl": {
+   "bytes": 1094429,
+   "records": 32837
+  },
+  "zones/a-welle.jsonl": {
+   "bytes": 161149,
+   "records": 4247
+  },
+  "zones/arcobaleno.jsonl": {
+   "bytes": 93981,
+   "records": 2565
+  },
+  "zones/bcs.jsonl": {
+   "bytes": 8889,
+   "records": 212
+  },
+  "zones/bodensee-ticket-bahn-bus-fahre.jsonl": {
+   "bytes": 436711,
+   "records": 12249
+  },
+  "zones/bs.jsonl": {
+   "bytes": 3388,
+   "records": 85
+  },
+  "zones/bum.jsonl": {
+   "bytes": 2127,
+   "records": 46
+  },
+  "zones/communaute-de-communes-pays-d-evian-vallee-d-abondance.jsonl": {
+   "bytes": 7912,
+   "records": 213
+  },
+  "zones/engadin-mobil.jsonl": {
+   "bytes": 15654,
+   "records": 316
+  },
+  "zones/frimobil.jsonl": {
+   "bytes": 87264,
+   "records": 1924
+  },
+  "zones/leman-pass.jsonl": {
+   "bytes": 98915,
+   "records": 2030
+  },
+  "zones/li-emobil.jsonl": {
+   "bytes": 14419,
+   "records": 407
+  },
+  "zones/libero.jsonl": {
+   "bytes": 327442,
+   "records": 6404
+  },
+  "zones/mobilis.jsonl": {
+   "bytes": 180919,
+   "records": 4511
+  },
+  "zones/onde-verte.jsonl": {
+   "bytes": 46118,
+   "records": 1089
+  },
+  "zones/ostwind.jsonl": {
+   "bytes": 478825,
+   "records": 10416
+  },
+  "zones/pag.jsonl": {
+   "bytes": 15355,
+   "records": 319
+  },
+  "zones/passepartout.jsonl": {
+   "bytes": 76801,
+   "records": 2081
+  },
+  "zones/regio-verkehrsverbund-lorrach.jsonl": {
+   "bytes": 113640,
+   "records": 3027
+  },
+  "zones/tarifverbund-davos.jsonl": {
+   "bytes": 5953,
+   "records": 158
+  },
+  "zones/tarifverbund-klosters.jsonl": {
+   "bytes": 3618,
+   "records": 88
+  },
+  "zones/tarifverbund-schwyz.jsonl": {
+   "bytes": 45736,
+   "records": 1118
+  },
+  "zones/tarifverbund-waldshut.jsonl": {
+   "bytes": 52885,
+   "records": 1621
+  },
+  "zones/tarifverbund-zug.jsonl": {
+   "bytes": 23047,
+   "records": 604
+  },
+  "zones/tnw.jsonl": {
+   "bytes": 208019,
+   "records": 3215
+  },
+  "zones/tpc.jsonl": {
+   "bytes": 3517,
+   "records": 72
+  },
+  "zones/transreno.jsonl": {
+   "bytes": 20696,
+   "records": 513
+  },
+  "zones/unireso.jsonl": {
+   "bytes": 41708,
+   "records": 1197
+  },
+  "zones/vagabond.jsonl": {
+   "bytes": 21423,
+   "records": 625
+  },
+  "zones/vbd.jsonl": {
+   "bytes": 2082,
+   "records": 52
+  },
+  "zones/vhb.jsonl": {
+   "bytes": 56693,
+   "records": 1623
+  },
+  "zones/vvv.jsonl": {
+   "bytes": 128441,
+   "records": 2789
+  },
+  "zones/z-pass-a-welle-zvv.jsonl": {
+   "bytes": 228668,
+   "records": 6420
+  },
+  "zones/z-pass-ostwind-zvv.jsonl": {
+   "bytes": 245167,
+   "records": 6879
+  },
+  "zones/z-pass-tv-schwyz-zug-zvv.jsonl": {
+   "bytes": 198390,
+   "records": 5592
+  },
+  "zones/zvv.jsonl": {
+   "bytes": 256255,
+   "records": 6558
+  }
+ },
+ "counts": {
+  "tarifs": 837,
+  "payLevels": 4735,
+  "edges": 47258,
+  "shortRoutes": 109727,
+  "relationAreasSource": 3454,
+  "relationsSource": 577343,
+  "relationAreas": 3166,
+  "relationPairs": 537842,
+  "distancePrices": 6131,
+  "zonePrices": 23812,
+  "stops": 32837
+ },
+ "alliances": {
+  "a-welle": {
+   "label": "A-Welle",
+   "plans": 2,
+   "zones": 52,
+   "edges": 4147,
+   "stops": 2560,
+   "fetched": "2026-11-10"
+  },
+  "arcobaleno": {
+   "label": "Arcobaleno",
+   "plans": 2,
+   "zones": 25,
+   "edges": 2513,
+   "stops": 1789,
+   "fetched": "2026-11-10"
+  },
+  "bcs": {
+   "label": "BCS",
+   "plans": 2,
+   "zones": 3,
+   "edges": 206,
+   "stops": 135,
+   "fetched": "2026-11-10"
+  },
+  "bodensee-ticket-bahn-bus-fahre": {
+   "label": "Bodensee Ticket Bahn - Bus - Fähre",
+   "plans": 1,
+   "zones": 3,
+   "edges": 12245,
+   "stops": 7075,
+   "fetched": "2026-11-10"
+  },
+  "bs": {
+   "label": "BS",
+   "plans": 1,
+   "zones": 1,
+   "edges": 83,
+   "stops": 56,
+   "fetched": "2026-11-10"
+  },
+  "bum": {
+   "label": "BUM",
+   "plans": 2,
+   "zones": 1,
+   "edges": 42,
+   "stops": 31,
+   "fetched": "2026-11-10"
+  },
+  "communaute-de-communes-pays-d-evian-vallee-d-abondance": {
+   "label": "Communauté de communes pays d'Evian - vallée d'Abondance",
+   "plans": 1,
+   "zones": 1,
+   "edges": 211,
+   "stops": 164,
+   "fetched": "2026-11-10"
+  },
+  "engadin-mobil": {
+   "label": "engadin mobil",
+   "plans": 3,
+   "zones": 13,
+   "edges": 295,
+   "stops": 130,
+   "fetched": "2026-11-10"
+  },
+  "frimobil": {
+   "label": "Frimobil",
+   "plans": 3,
+   "zones": 55,
+   "edges": 1808,
+   "stops": 1192,
+   "fetched": "2026-11-10"
+  },
+  "leman-pass": {
+   "label": "Léman Pass",
+   "plans": 4,
+   "zones": 6,
+   "edges": 2010,
+   "stops": 1405,
+   "fetched": "2026-11-10"
+  },
+  "li-emobil": {
+   "label": "LIEmobil",
+   "plans": 1,
+   "zones": 9,
+   "edges": 397,
+   "stops": 282,
+   "fetched": "2026-11-10"
+  },
+  "libero": {
+   "label": "Libero",
+   "plans": 7,
+   "zones": 117,
+   "edges": 5815,
+   "stops": 3783,
+   "fetched": "2026-11-10"
+  },
+  "mobilis": {
+   "label": "Mobilis",
+   "plans": 3,
+   "zones": 155,
+   "edges": 4043,
+   "stops": 2790,
+   "fetched": "2026-11-10"
+  },
+  "onde-verte": {
+   "label": "Onde Verte",
+   "plans": 3,
+   "zones": 13,
+   "edges": 1048,
+   "stops": 759,
+   "fetched": "2026-11-10"
+  },
+  "ostwind": {
+   "label": "Ostwind",
+   "plans": 6,
+   "zones": 203,
+   "edges": 9635,
+   "stops": 6117,
+   "fetched": "2026-11-10"
+  },
+  "pag": {
+   "label": "PAG",
+   "plans": 5,
+   "zones": 2,
+   "edges": 307,
+   "stops": 227,
+   "fetched": "2026-11-10"
+  },
+  "passepartout": {
+   "label": "Passepartout",
+   "plans": 2,
+   "zones": 33,
+   "edges": 2013,
+   "stops": 1380,
+   "fetched": "2026-11-10"
+  },
+  "regio-verkehrsverbund-lorrach": {
+   "label": "Regio Verkehrsverbund Lörrach",
+   "plans": 2,
+   "zones": 57,
+   "edges": 2961,
+   "stops": 1910,
+   "fetched": "2026-11-10"
+  },
+  "tarifverbund-davos": {
+   "label": "Tarifverbund Davos",
+   "plans": 1,
+   "zones": 16,
+   "edges": 141,
+   "stops": 85,
+   "fetched": "2026-11-10"
+  },
+  "tarifverbund-klosters": {
+   "label": "Tarifverbund Klosters",
+   "plans": 1,
+   "zones": 2,
+   "edges": 85,
+   "stops": 54,
+   "fetched": "2026-11-10"
+  },
+  "tarifverbund-schwyz": {
+   "label": "Tarifverbund Schwyz",
+   "plans": 2,
+   "zones": 35,
+   "edges": 1059,
+   "stops": 738,
+   "fetched": "2026-11-10"
+  },
+  "tarifverbund-waldshut": {
+   "label": "Tarifverbund Waldshut",
+   "plans": 1,
+   "zones": 6,
+   "edges": 1614,
+   "stops": 875,
+   "fetched": "2026-11-10"
+  },
+  "tarifverbund-zug": {
+   "label": "Tarifverbund Zug",
+   "plans": 2,
+   "zones": 17,
+   "edges": 568,
+   "stops": 397,
+   "fetched": "2026-11-10"
+  },
+  "tnw": {
+   "label": "TNW",
+   "plans": 9,
+   "zones": 57,
+   "edges": 2980,
+   "stops": 1911,
+   "fetched": "2026-11-10"
+  },
+  "tpc": {
+   "label": "TPC",
+   "plans": 2,
+   "zones": 2,
+   "edges": 66,
+   "stops": 47,
+   "fetched": "2026-11-10"
+  },
+  "transreno": {
+   "label": "Transreno",
+   "plans": 1,
+   "zones": 6,
+   "edges": 506,
+   "stops": 225,
+   "fetched": "2026-11-10"
+  },
+  "unireso": {
+   "label": "unireso",
+   "plans": 1,
+   "zones": 1,
+   "edges": 1195,
+   "stops": 789,
+   "fetched": "2026-11-10"
+  },
+  "vagabond": {
+   "label": "Vagabond",
+   "plans": 1,
+   "zones": 15,
+   "edges": 609,
+   "stops": 468,
+   "fetched": "2026-11-10"
+  },
+  "vbd": {
+   "label": "VBD",
+   "plans": 1,
+   "zones": 1,
+   "edges": 50,
+   "stops": 42,
+   "fetched": "2026-11-10"
+  },
+  "vhb": {
+   "label": "VHB",
+   "plans": 1,
+   "zones": 7,
+   "edges": 1615,
+   "stops": 884,
+   "fetched": "2026-11-10"
+  },
+  "vvv": {
+   "label": "VVV",
+   "plans": 3,
+   "zones": 90,
+   "edges": 2694,
+   "stops": 1819,
+   "fetched": "2026-11-10"
+  },
+  "z-pass-a-welle-zvv": {
+   "label": "Z-Pass A-Welle-ZVV",
+   "plans": 1,
+   "zones": 72,
+   "edges": 6347,
+   "stops": 3953,
+   "fetched": "2026-11-10"
+  },
+  "z-pass-ostwind-zvv": {
+   "label": "Z-Pass OSTWIND-ZVV",
+   "plans": 1,
+   "zones": 96,
+   "edges": 6782,
+   "stops": 4242,
+   "fetched": "2026-11-10"
+  },
+  "z-pass-tv-schwyz-zug-zvv": {
+   "label": "Z-Pass TV Schwyz/Zug-ZVV",
+   "plans": 1,
+   "zones": 79,
+   "edges": 5512,
+   "stops": 3484,
+   "fetched": "2026-11-10"
+  },
+  "zvv": {
+   "label": "ZVV",
+   "plans": 3,
+   "zones": 72,
+   "edges": 6393,
+   "stops": 3954,
+   "fetched": "2026-11-10"
+  }
+ },
+ "relationFiles": [
+  "relations-0.jsonl"
+ ],
+ "warnings": [
+  "prices: 47 zone price entries without a price were left out",
+  "stops: 500 of 33337 stop numbers used by the fare data have no name in the DiDok graph"
+ ],
+ "lastRun": {
+  "started": "2026-11-10T18:04:56.844Z",
+  "seconds": 269,
+  "requests": 159,
+  "cachedPages": 159,
+  "retries": 0,
+  "megabytes": 84,
+  "sections": [
+   "prices",
+   "zones",
+   "relations"
+  ]
+ }
+}
