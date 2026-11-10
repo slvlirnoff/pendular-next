@@ -1,0 +1,133 @@
+{
+  "_structure": "factors.<key> = { value: g CO2-eq per unit of `basis` or null if absent from the source; basis: pkm (per passenger-km) or vkm (per vehicle-km, car only); source: URL fetched; document; label: row in the source workbook; year: vehicle year of the row (null = fleet/not stated); fallback?: key to use when value is null }. Life cycle (GWP100a).",
+  "unit": "g CO2-eq per pkm (vkm for car)",
+  "version": "mobitool-Faktoren v3.1 (2025-04-08)",
+  "factors": {
+    "rail_long": {
+      "value": 6.8154,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 103",
+      "label": "Rail / Train Switzerland / long-distance traffic (electricity mix SBB)",
+      "year": null
+    },
+    "rail_regional": {
+      "value": 8.0381,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 101",
+      "label": "Rail / Train Switzerland / Regional traffic, incl. S-Bahn (electricity mix SBB)",
+      "year": null
+    },
+    "tram": {
+      "value": 42.793,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 18",
+      "label": "Road / Tram / fleet average",
+      "year": null
+    },
+    "bus_city": {
+      "value": 133.8195,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 20",
+      "label": "Road / City bus (13m) / Diesel / Single deck",
+      "year": 2020,
+      "note": "Closest available to a city bus fleet average: v3.1 has no fleet-average bus row. Trolleybus (articulated, row 43) = 29.6128; hybrid 13m single deck = 124.7268."
+    },
+    "bus_regional": {
+      "value": null,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road)",
+      "label": null,
+      "year": null,
+      "fallback": "bus_city",
+      "note": "v3.1 has no regional-bus row (only city bus 9/13/18 m, trolleybus, coach). Engine falls back to bus_city."
+    },
+    "metro": {
+      "value": null,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road)",
+      "label": null,
+      "year": null,
+      "fallback": "tram",
+      "note": "No metro/underground row in v3.1. Engine substitutes tram (Swiss rail/tram are electric)."
+    },
+    "boat": {
+      "value": 161.2961,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 105",
+      "label": "Waterway / Passenger ship / Diesel",
+      "year": null
+    },
+    "funicular": {
+      "value": null,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road)",
+      "label": null,
+      "year": null,
+      "fallback": "cableway",
+      "note": "No funicular row in v3.1. Engine substitutes the cable-car row (electric, consumer mix CH)."
+    },
+    "cableway": {
+      "value": 60.0304,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 106",
+      "label": "Airborne / Cable car / electric operation with consumer mix CH",
+      "year": null
+    },
+    "car": {
+      "value": 298.284,
+      "basis": "vkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 59",
+      "label": "Road / Passenger car / fleet average (2012), per vkm = pkm sum x average occupancy",
+      "year": 2012,
+      "derived": "AG59 (pkm, 186.42750219961442) x occupancy cell T59 (1.5999999999999996) = per vehicle-km; LibreOffice recalculation with unit switched to vkm failed (#DIV/0!), so derived by hand",
+      "pkmEquivalent": 186.42750219961442,
+      "occupancy": 1.5999999999999996
+    },
+    "car_electric": {
+      "value": 143.665,
+      "basis": "vkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 90",
+      "label": "Road / Passenger car / Battery electric / fleet average (2021), per vkm = pkm sum x average occupancy",
+      "year": 2021,
+      "derived": "AG90 (pkm, 89.7906410195474) x occupancy cell T90 (1.6) = per vehicle-km",
+      "pkmEquivalent": 89.7906410195474,
+      "occupancy": 1.6
+    },
+    "bike": {
+      "value": 5.58,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 9",
+      "label": "Soft mobility / Bicycle / Conventional, urban",
+      "year": 2020
+    },
+    "ebike": {
+      "value": 11.3259,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 10",
+      "label": "Soft mobility / E-Bike / Battery electric / <25 km/h",
+      "year": 2020,
+      "note": "Mobitool value used; Bosch eBike Systems page could not be fetched (HTTP 403 from bosch-ebike.com), so no Bosch figure is used."
+    },
+    "walk": {
+      "value": 0,
+      "basis": "pkm",
+      "source": "https://assets.ctfassets.net/4y40wxcxzkmz/oVkB45ifGfz5X44f5Omb1/9d3ef33605fb6154d61d7630536c3a92/mobitool-Faktoren-v3.1-20250408.xlsx",
+      "document": "mobitool-Faktoren v3.1 (2025-04-08), sheet \"mobitool-Faktoren-v3.1\", indicator GWP100a, functional unit pkm, column AG \"sum\" (direct + non-exhaust + energy chain + maintenance + vehicle + EoL + road); row 7",
+      "label": "Soft mobility / On foot",
+      "year": null
+    }
+  }
+}

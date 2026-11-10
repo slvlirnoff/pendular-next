@@ -1,0 +1,215 @@
+[
+ {
+  "id": "81b5f0c9-0f32-40e4-8ad9-154fe4d1c1cd",
+  "kind": "parkRail",
+  "name": "P+Rail Cully",
+  "stationName": "Cully",
+  "stationId": "8501124",
+  "stationIdType": "uic",
+  "lon": 6.72612337,
+  "lat": 46.48862672,
+  "capacity": 65,
+  "prices": {
+   "day": 4,
+   "month": 40,
+   "year": 400
+  }
+ },
+ {
+  "id": "bdaccb51-66a7-42ef-b877-df5fff4a069a",
+  "kind": "parkRail",
+  "name": "P+Rail Lucens",
+  "stationName": "Lucens",
+  "stationId": "8504121",
+  "stationIdType": "uic",
+  "lon": 6.84226045,
+  "lat": 46.70806429,
+  "capacity": 28,
+  "prices": {
+   "day": 4,
+   "month": 40,
+   "year": 400
+  }
+ },
+ {
+  "id": "56a99eb3-2690-4ba4-a9a1-d45b651b3f15",
+  "kind": "parkRail",
+  "name": "P+Rail Moudon",
+  "stationName": "Moudon",
+  "stationId": "8504120",
+  "stationIdType": "uic",
+  "lon": 6.80280968,
+  "lat": 46.6684369,
+  "capacity": 31,
+  "prices": {
+   "day": 4,
+   "month": 40,
+   "year": 400
+  }
+ },
+ {
+  "id": "570da2e4-1efc-48f1-90f9-a1243be73462",
+  "kind": "parkRail",
+  "name": "P+Rail Palézieux",
+  "stationName": "Palézieux",
+  "stationId": "8504014",
+  "stationIdType": "uic",
+  "lon": 6.83770266,
+  "lat": 46.54114772,
+  "capacity": 190,
+  "prices": {
+   "day": 7,
+   "month": 70,
+   "year": 700
+  }
+ },
+ {
+  "id": "75da292e-940f-44e1-b5a8-03b5914e4e6e",
+  "kind": "parkRail",
+  "name": "P+Rail Vevey",
+  "stationName": "Vevey",
+  "stationId": "8501200",
+  "stationIdType": "uic",
+  "lon": 6.83947011,
+  "lat": 46.46604254,
+  "capacity": 47,
+  "prices": {
+   "day": 10,
+   "month": null,
+   "year": 700
+  }
+ },
+ {
+  "id": "15eeb176-1c1f-4a09-9525-2cbd421e90fe",
+  "kind": "parkRail",
+  "name": "P+Rail Cossonay-Penthalaz",
+  "stationName": "Cossonay-Penthalaz",
+  "stationId": "8501115",
+  "stationIdType": "uic",
+  "lon": 6.5237669,
+  "lat": 46.60540405,
+  "capacity": 55,
+  "prices": {
+   "day": 8,
+   "month": 80,
+   "year": 800
+  }
+ },
+ {
+  "id": "de0daad8-a0b2-46f1-86ab-bfeae04f16a4",
+  "kind": "parkRail",
+  "name": "P+Rail Yverdon-les-Bains",
+  "stationName": "Yverdon-les-Bains",
+  "stationId": "8504200",
+  "stationIdType": "uic",
+  "lon": 6.63893307,
+  "lat": 46.78267504,
+  "capacity": 243,
+  "prices": {
+   "day": 10,
+   "month": 80,
+   "year": 800
+  }
+ },
+ {
+  "id": "56a6f8f4-2fe9-4edf-8cb7-c7641fce5688",
+  "kind": "parkRail",
+  "name": "P+Rail Palézieux-Village",
+  "stationName": "Palézieux-Village",
+  "stationId": "8504016",
+  "stationIdType": "uic",
+  "lon": 6.82925,
+  "lat": 46.557088,
+  "capacity": 10,
+  "prices": {
+   "day": 0,
+   "month": null,
+   "year": null
+  }
+ },
+ {
+  "id": "bike-8501037",
+  "kind": "bikeParking",
+  "name": "Bike parking Morges",
+  "stationName": "Morges",
+  "stationId": "8501037",
+  "stationIdType": "uic",
+  "lon": 6.492969,
+  "lat": 46.511535,
+  "capacity": 266,
+  "prices": {
+   "day": null,
+   "month": null,
+   "year": null
+  },
+  "covered": true
+ },
+ {
+  "id": "bike-8504014",
+  "kind": "bikeParking",
+  "name": "Bike parking Palézieux",
+  "stationName": "Palézieux",
+  "stationId": "8504014",
+  "stationIdType": "uic",
+  "lon": 6.83804,
+  "lat": 46.5429,
+  "capacity": 62,
+  "prices": {
+   "day": null,
+   "month": null,
+   "year": null
+  },
+  "covered": true
+ },
+ {
+  "id": "bike-65c5450d-afc9-425f-b9ad-8ae0f2239add",
+  "kind": "bikeParking",
+  "name": "Bike parking Lausanne",
+  "stationName": "Lausanne",
+  "stationId": null,
+  "stationIdType": null,
+  "lon": 6.62986,
+  "lat": 46.516116,
+  "capacity": 321,
+  "prices": {
+   "day": null,
+   "month": null,
+   "year": null
+  },
+  "covered": false
+ },
+ {
+  "id": "bike-8504121",
+  "kind": "bikeParking",
+  "name": "Bike parking Lucens",
+  "stationName": "Lucens",
+  "stationId": "8504121",
+  "stationIdType": "uic",
+  "lon": 6.84219,
+  "lat": 46.70791,
+  "capacity": 18,
+  "prices": {
+   "day": null,
+   "month": null,
+   "year": null
+  },
+  "covered": true
+ },
+ {
+  "id": "bike-8504200",
+  "kind": "bikeParking",
+  "name": "Bike parking Yverdon-les-Bains",
+  "stationName": "Yverdon-les-Bains",
+  "stationId": "8504200",
+  "stationIdType": "uic",
+  "lon": 6.63836,
+  "lat": 46.7825,
+  "capacity": 30,
+  "prices": {
+   "day": null,
+   "month": null,
+   "year": null
+  },
+  "covered": false
+ }
+]

@@ -1,0 +1,300 @@
+import type {
+  DataVersions,
+  Itinerary,
+  LatLon,
+  Leg,
+  LegMode,
+  RoutingProvider,
+  StopPoint,
+  StreetProfile,
+  StreetRoute,
+  TimeWindow,
+} from '../types.js';
+import { minutesBetween, windowToUtc } from '../time.js';
+
+/** Minimal shapes of the MOTIS v2 API responses that the adapter reads. */
+interface MotisPlace {
+  name: string;
+  stopId?: string;
+  parentId?: string;
+  lat: number;
+  lon: number;
+}
+interface MotisLeg {
+  mode: string;
+  from: MotisPlace;
+  to: MotisPlace;
+  duration: number;
+  startTime: string;
+  endTime: string;
+  distance?: number;
+  headsign?: string;
+  category?: { id: string; name: string; shortName: string };
+  agencyName?: string;
+  routeShortName?: string;
+  routeLongName?: string;
+  tripShortName?: string;
+  displayName?: string;
+  intermediateStops?: MotisPlace[];
+  legGeometry?: { points: string; precision: number; length: number };
+}
+interface MotisItinerary {
+  duration: number;
+  startTime: string;
+  endTime: string;
+  transfers: number;
+  legs: MotisLeg[];
+}
+interface MotisPlanResponse {
+  direct?: MotisItinerary[];
+  itineraries?: MotisItinerary[];
+  nextPageCursor?: string;
+  previousPageCursor?: string;
+}
+
+export interface MotisOptions {
+  baseUrl: string;
+  timezone: string;
+  /** E-bike cruising speed, m/s (bike uses the MOTIS default). */
+  ebikeSpeed?: number;
+  /** Safety cap on result pages fetched per window. */
+  maxPages?: number;
+  versions?: DataVersions;
+  fetch?: typeof fetch;
+}
+
+const MODE_MAP: Record<string, LegMode> = {
+  WALK: 'walk',
+  BIKE: 'bike',
+  CAR: 'car',
+  CAR_PARKING: 'car',
+  TRAM: 'tram',
+  SUBWAY: 'metro',
+  METRO: 'metro',
+  FERRY: 'boat',
+  BUS: 'bus',
+  COACH: 'bus',
+  FUNICULAR: 'funicular',
+  CABLE_CAR: 'funicular',
+  AERIAL_LIFT: 'cableway',
+  AREAL_LIFT: 'cableway',
+};
+
+export function mapMode(mode: string): LegMode {
+  return MODE_MAP[mode] ?? 'rail';
+}
+
+/** Google polyline algorithm with a configurable precision. Returns [lon, lat] pairs. */
+export function decodePolyline(points: string, precision: number): [number, number][] {
+  const factor = 10 ** precision;
+  const out: [number, number][] = [];
+  let index = 0;
+  let lat = 0;
+  let lon = 0;
+  while (index < points.length) {
+    for (const which of [0, 1] as const) {
+      let result = 0;
+      let shift = 0;
+      let byte: number;
+      do {
+        byte = points.charCodeAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      } while (byte >= 0x20 && index < points.length);
+      const delta = result & 1 ? ~(result >> 1) : result >> 1;
+      if (which === 0) lat += delta;
+      else lon += delta;
+    }
+    out.push([lon / factor, lat / factor]);
+  }
+  return out;
+}
+
+const place = (p: LatLon) => `${p.lat.toFixed(6)},${p.lon.toFixed(6)}`;
+
+function stationId(p: MotisPlace): string | undefined {
+  const raw = p.parentId ?? p.stopId;
+  if (!raw) return undefined;
+  // MOTIS prefixes ids with the dataset tag ("ch_8501120:0:1"); keep the station number.
+  const id = raw.includes('_') ? raw.slice(raw.indexOf('_') + 1) : raw;
+  return id.replace(/^Parent/, '').split(':')[0];
+}
+
+function toStop(p: MotisPlace): StopPoint {
+  return { name: p.name, lat: p.lat, lon: p.lon, stopId: stationId(p) };
+}
+
+export class MotisRouting implements RoutingProvider {
+  private readonly f: typeof fetch;
+  constructor(private readonly o: MotisOptions) {
+    this.f = o.fetch ?? fetch;
+  }
+
+  private async get<T>(path: string, params: Record<string, string | number | boolean>): Promise<T> {
+    const url = new URL(path, this.o.baseUrl);
+    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
+    const res = await this.f(url);
+    if (!res.ok) {
+      throw new Error(`MOTIS ${path} ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    }
+    return (await res.json()) as T;
+  }
+
+  private toLeg(l: MotisLeg, streetAs?: LegMode): Leg {
+    const mapped = mapMode(l.mode);
+    const mode = streetAs && (mapped === 'bike' || mapped === 'car' || mapped === 'walk') ? streetAs : mapped;
+    const transit = !['walk', 'bike', 'ebike', 'car'].includes(mode);
+    const geometry = l.legGeometry ? decodePolyline(l.legGeometry.points, l.legGeometry.precision) : undefined;
+    return {
+      mode,
+      from: toStop(l.from),
+      to: toStop(l.to),
+      departure: l.startTime,
+      arrival: l.endTime,
+      durationMin: Math.round(l.duration / 60),
+      distanceM: Math.round(l.distance ?? (geometry ? pathLength(geometry) : 0)),
+      line: transit
+        ? {
+            name: l.displayName ?? l.routeShortName ?? l.tripShortName ?? l.category?.shortName ?? '',
+            category: l.category?.shortName,
+            operator: l.agencyName,
+            headsign: l.headsign,
+          }
+        : undefined,
+      intermediateStops: transit ? l.intermediateStops?.map(toStop) : undefined,
+      geometry,
+    };
+  }
+
+  private toItinerary(it: MotisItinerary, streetAs?: LegMode): Itinerary {
+    return {
+      departure: it.startTime,
+      arrival: it.endTime,
+      durationMin: Math.round(it.duration / 60),
+      changes: it.transfers,
+      legs: it.legs.map((l) => this.toLeg(l, streetAs)),
+    };
+  }
+
+  async transit(q: {
+    from: LatLon;
+    to: LatLon;
+    date: string;
+    window: TimeWindow;
+    by: 'arrive' | 'depart';
+  }): Promise<Itinerary[]> {
+    const { start, end } = windowToUtc(q.date, q.window, this.o.timezone);
+    const arriveBy = q.by === 'arrive';
+    const out = new Map<string, Itinerary>();
+    let cursor: string | undefined;
+    const maxPages = this.o.maxPages ?? 6;
+    for (let page = 0; page < maxPages; page++) {
+      const res = await this.get<MotisPlanResponse>('/api/v6/plan', {
+        fromPlace: place(q.from),
+        toPlace: place(q.to),
+        // MOTIS searches the interval [time, time + searchWindow] on the departure
+        // (or [time - searchWindow, time] on the arrival) side.
+        time: (arriveBy ? end : start).toISOString(),
+        arriveBy,
+        searchWindow: Math.round((end.getTime() - start.getTime()) / 1000),
+        directModes: 'WALK',
+        maxItineraries: 40,
+        detailedTransfers: false,
+        ...(cursor ? { pageCursor: cursor } : {}),
+      });
+      let outside = 0;
+      for (const it of res.itineraries ?? []) {
+        const t = new Date(arriveBy ? it.endTime : it.startTime).getTime();
+        if (t < start.getTime() || t > end.getTime()) {
+          outside++;
+          continue;
+        }
+        out.set(`${it.startTime}|${it.endTime}|${it.legs.map((l) => l.tripShortName ?? l.mode).join('>')}`, this.toItinerary(it));
+      }
+      // The first response covers the whole window; page on only while results keep landing in it.
+      cursor = arriveBy ? res.previousPageCursor : res.nextPageCursor;
+      if (!cursor || outside > 0 || (res.itineraries ?? []).length === 0) break;
+    }
+    return [...out.values()].sort((a, b) => a.arrival.localeCompare(b.arrival));
+  }
+
+  async street(q: { from: LatLon; to: LatLon; profile: StreetProfile }): Promise<StreetRoute | null> {
+    const mode = q.profile === 'car' ? 'CAR' : q.profile === 'walk' ? 'WALK' : 'BIKE';
+    const res = await this.get<MotisPlanResponse>('/api/v6/plan', {
+      fromPlace: place(q.from),
+      toPlace: place(q.to),
+      directModes: mode,
+      transitModes: '',
+      maxDirectTime: 4 * 3600,
+      detailedTransfers: false,
+      ...(q.profile === 'ebike' ? { cyclingSpeed: this.o.ebikeSpeed ?? 6.1 } : {}),
+      ...(q.profile === 'bike' || q.profile === 'ebike' ? { elevationCosts: 'LOW' } : {}),
+    });
+    const it = res.direct?.[0];
+    if (!it) return null;
+    const legs = it.legs.map((l) => this.toLeg(l, q.profile));
+    return {
+      durationMin: it.duration / 60,
+      distanceM: legs.reduce((s, l) => s + l.distanceM, 0),
+      geometry: legs.flatMap((l) => l.geometry ?? []),
+    };
+  }
+
+  async streetMatrix(q: {
+    points: LatLon[];
+    anchor: LatLon;
+    profile: StreetProfile;
+    direction: 'toAnchor' | 'fromAnchor';
+    maxMin: number;
+  }): Promise<(StreetRoute | null)[]> {
+    if (q.points.length === 0) return [];
+    const mode = q.profile === 'car' ? 'CAR' : q.profile === 'walk' ? 'WALK' : 'BIKE';
+    // E-bikes use the bike network; MOTIS's matrix has no speed setting, so scale afterwards.
+    const speedUp = q.profile === 'ebike' ? EBIKE_MATRIX_SPEEDUP : 1;
+    const out: (StreetRoute | null)[] = [];
+    for (let i = 0; i < q.points.length; i += 120) {
+      const chunk = q.points.slice(i, i + 120);
+      const res = await this.get<{ duration?: number; distance?: number }[]>('/api/v1/one-to-many', {
+        one: `${q.anchor.lat};${q.anchor.lon}`,
+        many: chunk.map((p) => `${p.lat};${p.lon}`).join(','),
+        mode,
+        max: Math.round(q.maxMin * 60 * speedUp),
+        maxMatchingDistance: 250,
+        arriveBy: q.direction === 'toAnchor',
+        withDistance: true,
+      });
+      for (const d of res) {
+        out.push(
+          d.duration === undefined || d.duration === null
+            ? null
+            : { durationMin: d.duration / 60 / speedUp, distanceM: d.distance ?? 0 },
+        );
+      }
+    }
+    return out;
+  }
+
+  async versions(): Promise<DataVersions> {
+    return this.o.versions ?? {};
+  }
+}
+
+/** Ratio of e-bike to plain bike cruising speed used to scale matrix times. */
+const EBIKE_MATRIX_SPEEDUP = 1.35;
+
+function pathLength(g: [number, number][]): number {
+  let m = 0;
+  for (let i = 1; i < g.length; i++) m += haversineM(g[i - 1]!, g[i]!);
+  return m;
+}
+
+export function haversineM(a: [number, number], b: [number, number]): number {
+  const R = 6371008.8;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b[1] - a[1]);
+  const dLon = toRad(b[0] - a[0]);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+export { minutesBetween };

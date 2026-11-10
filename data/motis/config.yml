@@ -1,0 +1,24 @@
+# MOTIS configuration for Pendular: Swiss timetable 2027 + OpenStreetMap (Switzerland, padded).
+# Inputs are fetched by data/scripts/fetch.sh; `motis import` writes ./data.
+osm: input/switzerland.osm.pbf
+timetable:
+  # Timetable year 2027: 13.12.2026 – 11.12.2027.
+  first_day: 2026-12-13
+  num_days: 364
+  railviz: false
+  with_shapes: false
+  adjust_footpaths: true
+  link_stop_distance: 100
+  max_footpath_length: 15
+  default_transfer_time: 2
+  datasets:
+    ch:
+      path: input/gtfs.zip
+      default_bikes_allowed: false
+street_routing: true
+osr_footpath: false
+geocoding: true
+reverse_geocoding: true
+# Vector tiles are built separately (slow); enable for the map:
+# tiles:
+#   profile: bin/tiles-profiles/full.lua

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vite/
+data/raw/
+data/motis/bin/
+data/motis/data/
+data/motis/input/
+*.log
+.env
+data/build/

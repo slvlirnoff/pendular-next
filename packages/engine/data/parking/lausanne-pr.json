@@ -1,0 +1,121 @@
+{
+  "source": "lausanne.ch (unreachable in this session; names from the product spec)",
+  "fetchedAt": null,
+  "sites": [
+    {
+      "id": "lausanne-pr-vennes",
+      "name": "P+R Vennes",
+      "lat": null,
+      "lon": null,
+      "capacity": null,
+      "prices": {
+        "day": null,
+        "month": null,
+        "year": null
+      },
+      "includesTransit": {
+        "day": null,
+        "month": null
+      },
+      "zones": [
+        11,
+        12
+      ],
+      "nearestStop": null,
+      "sourceUrl": null,
+      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+    },
+    {
+      "id": "lausanne-pr-bourdonnette",
+      "name": "P+R Bourdonnette",
+      "lat": null,
+      "lon": null,
+      "capacity": null,
+      "prices": {
+        "day": null,
+        "month": null,
+        "year": null
+      },
+      "includesTransit": {
+        "day": null,
+        "month": null
+      },
+      "zones": [
+        11,
+        12
+      ],
+      "nearestStop": null,
+      "sourceUrl": null,
+      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+    },
+    {
+      "id": "lausanne-pr-velodrome",
+      "name": "P+R Vélodrome",
+      "lat": null,
+      "lon": null,
+      "capacity": null,
+      "prices": {
+        "day": null,
+        "month": null,
+        "year": null
+      },
+      "includesTransit": {
+        "day": null,
+        "month": null
+      },
+      "zones": [
+        11,
+        12
+      ],
+      "nearestStop": null,
+      "sourceUrl": null,
+      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+    },
+    {
+      "id": "lausanne-pr-valmont",
+      "name": "P+R Valmont",
+      "lat": null,
+      "lon": null,
+      "capacity": null,
+      "prices": {
+        "day": null,
+        "month": null,
+        "year": null
+      },
+      "includesTransit": {
+        "day": null,
+        "month": null
+      },
+      "zones": [
+        11,
+        12
+      ],
+      "nearestStop": null,
+      "sourceUrl": null,
+      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+    },
+    {
+      "id": "lausanne-pr-mont-sur-lausanne",
+      "name": "P+R Mont-sur-Lausanne",
+      "lat": null,
+      "lon": null,
+      "capacity": null,
+      "prices": {
+        "day": null,
+        "month": null,
+        "year": null
+      },
+      "includesTransit": {
+        "day": null,
+        "month": null
+      },
+      "zones": [
+        11,
+        12
+      ],
+      "nearestStop": null,
+      "sourceUrl": null,
+      "notes": "NOT VERIFIED: lausanne.ch refused every request (Request Rejected by the site's bot filter), so no address, coordinates, capacity or price could be read. Site name is from the product spec only; zones 11+12 and the 'Vennes is parking only' claim are spec statements, not confirmed on the city page."
+    }
+  ]
+}
