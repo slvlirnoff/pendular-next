@@ -93,7 +93,7 @@ for m in M:
     s = dict(label=l['text'], kind=m['kind'], zones=zones, border=len(zones) > 1,
              zoneMethod=('border: centre within %.0f svg units of %d polygon boundaries (nearest %s)' % (BORDER_TOL, len(zones), ', '.join('%s=%.1f' % (z, d) for z, d in m['dist_all'][:len(zones)]))) if len(zones) > 1 else ('point-in-polygon' + ('' if m['dist_all'][0][1] == 0 else ' (centre %.1f units from boundary of zone %s)' % (m['dist_all'][0][1], m['dist_all'][0][0]))),
              svg=[round(m['x'], 1), round(m['y'], 1)], labelDist=round(m['label_dist'], 1),
-             gtfs=[{k: v for k, v in c.items() if k not in ('served',)} for c in cands[:10]], confidence=LEVEL[level])
+             gtfs=[{k: v for k, v in c.items() if k not in ('served', 'bus')} for c in cands[:10]], confidence=LEVEL[level])
     if l.get('canton'): s['canton'] = l['canton']
     if flags: s['flags'] = flags
     stops.append(s)
