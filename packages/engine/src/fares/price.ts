@@ -1,6 +1,7 @@
 import type { CostComponent, Leg, PricedProduct, ProductKind, Provenance, Traveller } from '../types.js';
 import type { FareContext } from '../planner/compare.js';
 import type { ZoneIndex } from './zones.js';
+import type { NovaData } from './nova.js';
 import {
   MOBILIS_SOURCE,
   mobilisDayPass,
@@ -24,6 +25,11 @@ import {
 
 export interface PriceDeps {
   zones?: ZoneIndex;
+  /**
+   * The official fare data (NOVA): zones of every hop between two stops, and tariff kilometres
+   * between stations. Used first; the zone table and the travelled distance are the fallbacks.
+   */
+  nova?: NovaData;
   /**
    * A quoted single for the trip when one is available (OJP Fare).
    * Used for the singles of trips outside the zone table and to confirm zone counts.
@@ -155,15 +161,74 @@ function mobilisProducts(n: number, exact: boolean, ctx: FareContext, notes: str
 // National distance tariff
 // ---------------------------------------------------------------------------------------------
 
-/** Tariff kilometres are not open data: the travelled distance stands in for them. */
+/** Without official tariff kilometres, the travelled distance stands in for them. */
 export function estimatedTariffKm(legs: Leg[]): number {
   return Math.max(1, Math.ceil(legs.reduce((s, l) => s + l.distanceM, 0) / 1000));
+}
+
+const stopsOf = (l: Leg): string[] | null => {
+  const ids = [l.from, ...(l.intermediateStops ?? []), l.to].map((x) => x.stopId);
+  return ids.every((x): x is string => !!x) ? ids : null;
+};
+
+/**
+ * Tariff kilometres of the trip: official values leg by leg where the fare data has them
+ * (distances of the direct service add up), the travelled distance for the other legs.
+ */
+export function tariffKm(legs: Leg[], nova: NovaData | undefined, tariff: 'T601' | 'T650'): { km: number; official: boolean } {
+  let km = 0;
+  let official = !!nova;
+  for (const l of legs) {
+    const seq = stopsOf(l);
+    const t = seq && nova ? nova.tariffKm(seq, tariff) : null;
+    if (t && t.parts.every((p) => p.unit === 'KILOMETER')) km += t.km;
+    else {
+      km += l.distanceM / 1000;
+      official = false;
+    }
+  }
+  return { km: Math.max(1, Math.ceil(km)), official };
+}
+
+const MOBILIS = 'mobilis';
+const MOBILIS_PASS_PLAN = 'mobilis-abo-abo';
+
+/**
+ * Mobilis zones of the trip from the official data: every hop of every vehicle lists the zones
+ * it uses, including those crossed without a stop. Null when a stop or a hop is not in the
+ * network's data (the zone table then decides).
+ */
+function novaMobilisZones(legs: Leg[], nova: NovaData): { count: number; exact: boolean; notes: string[] } | null {
+  const used = new Set<number>();
+  let bridged = 0;
+  for (const l of legs) {
+    const seq = stopsOf(l);
+    if (!seq || !nova.alliancesAt(seq[0]!).includes(MOBILIS) || !nova.alliancesAt(seq[seq.length - 1]!).includes(MOBILIS)) return null;
+    const z = nova.zonesForStops(MOBILIS, MOBILIS_PASS_PLAN, seq);
+    if (z.missingEdges.length > 0 || z.zones.length === 0) return null;
+    bridged += z.bridged.length;
+    for (const x of z.zones) used.add(x);
+  }
+  // Lausanne's zones 11 and 12 are always sold together.
+  if (used.has(11) || used.has(12)) {
+    used.add(11);
+    used.add(12);
+  }
+  const zones = [...used].sort((a, b) => a - b);
+  return {
+    count: nova.zoneCount(MOBILIS, MOBILIS_PASS_PLAN, zones),
+    exact: bridged === 0,
+    notes: bridged ? [`${bridged} hop(s) between stops not listed as such in the fare data, joined through the network`] : [],
+  };
 }
 
 function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps): PricedProduct[] {
   const t = ctx.traveller;
   const cls = t.travelClass;
-  const km = estimatedTariffKm(legs);
+  // Single tickets and route passes have their own distance tables.
+  const single601 = tariffKm(legs, deps.nova, 'T601');
+  const pass650 = tariffKm(legs, deps.nova, 'T650');
+  const km = pass650.km;
   const out: (PricedProduct | null)[] = [];
   const reduced = t.ageGroup === 'child' || t.halfFare;
   const quoted = deps.quote?.(legs) ?? null;
@@ -173,10 +238,10 @@ function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps): Price
     if (quoted && quoted.travelClass === cls && quoted.half === half) {
       return { key: half ? 'national.single.half' : 'national.single', params: { unit: quoted.single, times: ctx.tripsPerYear }, yearly: quoted.single * ctx.tripsPerYear, provenance: 'quoted', source: 'OJP Fare' };
     }
-    const p = distanceSingle(km, { travelClass: cls, half });
+    const p = distanceSingle(single601.km, { travelClass: cls, half });
     return p == null
       ? null
-      : { key: half ? 'national.single.half' : 'national.single', params: { ...params, unit: p, times: ctx.tripsPerYear }, yearly: p * ctx.tripsPerYear, provenance: 'estimated', source: DISTANCE_TABLE_SOURCE };
+      : { key: half ? 'national.single.half' : 'national.single', params: { km: single601.km, unit: p, times: ctx.tripsPerYear }, yearly: p * ctx.tripsPerYear, provenance: single601.official ? 'tariff' : 'estimated', source: DISTANCE_TABLE_SOURCE };
   };
   if (!reduced) {
     const s = single(false);
@@ -195,11 +260,11 @@ function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps): Price
   const month = routePass('month', km, { travelClass: cls, category });
   if (month != null) {
     const m = passMonths(ctx);
-    out.push(product('routePassMonthly', [{ key: 'national.routePass.month', params: { ...params, unit: month, times: m }, yearly: month * m, provenance: 'estimated', source: ROUTE_PASS_TABLE_SOURCE }]));
+    out.push(product('routePassMonthly', [{ key: 'national.routePass.month', params: { ...params, unit: month, times: m }, yearly: month * m, provenance: pass650.official ? 'tariff' : 'estimated', source: ROUTE_PASS_TABLE_SOURCE }]));
   }
   const year = routePass('year', km, { travelClass: cls, category });
   if (year != null) {
-    out.push(product('routePassYearly', [{ key: 'national.routePass.year', params, yearly: year, provenance: 'estimated', source: ROUTE_PASS_TABLE_SOURCE }]));
+    out.push(product('routePassYearly', [{ key: 'national.routePass.year', params, yearly: year, provenance: pass650.official ? 'tariff' : 'estimated', source: ROUTE_PASS_TABLE_SOURCE }]));
   }
   return out.filter((p): p is PricedProduct => p !== null);
 }
@@ -210,9 +275,11 @@ function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps): Price
 export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}): PricedProduct[] {
   if (legs.length === 0) return [];
   const products: PricedProduct[] = [];
-  const z = deps.zones?.zonesForLegs(legs) ?? null;
+  const official = deps.nova ? novaMobilisZones(legs, deps.nova) : null;
+  const table = official ? null : (deps.zones?.zonesForLegs(legs) ?? null);
+  const z = official ?? (table ? { count: table.zones.length, exact: table.exact, notes: table.notes } : null);
   if (z) {
-    let n = z.zones.length;
+    let n = z.count;
     let exact = z.exact;
     const notes = [...z.notes];
     // A quoted single confirms (or corrects) the zone count: each count has its own price.

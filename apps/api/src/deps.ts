@@ -9,6 +9,7 @@ import {
   createZoneIndex,
   loadCityParkRide,
   loadDensity,
+  loadNova,
   parkingByDensity,
   trafficFactorAlong,
   loadParking,
@@ -98,6 +99,8 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
   const FARE_BUDGET_MS = 1500;
 
   const density = loadDensity();
+  // Official fare data (zones per hop, tariff kilometres), refreshed with tools/nova-import.
+  const nova = loadNova();
   const gtfs = resolve(ROOT, 'data/raw/gtfs.zip');
   const osm = resolve(ROOT, 'data/raw/switzerland.osm.pbf');
   return {
@@ -121,6 +124,7 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
     priceTransit: (legs, ctx) =>
       priceTransit(legs, ctx, {
         zones,
+        nova,
         quote: fare ? (l) => quotes.get(quoteKey(l, ctx.traveller.travelClass, ctx.traveller.halfFare)) ?? null : undefined,
       }),
     prepareFares: fare
