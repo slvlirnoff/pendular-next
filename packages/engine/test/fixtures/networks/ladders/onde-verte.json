@@ -1,0 +1,48 @@
+{
+ "_fixture": "Invented prices for tests.",
+ "network": "Onde Verte",
+ "alliance": "onde-verte",
+ "origin": "nova",
+ "year": 2026,
+ "validFrom": null,
+ "source": "test://nova-ladder",
+ "currency": "CHF",
+ "notes": [],
+ "confidence": "partial",
+ "passPlan": "onde-verte-abo-abo",
+ "rules": {
+  "minZones": {
+   "pass": 1,
+   "ticket": 1
+  },
+  "countBy": "factor"
+ },
+ "passes": {
+  "month": {
+   "adult": {
+    "2": {
+     "1": 70.0,
+     "2": 90.0,
+     "3": 110.0,
+     "4": 130.0,
+     "5": 150.0,
+     "6": 170.0,
+     "all": 200.0
+    }
+   }
+  },
+  "year": {
+   "adult": {
+    "2": {
+     "1": 630.0,
+     "2": 810.0,
+     "3": 990.0,
+     "4": 1170.0,
+     "5": 1350.0,
+     "6": 1530.0,
+     "all": 1800.0
+    }
+   }
+  }
+ }
+}

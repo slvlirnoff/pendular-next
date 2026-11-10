@@ -229,7 +229,8 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     if (cheapest.components.some((c) => c.key.startsWith('national.'))) {
       return `route:${legs[0]!.from.stopId ?? legs[0]!.from.name}>${legs[legs.length - 1]!.to.stopId ?? legs[legs.length - 1]!.to.name}`;
     }
-    return `${cheapest.kind}:${cheapest.components.map((c) => `${c.key}:${c.params?.zones ?? ''}:${c.yearly}`).join(',')}`;
+    // The network is part of the ticket: two networks can sell as many zones at the same price.
+    return `${cheapest.kind}:${cheapest.components.map((c) => `${c.key}:${c.params?.network ? `${c.params.network}:` : ''}${c.params?.zones ?? ''}:${c.yearly}`).join(',')}`;
   };
 
   const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);

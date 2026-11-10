@@ -1,0 +1,74 @@
+{
+ "_fixture": "Hand-made for tests: the zones around Lucens and Moudon are Mobilis's own, Frimobil's 45 and 47 lie on Mobilis ground.",
+ "umbrellas": [
+  "leman-pass",
+  "z-pass-a-welle-zvv",
+  "z-pass-ostwind-zvv",
+  "z-pass-tv-schwyz-zug-zvv"
+ ],
+ "alliances": {
+  "mobilis": {
+   "mobilis-abo-abo": {
+    "60": {
+     "stops": 10,
+     "sharedShare": 0.1,
+     "own": true
+    },
+    "103": {
+     "stops": 10,
+     "sharedShare": 0.2,
+     "own": true
+    },
+    "11": {
+     "stops": 10,
+     "sharedShare": 0,
+     "own": true
+    },
+    "12": {
+     "stops": 10,
+     "sharedShare": 0,
+     "own": true
+    }
+   }
+  },
+  "frimobil": {
+   "frimobil-billett-amp-abo": {
+    "45": {
+     "stops": 10,
+     "sharedShare": 1.0,
+     "own": false
+    },
+    "47": {
+     "stops": 10,
+     "sharedShare": 1.0,
+     "own": false
+    },
+    "44": {
+     "stops": 10,
+     "sharedShare": 0,
+     "own": true
+    },
+    "10": {
+     "stops": 10,
+     "sharedShare": 0,
+     "own": true
+    },
+    "11": {
+     "stops": 10,
+     "sharedShare": 0,
+     "own": true
+    },
+    "35": {
+     "stops": 10,
+     "sharedShare": 0,
+     "own": true
+    },
+    "36": {
+     "stops": 10,
+     "sharedShare": 0,
+     "own": true
+    }
+   }
+  }
+ }
+}

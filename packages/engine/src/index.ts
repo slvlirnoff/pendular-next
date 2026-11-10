@@ -7,6 +7,7 @@ export { priceTransit, coveredByZones, estimatedTariffKm, type PriceDeps } from 
 export { createZoneIndex, type ZoneIndex, type ZoneIndexOptions, type ZoneTable } from './fares/zones.js';
 export { MotisRouting, decodePolyline, type MotisOptions } from './routing/motis.js';
 export * as mobilis from './fares/mobilis.js';
+export { loadNetworks, createNetworks, createNetwork, createTripResolver, TARIFF_YEAR, type Network, type Networks, type NetworkGrid, type NetworkRules, type NetworkDiscount, type OwnZonesFile, type TripNetwork, type TripNetworks, type LoadNetworksOptions } from './fares/networks.js';
 export * as national from './fares/national.js';
 export { loadParking, loadCityParkRide, type ParkingSite, type CityParkRide } from './places/parking.js';
 export { createOjpFareClient, stopSequenceKey, type FareQuote, type OjpFareClient } from './fares/ojpFare.js';

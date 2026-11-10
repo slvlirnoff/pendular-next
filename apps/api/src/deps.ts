@@ -9,6 +9,7 @@ import {
   createZoneIndex,
   loadCityParkRide,
   loadDensity,
+  loadNetworks,
   loadNova,
   parkingByDensity,
   trafficFactorAlong,
@@ -101,6 +102,8 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
   const density = loadDensity();
   // Official fare data (zones per hop, tariff kilometres), refreshed with tools/nova-import.
   const nova = loadNova();
+  // Price grids of the zone networks (data/tariffs/networks, data/nova/price-ladders), read once.
+  const networks = loadNetworks();
   const gtfs = resolve(ROOT, 'data/raw/gtfs.zip');
   const osm = resolve(ROOT, 'data/raw/switzerland.osm.pbf');
   return {
@@ -125,6 +128,7 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
       priceTransit(legs, ctx, {
         zones,
         nova,
+        networks,
         quote: fare ? (l) => quotes.get(quoteKey(l, ctx.traveller.travelClass, ctx.traveller.halfFare)) ?? null : undefined,
       }),
     prepareFares: fare
@@ -140,7 +144,7 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
           await Promise.race([Promise.allSettled(pending), new Promise((r) => setTimeout(r, FARE_BUDGET_MS))]);
         }
       : undefined,
-    coveredByZones: (legs, z) => coveredByZones(legs, z, zones),
+    coveredByZones: (legs, z) => coveredByZones(legs, z, zones, nova, networks),
     co2KgPerYear,
     parkRail: sites.filter((s) => s.kind === 'parkRail').map(toCandidate),
     bikeParking: sites.filter((s) => s.kind === 'bikeParking').map(toCandidate),

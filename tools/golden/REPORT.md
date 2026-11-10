@@ -1,6 +1,6 @@
 # Golden commutes report
 
-Generated 2026-11-10T18:18:26.193Z against http://127.0.0.1:8787.
+Generated 2026-11-10T20:04:11.526Z against http://127.0.0.1:8787.
 Timetable GTFS 2027, fetched 2026-11-10, tariffs Mobilis 13.12.2026; GA/Half Fare 13.12.2026; T601/T650 edition 01.06.2026, engine MOTIS 2, reference day 2027-01-19.
 
 Checks: 431 PASS, 0 WARN, 0 FAIL.

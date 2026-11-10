@@ -221,6 +221,7 @@ input[type='number'] { width: 96px; }
 .ticket-name { font-weight: 700; }
 .ticket-price { font-weight: 700; white-space: nowrap; }
 .ticket-sub { grid-column: 1 / -1; font-size: 13px; color: var(--text-muted); }
+.price-year { font-size: 13px; font-weight: 400; color: var(--text-muted); }
 .ticket-note { margin-top: 6px; font-size: 13px; color: var(--text-muted); }
 .ticket-others { margin-top: 8px; }
 .ticket-others summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); min-height: 24px; }

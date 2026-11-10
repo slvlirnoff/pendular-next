@@ -15,12 +15,34 @@ function componentLabel(c: CostComponent, t: ReturnType<typeof useI18n>['t'], la
   if (c.key.startsWith('mobilis.') || c.key.startsWith('national.') || c.key.startsWith('ga.')) {
     return [where, unit, c.key.endsWith('vaudDiscount') ? t('cost.vaudDiscount') : ''].filter(Boolean).join(' · ');
   }
+  // A zone network other than Mobilis: one sentence naming the network and its zones.
+  if (c.key.startsWith('network.')) {
+    const zones = typeof p.zones === 'number' ? p.zones : 0;
+    return [t(c.key as Key, { network: p.network ?? '', zones, n: zones }), unit].filter(Boolean).join(' · ');
+  }
   const text = t(known, p as Record<string, string | number>);
   return text === known ? c.key : text;
 }
 
+/** The all-zones pass of a network other than Mobilis is named after that network. */
+function productName(p: PricedProduct, t: ReturnType<typeof useI18n>['t']): string {
+  if (p.kind === 'zonePassAllYearly' && p.network && p.components[0]?.key.startsWith('network.')) return t('network.year.all', { network: p.network });
+  return t(`product.${p.kind}`);
+}
+
 function ticketDetail(p: PricedProduct, t: ReturnType<typeof useI18n>['t'], lang: string): string {
-  return p.components.map((c) => componentLabel(c, t, lang)).filter(Boolean).join(' + ');
+  return p.components
+    // Already said by the product's name.
+    .filter((c) => !c.key.startsWith('network.year.all'))
+    .map((c) => componentLabel(c, t, lang))
+    .filter(Boolean)
+    .join(' + ');
+}
+
+/** Prices of another year than the coming timetable year: said next to the product, in few words. */
+function PriceYear({ product }: { product: PricedProduct }) {
+  const { t } = useI18n();
+  return product.priceYear ? <small className="price-year"> · {t('network.priceYear', { year: product.priceYear })}</small> : null;
 }
 
 /** The ticket to buy, stated once; the alternatives stay one click away. */
@@ -33,7 +55,7 @@ function Products({ products, sameAs }: { products: PricedProduct[]; sameAs?: st
     return (
       <div className="detail-block">
         <h4>{t('ticket.buy')}</h4>
-        <p>{t('ticket.sameDetail', { name: sameAs, product: t(`product.${best.kind}`), chf: chf(best.yearly, lang) })}</p>
+        <p>{t('ticket.sameDetail', { name: sameAs, product: productName(best, t), chf: chf(best.yearly, lang) })}</p>
       </div>
     );
   }
@@ -45,7 +67,10 @@ function Products({ products, sameAs }: { products: PricedProduct[]; sameAs?: st
     <div className="detail-block">
       <h4>{t('ticket.buy')}</h4>
       <p className="ticket">
-        <span className="ticket-name">{t(`product.${best.kind}`)}</span>
+        <span className="ticket-name">
+          {productName(best, t)}
+          <PriceYear product={best} />
+        </span>
         <span className="ticket-price">
           {chf(best.yearly, lang)} <small>{t('verdict.perYear')}</small>
         </span>
@@ -56,7 +81,7 @@ function Products({ products, sameAs }: { products: PricedProduct[]; sameAs?: st
       </p>
       {estimated && (
         <p className="ticket-note">
-          {byKm ? t('ticket.estimateKm') : t('ticket.estimate')}
+          {best.priceYear ? t('ticket.estimateYear', { year: best.priceYear, network: best.network ?? '' }) : byKm ? t('ticket.estimateKm') : t('ticket.estimate')}
         </p>
       )}
       {others.length > 0 && (
@@ -67,7 +92,8 @@ function Products({ products, sameAs }: { products: PricedProduct[]; sameAs?: st
               {others.map((p) => (
                 <tr key={p.kind}>
                   <th scope="row">
-                    {t(`product.${p.kind}`)}
+                    {productName(p, t)}
+                    <PriceYear product={p} />
                     <span className="sub">{ticketDetail(p, t, lang)}</span>
                   </th>
                   <td className="amount">{chf(p.yearly, lang)}</td>

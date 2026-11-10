@@ -331,6 +331,10 @@ export interface PricedProduct {
   provenance: Provenance;
   /** For estimated zone counts: yearly cost with one zone fewer / more. */
   range?: { low: number; high: number };
+  /** Name of the fare network whose zones the product is for ("Mobilis", "Frimobil"). */
+  network?: string;
+  /** Year of the prices, only when they are not those of the coming timetable year. */
+  priceYear?: number;
 }
 
 export interface OptionCost {

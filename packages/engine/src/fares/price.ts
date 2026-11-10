@@ -2,15 +2,7 @@ import type { CostComponent, Leg, PricedProduct, ProductKind, Provenance, Travel
 import type { FareContext } from '../planner/compare.js';
 import type { ZoneIndex } from './zones.js';
 import type { NovaData } from './nova.js';
-import {
-  MOBILIS_SOURCE,
-  mobilisDayPass,
-  mobilisPass,
-  mobilisPassCategory,
-  mobilisSingle,
-  zonesFromSinglePrice,
-  type MobilisZones,
-} from './mobilis.js';
+import { MOBILIS, TARIFF_YEAR, builtInNetworks, passCategory, tripResolver, type Network, type Networks, type TripNetworks } from './networks.js';
 import {
   DISTANCE_TABLE_SOURCE,
   NATIONAL_SOURCE,
@@ -30,6 +22,11 @@ export interface PriceDeps {
    * between stations. Used first; the zone table and the travelled distance are the fallbacks.
    */
   nova?: NovaData;
+  /**
+   * Price grids of the zone networks and which zones are each network's own (`loadNetworks`).
+   * Mobilis alone when omitted.
+   */
+  networks?: Networks;
   /**
    * A quoted single for the trip when one is available (OJP Fare).
    * Used for the singles of trips outside the zone table and to confirm zone counts.
@@ -82,29 +79,71 @@ function withCard(
 }
 
 // ---------------------------------------------------------------------------------------------
-// Mobilis (zones)
+// Zone networks (Mobilis, Frimobil ...)
 // ---------------------------------------------------------------------------------------------
 
-function mobilisProducts(n: number, exact: boolean, ctx: FareContext, notes: string[]): PricedProduct[] {
+/** Discounts the grid lists for this part of the tariff and this traveller: named, never applied here. */
+function discountNote(net: Network, section: string, t: Traveller): string | undefined {
+  const labels = net.discounts
+    .filter((d) => !d.appliesTo || d.appliesTo.some((a) => section === a || section.startsWith(`${a}.`)))
+    .filter((d) => !d.ageGroups || d.ageGroups.includes(t.ageGroup))
+    .map((d) => d.label);
+  return labels.length ? labels.join('; ') : undefined;
+}
+
+/**
+ * The products of one zone network for a number of zones. `counts` are the price-relevant zone
+ * counts of the trip on the pass plan and on the ticket plan (the same for most networks).
+ */
+function networkProducts(
+  net: Network,
+  counts: { pass: number; ticket: number },
+  exact: boolean,
+  ctx: FareContext,
+  notes: string[],
+): PricedProduct[] {
   const t = ctx.traveller;
   const cls = t.travelClass;
-  const prov: Provenance = exact ? 'tariff' : 'estimated';
-  const z: MobilisZones = n;
-  const src = MOBILIS_SOURCE;
-  const params = { zones: n, ...(notes.length ? { note: notes.join('; ') } : {}) };
-  const out: (PricedProduct | null)[] = [];
+  const mobilis = net.alliance === MOBILIS;
+  // Prices of another year (NOVA only has the current one) are an estimate of the coming year's.
+  const thisYear = net.origin === 'tariff' && net.year === TARIFF_YEAR;
+  const prov: Provenance = exact && thisYear ? 'tariff' : 'estimated';
+  const src = net.source;
+  // Mobilis keeps the keys and parameters it always had; the other networks share generic ones.
+  const prefix = mobilis ? 'mobilis' : 'network';
+  const note: Record<string, string> = notes.length ? { note: notes.join('; ') } : {};
+  const paramsFor = (zones: number, section: string): Record<string, string | number> => {
+    if (mobilis) return { zones, ...note };
+    const discounts = discountNote(net, section, t);
+    return { network: net.label, zones, ...(thisYear ? {} : { priceYear: net.year }), ...note, ...(discounts ? { discounts } : {}) };
+  };
+  const tag = (p: PricedProduct): PricedProduct => {
+    p.network = net.label;
+    if (!thisYear) p.priceYear = net.year;
+    return p;
+  };
+  const out: PricedProduct[] = [];
   const reduced = t.ageGroup === 'child' || t.halfFare;
 
   const one = (
     kind: ProductKind,
     key: string,
-    price: (zones: MobilisZones) => number | null,
+    section: string,
+    family: 'pass' | 'ticket',
+    price: (zones: number) => number | null,
     times: number,
     card: boolean,
   ) => {
-    const p = price(z);
+    const n = counts[family];
+    const p = price(n);
     if (p == null) return;
-    const comp: CostComponent = { key, params: { ...params, unit: p, times }, yearly: p * times, provenance: prov, source: src };
+    const comp: CostComponent = {
+      key: `${prefix}.${key}`,
+      params: { ...paramsFor(net.paidZones(n, family), section), unit: p, times },
+      yearly: p * times,
+      provenance: prov,
+      source: src,
+    };
     const made = card ? withCard(kind, comp, ctx) : product(kind, [comp]);
     if (!made) return;
     if (!exact) {
@@ -113,49 +152,65 @@ function mobilisProducts(n: number, exact: boolean, ctx: FareContext, notes: str
       const extra = made.yearly - comp.yearly;
       if (lo != null && hi != null) made.range = { low: Math.round(lo * times + extra), high: Math.round(hi * times + extra) };
     }
-    out.push(made);
+    out.push(tag(made));
   };
 
   const trips = ctx.tripsPerYear;
   const days = ctx.workingDaysPerYear;
   // Without a reduction: full-fare singles and day passes.
   if (!reduced) {
-    one('singles', 'mobilis.single', (zz) => mobilisSingle(zz, { travelClass: cls, half: false }), trips, false);
-    one('dayPasses', 'mobilis.dayPass', (zz) => mobilisDayPass(zz, { travelClass: cls, half: false }), days, false);
+    one('singles', 'single', 'tickets.single', 'ticket', (zz) => net.single(zz, { travelClass: cls, half: false }), trips, false);
+    one('dayPasses', 'dayPass', 'dayPass', 'ticket', (zz) => net.dayPass(zz, { travelClass: cls, half: false }), days, false);
   }
-  one('halfFareSingles', 'mobilis.single.half', (zz) => mobilisSingle(zz, { travelClass: cls, half: true }), trips, true);
-  one('halfFareDayPasses', 'mobilis.dayPass.half', (zz) => mobilisDayPass(zz, { travelClass: cls, half: true }), days, true);
+  one('halfFareSingles', 'single.half', 'tickets.single', 'ticket', (zz) => net.single(zz, { travelClass: cls, half: true }), trips, true);
+  one('halfFareDayPasses', 'dayPass.half', 'dayPass', 'ticket', (zz) => net.dayPass(zz, { travelClass: cls, half: true }), days, true);
 
-  const category = mobilisPassCategory(t.ageGroup);
+  const category = passCategory(t.ageGroup);
   // FlexiAbo: 100 travel days within a year.
-  one('flexiPass', 'mobilis.flexi', (zz) => mobilisPass('flexi', zz, { category, travelClass: cls }), Math.max(1, Math.ceil(days / 100)), false);
-  one('zonePassMonthly', 'mobilis.month', (zz) => mobilisPass('month', zz, { category, travelClass: cls }), passMonths(ctx), false);
+  one('flexiPass', 'flexi', 'passes.flexi', 'pass', (zz) => net.pass('flexi', zz, { category, travelClass: cls }), Math.max(1, Math.ceil(days / 100)), false);
+  one('zonePassMonthly', 'month', 'passes.month', 'pass', (zz) => net.pass('month', zz, { category, travelClass: cls }), passMonths(ctx), false);
 
   // Canton of Vaud: 50 % off annual Mobilis passes for residents up to 25 and from 65.
-  const discount = t.vaudResident && t.ageGroup !== 'adult' ? 0.5 : 1;
+  // The only discount applied: those a grid file lists are named in the parameters, no more.
+  const discount = mobilis && t.vaudResident && t.ageGroup !== 'adult' ? 0.5 : 1;
   one(
     'zonePassYearly',
-    discount < 1 ? 'mobilis.year.vaudDiscount' : 'mobilis.year',
+    discount < 1 ? 'year.vaudDiscount' : 'year',
+    'passes.year',
+    'pass',
     (zz) => {
-      const p = mobilisPass('year', zz, { category, travelClass: cls });
+      const p = net.pass('year', zz, { category, travelClass: cls });
       return p == null ? null : p * discount;
     },
     1,
     false,
   );
   // The pass for the whole network: rarely the cheapest for one commute, but it shows what
-  // unlimited travel in the canton costs next to the pass for this trip.
-  const all = mobilisPass('year', 'all', { category, travelClass: cls });
-  const own = mobilisPass('year', z, { category, travelClass: cls });
+  // unlimited travel in the network costs next to the pass for this trip.
+  const all = net.pass('year', 'all', { category, travelClass: cls });
+  const own = net.pass('year', counts.pass, { category, travelClass: cls });
   if (all != null && own != null && all > own) {
+    const discounts = mobilis ? undefined : discountNote(net, 'passes.year', t);
     out.push(
-      product('zonePassAllYearly', [
-        { key: discount < 1 ? 'mobilis.year.all.vaudDiscount' : 'mobilis.year.all', yearly: all * discount, provenance: 'tariff', source: src },
-      ]),
+      tag(
+        product('zonePassAllYearly', [
+          {
+            key: `${prefix}.${discount < 1 ? 'year.all.vaudDiscount' : 'year.all'}`,
+            ...(mobilis ? {} : { params: { network: net.label, ...(thisYear ? {} : { priceYear: net.year }), ...(discounts ? { discounts } : {}) } }),
+            yearly: all * discount,
+            provenance: thisYear ? 'tariff' : 'estimated',
+            source: src,
+          },
+        ]),
+      ),
     );
   }
-  return out.filter((p): p is PricedProduct => p !== null);
+  return out;
 }
+
+/** The annual pass of a network for the trip, to compare networks; the cheapest product when it sells none. */
+const yearlyPassCost = (products: PricedProduct[]): number =>
+  products.find((p) => p.kind === 'zonePassYearly')?.yearly ?? Math.min(Infinity, ...products.map((p) => p.yearly));
 
 // ---------------------------------------------------------------------------------------------
 // National distance tariff
@@ -190,39 +245,7 @@ export function tariffKm(legs: Leg[], nova: NovaData | undefined, tariff: 'T601'
   return { km: Math.max(1, Math.ceil(km)), official };
 }
 
-const MOBILIS = 'mobilis';
-const MOBILIS_PASS_PLAN = 'mobilis-abo-abo';
-
-/**
- * Mobilis zones of the trip from the official data: every hop of every vehicle lists the zones
- * it uses, including those crossed without a stop. Null when a stop or a hop is not in the
- * network's data (the zone table then decides).
- */
-function novaMobilisZones(legs: Leg[], nova: NovaData): { count: number; exact: boolean; notes: string[] } | null {
-  const used = new Set<number>();
-  let bridged = 0;
-  for (const l of legs) {
-    const seq = stopsOf(l);
-    if (!seq || !nova.alliancesAt(seq[0]!).includes(MOBILIS) || !nova.alliancesAt(seq[seq.length - 1]!).includes(MOBILIS)) return null;
-    const z = nova.zonesForStops(MOBILIS, MOBILIS_PASS_PLAN, seq);
-    if (z.missingEdges.length > 0 || z.zones.length === 0) return null;
-    bridged += z.bridged.length;
-    for (const x of z.zones) used.add(x);
-  }
-  // Lausanne's zones 11 and 12 are always sold together.
-  if (used.has(11) || used.has(12)) {
-    used.add(11);
-    used.add(12);
-  }
-  const zones = [...used].sort((a, b) => a - b);
-  return {
-    count: nova.zoneCount(MOBILIS, MOBILIS_PASS_PLAN, zones),
-    exact: bridged === 0,
-    notes: bridged ? [`${bridged} hop(s) between stops not listed as such in the fare data, joined through the network`] : [],
-  };
-}
-
-function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps): PricedProduct[] {
+function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps, note?: string): PricedProduct[] {
   const t = ctx.traveller;
   const cls = t.travelClass;
   // Single tickets and route passes have their own distance tables.
@@ -232,16 +255,18 @@ function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps): Price
   const out: (PricedProduct | null)[] = [];
   const reduced = t.ageGroup === 'child' || t.halfFare;
   const quoted = deps.quote?.(legs) ?? null;
-  const params = { km };
+  // Why a trip inside a zone network is priced by distance all the same.
+  const why: Record<string, string> = note ? { note } : {};
+  const params = { km, ...why };
 
   const single = (half: boolean): CostComponent | null => {
     if (quoted && quoted.travelClass === cls && quoted.half === half) {
-      return { key: half ? 'national.single.half' : 'national.single', params: { unit: quoted.single, times: ctx.tripsPerYear }, yearly: quoted.single * ctx.tripsPerYear, provenance: 'quoted', source: 'OJP Fare' };
+      return { key: half ? 'national.single.half' : 'national.single', params: { ...why, unit: quoted.single, times: ctx.tripsPerYear }, yearly: quoted.single * ctx.tripsPerYear, provenance: 'quoted', source: 'OJP Fare' };
     }
     const p = distanceSingle(single601.km, { travelClass: cls, half });
     return p == null
       ? null
-      : { key: half ? 'national.single.half' : 'national.single', params: { km: single601.km, unit: p, times: ctx.tripsPerYear }, yearly: p * ctx.tripsPerYear, provenance: single601.official ? 'tariff' : 'estimated', source: DISTANCE_TABLE_SOURCE };
+      : { key: half ? 'national.single.half' : 'national.single', params: { km: single601.km, ...why, unit: p, times: ctx.tripsPerYear }, yearly: p * ctx.tripsPerYear, provenance: single601.official ? 'tariff' : 'estimated', source: DISTANCE_TABLE_SOURCE };
   };
   if (!reduced) {
     const s = single(false);
@@ -253,7 +278,7 @@ function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps): Price
   // Day card for Half Fare holders: valid all day on the whole network.
   const dc = dayCardHalfFare(cls);
   if (dc != null) {
-    out.push(withCard('halfFareDayPasses', { key: 'national.dayCard.half', params: { unit: dc, times: ctx.workingDaysPerYear }, yearly: dc * ctx.workingDaysPerYear, provenance: 'tariff', source: NATIONAL_SOURCE }, ctx));
+    out.push(withCard('halfFareDayPasses', { key: 'national.dayCard.half', params: { ...why, unit: dc, times: ctx.workingDaysPerYear }, yearly: dc * ctx.workingDaysPerYear, provenance: 'tariff', source: NATIONAL_SOURCE }, ctx));
   }
 
   const category = t.ageGroup === 'child' || t.ageGroup === 'youth' ? 'junior' : 'adult';
@@ -271,30 +296,72 @@ function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps): Price
 
 // ---------------------------------------------------------------------------------------------
 
+/** The zone networks that contain the trip, from the official data; null without it or without stop ids. */
+function networksOfTrip(legs: Leg[], deps: PriceDeps): TripNetworks | null {
+  if (!deps.nova) return null;
+  const seqs = legs.map(stopsOf);
+  if (!seqs.every((s): s is string[] => s !== null)) return null;
+  return tripResolver(deps.nova, deps.networks ?? builtInNetworks())(seqs);
+}
+
 /** All ticket products that can cover the public transport legs of one trip, cheapest first. */
 export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}): PricedProduct[] {
   if (legs.length === 0) return [];
+  const networks = deps.networks ?? builtInNetworks();
+  const mobilis = networks.get(MOBILIS)!;
   const products: PricedProduct[] = [];
-  const official = deps.nova ? novaMobilisZones(legs, deps.nova) : null;
-  const table = official ? null : (deps.zones?.zonesForLegs(legs) ?? null);
-  const z = official ?? (table ? { count: table.zones.length, exact: table.exact, notes: table.notes } : null);
-  if (z) {
-    let n = z.count;
-    let exact = z.exact;
-    const notes = [...z.notes];
-    // A quoted single confirms (or corrects) the zone count: each count has its own price.
+  const trip = networksOfTrip(legs, deps);
+
+  /** Mobilis: a quoted single confirms (or corrects) the zone count, as each count has its own price. */
+  const mobilisProducts = (count: number, exactZones: boolean, zoneNotes: string[]): PricedProduct[] => {
+    let n = count;
+    let exact = exactZones;
+    const notes = [...zoneNotes];
     const q = deps.quote?.(legs);
     if (q) {
-      const fromQuote = zonesFromSinglePrice(q.single, { travelClass: q.travelClass, half: q.half });
+      const fromQuote = mobilis.zonesFromSinglePrice(q.single, { travelClass: q.travelClass, half: q.half });
       if (typeof fromQuote === 'number') {
         if (fromQuote !== n) notes.push(`zone count ${n} corrected to ${fromQuote} from the quoted price`);
         n = fromQuote;
         exact = true;
       }
     }
-    products.push(...mobilisProducts(n, exact, ctx, notes));
+    return networkProducts(mobilis, { pass: n, ticket: n }, exact, ctx, notes);
+  };
+
+  // Networks that may sell the trip and that we have prices for: the cheapest annual pass decides.
+  const priced = (trip?.eligible ?? [])
+    .filter((c) => c.network)
+    .map((c) => ({
+      c,
+      products: c.alliance === MOBILIS ? mobilisProducts(c.passCount, c.exact, c.notes) : networkProducts(c.network!, { pass: c.passCount, ticket: c.ticketCount }, c.exact, ctx, c.notes),
+    }))
+    .filter((x) => x.products.length > 0)
+    .sort((a, b) => yearlyPassCost(a.products) - yearlyPassCost(b.products));
+  const unpriced = (trip?.eligible ?? []).filter((c) => !priced.some((x) => x.c === c));
+  // The older hand-made Mobilis table decides only when the official data cannot place the trip in Mobilis.
+  const table = priced.length === 0 && !trip?.candidates.some((c) => c.alliance === MOBILIS) ? (deps.zones?.zonesForLegs(legs) ?? null) : null;
+
+  if (priced.length > 0) {
+    const best = priced[0]!;
+    const others = [
+      ...priced.slice(1).map((x) => `also inside ${x.c.label}: annual pass CHF ${Math.round(yearlyPassCost(x.products))}`),
+      ...unpriced.map((c) => `also inside ${c.label}: no price grid`),
+    ];
+    if (others.length) {
+      for (const p of best.products) {
+        for (const comp of p.components) {
+          if (comp.params && 'zones' in comp.params) comp.params.note = [comp.params.note, ...others].filter(Boolean).join('; ');
+        }
+      }
+    }
+    products.push(...best.products);
+  } else if (table) {
+    products.push(...mobilisProducts(table.zones.length, table.exact, table.notes));
   } else {
-    products.push(...nationalProducts(legs, ctx, deps));
+    // Inside a zone network we have no prices for: the national distance tariff stands in, and says so.
+    const note = unpriced.length ? `inside ${unpriced.map((c) => c.label).join(', ')}: no price grid for this network, priced by distance` : undefined;
+    products.push(...nationalProducts(legs, ctx, deps, note));
   }
   const ga = gaProduct(ctx);
   if (ga) products.push(ga);
@@ -302,7 +369,14 @@ export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}
   return products.sort((a, b) => a.yearly - b.yearly);
 }
 
-export function coveredByZones(legs: Leg[], zones: number[], index?: ZoneIndex): boolean {
+/**
+ * True when the trip needs no Mobilis zone other than `zones` (passes of Lausanne's P+R include
+ * zones 11 and 12). The official data decides; the zone table when it cannot place the trip.
+ */
+export function coveredByZones(legs: Leg[], zones: number[], index?: ZoneIndex, nova?: NovaData, networks?: Networks): boolean {
+  if (legs.length === 0) return false;
+  const official = networksOfTrip(legs, { nova, networks })?.candidates.find((c) => c.alliance === MOBILIS);
+  if (official) return official.zones.every((x) => zones.includes(x));
   const z = index?.zonesForLegs(legs);
   return !!z && z.zones.every((x) => zones.includes(x));
 }
