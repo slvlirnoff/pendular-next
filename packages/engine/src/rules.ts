@@ -12,6 +12,7 @@ export const PENDULAR_RULES: RuleSet = {
   weeksPerYear: 52,
   // Assumption (no traffic data yet): rush-hour driving takes 30 % longer than on empty roads.
   carPeakFactor: 1.3,
+  carPeakByDensity: true,
   carParkingMin: null,
   // Vaud, timetable year 2027: 1 and 2 January, Good Friday, Easter Monday, Ascension,
   // Whit Monday, 1 August, Monday of the Jeûne fédéral, Christmas.

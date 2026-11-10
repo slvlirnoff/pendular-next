@@ -10,6 +10,7 @@ import {
   loadCityParkRide,
   loadDensity,
   parkingByDensity,
+  trafficFactorAlong,
   loadParking,
   priceTransit,
   type AccessCandidate,
@@ -112,6 +113,7 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
       versions: { timetable: `GTFS 2027, fetched ${readVersion(gtfs) ?? '?'}`, streets: `OSM, fetched ${readVersion(osm) ?? '?'}`, engine: 'MOTIS 2' },
     }),
     rules: PENDULAR_RULES,
+    trafficFactor: (route) => trafficFactorAlong(density, route),
     parkingAt: (p) => {
       const d = density.around(p);
       return { ...parkingByDensity(d), residents: d.residents, jobs: d.jobs };

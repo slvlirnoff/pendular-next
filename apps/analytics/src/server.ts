@@ -153,7 +153,8 @@ app.post('/api/lists/:id/analyses', async (c) => {
   return c.json(analysis, 201);
 });
 
-function carNote(car: { peakFactor: number; parkingMin: number } | null | undefined): string | null {
+function carNote(car: { peakFactor: number; peakAuto?: boolean; parkingMin: number } | null | undefined): string | null {
+  if (car?.peakAuto) return `Car minutes include a rush-hour factor on the driving time, from x1.1 in open country to x1.7 in city centres along each person's route, and ${car.parkingMin} min to park at the destination.`;
   return car ? `Car minutes include a rush-hour factor of x${car.peakFactor} on the driving time and ${car.parkingMin} min to park at the destination.` : null;
 }
 function csvNotes(a: Awaited<ReturnType<typeof store.analysis>> & {}): string[] {

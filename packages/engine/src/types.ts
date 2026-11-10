@@ -99,6 +99,11 @@ export interface RuleSet {
    */
   carPeakFactor: number;
   /**
+   * True: the factor is worked out per route from how built-up its surroundings are
+   * (`carPeakFactor` is then the fallback when that is not available).
+   */
+  carPeakByDensity: boolean;
+  /**
    * Minutes to find a space and walk to the door at the destination. Null = by how dense the
    * area is (residents and jobs within 1 km); a number = set by hand (employer car park…).
    */
@@ -413,6 +418,8 @@ export interface Verdict {
 /** What the car time assumes on top of the street network's own time. */
 export interface CarAssumptions {
   peakFactor: number;
+  /** True when the factor comes from how built-up the route's surroundings are. */
+  peakAuto?: boolean;
   parkingMin: number;
   /** False when the parking time was set by hand. */
   parkingAuto: boolean;

@@ -163,3 +163,43 @@ export function parkingByDensity(d: DensityAround): { minutes: number; kind: Par
   const b = parkingAt(d, COMBINED_PARKING_THRESHOLDS);
   return b.minutes > a.minutes ? b : a;
 }
+
+/**
+ * Rush-hour slow-down by how built-up the surroundings of the road are (residents + jobs
+ * within 1 km), with the speed assumed on empty roads there. Assumptions, not measurements:
+ * open country flows almost freely, city streets and the motorways around a city do not.
+ */
+export const TRAFFIC_CLASSES: { minDensity: number; factor: number; freeKmh: number }[] = [
+  { minDensity: 30_000, factor: 1.7, freeKmh: 30 },
+  { minDensity: 10_000, factor: 1.5, freeKmh: 45 },
+  { minDensity: 2_000, factor: 1.3, freeKmh: 60 },
+  { minDensity: 0, factor: 1.1, freeKmh: 80 },
+];
+
+/**
+ * Rush-hour factor for a route ([lon, lat] points): the route is sampled every 250 m, each
+ * sample gets the factor of its surroundings, and samples weigh by the time spent there.
+ */
+export function trafficFactorAlong(index: DensityIndex, route: [number, number][], classes = TRAFFIC_CLASSES): number {
+  if (route.length < 2) return classes[classes.length - 1]!.factor;
+  const STEP_M = 250;
+  let free = 0;
+  let peak = 0;
+  let carry = 0;
+  for (let i = 1; i < route.length; i++) {
+    const a = wgs84ToLv95(route[i - 1]![1], route[i - 1]![0]);
+    const b = wgs84ToLv95(route[i]![1], route[i]![0]);
+    const len = Math.hypot(b.e - a.e, b.n - a.n);
+    for (let d = carry; d < len; d += STEP_M) {
+      const t = len === 0 ? 0 : d / len;
+      const around = index.aroundLv95(a.e + (b.e - a.e) * t, a.n + (b.n - a.n) * t);
+      const density = around.residents + (around.jobs ?? 0);
+      const c = classes.find((x) => density >= x.minDensity) ?? classes[classes.length - 1]!;
+      free += 1 / c.freeKmh;
+      peak += c.factor / c.freeKmh;
+    }
+    carry = (carry - len) % STEP_M;
+    if (carry < 0) carry += STEP_M;
+  }
+  return free === 0 ? classes[classes.length - 1]!.factor : Math.round((peak / free) * 100) / 100;
+}

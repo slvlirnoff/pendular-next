@@ -66,6 +66,8 @@ export interface EngineDeps {
    * is. Without it, the car is given five minutes.
    */
   parkingAt?: (p: LatLon) => { minutes: number; kind: 'cityCentre' | 'townCentre' | 'elsewhere'; residents: number; jobs: number | null };
+  /** Rush-hour factor for a drive along the given [lon, lat] points, from how built-up it is. */
+  trafficFactor?: (route: [number, number][]) => number;
   parkRail: AccessCandidate[];
   bikeParking: AccessCandidate[];
   cityParkRide: AccessCandidate[];
@@ -196,8 +198,13 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   // The street network gives the time on empty roads, door to door with a space at the door.
   // Two assumptions make the car comparable: a rush-hour factor, and time to park and walk.
   const density = rules.carParkingMin === null ? deps.parkingAt?.(req.work) : undefined;
+  const peakAuto = rules.carPeakByDensity && !!deps.trafficFactor;
+  /** Without the route's shape (times from a matrix), the straight line stands in for it. */
+  const peakOf = (r: StreetRoute, to: LatLon): number =>
+    peakAuto ? deps.trafficFactor!(r.geometry && r.geometry.length > 1 ? r.geometry : [[req.home.lon, req.home.lat], [to.lon, to.lat]]) : rules.carPeakFactor;
   const carAssumptions: CarAssumptions = {
     peakFactor: rules.carPeakFactor,
+    peakAuto,
     parkingMin: rules.carParkingMin ?? density?.minutes ?? 5,
     parkingAuto: rules.carParkingMin === null,
     parkingKind: density?.kind,
@@ -353,19 +360,19 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     legMode: LegMode,
     transferMin: number,
   ) {
-    const carMin = car ? car.durationMin * rules.carPeakFactor : Infinity;
+    const carMin = car ? car.durationMin * peakOf(car, req.work) : Infinity;
     const reachable = cands
       .map((site, i) => ({ site, route: routes[i] ?? null }))
       .filter((c): c is { site: AccessCandidate; route: StreetRoute } => c.route !== null)
       // Driving most of the way and then changing is not park and ride; a two-minute ride is a walk.
-      .filter((c) => kind !== 'cityParkRide' || c.route.durationMin * rules.carPeakFactor <= carMin * rules.cityParkRideMaxDetour)
-      .filter((c) => kind !== 'parkRail' || c.route.durationMin * rules.carPeakFactor <= carMin * rules.parkRailMaxDriveShare)
+      .filter((c) => kind !== 'cityParkRide' || c.route.durationMin * peakOf(c.route, c.site) <= carMin * rules.cityParkRideMaxDetour)
+      .filter((c) => kind !== 'parkRail' || c.route.durationMin * peakOf(c.route, c.site) <= carMin * rules.parkRailMaxDriveShare)
       .filter((c) => kind !== 'bikeRide' || c.route.durationMin >= rules.bikeRideMinMin)
       // Rank by access time plus the public transport time from the site to work. That time
       // comes from the one-to-all answer; without it, from a straight-line guess.
       .map((c) => {
         const pt = onward(c.site);
-        return { ...c, known: pt !== null, guess: c.route.durationMin * (legMode === 'car' ? rules.carPeakFactor : 1) + transferMin + (pt ?? (haversineKm(c.site, req.work) / 55) * 60) };
+        return { ...c, known: pt !== null, guess: c.route.durationMin * (legMode === 'car' ? peakOf(c.route, c.site) : 1) + transferMin + (pt ?? (haversineKm(c.site, req.work) / 55) * 60) };
       })
       // With real times: a site with no public transport to work within the limit is out, and so
       // is one that cannot come near the fastest public transport from home (the one-to-all time
@@ -380,7 +387,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       const groups = groupItineraries((results[i] ?? []).filter((it) => it.legs.some(isTransit)), fareKey);
       const g = [...groups].sort((a, b) => a.typicalMin - b.typicalMin)[0];
       if (!g) return;
-      const factor = legMode === 'car' ? rules.carPeakFactor : 1;
+      const factor = legMode === 'car' ? peakOf(c.route, c.site) : 1;
       const rideMs = c.route.durationMin * factor * 60000;
       // The search from the site already walks from the car park to the platform: parking and
       // that walk together take the transfer time, or the walk itself when it is longer.
@@ -447,7 +454,8 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   directOption('walk', walk, rules.walkAllWayMaxMin);
   directOption('bike', bike, rules.bikeAllWayMaxMin);
   directOption('ebike', ebike, rules.ebikeAllWayMaxMin);
-  directOption('car', car, Infinity, carAssumptions.parkingMin, rules.carPeakFactor);
+  if (car) carAssumptions.peakFactor = peakOf(car, req.work);
+  directOption('car', car, Infinity, carAssumptions.parkingMin, carAssumptions.peakFactor);
 
   // --- 5. Price, CO₂ --------------------------------------------------------------------------
   if (deps.prepareFares) {

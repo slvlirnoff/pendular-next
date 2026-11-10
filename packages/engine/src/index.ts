@@ -10,4 +10,4 @@ export * as mobilis from './fares/mobilis.js';
 export * as national from './fares/national.js';
 export { loadParking, loadCityParkRide, type ParkingSite, type CityParkRide } from './places/parking.js';
 export { createOjpFareClient, stopSequenceKey, type FareQuote, type OjpFareClient } from './fares/ojpFare.js';
-export { loadDensity, parkingAt, parkingByDensity, DEFAULT_PARKING_THRESHOLDS, COMBINED_PARKING_THRESHOLDS, type DensityIndex, type DensityAround, type ParkingKind } from './density.js';
+export { loadDensity, parkingAt, parkingByDensity, trafficFactorAlong, TRAFFIC_CLASSES, DEFAULT_PARKING_THRESHOLDS, COMBINED_PARKING_THRESHOLDS, type DensityIndex, type DensityAround, type ParkingKind } from './density.js';

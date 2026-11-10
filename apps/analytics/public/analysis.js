@@ -106,7 +106,7 @@ export function analysisView(root, ctx, id) {
     const car = a.stamp?.car;
     if (!car) return null;
     return h('p', { class: 'subtle assumptions', style: 'margin-bottom:12px' },
-      `Car times assume rush-hour traffic (driving time × ${car.peakFactor}) and ${car.parkingMin} min to park at the destination, for everybody. Public transport and car times are door to door, for an arrival between ${a.arrival.from} and ${a.arrival.to}.`);
+      `Car times assume rush-hour traffic (${car.peakAuto ? 'driving time × 1.1 in open country to × 1.7 in city centres, along each route' : `driving time × ${car.peakFactor}`}) and ${car.parkingMin} min to park at the destination, for everybody. Public transport and car times are door to door, for an arrival between ${a.arrival.from} and ${a.arrival.to}.`);
   }
   const tile = (big, cap) => h('div', { class: 'tile' }, h('div', { class: 'big' }, big), h('div', { class: 'cap' }, cap));
   function tiles(i) {

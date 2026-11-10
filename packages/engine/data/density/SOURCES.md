@@ -64,3 +64,13 @@ Coordinates are approximate station or centre points.
 | Lovatens (village) | 171 | 48 | 219 | 5 (elsewhere) |
 
 Observations: the residents figures here (2025) are close to the earlier prototype for Lausanne gare (33,743 against about 33,600) but lower for Morges (11,789 against about 13,100, probably another year or reference point). On the combined sum, EPFL (18,060) lands next to Morges (18,732) and below Nyon (20,756), so a combined limit that puts EPFL in "townCentre" at about 18,000 would also pull in every town centre of Morges size; Bern HB, which is a clear car-hostile centre, only reaches 10 by residents but 103,000 combined.
+
+## Rush-hour factor along the route (assumption)
+
+The car's street time is multiplied by a factor worked out per route: the route is sampled every
+250 m, each sample takes the factor of its surroundings (residents + jobs within 1 km), and
+samples weigh by the time spent there (speed assumed on empty roads). Values in `TRAFFIC_CLASSES`
+(`src/density.ts`): 30,000 and more: x1.7 at 30 km/h; 10,000: x1.5 at 45; 2,000: x1.3 at 60;
+below: x1.1 at 80. These are assumptions, not measurements; a motorway through open country that
+is busy in the morning is under-counted. Examples (10.11.2026): Yverdon-Bern x1.23,
+Lucens-Lausanne gare x1.33, Lovatens-EPFL x1.32, Echallens-Lausanne Flon x1.42.

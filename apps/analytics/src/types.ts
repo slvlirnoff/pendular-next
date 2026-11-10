@@ -114,6 +114,8 @@ export interface AnalysisSettings {
 export interface CarStamp {
   /** Rush-hour factor applied to the car's driving time. */
   peakFactor: number;
+  /** True when the factor is worked out per route from how built-up it is. */
+  peakAuto?: boolean;
   /** Minutes added at the destination to park and walk to the door. */
   parkingMin: number;
   /** False when the parking time was set by hand. */
