@@ -1,0 +1,8093 @@
+{
+ "source": "swisstopo amtliches-gebaeudeadressverzeichnis_ch (CSV, LV95)",
+ "seed": 7,
+ "rows": [
+  {
+   "id": "a0001",
+   "kind": "clean",
+   "input": {
+    "address": "Rte Cantonale 9",
+    "postcode": "1426",
+    "city": "Concise"
+   },
+   "truth": {
+    "lat": 46.8510335989443,
+    "lon": 6.718344312523303
+   },
+   "register": "Route Cantonale 9, 1426 Concise",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0002",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Vignettes 5, 1185 Mont-sur-Rolle"
+   },
+   "truth": {
+    "lat": 46.474180521414816,
+    "lon": 6.330096023758595
+   },
+   "register": "Chemin des Vignettes 5, 1185 Mont-sur-Rolle",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0003",
+   "kind": "numberOtherBuilding",
+   "truth": {
+    "lat": 46.61555721259031,
+    "lon": 9.15646135375033
+   },
+   "register": "Leisalpstrasse 34, 7132 Vals",
+   "canton": "GR",
+   "twin": false,
+   "input": {
+    "address": "Leisalpstrasse 82",
+    "postcode": "7132",
+    "city": "Vals"
+   },
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   },
+   "note": "number 34 -> 82, which is another real building (undetectable by design: the address exists)"
+  },
+  {
+   "id": "a0004",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Casard 2",
+    "postcode": "1023",
+    "city": "Crissier"
+   },
+   "truth": {
+    "lat": 46.55593277054182,
+    "lon": 6.578787975081253
+   },
+   "register": "Chemin du Casard 2, 1023 Crissier",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0005",
+   "kind": "clean",
+   "input": {
+    "address": "ALBULASTRASSE 16, 7472 SURAVA"
+   },
+   "truth": {
+    "lat": 46.66464116682735,
+    "lon": 9.610054857118783
+   },
+   "register": "Albulastrasse 16, 7472 Surava",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0006",
+   "kind": "clean",
+   "input": {
+    "address": "Nüchenstrasse 968, 8883 Quarten"
+   },
+   "truth": {
+    "lat": 47.102565049068225,
+    "lon": 9.243858365299888
+   },
+   "register": "Nüchenstrasse 968, 8883 Quarten",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0007",
+   "kind": "clean",
+   "input": {
+    "address": "Ulmenstrasse 13, 8500 Frauenfeld"
+   },
+   "truth": {
+    "lat": 47.55153468096424,
+    "lon": 8.880538892922514
+   },
+   "register": "Ulmenstrasse 13, 8500 Frauenfeld",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0008",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Marmouzets 4a",
+    "postcode": "1270",
+    "city": "Trélex"
+   },
+   "truth": {
+    "lat": 46.415839842705786,
+    "lon": 6.203694886619153
+   },
+   "register": "Chemin des Marmouzets 4a, 1270 Trélex",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0009",
+   "kind": "clean",
+   "input": {
+    "address": "Zentweg 1a",
+    "postcode": "3006",
+    "city": "Bern"
+   },
+   "truth": {
+    "lat": 46.958822835179504,
+    "lon": 7.472556134957382
+   },
+   "register": "Zentweg 1a, 3006 Bern",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0010",
+   "kind": "clean",
+   "input": {
+    "address": "Route André-Piller 30c",
+    "postcode": "1762",
+    "city": "Givisiez"
+   },
+   "truth": {
+    "lat": 46.812633594687284,
+    "lon": 7.1199858845951285
+   },
+   "register": "Route André-Piller 30c, 1762 Givisiez",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0011",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Praz-Buchilly 75a 1066 Epalinges"
+   },
+   "truth": {
+    "lat": 46.55703453457503,
+    "lon": 6.673447396762499
+   },
+   "register": "Chemin du Praz-Buchilly 75a, 1066 Epalinges",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0012",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de Saule 69a, 1233 Bernex"
+   },
+   "truth": {
+    "lat": 46.1747980638147,
+    "lon": 6.068310321355171
+   },
+   "register": "Chemin de Saule 69a, 1233 Bernex",
+   "canton": "GE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0013",
+   "kind": "clean",
+   "input": {
+    "address": "ilbachstrasse 9",
+    "postcode": "CH-4228",
+    "city": "erschwil"
+   },
+   "truth": {
+    "lat": 47.37293042942039,
+    "lon": 7.539574324007402
+   },
+   "register": "Ilbachstrasse 9, 4228 Erschwil",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0014",
+   "kind": "clean",
+   "input": {
+    "address": "Buchholzstrasse 3",
+    "postcode": "8702",
+    "city": "Zollikon"
+   },
+   "truth": {
+    "lat": 47.33850908702729,
+    "lon": 8.574917033847004
+   },
+   "register": "Buchholzstrasse 3, 8702 Zollikon",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0015",
+   "kind": "clean",
+   "input": {
+    "address": "avenue du général-guisan 25",
+    "postcode": "CH-1800",
+    "city": "vevey"
+   },
+   "truth": {
+    "lat": 46.4638136154895,
+    "lon": 6.840041624039081
+   },
+   "register": "Avenue du Général-Guisan 25, 1800 Vevey",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0016",
+   "kind": "clean",
+   "input": {
+    "address": "Bindlistrasse 7",
+    "postcode": "9107",
+    "city": "Urnäsch"
+   },
+   "truth": {
+    "lat": 47.30984370943324,
+    "lon": 9.275750724973522
+   },
+   "register": "Bindlistrasse 7, 9107 Urnäsch",
+   "canton": "AR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0017",
+   "kind": "numberMissingInRegister",
+   "truth": {
+    "lat": 46.818820315583906,
+    "lon": 7.588819555454783
+   },
+   "register": "Schmiedemattweg 2a, 3629 Kiesen",
+   "canton": "BE",
+   "twin": false,
+   "input": {
+    "address": "Schmiedemattweg 16",
+    "postcode": "3629",
+    "city": "Kiesen"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "houseNumber"
+    ]
+   },
+   "note": "number 2a -> 16, not in the register"
+  },
+  {
+   "id": "a0018",
+   "kind": "clean",
+   "input": {
+    "address": "Wandfluh 1 6386 Wolfenschiessen"
+   },
+   "truth": {
+    "lat": 46.92297231806471,
+    "lon": 8.410924069282315
+   },
+   "register": "Wandfluh 1, 6386 Wolfenschiessen",
+   "canton": "NW",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0019",
+   "kind": "clean",
+   "input": {
+    "address": "Largitzenstr. 70, 4056 Basel"
+   },
+   "truth": {
+    "lat": 47.56633619697822,
+    "lon": 7.567157324266181
+   },
+   "register": "Largitzenstrasse 70, 4056 Basel",
+   "canton": "BS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0020",
+   "kind": "clean",
+   "input": {
+    "address": "10 avenue du Vieux-Moulin",
+    "postcode": "1018",
+    "city": "Lausanne"
+   },
+   "truth": {
+    "lat": 46.53284934748369,
+    "lon": 6.6288535114696145
+   },
+   "register": "Avenue du Vieux-Moulin 10, 1018 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0021",
+   "kind": "clean",
+   "input": {
+    "address": "CHAMP-MURAT 16, 1436 TREYCOVAGNES"
+   },
+   "truth": {
+    "lat": 46.777455809223106,
+    "lon": 6.612285708475836
+   },
+   "register": "Champ-Murat 16, 1436 Treycovagnes",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0022",
+   "kind": "clean",
+   "input": {
+    "address": "BAS DU ROSSÉ 9, 1163 ETOY"
+   },
+   "truth": {
+    "lat": 46.4840481280364,
+    "lon": 6.419268062959102
+   },
+   "register": "Bas du Rossé 9, 1163 Etoy",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0023",
+   "kind": "clean",
+   "input": {
+    "address": "hinterbergstrasse 23",
+    "postcode": "CH-6318",
+    "city": "walchwil"
+   },
+   "truth": {
+    "lat": 47.09670336979653,
+    "lon": 8.521768303100846
+   },
+   "register": "Hinterbergstrasse 23, 6318 Walchwil",
+   "canton": "ZG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0024",
+   "kind": "clean",
+   "input": {
+    "address": "Vers Morey 39",
+    "postcode": "1853",
+    "city": "Yvorne"
+   },
+   "truth": {
+    "lat": 46.33331770019965,
+    "lon": 6.963624891831974
+   },
+   "register": "Vers Morey 39, 1853 Yvorne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0025",
+   "kind": "clean",
+   "input": {
+    "address": "Le Champ-du-Noud 79, 2416 Le Locle"
+   },
+   "truth": {
+    "lat": 47.06932775360851,
+    "lon": 6.70445321403734
+   },
+   "register": "Le Champ-du-Noud 79, 2416 Les Brenets",
+   "canton": "NE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0026",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Cottenets 6",
+    "postcode": "1233",
+    "city": "Bernex"
+   },
+   "truth": {
+    "lat": 46.16269741480576,
+    "lon": 6.060137460922925
+   },
+   "register": "Chemin des Cottenets 6, 1233 Bernex",
+   "canton": "GE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0027",
+   "kind": "clean",
+   "input": {
+    "address": "Schwantlen 19, 9055 Bühler"
+   },
+   "truth": {
+    "lat": 47.3816267577092,
+    "lon": 9.41303443132031
+   },
+   "register": "Schwantlen 19, 9055 Bühler",
+   "canton": "AR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0028",
+   "kind": "clean",
+   "input": {
+    "address": "MYTHENSTRASSE 12, 6410 GOLDAU"
+   },
+   "truth": {
+    "lat": 47.05175440944754,
+    "lon": 8.549140083367572
+   },
+   "register": "Mythenstrasse 12, 6410 Goldau",
+   "canton": "SZ",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0029",
+   "kind": "clean",
+   "input": {
+    "address": "Oberdorf 6",
+    "postcode": "6105",
+    "city": "Schachen LU"
+   },
+   "truth": {
+    "lat": 47.035404178358135,
+    "lon": 8.143554319931075
+   },
+   "register": "Oberdorf 6, 6105 Schachen LU",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0030",
+   "kind": "clean",
+   "input": {
+    "address": "Via Cantonitt 19",
+    "postcode": "6647",
+    "city": "Mergoscia"
+   },
+   "truth": {
+    "lat": 46.20990275098168,
+    "lon": 8.844233061200416
+   },
+   "register": "Via Cantonitt 19, 6647 Mergoscia",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0031",
+   "kind": "typo",
+   "truth": {
+    "lat": 46.241021797169005,
+    "lon": 7.307732683371935
+   },
+   "register": "Rue d'Oudin 5, 1975 St-Séverin",
+   "canton": "VS",
+   "twin": false,
+   "input": {
+    "address": "Rue d'Oudinx 5",
+    "postcode": "1975",
+    "city": "St-Séverin"
+   },
+   "expect": {
+    "status": [
+     "exact",
+     "check"
+    ]
+   },
+   "note": "street \"Rue d'Oudin\" -> \"Rue d'Oudinx\""
+  },
+  {
+   "id": "a0032",
+   "kind": "clean",
+   "input": {
+    "address": "Berglistrasse 23",
+    "postcode": "8580",
+    "city": "Amriswil"
+   },
+   "truth": {
+    "lat": 47.54334234663483,
+    "lon": 9.304742528231307
+   },
+   "register": "Berglistrasse 23, 8580 Amriswil",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0033",
+   "kind": "clean",
+   "input": {
+    "address": "Bulliard 12b",
+    "postcode": "1792",
+    "city": "Cordast"
+   },
+   "truth": {
+    "lat": 46.875700189126306,
+    "lon": 7.153550230306463
+   },
+   "register": "Bulliard 12b, 1792 Cordast",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0034",
+   "kind": "clean",
+   "input": {
+    "address": "LENKSTRASSE 98, 3775 LENK"
+   },
+   "truth": {
+    "lat": 46.47170631657162,
+    "lon": 7.43666862210557
+   },
+   "register": "Lenkstrasse 98, 3775 Lenk im Simmental",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0035",
+   "kind": "clean",
+   "input": {
+    "address": "Boldistrasse 34",
+    "postcode": "5415",
+    "city": "Obersiggenthal"
+   },
+   "truth": {
+    "lat": 47.48365409402727,
+    "lon": 8.304811421137025
+   },
+   "register": "Boldistrasse 34, 5415 Rieden AG",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0036",
+   "kind": "clean",
+   "input": {
+    "address": "Stegerboden 13",
+    "postcode": "8774",
+    "city": "Leuggelbach"
+   },
+   "truth": {
+    "lat": 46.97333070266368,
+    "lon": 9.043320559450148
+   },
+   "register": "Stegerboden 13, 8774 Leuggelbach",
+   "canton": "GL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0037",
+   "kind": "clean",
+   "input": {
+    "address": "Mühleweg 16, 5420 Ehrendingen"
+   },
+   "truth": {
+    "lat": 47.498975517656135,
+    "lon": 8.342840357401164
+   },
+   "register": "Mühleweg 16, 5420 Ehrendingen",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0038",
+   "kind": "clean",
+   "input": {
+    "address": "Alte Brücke 8, 8427 Rorbas"
+   },
+   "truth": {
+    "lat": 47.52977328045201,
+    "lon": 8.579633307195131
+   },
+   "register": "Alte Brücke 8, 8427 Rorbas",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0039",
+   "kind": "clean",
+   "input": {
+    "address": "Staldenrain 1",
+    "postcode": "8965",
+    "city": "Berikon"
+   },
+   "truth": {
+    "lat": 47.348338647844784,
+    "lon": 8.377143962508095
+   },
+   "register": "Staldenrain 1, 8965 Berikon",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0040",
+   "kind": "noPostcode",
+   "truth": {
+    "lat": 47.34274316216815,
+    "lon": 8.572031182663395
+   },
+   "register": "Alte Landstrasse 32, 8702 Zollikon",
+   "canton": "ZH",
+   "twin": false,
+   "input": {
+    "address": "Alte Landstrasse 32",
+    "city": "Zollikon"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   }
+  },
+  {
+   "id": "a0041",
+   "kind": "clean",
+   "input": {
+    "address": "3 chemin de Chamasson",
+    "postcode": "1040",
+    "city": "Villars-le-Terroir"
+   },
+   "truth": {
+    "lat": 46.65346307888384,
+    "lon": 6.638191371798063
+   },
+   "register": "Chemin de Chamasson 3, 1040 Villars-le-Terroir",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0042",
+   "kind": "clean",
+   "input": {
+    "address": "chemin de la barque 11",
+    "postcode": "CH-1027",
+    "city": "lonay"
+   },
+   "truth": {
+    "lat": 46.52897385756689,
+    "lon": 6.525591457620376
+   },
+   "register": "Chemin de la Barque 11, 1027 Lonay",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0043",
+   "kind": "clean",
+   "input": {
+    "address": "Antoniusweg 33a 1713 St. Antoni"
+   },
+   "truth": {
+    "lat": 46.819426032558034,
+    "lon": 7.260200841414557
+   },
+   "register": "Antoniusweg 33a, 1713 St. Antoni",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0044",
+   "kind": "clean",
+   "input": {
+    "address": "Obere Lättenstrasse 42, 5245 Habsburg"
+   },
+   "truth": {
+    "lat": 47.46387202719278,
+    "lon": 8.1861923286476
+   },
+   "register": "Obere Lättenstrasse 42, 5245 Habsburg",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0045",
+   "kind": "clean",
+   "input": {
+    "address": "gängstrasse 14a",
+    "postcode": "CH-6436",
+    "city": "muotathal"
+   },
+   "truth": {
+    "lat": 46.97658449683336,
+    "lon": 8.75173319381165
+   },
+   "register": "Gängstrasse 14a, 6436 Muotathal",
+   "canton": "SZ",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0046",
+   "kind": "clean",
+   "input": {
+    "address": "Hauptstrasse 22f, 4654 Lostorf"
+   },
+   "truth": {
+    "lat": 47.38377396757676,
+    "lon": 7.948652853498459
+   },
+   "register": "Hauptstrasse 22f, 4654 Lostorf",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0047",
+   "kind": "clean",
+   "input": {
+    "address": "RUE DE LA BOULANGERIE 3, 1204 GENÈVE"
+   },
+   "truth": {
+    "lat": 46.20170365743817,
+    "lon": 6.145708854316691
+   },
+   "register": "Rue de la Boulangerie 3, 1204 Genève",
+   "canton": "GE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0048",
+   "kind": "clean",
+   "input": {
+    "address": "Weidenweg 40",
+    "postcode": "3954",
+    "city": "Leukerbad"
+   },
+   "truth": {
+    "lat": 46.38687121162831,
+    "lon": 7.641849374270785
+   },
+   "register": "Weidenweg 40, 3954 Leukerbad",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0049",
+   "kind": "clean",
+   "input": {
+    "address": "Route du Jorat 40, 1872 Troistorrents"
+   },
+   "truth": {
+    "lat": 46.22666689485093,
+    "lon": 6.87728265580508
+   },
+   "register": "Route du Jorat 40, 1872 Troistorrents",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0050",
+   "kind": "clean",
+   "input": {
+    "address": "Feld 1a",
+    "postcode": "3253",
+    "city": "Schnottwil"
+   },
+   "truth": {
+    "lat": 47.104402837686706,
+    "lon": 7.3948103069629365
+   },
+   "register": "Feld 1a, 3253 Schnottwil",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0051",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Chexbres 10, 1073 Savigny"
+   },
+   "truth": {
+    "lat": 46.53691065292355,
+    "lon": 6.7362589607295575
+   },
+   "register": "Route de Chexbres 10, 1073 Savigny",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0052",
+   "kind": "clean",
+   "input": {
+    "address": "Kernmattstrasse 38",
+    "postcode": "4102",
+    "city": "Binningen"
+   },
+   "truth": {
+    "lat": 47.54408920864631,
+    "lon": 7.57208807060074
+   },
+   "register": "Kernmattstrasse 38, 4102 Binningen",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0053",
+   "kind": "clean",
+   "input": {
+    "address": "Dorfstrasse 53",
+    "postcode": "8835",
+    "city": "Feusisberg"
+   },
+   "truth": {
+    "lat": 47.187725142809164,
+    "lon": 8.75010420478787
+   },
+   "register": "Dorfstrasse 53, 8835 Feusisberg",
+   "canton": "SZ",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0054",
+   "kind": "clean",
+   "input": {
+    "address": "chemin sur les roches 9",
+    "postcode": "CH-1264",
+    "city": "st-cergue"
+   },
+   "truth": {
+    "lat": 46.45147800178161,
+    "lon": 6.15529152983272
+   },
+   "register": "Chemin Sur les Roches 9, 1264 St-Cergue",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0055",
+   "kind": "clean",
+   "input": {
+    "address": "Claridenstrasse 19",
+    "postcode": "8800",
+    "city": "Thalwil"
+   },
+   "truth": {
+    "lat": 47.29759315443866,
+    "lon": 8.557505659480695
+   },
+   "register": "Claridenstrasse 19, 8800 Thalwil",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0056",
+   "kind": "clean",
+   "input": {
+    "address": "wagenhauserstrasse 16",
+    "postcode": "CH-8260",
+    "city": "stein am rhein"
+   },
+   "truth": {
+    "lat": 47.657717182431035,
+    "lon": 8.856333277866014
+   },
+   "register": "Wagenhauserstrasse 16, 8260 Stein am Rhein",
+   "canton": "SH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0057",
+   "kind": "clean",
+   "input": {
+    "address": "Via Casenzano 19, 6575 Gambarogno"
+   },
+   "truth": {
+    "lat": 46.13006047575553,
+    "lon": 8.80831078940299
+   },
+   "register": "Via Casenzano 19, 6575 Vairano",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0058",
+   "kind": "postcodeSwapped",
+   "truth": {
+    "lat": 46.87577890592652,
+    "lon": 8.96859665014061
+   },
+   "register": "Altenoren 2, 8783 Linthal",
+   "canton": "GL",
+   "twin": false,
+   "input": {
+    "address": "Altenoren 2",
+    "postcode": "8738",
+    "city": "Linthal"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   },
+   "note": "postcode 8783 -> 8738"
+  },
+  {
+   "id": "a0059",
+   "kind": "clean",
+   "input": {
+    "address": "chälenrain 42",
+    "postcode": "CH-6053",
+    "city": "alpnach"
+   },
+   "truth": {
+    "lat": 46.95284253169756,
+    "lon": 8.272672622299927
+   },
+   "register": "Chälenrain 42, 6053 Alpnachstad",
+   "canton": "OW",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0060",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin Michée-CHAUDERON 8a 1203 Genève"
+   },
+   "truth": {
+    "lat": 46.20426581626444,
+    "lon": 6.111303846115126
+   },
+   "register": "Chemin Michée-CHAUDERON 8a, 1203 Genève",
+   "canton": "GE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0061",
+   "kind": "clean",
+   "input": {
+    "address": "Praz Zagan 10n, 3280 Murten"
+   },
+   "truth": {
+    "lat": 46.92971898337885,
+    "lon": 7.12815132057175
+   },
+   "register": "Praz Zagan 10n, 3280 Murten",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0062",
+   "kind": "clean",
+   "input": {
+    "address": "chemin des bois 43",
+    "postcode": "CH-1255",
+    "city": "veyrier"
+   },
+   "truth": {
+    "lat": 46.167418204977494,
+    "lon": 6.17310281392212
+   },
+   "register": "Chemin des Bois 43, 1255 Veyrier",
+   "canton": "GE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0063",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de Chantemerle 1, 1132 Lully VD"
+   },
+   "truth": {
+    "lat": 46.50175583660587,
+    "lon": 6.464824989746382
+   },
+   "register": "Chemin de Chantemerle 1, 1132 Lully VD",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0064",
+   "kind": "clean",
+   "input": {
+    "address": "Mühliweg 1",
+    "postcode": "7220",
+    "city": "Schiers"
+   },
+   "truth": {
+    "lat": 46.969348846122216,
+    "lon": 9.68883552291326
+   },
+   "register": "Mühliweg 1, 7220 Schiers",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0065",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Torrent 102 1997 Haute-Nendaz"
+   },
+   "truth": {
+    "lat": 46.17512580596697,
+    "lon": 7.282625581730362
+   },
+   "register": "Chemin du Torrent 102, 1997 Haute-Nendaz",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0066",
+   "kind": "clean",
+   "input": {
+    "address": "Käsereiweg 3c",
+    "postcode": "2554",
+    "city": "Meinisberg"
+   },
+   "truth": {
+    "lat": 47.16015327681535,
+    "lon": 7.348457875908021
+   },
+   "register": "Käsereiweg 3c, 2554 Meinisberg",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0067",
+   "kind": "clean",
+   "input": {
+    "address": "Churerstr. 15, 9450 Altstätten SG"
+   },
+   "truth": {
+    "lat": 47.3773841528774,
+    "lon": 9.543331384400147
+   },
+   "register": "Churerstrasse 15, 9450 Altstätten SG",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0068",
+   "kind": "clean",
+   "input": {
+    "address": "Kirchweg 2",
+    "postcode": "5300",
+    "city": "Turgi"
+   },
+   "truth": {
+    "lat": 47.49287280215645,
+    "lon": 8.254344032846543
+   },
+   "register": "Kirchweg 2, 5300 Turgi",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0069",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin Pré-de-la-Cible 2",
+    "postcode": "1880",
+    "city": "Bex"
+   },
+   "truth": {
+    "lat": 46.25198241460526,
+    "lon": 7.013484657461725
+   },
+   "register": "Chemin Pré-de-la-Cible 2, 1880 Bex",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0070",
+   "kind": "clean",
+   "input": {
+    "address": "Rue du Tilleul 3",
+    "postcode": "1355",
+    "city": "Sergey"
+   },
+   "truth": {
+    "lat": 46.75132146832378,
+    "lon": 6.500444167303166
+   },
+   "register": "Rue du Tilleul 3, 1355 Sergey",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0071",
+   "kind": "noPostcode",
+   "truth": {
+    "lat": 47.457985216287994,
+    "lon": 9.563946544162034
+   },
+   "register": "Hellbüchel 252, 9426 Lutzenberg",
+   "canton": "AR",
+   "twin": false,
+   "input": {
+    "address": "Hellbüchel 252",
+    "city": "Lutzenberg"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   }
+  },
+  {
+   "id": "a0072",
+   "kind": "clean",
+   "input": {
+    "address": "Lonzustägstrasse 15, 3918 Wiler (Lötschen)"
+   },
+   "truth": {
+    "lat": 46.40406513624909,
+    "lon": 7.784925673926214
+   },
+   "register": "Lonzustägstrasse 15, 3918 Wiler (Lötschen)",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0073",
+   "kind": "clean",
+   "input": {
+    "address": "Obseestrasse 11",
+    "postcode": "6078",
+    "city": "Lungern"
+   },
+   "truth": {
+    "lat": 46.780993044704104,
+    "lon": 8.156661429560671
+   },
+   "register": "Obseestrasse 11, 6078 Lungern",
+   "canton": "OW",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0074",
+   "kind": "clean",
+   "input": {
+    "address": "Aclas Davains 23",
+    "postcode": "7492",
+    "city": "Alvaneu Dorf"
+   },
+   "truth": {
+    "lat": 46.69668970936331,
+    "lon": 9.651757713710936
+   },
+   "register": "Aclas Davains 23, 7492 Alvaneu Dorf",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0075",
+   "kind": "clean",
+   "input": {
+    "address": "IM HEUGARTEN 8, 8617 MÖNCHALTORF"
+   },
+   "truth": {
+    "lat": 47.30928802398514,
+    "lon": 8.72449487322879
+   },
+   "register": "Im Heugarten 8, 8617 Mönchaltorf",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0076",
+   "kind": "clean",
+   "input": {
+    "address": "Route d'Airmont 1, 2950 Courgenay"
+   },
+   "truth": {
+    "lat": 47.40781586252873,
+    "lon": 7.116048434010878
+   },
+   "register": "Route d'Airmont 1, 2950 Courgenay",
+   "canton": "JU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0077",
+   "kind": "clean",
+   "input": {
+    "address": "10 rue du Grand-Chêne",
+    "postcode": "1820",
+    "city": "Montreux"
+   },
+   "truth": {
+    "lat": 46.43429832211144,
+    "lon": 6.915781612356503
+   },
+   "register": "Rue du Grand-Chêne 10, 1820 Montreux",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0078",
+   "kind": "clean",
+   "input": {
+    "address": "Kantonsschulweg 2, 8620 Wetzikon ZH"
+   },
+   "truth": {
+    "lat": 47.31810753753021,
+    "lon": 8.79510265691472
+   },
+   "register": "Kantonsschulweg 2, 8620 Wetzikon ZH",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0079",
+   "kind": "clean",
+   "input": {
+    "address": "Bernstrasse 48a, 3072 Ostermundigen"
+   },
+   "truth": {
+    "lat": 46.957248904267274,
+    "lon": 7.486171103635385
+   },
+   "register": "Bernstrasse 48a, 3072 Ostermundigen",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0080",
+   "kind": "clean",
+   "input": {
+    "address": "Dorf 30, 3903 Mund"
+   },
+   "truth": {
+    "lat": 46.31596251817191,
+    "lon": 7.942295594914571
+   },
+   "register": "Dorf 30, 3903 Mund",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0081",
+   "kind": "clean",
+   "input": {
+    "address": "Via Bulastro 1",
+    "postcode": "6713",
+    "city": "Malvaglia"
+   },
+   "truth": {
+    "lat": 46.39413085746608,
+    "lon": 8.985364092947792
+   },
+   "register": "Via Bulastro 1, 6713 Malvaglia",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0082",
+   "kind": "clean",
+   "input": {
+    "address": "Rue de la Laiterie 3",
+    "postcode": "1427",
+    "city": "Bonvillars"
+   },
+   "truth": {
+    "lat": 46.838399582526954,
+    "lon": 6.671305281993797
+   },
+   "register": "Rue de la Laiterie 3, 1427 Bonvillars",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0083",
+   "kind": "clean",
+   "input": {
+    "address": "Brämlenstrasse 11, 8234 Stetten SH"
+   },
+   "truth": {
+    "lat": 47.73732397671389,
+    "lon": 8.657772919578534
+   },
+   "register": "Brämlenstrasse 11, 8234 Stetten SH",
+   "canton": "SH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0084",
+   "kind": "clean",
+   "input": {
+    "address": "Rue des Pressoirs 38",
+    "postcode": "1180",
+    "city": "Tartegnin"
+   },
+   "truth": {
+    "lat": 46.467815168309706,
+    "lon": 6.315599957371217
+   },
+   "register": "Rue des Pressoirs 38, 1180 Tartegnin",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0085",
+   "kind": "clean",
+   "input": {
+    "address": "Waldheimstrasse 18",
+    "postcode": "6314",
+    "city": "Unterägeri"
+   },
+   "truth": {
+    "lat": 47.140162556345885,
+    "lon": 8.579331648505587
+   },
+   "register": "Waldheimstrasse 18, 6314 Unterägeri",
+   "canton": "ZG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0086",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Cret-Ministre 24",
+    "postcode": "1090",
+    "city": "Lutry"
+   },
+   "truth": {
+    "lat": 46.51862691946369,
+    "lon": 6.692695972974007
+   },
+   "register": "Chemin du Crêt-Ministre 24, 1090 La Croix (Lutry)",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0087",
+   "kind": "clean",
+   "input": {
+    "address": "i Campagnòi 2",
+    "postcode": "6513",
+    "city": "Bellinzona"
+   },
+   "truth": {
+    "lat": 46.185678329990715,
+    "lon": 8.997391214402334
+   },
+   "register": "i Campagnòi 2, 6513 Monte Carasso",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0088",
+   "kind": "typo",
+   "truth": {
+    "lat": 46.52643989603689,
+    "lon": 6.624005150456546
+   },
+   "register": "Avenue du Vingt-Quatre-Janvier 8, 1004 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "input": {
+    "address": "Aenue du Vingt-Quatre-Janvier 8",
+    "postcode": "1004",
+    "city": "Lausanne"
+   },
+   "expect": {
+    "status": [
+     "exact",
+     "check"
+    ]
+   },
+   "note": "street \"Avenue du Vingt-Quatre-Janvier\" -> \"Aenue du Vingt-Quatre-Janvier\""
+  },
+  {
+   "id": "a0089",
+   "kind": "clean",
+   "input": {
+    "address": "Rue de la Bauma 16 1462 Yvonand"
+   },
+   "truth": {
+    "lat": 46.79701756868511,
+    "lon": 6.749637203613168
+   },
+   "register": "Rue de la Bauma 16, 1462 Yvonand",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0090",
+   "kind": "clean",
+   "input": {
+    "address": "Wintersingerstrasse 78",
+    "postcode": "4312",
+    "city": "Magden"
+   },
+   "truth": {
+    "lat": 47.51867976943337,
+    "lon": 7.817257671183057
+   },
+   "register": "Wintersingerstrasse 78, 4312 Magden",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0091",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Pré-des-Esserts 10",
+    "postcode": "1224",
+    "city": "Chêne-Bougeries"
+   },
+   "truth": {
+    "lat": 46.19792521219376,
+    "lon": 6.192328327106247
+   },
+   "register": "Chemin du Pré-des-Esserts 10, 1224 Chêne-Bougeries",
+   "canton": "GE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0092",
+   "kind": "clean",
+   "input": {
+    "address": "Sagenblickstrasse 3, 6030 Ebikon"
+   },
+   "truth": {
+    "lat": 47.07286483990735,
+    "lon": 8.337446374557869
+   },
+   "register": "Sagenblickstrasse 3, 6030 Ebikon",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0093",
+   "kind": "clean",
+   "input": {
+    "address": "Haldengutstrasse 33a",
+    "postcode": "8305",
+    "city": "Dietlikon"
+   },
+   "truth": {
+    "lat": 47.431144640377255,
+    "lon": 8.620207472563186
+   },
+   "register": "Haldengutstrasse 33a, 8305 Dietlikon",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0094",
+   "kind": "clean",
+   "input": {
+    "address": "Passage du Temple 1a, 2087 Cornaux NE"
+   },
+   "truth": {
+    "lat": 47.03794490861233,
+    "lon": 7.020913305159412
+   },
+   "register": "Passage du Temple 1a, 2087 Cornaux NE",
+   "canton": "NE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0095",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Villars 62",
+    "postcode": "1884",
+    "city": "Huemoz"
+   },
+   "truth": {
+    "lat": 46.29067135150938,
+    "lon": 7.024241574848479
+   },
+   "register": "Route de Villars 62, 1884 Huémoz",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0096",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Répies 6 1562 Corcelles-près-Payerne"
+   },
+   "truth": {
+    "lat": 46.83489733628954,
+    "lon": 6.960412886756191
+   },
+   "register": "Chemin des Répies 6, 1562 Corcelles-près-Payerne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0097",
+   "kind": "clean",
+   "input": {
+    "address": "Salwiesenstrasse 8 9320 Arbon"
+   },
+   "truth": {
+    "lat": 47.50433134727226,
+    "lon": 9.42747429590022
+   },
+   "register": "Salwiesenstrasse 8, 9320 Arbon",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0098",
+   "kind": "clean",
+   "input": {
+    "address": "route de bellelay 11a",
+    "postcode": "CH-2712",
+    "city": "le fuet"
+   },
+   "truth": {
+    "lat": 47.24307277376705,
+    "lon": 7.177065923189054
+   },
+   "register": "Route de Bellelay 11a, 2712 Le Fuet",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0099",
+   "kind": "clean",
+   "input": {
+    "address": "Gutstrasse 7a",
+    "postcode": "8055",
+    "city": "Zürich"
+   },
+   "truth": {
+    "lat": 47.37028954100684,
+    "lon": 8.509109386827554
+   },
+   "register": "Gutstrasse 7a, 8055 Zürich",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0100",
+   "kind": "clean",
+   "input": {
+    "address": "Solothurnstrasse 55",
+    "postcode": "3294",
+    "city": "Büren an der Aare"
+   },
+   "truth": {
+    "lat": 47.14340025747229,
+    "lon": 7.385446759389243
+   },
+   "register": "Solothurnstrasse 55, 3294 Büren an der Aare",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0101",
+   "kind": "clean",
+   "input": {
+    "address": "Via Bostg 13",
+    "postcode": "7188",
+    "city": "Sedrun"
+   },
+   "truth": {
+    "lat": 46.68091950209074,
+    "lon": 8.786341974776173
+   },
+   "register": "Via Bostg 13, 7188 Sedrun",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0102",
+   "kind": "clean",
+   "input": {
+    "address": "Via Giovacchino Respini 6",
+    "postcode": "6500",
+    "city": "Bellinzona"
+   },
+   "truth": {
+    "lat": 46.20260492186754,
+    "lon": 9.032993820563307
+   },
+   "register": "Via Giovacchino Respini 6, 6500 Bellinzona",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0103",
+   "kind": "clean",
+   "input": {
+    "address": "Dürrenbergstr. 55b, 4632 Trimbach"
+   },
+   "truth": {
+    "lat": 47.36660213425528,
+    "lon": 7.897403518264546
+   },
+   "register": "Dürrenbergstrasse 55b, 4632 Trimbach",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0104",
+   "kind": "clean",
+   "input": {
+    "address": "RUE DES FONTAINES 10, 1427 BONVILLARS"
+   },
+   "truth": {
+    "lat": 46.8394815158803,
+    "lon": 6.671108337588058
+   },
+   "register": "Rue des Fontaines 10, 1427 Bonvillars",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0105",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin Erna Hamburger 1g, 1015 Ecublens (VD)"
+   },
+   "truth": {
+    "lat": 46.517680096550265,
+    "lon": 6.561312984337413
+   },
+   "register": "Chemin Erna Hamburger 1g, 1015 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0106",
+   "kind": "clean",
+   "input": {
+    "address": "Langmoosstr. 18",
+    "postcode": "9410",
+    "city": "Heiden"
+   },
+   "truth": {
+    "lat": 47.43835210401335,
+    "lon": 9.540213934083539
+   },
+   "register": "Langmoosstrasse 18, 9410 Heiden",
+   "canton": "AR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0107",
+   "kind": "clean",
+   "input": {
+    "address": "Weststrasse 40, 9500 Wil SG"
+   },
+   "truth": {
+    "lat": 47.46348638538184,
+    "lon": 9.036613074194946
+   },
+   "register": "Weststrasse 40, 9500 Wil SG",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0108",
+   "kind": "clean",
+   "input": {
+    "address": "Bruderholzallee 6",
+    "postcode": "4059",
+    "city": "Basel"
+   },
+   "truth": {
+    "lat": 47.53547347520142,
+    "lon": 7.587243854200667
+   },
+   "register": "Bruderholzallee 6, 4059 Basel",
+   "canton": "BS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0109",
+   "kind": "clean",
+   "input": {
+    "address": "WINTERHALDEN 11, 6265 ROGGLISWIL"
+   },
+   "truth": {
+    "lat": 47.21370210629825,
+    "lon": 7.884627716263921
+   },
+   "register": "Winterhalden 11, 6265 Roggliswil",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0110",
+   "kind": "clean",
+   "input": {
+    "address": "Paradiesstrasse 15, 9000 St. Gallen"
+   },
+   "truth": {
+    "lat": 47.418460691025274,
+    "lon": 9.362943450985043
+   },
+   "register": "Paradiesstrasse 15, 9000 St. Gallen",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0111",
+   "kind": "clean",
+   "input": {
+    "address": "8 chemin Pré-de-Ville",
+    "postcode": "1588",
+    "city": "Cudrefin"
+   },
+   "truth": {
+    "lat": 46.95402935055092,
+    "lon": 7.019523406674999
+   },
+   "register": "Chemin Pré-de-Ville 8, 1588 Cudrefin",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0112",
+   "kind": "clean",
+   "input": {
+    "address": "AVENUE DE COLLONGE 36, 1820 TERRITET"
+   },
+   "truth": {
+    "lat": 46.4260338857558,
+    "lon": 6.925409293192078
+   },
+   "register": "Avenue de Collonge 36, 1820 Territet",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0113",
+   "kind": "clean",
+   "input": {
+    "address": "Biderstrasse 57",
+    "postcode": "3006",
+    "city": "Bern"
+   },
+   "truth": {
+    "lat": 46.95652877058927,
+    "lon": 7.479184867138762
+   },
+   "register": "Biderstrasse 57, 3006 Bern",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0114",
+   "kind": "clean",
+   "input": {
+    "address": "Route des Channes 2",
+    "postcode": "1076",
+    "city": "Ferlens VD"
+   },
+   "truth": {
+    "lat": 46.58866022139793,
+    "lon": 6.787853179151065
+   },
+   "register": "Route des Channes 2, 1076 Ferlens VD",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0115",
+   "kind": "clean",
+   "input": {
+    "address": "Bergstrasse 34",
+    "postcode": "8566",
+    "city": "Dotnacht"
+   },
+   "truth": {
+    "lat": 47.5937126524494,
+    "lon": 9.151236635476833
+   },
+   "register": "Bergstrasse 34, 8566 Dotnacht",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0116",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Roche-Blanche 48a, 1038 Bercher"
+   },
+   "truth": {
+    "lat": 46.69407002909038,
+    "lon": 6.708372894324183
+   },
+   "register": "Chemin de la Roche-Blanche 48a, 1038 Bercher",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0117",
+   "kind": "clean",
+   "input": {
+    "address": "Grand'Rue 44, 1176 St-Livres"
+   },
+   "truth": {
+    "lat": 46.50831502981934,
+    "lon": 6.388920770274198
+   },
+   "register": "Grand'Rue 44, 1176 St-Livres",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0118",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Lausanne 1",
+    "postcode": "1400",
+    "city": "Yverdon-les-Bains"
+   },
+   "truth": {
+    "lat": 46.76906688792285,
+    "lon": 6.652550985336589
+   },
+   "register": "Route de Lausanne 1, 1400 Yverdon-les-Bains",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0119",
+   "kind": "clean",
+   "input": {
+    "address": "Coin d'En Haut 5",
+    "postcode": "1092",
+    "city": "Belmont-sur-Lausanne"
+   },
+   "truth": {
+    "lat": 46.52026418865672,
+    "lon": 6.679926557375848
+   },
+   "register": "Coin d'En Haut 5, 1092 Belmont-sur-Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0120",
+   "kind": "clean",
+   "input": {
+    "address": "Crettaz 33",
+    "postcode": "1854",
+    "city": "Leysin"
+   },
+   "truth": {
+    "lat": 46.348263898398024,
+    "lon": 7.028117252465814
+   },
+   "register": "Crettaz 33, 1854 Leysin",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0121",
+   "kind": "clean",
+   "input": {
+    "address": "chemin agénor-parmelin 14b",
+    "postcode": "CH-1183",
+    "city": "bursins"
+   },
+   "truth": {
+    "lat": 46.451334918928644,
+    "lon": 6.291139185643771
+   },
+   "register": "Chemin Agénor-Parmelin 14b, 1183 Bursins",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0122",
+   "kind": "clean",
+   "input": {
+    "address": "Vorderbergstrasse 24c",
+    "postcode": "6318",
+    "city": "Walchwil"
+   },
+   "truth": {
+    "lat": 47.1062993601054,
+    "lon": 8.514743824473209
+   },
+   "register": "Vorderbergstrasse 24c, 6318 Walchwil",
+   "canton": "ZG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0123",
+   "kind": "clean",
+   "input": {
+    "address": "la Stráda Piazzéta 13 6677 Moghegno"
+   },
+   "truth": {
+    "lat": 46.239991404397095,
+    "lon": 8.705665433663992
+   },
+   "register": "la Stráda Piazzéta 13, 6677 Moghegno",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0124",
+   "kind": "clean",
+   "input": {
+    "address": "Dorfstrasse 26a",
+    "postcode": "3257",
+    "city": "Grossaffoltern"
+   },
+   "truth": {
+    "lat": 47.06608885422621,
+    "lon": 7.361646905651641
+   },
+   "register": "Dorfstrasse 26a, 3257 Grossaffoltern",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0125",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Plats 7, 1041 Naz"
+   },
+   "truth": {
+    "lat": 46.65753735999053,
+    "lon": 6.696323452253072
+   },
+   "register": "Chemin des Plats 7, 1041 Naz",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0126",
+   "kind": "clean",
+   "input": {
+    "address": "ROUTE DES CHAMPS 8, 1892 LAVEY-VILLAGE"
+   },
+   "truth": {
+    "lat": 46.22077917763756,
+    "lon": 7.019276732350008
+   },
+   "register": "Route des Champs 8, 1892 Lavey-Village",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0127",
+   "kind": "clean",
+   "input": {
+    "address": "Au Chalin 11 1624 La Verrerie"
+   },
+   "truth": {
+    "lat": 46.58932844348729,
+    "lon": 6.917791889432396
+   },
+   "register": "Au Chalin 11, 1624 Progens",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0128",
+   "kind": "clean",
+   "input": {
+    "address": "Grundeystrasse 54",
+    "postcode": "3862",
+    "city": "Innertkirchen"
+   },
+   "truth": {
+    "lat": 46.698419786909156,
+    "lon": 8.232535400909645
+   },
+   "register": "Grundeystrasse 54, 3862 Innertkirchen",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0129",
+   "kind": "clean",
+   "input": {
+    "address": "Häsingerstrasse 28, 4055 Basel"
+   },
+   "truth": {
+    "lat": 47.56284712910799,
+    "lon": 7.568836668035077
+   },
+   "register": "Häsingerstrasse 28, 4055 Basel",
+   "canton": "BS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0130",
+   "kind": "noPostcode",
+   "truth": {
+    "lat": 47.051501941772365,
+    "lon": 9.441395030150183
+   },
+   "register": "Ratellerstrasse 2, 7320 Sargans",
+   "canton": "SG",
+   "twin": false,
+   "input": {
+    "address": "Ratellerstrasse 2",
+    "city": "Sargans"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   }
+  },
+  {
+   "id": "a0131",
+   "kind": "clean",
+   "input": {
+    "address": "Dorfgasse 2",
+    "postcode": "9565",
+    "city": "Rothenhausen"
+   },
+   "truth": {
+    "lat": 47.54961488218672,
+    "lon": 9.101885320070116
+   },
+   "register": "Dorfgasse 2, 9565 Rothenhausen",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0132",
+   "kind": "clean",
+   "input": {
+    "address": "Ch. du Pré-Girard 61, 2067 Chaumont"
+   },
+   "truth": {
+    "lat": 47.05657429523138,
+    "lon": 6.986115496648827
+   },
+   "register": "Chemin du Pré-Girard 61, 2067 Chaumont",
+   "canton": "NE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0133",
+   "kind": "clean",
+   "input": {
+    "address": "allmendstrasse 19",
+    "postcode": "CH-4703",
+    "city": "kestenholz"
+   },
+   "truth": {
+    "lat": 47.27877653176611,
+    "lon": 7.758845109338051
+   },
+   "register": "Allmendstrasse 19, 4703 Kestenholz",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0134",
+   "kind": "clean",
+   "input": {
+    "address": "Les Cerisiers Neyret 6 1029 Villars-Ste-Croix"
+   },
+   "truth": {
+    "lat": 46.569316303108515,
+    "lon": 6.566470622693955
+   },
+   "register": "Les Cerisiers Neyret 6, 1029 Villars-Ste-Croix",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0135",
+   "kind": "clean",
+   "input": {
+    "address": "Rue des Alpes 10 1400 Yverdon-les-Bains"
+   },
+   "truth": {
+    "lat": 46.775002431239415,
+    "lon": 6.634607373995788
+   },
+   "register": "Rue des Alpes 10, 1400 Yverdon-les-Bains",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0136",
+   "kind": "clean",
+   "input": {
+    "address": "Avenue Antoine-Michel-Servan 11",
+    "postcode": "1006",
+    "city": "Lausanne"
+   },
+   "truth": {
+    "lat": 46.51250572066399,
+    "lon": 6.631864086986891
+   },
+   "register": "Avenue Antoine-Michel-Servan 11, 1006 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0137",
+   "kind": "clean",
+   "input": {
+    "address": "Vorder Waldi 2",
+    "postcode": "6463",
+    "city": "Bürglen (UR)"
+   },
+   "truth": {
+    "lat": 46.88757044537377,
+    "lon": 8.657287767903808
+   },
+   "register": "Vorder Waldi 2, 6463 Bürglen UR",
+   "canton": "UR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0138",
+   "kind": "clean",
+   "input": {
+    "address": "26 chemin du Grand-Voiret",
+    "postcode": "1228",
+    "city": "Plan-les-Ouates"
+   },
+   "truth": {
+    "lat": 46.17402976115734,
+    "lon": 6.111510910457071
+   },
+   "register": "Chemin du Grand-Voiret 26, 1228 Plan-les-Ouates",
+   "canton": "GE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0139",
+   "kind": "clean",
+   "input": {
+    "address": "Dammstrasse 28",
+    "postcode": "4562",
+    "city": "Biberist"
+   },
+   "truth": {
+    "lat": 47.17803390008143,
+    "lon": 7.562194134901372
+   },
+   "register": "Dammstrasse 28, 4562 Biberist",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0140",
+   "kind": "clean",
+   "input": {
+    "address": "ALTE LANDSTRASSE 30, 8193 EGLISAU"
+   },
+   "truth": {
+    "lat": 47.570758951691026,
+    "lon": 8.524595847533654
+   },
+   "register": "Alte Landstrasse 30, 8193 Eglisau",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0141",
+   "kind": "clean",
+   "input": {
+    "address": "Untergasse 16a",
+    "postcode": "4922",
+    "city": "Thunstetten"
+   },
+   "truth": {
+    "lat": 47.202814891503635,
+    "lon": 7.759423889986209
+   },
+   "register": "Untergasse 16a, 4922 Thunstetten",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0142",
+   "kind": "clean",
+   "input": {
+    "address": "RUE HAUTE 5, 1428 PROVENCE"
+   },
+   "truth": {
+    "lat": 46.89087517877632,
+    "lon": 6.726011985779767
+   },
+   "register": "Rue Haute 5, 1428 Provence",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0143",
+   "kind": "noPostcode",
+   "truth": {
+    "lat": 47.46549994613378,
+    "lon": 9.082459812253703
+   },
+   "register": "Dorfstrasse 13, 9523 Züberwangen",
+   "canton": "SG",
+   "twin": false,
+   "input": {
+    "address": "Dorfstrasse 13",
+    "city": "Züberwangen"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   }
+  },
+  {
+   "id": "a0144",
+   "kind": "clean",
+   "input": {
+    "address": "Stráda da Cariròra 5, 6822 Arogno"
+   },
+   "truth": {
+    "lat": 45.95681763966326,
+    "lon": 8.984015237792159
+   },
+   "register": "Stráda da Cariròra 5, 6822 Arogno",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0145",
+   "kind": "clean",
+   "input": {
+    "address": "chemin des sources 3d",
+    "postcode": "CH-1185",
+    "city": "mont-sur-rolle"
+   },
+   "truth": {
+    "lat": 46.466518361613794,
+    "lon": 6.340171729959789
+   },
+   "register": "Chemin des Sources 3d, 1185 Mont-sur-Rolle",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0146",
+   "kind": "postcodeSwapped",
+   "truth": {
+    "lat": 46.31816490872179,
+    "lon": 6.178080355641046
+   },
+   "register": "Route de Coppet 24, 1291 Commugny",
+   "canton": "VD",
+   "twin": false,
+   "input": {
+    "address": "Route de Coppet 24",
+    "postcode": "2191",
+    "city": "Commugny"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   },
+   "note": "postcode 1291 -> 2191"
+  },
+  {
+   "id": "a0147",
+   "kind": "clean",
+   "input": {
+    "address": "impasse champ le derrey 16",
+    "postcode": "CH-1674",
+    "city": "montet (glâne)"
+   },
+   "truth": {
+    "lat": 46.64531073819381,
+    "lon": 6.815512913421214
+   },
+   "register": "Impasse Champ le Derrey 16, 1674 Montet (Glâne)",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0148",
+   "kind": "clean",
+   "input": {
+    "address": "Rte de Chesalles 7a",
+    "postcode": "1512",
+    "city": "Chavannes-sur-Moudon"
+   },
+   "truth": {
+    "lat": 46.65790923364732,
+    "lon": 6.80909519865719
+   },
+   "register": "Route de Chesalles 7a, 1512 Chavannes-sur-Moudon",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0149",
+   "kind": "clean",
+   "input": {
+    "address": "BITTWILSTRASSE 17, 3305 JEGENSTORF"
+   },
+   "truth": {
+    "lat": 47.0678268521995,
+    "lon": 7.451420959934591
+   },
+   "register": "Bittwilstrasse 17, 3305 Scheunen",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0150",
+   "kind": "clean",
+   "input": {
+    "address": "Acherli 1",
+    "postcode": "6465",
+    "city": "Unterschächen"
+   },
+   "truth": {
+    "lat": 46.86663684562833,
+    "lon": 8.770198274393211
+   },
+   "register": "Acherli 1, 6465 Unterschächen",
+   "canton": "UR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0151",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Campanules 3",
+    "postcode": "1273",
+    "city": "Arzier-Le Muids"
+   },
+   "truth": {
+    "lat": 46.454063513887235,
+    "lon": 6.2118054920152055
+   },
+   "register": "Chemin des Campanules 3, 1273 Arzier-Le Muids",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0152",
+   "kind": "clean",
+   "input": {
+    "address": "Via Canton 15 6540 Castaneda"
+   },
+   "truth": {
+    "lat": 46.25801417130461,
+    "lon": 9.139376476740964
+   },
+   "register": "Via Canton 15, 6540 Castaneda",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0153",
+   "kind": "clean",
+   "input": {
+    "address": "14 chemin du Bochet",
+    "postcode": "1032",
+    "city": "Romanel-sur-Lausanne"
+   },
+   "truth": {
+    "lat": 46.56417701266744,
+    "lon": 6.5971532316893455
+   },
+   "register": "Chemin du Bochet 14, 1032 Romanel-sur-Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0154",
+   "kind": "clean",
+   "input": {
+    "address": "Schenkenrütiring 16 6280 Hochdorf"
+   },
+   "truth": {
+    "lat": 47.16129583196513,
+    "lon": 8.295944596540426
+   },
+   "register": "Schenkenrütiring 16, 6280 Hochdorf",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0155",
+   "kind": "clean",
+   "input": {
+    "address": "Dörfli 7g",
+    "postcode": "4919",
+    "city": "Reisiswil"
+   },
+   "truth": {
+    "lat": 47.165885381219226,
+    "lon": 7.845643869651373
+   },
+   "register": "Dörfli 7g, 4919 Reisiswil",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0156",
+   "kind": "clean",
+   "input": {
+    "address": "chemin du coteau 27",
+    "postcode": "CH-1422",
+    "city": "grandson"
+   },
+   "truth": {
+    "lat": 46.799022043961514,
+    "lon": 6.624770673045841
+   },
+   "register": "Chemin du Coteau 27, 1422 Grandson",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0157",
+   "kind": "clean",
+   "input": {
+    "address": "91b route de Saussivue",
+    "postcode": "1663",
+    "city": "Gruyères"
+   },
+   "truth": {
+    "lat": 46.57851258336214,
+    "lon": 7.0859534627841665
+   },
+   "register": "Route de Saussivue 91b, 1663 Gruyères",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0158",
+   "kind": "clean",
+   "input": {
+    "address": "chemin de la mellette 26",
+    "postcode": "CH-1081",
+    "city": "montpreveyres"
+   },
+   "truth": {
+    "lat": 46.577831259933276,
+    "lon": 6.7289323650022785
+   },
+   "register": "Chemin de la Mellette 26, 1081 Montpreveyres",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0159",
+   "kind": "clean",
+   "input": {
+    "address": "Route de la Gruyère 38 1634 La Roche FR"
+   },
+   "truth": {
+    "lat": 46.692564978434675,
+    "lon": 7.133836536587577
+   },
+   "register": "Route de la Gruyère 38, 1634 La Roche FR",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0160",
+   "kind": "clean",
+   "input": {
+    "address": "Route du Mollendruz 2",
+    "postcode": "1148",
+    "city": "L'Isle"
+   },
+   "truth": {
+    "lat": 46.62034183287252,
+    "lon": 6.413987326437211
+   },
+   "register": "Route du Mollendruz 2, 1148 L'Isle",
+   "canton": "VD",
+   "twin": true,
+   "expect": {
+    "status": [
+     "check"
+    ]
+   }
+  },
+  {
+   "id": "a0161",
+   "kind": "clean",
+   "input": {
+    "address": "Fraissen 94",
+    "postcode": "7145",
+    "city": "Lumnezia"
+   },
+   "truth": {
+    "lat": 46.70590041411048,
+    "lon": 9.169232467959574
+   },
+   "register": "Fraissen 94, 7145 Degen",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0162",
+   "kind": "clean",
+   "input": {
+    "address": "Tittwiesenstr. 120",
+    "postcode": "7000",
+    "city": "Chur"
+   },
+   "truth": {
+    "lat": 46.86355831962482,
+    "lon": 9.526107711565594
+   },
+   "register": "Tittwiesenstrasse 120, 7000 Chur",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0163",
+   "kind": "clean",
+   "input": {
+    "address": "Sägegasse 72b",
+    "postcode": "3556",
+    "city": "Trub"
+   },
+   "truth": {
+    "lat": 46.94277511426963,
+    "lon": 7.884336710675064
+   },
+   "register": "Sägegasse 72b, 3556 Trub",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0164",
+   "kind": "clean",
+   "input": {
+    "address": "QUADRELLA 21, 7417 PASPELS"
+   },
+   "truth": {
+    "lat": 46.75117607978778,
+    "lon": 9.43887535401642
+   },
+   "register": "Quadrella 21, 7417 Paspels",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0165",
+   "kind": "clean",
+   "input": {
+    "address": "Avenue de Florissant 32",
+    "postcode": "1020",
+    "city": "Renens VD"
+   },
+   "truth": {
+    "lat": 46.53219391988319,
+    "lon": 6.598090669580859
+   },
+   "register": "Avenue de Florissant 32, 1020 Renens VD",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0166",
+   "kind": "numberOtherBuilding",
+   "truth": {
+    "lat": 46.480165836368705,
+    "lon": 6.229490734737331
+   },
+   "register": "Route des Montagnes 5, 1261 Le Vaud",
+   "canton": "VD",
+   "twin": true,
+   "input": {
+    "address": "Route des Montagnes 30",
+    "postcode": "1261",
+    "city": "Le Vaud"
+   },
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   },
+   "note": "number 5 -> 30, which is another real building (undetectable by design: the address exists)"
+  },
+  {
+   "id": "a0167",
+   "kind": "clean",
+   "input": {
+    "address": "Vietta Plaun San Gian 11, 7505 Celerina/Schlarigna"
+   },
+   "truth": {
+    "lat": 46.513827884535445,
+    "lon": 9.872792211715002
+   },
+   "register": "Vietta Plaun San Gian 11, 7505 Celerina/Schlarigna",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0168",
+   "kind": "clean",
+   "input": {
+    "address": "Route d'Yverdon 13, 1033 Cheseaux-sur-Lausanne"
+   },
+   "truth": {
+    "lat": 46.587491436006786,
+    "lon": 6.606026580649417
+   },
+   "register": "Route d'Yverdon 13, 1033 Cheseaux-sur-Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0169",
+   "kind": "clean",
+   "input": {
+    "address": "ED.-HUBERSTRASSE 7, 6022 GROSSWANGEN"
+   },
+   "truth": {
+    "lat": 47.13183960872619,
+    "lon": 8.053259946518159
+   },
+   "register": "Ed.-Huberstrasse 7, 6022 Grosswangen",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0170",
+   "kind": "clean",
+   "input": {
+    "address": "Im Holzerhurd 58a, 8046 Zürich"
+   },
+   "truth": {
+    "lat": 47.423402447338646,
+    "lon": 8.496478032333364
+   },
+   "register": "Im Holzerhurd 58a, 8046 Zürich",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0171",
+   "kind": "clean",
+   "input": {
+    "address": "Eichbergerstr. 40, 9450 Altstätten SG"
+   },
+   "truth": {
+    "lat": 47.36931020771774,
+    "lon": 9.54016305446866
+   },
+   "register": "Eichbergerstrasse 40, 9450 Altstätten SG",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0172",
+   "kind": "clean",
+   "input": {
+    "address": "ROUTE DE LA BRÉVIRE 19E, 1553 CHÂTONNAYE"
+   },
+   "truth": {
+    "lat": 46.75406019424466,
+    "lon": 6.951290618254036
+   },
+   "register": "Route de la Brévire 19e, 1553 Châtonnaye",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0173",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Grandchamp 5, 1018 Lausanne"
+   },
+   "truth": {
+    "lat": 46.53397928131112,
+    "lon": 6.633936796196541
+   },
+   "register": "Chemin du Grandchamp 5, 1018 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0174",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Epillets 3, 1846 Chessel"
+   },
+   "truth": {
+    "lat": 46.348873708122035,
+    "lon": 6.892946642959584
+   },
+   "register": "Chemin des Epillets 3, 1846 Chessel",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0175",
+   "kind": "numberMissingInRegister",
+   "truth": {
+    "lat": 47.48896255950768,
+    "lon": 9.002958491929594
+   },
+   "register": "Rebenstrasse 15, 9543 St. Margarethen TG",
+   "canton": "TG",
+   "twin": false,
+   "input": {
+    "address": "Rebenstrasse 12",
+    "postcode": "9543",
+    "city": "St. Margarethen TG"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "houseNumber"
+    ]
+   },
+   "note": "number 15 -> 12, not in the register"
+  },
+  {
+   "id": "a0176",
+   "kind": "clean",
+   "input": {
+    "address": "Sentier de la Vignette 4 1530 Payerne"
+   },
+   "truth": {
+    "lat": 46.81625516743439,
+    "lon": 6.938551286942291
+   },
+   "register": "Sentier de la Vignette 4, 1530 Payerne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0177",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Châbles 16a 1807 Blonay"
+   },
+   "truth": {
+    "lat": 46.45974757897098,
+    "lon": 6.882019816460063
+   },
+   "register": "Chemin des Châbles 16a, 1807 Blonay",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0178",
+   "kind": "numberOtherBuilding",
+   "truth": {
+    "lat": 46.662744842238254,
+    "lon": 6.506598553032973
+   },
+   "register": "Le Pré des Buis 39, 1315 La Sarraz",
+   "canton": "VD",
+   "twin": false,
+   "input": {
+    "address": "Le Pré des Buis 26",
+    "postcode": "1315",
+    "city": "La Sarraz"
+   },
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   },
+   "note": "number 39 -> 26, which is another real building (undetectable by design: the address exists)"
+  },
+  {
+   "id": "a0179",
+   "kind": "clean",
+   "input": {
+    "address": "Heinimoosstrasse 12",
+    "postcode": "5734",
+    "city": "Reinach AG"
+   },
+   "truth": {
+    "lat": 47.25370378793772,
+    "lon": 8.168282786425078
+   },
+   "register": "Heinimoosstrasse 12, 5734 Reinach AG",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0180",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Bâle 38, 2800 Delémont"
+   },
+   "truth": {
+    "lat": 47.367012780310276,
+    "lon": 7.349204477495456
+   },
+   "register": "Route de Bâle 38, 2800 Delémont",
+   "canton": "JU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0181",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Crépon 20, 1040 Echallens"
+   },
+   "truth": {
+    "lat": 46.63418615355714,
+    "lon": 6.630691756901853
+   },
+   "register": "Chemin du Crépon 20, 1040 Echallens",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0182",
+   "kind": "clean",
+   "input": {
+    "address": "Lindenstrasse 7, 9050 Appenzell Enggenhütten"
+   },
+   "truth": {
+    "lat": 47.35584271148303,
+    "lon": 9.36553687235173
+   },
+   "register": "Lindenstrasse 7, 9050 Appenzell Enggenhütten",
+   "canton": "AI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0183",
+   "kind": "numberMissingInRegister",
+   "truth": {
+    "lat": 46.290171066220985,
+    "lon": 6.164270475221253
+   },
+   "register": "Chemin de Versoix-la-Ville 30, 1290 Versoix",
+   "canton": "GE",
+   "twin": false,
+   "input": {
+    "address": "Chemin de Versoix-la-Ville 71",
+    "postcode": "1290",
+    "city": "Versoix"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "houseNumber"
+    ]
+   },
+   "note": "number 30 -> 71, not in the register"
+  },
+  {
+   "id": "a0184",
+   "kind": "clean",
+   "input": {
+    "address": "Binna 7, 3994 Lax"
+   },
+   "truth": {
+    "lat": 46.387624869355896,
+    "lon": 8.1135644340505
+   },
+   "register": "Binna 7, 3994 Lax",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0185",
+   "kind": "clean",
+   "input": {
+    "address": "Sodackerstrasse 10, 4133 Pratteln"
+   },
+   "truth": {
+    "lat": 47.51842031045539,
+    "lon": 7.7026533773586054
+   },
+   "register": "Sodackerstrasse 10, 4133 Pratteln",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0186",
+   "kind": "postcodeSwapped",
+   "truth": {
+    "lat": 46.13063021098898,
+    "lon": 7.091991308291934
+   },
+   "register": "Rue de la Chapelle 17, 1926 Fully",
+   "canton": "VS",
+   "twin": false,
+   "input": {
+    "address": "Rue de la Chapelle 17",
+    "postcode": "1296",
+    "city": "Fully"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   },
+   "note": "postcode 1926 -> 1296"
+  },
+  {
+   "id": "a0187",
+   "kind": "clean",
+   "input": {
+    "address": "bruggwaldstrasse 33",
+    "postcode": "CH-9008",
+    "city": "st. gallen"
+   },
+   "truth": {
+    "lat": 47.44561908197567,
+    "lon": 9.395417141410611
+   },
+   "register": "Bruggwaldstrasse 33, 9008 St. Gallen",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0188",
+   "kind": "clean",
+   "input": {
+    "address": "Weiherhofstrasse 162, 4054 Basel"
+   },
+   "truth": {
+    "lat": 47.546876813179466,
+    "lon": 7.557743399999789
+   },
+   "register": "Weiherhofstrasse 162, 4054 Basel",
+   "canton": "BS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0189",
+   "kind": "clean",
+   "input": {
+    "address": "Kantonsstrasse 18 6234 Triengen"
+   },
+   "truth": {
+    "lat": 47.231027811406925,
+    "lon": 8.080552537010185
+   },
+   "register": "Kantonsstrasse 18, 6234 Triengen",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0190",
+   "kind": "clean",
+   "input": {
+    "address": "baslerstrasse 2c",
+    "postcode": "CH-4102",
+    "city": "binningen"
+   },
+   "truth": {
+    "lat": 47.54336818114506,
+    "lon": 7.577993462698119
+   },
+   "register": "Baslerstrasse 2c, 4102 Binningen",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0191",
+   "kind": "clean",
+   "input": {
+    "address": "Fideren 2",
+    "postcode": "9450",
+    "city": "Altstätten"
+   },
+   "truth": {
+    "lat": 47.37970201351956,
+    "lon": 9.52428813613705
+   },
+   "register": "Fideren 2, 9450 Altstätten SG",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0192",
+   "kind": "clean",
+   "input": {
+    "address": "Rue des Tisserands 20, 1510 Moudon"
+   },
+   "truth": {
+    "lat": 46.66999740670248,
+    "lon": 6.79832644899293
+   },
+   "register": "Rue des Tisserands 20, 1510 Moudon",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0193",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Sorbiers 4 1269 Bassins"
+   },
+   "truth": {
+    "lat": 46.471573296596404,
+    "lon": 6.2243735948180765
+   },
+   "register": "Chemin des Sorbiers 4, 1269 Bassins",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0194",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Mellette 11d, 1081 Montpreveyres"
+   },
+   "truth": {
+    "lat": 46.578147869830424,
+    "lon": 6.73306004256023
+   },
+   "register": "Chemin de la Mellette 11d, 1081 Montpreveyres",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0195",
+   "kind": "clean",
+   "input": {
+    "address": "Avenue du Temple 28a 1012 Lausanne"
+   },
+   "truth": {
+    "lat": 46.531384416151006,
+    "lon": 6.650760027651481
+   },
+   "register": "Avenue du Temple 28a, 1012 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0196",
+   "kind": "postcodeSwapped",
+   "truth": {
+    "lat": 46.71441445336608,
+    "lon": 6.9729744669908555
+   },
+   "register": "Chemin de la Rapetta 20a, 1690 Villaz-St-Pierre",
+   "canton": "FR",
+   "twin": false,
+   "input": {
+    "address": "Chemin de la Rapetta 20a",
+    "postcode": "1609",
+    "city": "Villaz-St-Pierre"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   },
+   "note": "postcode 1690 -> 1609"
+  },
+  {
+   "id": "a0197",
+   "kind": "clean",
+   "input": {
+    "address": "Rütistrasse 6 8844 Euthal"
+   },
+   "truth": {
+    "lat": 47.08440200768582,
+    "lon": 8.81590730540851
+   },
+   "register": "Rütistrasse 6, 8844 Euthal",
+   "canton": "SZ",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0198",
+   "kind": "clean",
+   "input": {
+    "address": "Brentschen 45",
+    "postcode": "3957",
+    "city": "Erschmatt"
+   },
+   "truth": {
+    "lat": 46.32820406891355,
+    "lon": 7.694203917211886
+   },
+   "register": "Brentschen 45, 3957 Erschmatt",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0199",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Tuilière 30 1805 Jongny"
+   },
+   "truth": {
+    "lat": 46.487125889560154,
+    "lon": 6.841938187226585
+   },
+   "register": "Chemin de la Tuilière 30, 1805 Jongny",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0200",
+   "kind": "clean",
+   "input": {
+    "address": "Rathausgasse 3",
+    "postcode": "6060",
+    "city": "Sarnen"
+   },
+   "truth": {
+    "lat": 46.89531892711719,
+    "lon": 8.244845084863409
+   },
+   "register": "Rathausgasse 3, 6060 Sarnen",
+   "canton": "OW",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0201",
+   "kind": "clean",
+   "input": {
+    "address": "Römerstrasse 24",
+    "postcode": "8214",
+    "city": "Gächlingen"
+   },
+   "truth": {
+    "lat": 47.70215637277394,
+    "lon": 8.502855010522943
+   },
+   "register": "Römerstrasse 24, 8214 Gächlingen",
+   "canton": "SH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0202",
+   "kind": "clean",
+   "input": {
+    "address": "Bachgässchen 6, 4125 Riehen"
+   },
+   "truth": {
+    "lat": 47.585943147136966,
+    "lon": 7.651372388451514
+   },
+   "register": "Bachgässchen 6, 4125 Riehen",
+   "canton": "BS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0203",
+   "kind": "clean",
+   "input": {
+    "address": "Route de la Planniaz 6, 1833 Les Avants"
+   },
+   "truth": {
+    "lat": 46.46273267988931,
+    "lon": 6.946094853340493
+   },
+   "register": "Route de la Planniaz 6, 1833 Les Avants",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0204",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Miroir 73, 1090 La Croix (Lutry)"
+   },
+   "truth": {
+    "lat": 46.51428517076088,
+    "lon": 6.706356533693611
+   },
+   "register": "Chemin du Miroir 73, 1090 La Croix (Lutry)",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0205",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Lausanne 21, 1400 Yverdon-les-Bains"
+   },
+   "truth": {
+    "lat": 46.76338910618892,
+    "lon": 6.649576952598262
+   },
+   "register": "Route de Lausanne 21, 1400 Yverdon-les-Bains",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0206",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de Chatruffe 34 1092 Belmont-sur-Lausanne"
+   },
+   "truth": {
+    "lat": 46.52553107654686,
+    "lon": 6.683248374274296
+   },
+   "register": "Chemin de Chatruffe 34, 1092 Belmont-sur-Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0207",
+   "kind": "postcodeSwapped",
+   "truth": {
+    "lat": 46.61998354856078,
+    "lon": 6.596946065916906
+   },
+   "register": "Route de Boussens 10a, 1042 Bioley-Orjulaz",
+   "canton": "VD",
+   "twin": false,
+   "input": {
+    "address": "Route de Boussens 10a",
+    "postcode": "1402",
+    "city": "Bioley-Orjulaz"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   },
+   "note": "postcode 1042 -> 1402"
+  },
+  {
+   "id": "a0208",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Millière 5, 1052 Le Mont-sur-Lausanne"
+   },
+   "truth": {
+    "lat": 46.560468281322834,
+    "lon": 6.6259010965945375
+   },
+   "register": "Chemin de la Millière 5, 1052 Le Mont-sur-Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0209",
+   "kind": "clean",
+   "input": {
+    "address": "Rousseaustrasse 70",
+    "postcode": "8037",
+    "city": "Zürich"
+   },
+   "truth": {
+    "lat": 47.39077863753331,
+    "lon": 8.53221246324475
+   },
+   "register": "Rousseaustrasse 70, 8037 Zürich",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0210",
+   "kind": "clean",
+   "input": {
+    "address": "Oberhusrain 12 6010 Kriens"
+   },
+   "truth": {
+    "lat": 47.03923517087542,
+    "lon": 8.282941326005812
+   },
+   "register": "Oberhusrain 12, 6010 Kriens",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0211",
+   "kind": "garbage",
+   "input": {
+    "address": "cdzfnbjt cpfnbq",
+    "postcode": "8049",
+    "city": "gwlqhhyzw"
+   },
+   "expect": {
+    "status": [
+     "notfound"
+    ]
+   }
+  },
+  {
+   "id": "a0212",
+   "kind": "clean",
+   "input": {
+    "address": "Hagi 6c 3662 Seftigen"
+   },
+   "truth": {
+    "lat": 46.79138191338568,
+    "lon": 7.522725087431125
+   },
+   "register": "Hagi 6c, 3662 Seftigen",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0213",
+   "kind": "clean",
+   "input": {
+    "address": "Riedhofstrasse 40, 8408 Winterthur"
+   },
+   "truth": {
+    "lat": 47.51240044050675,
+    "lon": 8.694503068200056
+   },
+   "register": "Riedhofstrasse 40, 8408 Winterthur",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0214",
+   "kind": "clean",
+   "input": {
+    "address": "RUE DE LA BOUGNE 16, 1607 PALÉZIEUX-VILLAGE"
+   },
+   "truth": {
+    "lat": 46.555172179079136,
+    "lon": 6.832688487466564
+   },
+   "register": "Rue de la Bougne 16, 1607 Palézieux-Village",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0215",
+   "kind": "clean",
+   "input": {
+    "address": "Rickenstrasse 12a",
+    "postcode": "9630",
+    "city": "Wattwil"
+   },
+   "truth": {
+    "lat": 47.30038273706689,
+    "lon": 9.084118647546195
+   },
+   "register": "Rickenstrasse 12a, 9630 Wattwil",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0216",
+   "kind": "clean",
+   "input": {
+    "address": "5 route de Sumont",
+    "postcode": "1030",
+    "city": "Bussigny"
+   },
+   "truth": {
+    "lat": 46.55535633743814,
+    "lon": 6.554786907857205
+   },
+   "register": "Route de Sumont 5, 1030 Bussigny",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0217",
+   "kind": "clean",
+   "input": {
+    "address": "Madretschstrasse / Rue de Madretsch 27b, 2503 Biel/Bienne"
+   },
+   "truth": {
+    "lat": 47.1330256819133,
+    "lon": 7.252749430507671
+   },
+   "register": "Madretschstrasse / Rue de Madretsch 27b, 2503 Biel/Bienne",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0218",
+   "kind": "clean",
+   "input": {
+    "address": "Tälligstrasse 9 8570 Weinfelden"
+   },
+   "truth": {
+    "lat": 47.56381560382272,
+    "lon": 9.103985605886031
+   },
+   "register": "Tälligstrasse 9, 8570 Weinfelden",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0219",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de l'Etang 5, 1037 Etagnières"
+   },
+   "truth": {
+    "lat": 46.60159463282884,
+    "lon": 6.612814469359735
+   },
+   "register": "Chemin de l'Etang 5, 1037 Etagnières",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0220",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de l'Ondine 4, 1008 Prilly"
+   },
+   "truth": {
+    "lat": 46.539832452897,
+    "lon": 6.599898421782415
+   },
+   "register": "Chemin de l'Ondine 4, 1008 Prilly",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0221",
+   "kind": "clean",
+   "input": {
+    "address": "Route Suisse 6",
+    "postcode": "1166",
+    "city": "Perroy"
+   },
+   "truth": {
+    "lat": 46.46626570418843,
+    "lon": 6.377376062761101
+   },
+   "register": "Route Suisse 6, 1166 Perroy",
+   "canton": "VD",
+   "twin": true,
+   "expect": {
+    "status": [
+     "check"
+    ]
+   }
+  },
+  {
+   "id": "a0222",
+   "kind": "clean",
+   "input": {
+    "address": "Riedweg 46, 3995 Ausserbinn"
+   },
+   "truth": {
+    "lat": 46.38344759059202,
+    "lon": 8.145707391078805
+   },
+   "register": "Riedweg 46, 3995 Ausserbinn",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0223",
+   "kind": "clean",
+   "input": {
+    "address": "Seewies 5a",
+    "postcode": "8594",
+    "city": "Güttingen"
+   },
+   "truth": {
+    "lat": 47.60874887382942,
+    "lon": 9.296125147197175
+   },
+   "register": "Seewies 5a, 8594 Güttingen",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0224",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Crêt des Biolles 2a",
+    "postcode": "1521",
+    "city": "Curtilles"
+   },
+   "truth": {
+    "lat": 46.70131073562905,
+    "lon": 6.852875825006948
+   },
+   "register": "Chemin du Crêt des Biolles 2a, 1521 Curtilles",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0225",
+   "kind": "clean",
+   "input": {
+    "address": "CHEMIN MAGNIN 8, 1261 LONGIROD"
+   },
+   "truth": {
+    "lat": 46.495813432734536,
+    "lon": 6.259704770060748
+   },
+   "register": "Chemin Magnin 8, 1261 Longirod",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0226",
+   "kind": "typo",
+   "truth": {
+    "lat": 46.214755588534494,
+    "lon": 7.58549480531495
+   },
+   "register": "Place de la Tour 17, 3961 Vissoie",
+   "canton": "VS",
+   "twin": false,
+   "input": {
+    "address": "Placce de la Tour 17",
+    "postcode": "3961",
+    "city": "Vissoie"
+   },
+   "expect": {
+    "status": [
+     "exact",
+     "check"
+    ]
+   },
+   "note": "street \"Place de la Tour\" -> \"Placce de la Tour\""
+  },
+  {
+   "id": "a0227",
+   "kind": "clean",
+   "input": {
+    "address": "Rue des Vergers 6, 1545 Chevroux"
+   },
+   "truth": {
+    "lat": 46.88639779935823,
+    "lon": 6.904809799076136
+   },
+   "register": "Rue des Vergers 6, 1545 Chevroux",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0228",
+   "kind": "clean",
+   "input": {
+    "address": "2 chemin de la Tour de Gourze",
+    "postcode": "1072",
+    "city": "Forel (Lavaux)"
+   },
+   "truth": {
+    "lat": 46.524367814342526,
+    "lon": 6.767415647886043
+   },
+   "register": "Chemin de la Tour de Gourze 2, 1072 Forel (Lavaux)",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0229",
+   "kind": "typo",
+   "truth": {
+    "lat": 47.318742339522075,
+    "lon": 9.483411733737828
+   },
+   "register": "Egglistrasse 55a, 9050 Appenzell Steinegg",
+   "canton": "AI",
+   "twin": false,
+   "input": {
+    "address": "Egglsitrasse 55a",
+    "postcode": "9050",
+    "city": "Appenzell Steinegg"
+   },
+   "expect": {
+    "status": [
+     "exact",
+     "check"
+    ]
+   },
+   "note": "street \"Egglistrasse\" -> \"Egglsitrasse\""
+  },
+  {
+   "id": "a0230",
+   "kind": "clean",
+   "input": {
+    "address": "Ch. du Pré-au-Seigneur 4a, 1066 Epalinges"
+   },
+   "truth": {
+    "lat": 46.551373961095784,
+    "lon": 6.665195844838061
+   },
+   "register": "Chemin du Pré-au-Seigneur 4a, 1066 Epalinges",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0231",
+   "kind": "clean",
+   "input": {
+    "address": "16 avenue du Théâtre",
+    "postcode": "1005",
+    "city": "Lausanne"
+   },
+   "truth": {
+    "lat": 46.517833115923416,
+    "lon": 6.637725380677853
+   },
+   "register": "Avenue du Théâtre 16, 1005 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0232",
+   "kind": "clean",
+   "input": {
+    "address": "Dorfstrasse 28, 7438 Hinterrhein"
+   },
+   "truth": {
+    "lat": 46.531019925222076,
+    "lon": 9.198707787519337
+   },
+   "register": "Dorfstrasse 28, 7438 Hinterrhein",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0233",
+   "kind": "clean",
+   "input": {
+    "address": "Höhenstrasse 36",
+    "postcode": "6454",
+    "city": "Flüelen"
+   },
+   "truth": {
+    "lat": 46.912562874610074,
+    "lon": 8.624171614266226
+   },
+   "register": "Höhenstrasse 36, 6454 Flüelen",
+   "canton": "UR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0234",
+   "kind": "clean",
+   "input": {
+    "address": "SONNHALDE 4, 9107 URNÄSCH"
+   },
+   "truth": {
+    "lat": 47.31906708969419,
+    "lon": 9.284681824581346
+   },
+   "register": "Sonnhalde 4, 9107 Urnäsch",
+   "canton": "AR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0235",
+   "kind": "clean",
+   "input": {
+    "address": "Langholzstrasse 30b, 6333 Hünenberg See"
+   },
+   "truth": {
+    "lat": 47.17257420072098,
+    "lon": 8.446435905661279
+   },
+   "register": "Langholzstrasse 30b, 6333 Hünenberg See",
+   "canton": "ZG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0236",
+   "kind": "clean",
+   "input": {
+    "address": "Panoramastrasse 1 4622 Egerkingen"
+   },
+   "truth": {
+    "lat": 47.32524739322942,
+    "lon": 7.799044951924255
+   },
+   "register": "Panoramastrasse 1, 4622 Egerkingen",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0237",
+   "kind": "clean",
+   "input": {
+    "address": "Route de la Pontille 74a, 1618 Châtel-Saint-Denis"
+   },
+   "truth": {
+    "lat": 46.52563926515629,
+    "lon": 6.907033294583714
+   },
+   "register": "Route de la Pontille 74a, 1618 Châtel-St-Denis",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0238",
+   "kind": "clean",
+   "input": {
+    "address": "CHEMIN PRÉS-CHAMP 9, 1273 ARZIER-LE MUIDS"
+   },
+   "truth": {
+    "lat": 46.456854036687304,
+    "lon": 6.217215978409089
+   },
+   "register": "Chemin Prés-Champ 9, 1273 Arzier-Le Muids",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0239",
+   "kind": "clean",
+   "input": {
+    "address": "Obereggerstrasse 52c",
+    "postcode": "9442",
+    "city": "Büriswilen"
+   },
+   "truth": {
+    "lat": 47.43339814308615,
+    "lon": 9.600138656555977
+   },
+   "register": "Obereggerstrasse 52c, 9442 Büriswilen",
+   "canton": "AI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0240",
+   "kind": "clean",
+   "input": {
+    "address": "Eimattstrasse 37a",
+    "postcode": "4436",
+    "city": "Oberdorf BL"
+   },
+   "truth": {
+    "lat": 47.39299441053058,
+    "lon": 7.7505142704867565
+   },
+   "register": "Eimattstrasse 37a, 4436 Oberdorf BL",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0241",
+   "kind": "clean",
+   "input": {
+    "address": "Route de la Barbeyre 18",
+    "postcode": "1407",
+    "city": "Gossens"
+   },
+   "truth": {
+    "lat": 46.74111372372829,
+    "lon": 6.701129328259293
+   },
+   "register": "Route de la Barbeyre 18, 1407 Gossens",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0242",
+   "kind": "clean",
+   "input": {
+    "address": "Kenzenaustrasse 13",
+    "postcode": "9223",
+    "city": "Schweizersholz"
+   },
+   "truth": {
+    "lat": 47.50284740289769,
+    "lon": 9.187766108908102
+   },
+   "register": "Kenzenaustrasse 13, 9223 Schweizersholz",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0243",
+   "kind": "clean",
+   "input": {
+    "address": "Thunstrasse 14, 1712 Tafers"
+   },
+   "truth": {
+    "lat": 46.81636440922343,
+    "lon": 7.22076039864806
+   },
+   "register": "Thunstrasse 14, 1712 Tafers",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0244",
+   "kind": "garbage",
+   "input": {
+    "address": "???",
+    "postcode": "0000"
+   },
+   "expect": {
+    "status": [
+     "notfound"
+    ]
+   }
+  },
+  {
+   "id": "a0245",
+   "kind": "clean",
+   "input": {
+    "address": "oberfeldweg 22",
+    "postcode": "CH-5703",
+    "city": "seon"
+   },
+   "truth": {
+    "lat": 47.34146783051912,
+    "lon": 8.164234309615388
+   },
+   "register": "Oberfeldweg 22, 5703 Seon",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0246",
+   "kind": "clean",
+   "input": {
+    "address": "Spalen 1 B",
+    "postcode": "4206",
+    "city": "Seewen SO"
+   },
+   "truth": {
+    "lat": 47.43993570012988,
+    "lon": 7.650767965738371
+   },
+   "register": "Spalen 1b, 4206 Seewen SO",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0247",
+   "kind": "clean",
+   "input": {
+    "address": "Jurastrasse 4, 4658 Däniken SO"
+   },
+   "truth": {
+    "lat": 47.35299788403647,
+    "lon": 7.97795747128758
+   },
+   "register": "Jurastrasse 4, 4658 Däniken SO",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0248",
+   "kind": "clean",
+   "input": {
+    "address": "Le Perrey 65, 1921 Martigny-Croix"
+   },
+   "truth": {
+    "lat": 46.087090914061086,
+    "lon": 7.048874835954781
+   },
+   "register": "Le Perrey 65, 1921 Martigny-Croix",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0249",
+   "kind": "typo",
+   "truth": {
+    "lat": 46.76567693265987,
+    "lon": 7.6354857149502475
+   },
+   "register": "Traubenweg 103, 3612 Steffisburg",
+   "canton": "BE",
+   "twin": false,
+   "input": {
+    "address": "Traubenpeg 103",
+    "postcode": "3612",
+    "city": "Steffisburg"
+   },
+   "expect": {
+    "status": [
+     "exact",
+     "check"
+    ]
+   },
+   "note": "street \"Traubenweg\" -> \"Traubenpeg\""
+  },
+  {
+   "id": "a0250",
+   "kind": "clean",
+   "input": {
+    "address": "Gloriweg 14, 6403 Küssnacht (SZ)"
+   },
+   "truth": {
+    "lat": 47.08378256144894,
+    "lon": 8.43180197497417
+   },
+   "register": "Gloriweg 14, 6403 Küssnacht am Rigi",
+   "canton": "SZ",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0251",
+   "kind": "clean",
+   "input": {
+    "address": "Rousseaustrasse 62",
+    "postcode": "8037",
+    "city": "Zürich"
+   },
+   "truth": {
+    "lat": 47.39025660249331,
+    "lon": 8.532697512593712
+   },
+   "register": "Rousseaustrasse 62, 8037 Zürich",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0252",
+   "kind": "clean",
+   "input": {
+    "address": "Schützenweg 12",
+    "postcode": "4104",
+    "city": "Oberwil BL"
+   },
+   "truth": {
+    "lat": 47.512973473563015,
+    "lon": 7.548427146741536
+   },
+   "register": "Schützenweg 12, 4104 Oberwil BL",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0253",
+   "kind": "clean",
+   "input": {
+    "address": "KERENZERBERGSTRASSE 85, 8757 FILZBACH"
+   },
+   "truth": {
+    "lat": 47.120620514426015,
+    "lon": 9.117462074632101
+   },
+   "register": "Kerenzerbergstrasse 85, 8757 Filzbach",
+   "canton": "GL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0254",
+   "kind": "clean",
+   "input": {
+    "address": "Moosackerweg 11a",
+    "postcode": "4105",
+    "city": "Biel-Benken BL"
+   },
+   "truth": {
+    "lat": 47.51000234287811,
+    "lon": 7.518692150954672
+   },
+   "register": "Moosackerweg 11a, 4105 Biel-Benken BL",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0255",
+   "kind": "clean",
+   "input": {
+    "address": "Sentier de Courtaraye 12, 1073 Savigny"
+   },
+   "truth": {
+    "lat": 46.53941377592185,
+    "lon": 6.733738591813697
+   },
+   "register": "Sentier de Courtaraye 12, 1073 Savigny",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0256",
+   "kind": "clean",
+   "input": {
+    "address": "Klibenstrasse 131, 3954 Leukerbad"
+   },
+   "truth": {
+    "lat": 46.38640968889652,
+    "lon": 7.627246197167898
+   },
+   "register": "Klibenstrasse 131, 3954 Leukerbad",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0257",
+   "kind": "clean",
+   "input": {
+    "address": "Hintere Bahnhofstr. 12d, 5034 Suhr"
+   },
+   "truth": {
+    "lat": 47.37037924205352,
+    "lon": 8.082951522725331
+   },
+   "register": "Hintere Bahnhofstrasse 12d, 5034 Suhr",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0258",
+   "kind": "clean",
+   "input": {
+    "address": "Dorfstrasse 58, 3818 Grindelwald"
+   },
+   "truth": {
+    "lat": 46.62468524793782,
+    "lon": 8.03010943145528
+   },
+   "register": "Dorfstrasse 58, 3818 Grindelwald",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0259",
+   "kind": "clean",
+   "input": {
+    "address": "Kalben 3, 8865 Bilten"
+   },
+   "truth": {
+    "lat": 47.15082626232819,
+    "lon": 9.005633188409597
+   },
+   "register": "Kalben 3, 8865 Bilten",
+   "canton": "GL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0260",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Louye 3",
+    "postcode": "1042",
+    "city": "Assens"
+   },
+   "truth": {
+    "lat": 46.61582293764666,
+    "lon": 6.624147524498144
+   },
+   "register": "Chemin de la Louye 3, 1042 Assens",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0261",
+   "kind": "clean",
+   "input": {
+    "address": "Saumgässli 2, 3088 Rüeggisberg"
+   },
+   "truth": {
+    "lat": 46.818776630582576,
+    "lon": 7.45348411901038
+   },
+   "register": "Saumgässli 2, 3088 Rüeggisberg",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0262",
+   "kind": "clean",
+   "input": {
+    "address": "Frohalpstrasse 89",
+    "postcode": "8038",
+    "city": "Zürich"
+   },
+   "truth": {
+    "lat": 47.339502882659474,
+    "lon": 8.525020030578213
+   },
+   "register": "Frohalpstrasse 89, 8038 Zürich",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0263",
+   "kind": "clean",
+   "input": {
+    "address": "ruelle du château 6",
+    "postcode": "CH-1321",
+    "city": "arnex-sur-orbe"
+   },
+   "truth": {
+    "lat": 46.69327085812543,
+    "lon": 6.521100908593962
+   },
+   "register": "Ruelle du Château 6, 1321 Arnex-sur-Orbe",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0264",
+   "kind": "clean",
+   "input": {
+    "address": "St. Josef 6",
+    "postcode": "6370",
+    "city": "Stans"
+   },
+   "truth": {
+    "lat": 46.95880056242296,
+    "lon": 8.349457952108851
+   },
+   "register": "St. Josef 6, 6370 Stans",
+   "canton": "NW",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0265",
+   "kind": "clean",
+   "input": {
+    "address": "in Piantett 7",
+    "postcode": "6760",
+    "city": "Calpiogna"
+   },
+   "truth": {
+    "lat": 46.482355937477706,
+    "lon": 8.805284981396872
+   },
+   "register": "in Piantétt 7, 6760 Calpiogna",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0266",
+   "kind": "clean",
+   "input": {
+    "address": "chemin du refuge 4",
+    "postcode": "CH-1307",
+    "city": "lussery-villars"
+   },
+   "truth": {
+    "lat": 46.63516449998325,
+    "lon": 6.5276911642062565
+   },
+   "register": "Chemin du Refuge 4, 1307 Lussery-Villars",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0267",
+   "kind": "clean",
+   "input": {
+    "address": "Rue de la Mauguettaz 22, 1462 Yvonand"
+   },
+   "truth": {
+    "lat": 46.795657105658385,
+    "lon": 6.742791403937087
+   },
+   "register": "Rue de la Mauguettaz 22, 1462 Yvonand",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0268",
+   "kind": "clean",
+   "input": {
+    "address": "Rue du Progrès 7",
+    "postcode": "1700",
+    "city": "Fribourg"
+   },
+   "truth": {
+    "lat": 46.802808144869424,
+    "lon": 7.144781170298755
+   },
+   "register": "Rue du Progrès 7, 1700 Fribourg",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0269",
+   "kind": "clean",
+   "input": {
+    "address": "rämelstrasse 7",
+    "postcode": "CH-4055",
+    "city": "basel"
+   },
+   "truth": {
+    "lat": 47.56250372176857,
+    "lon": 7.5655015746239735
+   },
+   "register": "Rämelstrasse 7, 4055 Basel",
+   "canton": "BS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0270",
+   "kind": "clean",
+   "input": {
+    "address": "GRAND'RUE 57, 2054 VAL-DE-RUZ"
+   },
+   "truth": {
+    "lat": 47.06624764272687,
+    "lon": 6.931718137490029
+   },
+   "register": "Grand'Rue 57, 2054 Chézard-St-Martin",
+   "canton": "NE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0271",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Chevreuils 1",
+    "postcode": "1027",
+    "city": "Lonay"
+   },
+   "truth": {
+    "lat": 46.53164425448212,
+    "lon": 6.523821551767973
+   },
+   "register": "Chemin des Chevreuils 1, 1027 Lonay",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0272",
+   "kind": "clean",
+   "input": {
+    "address": "Bidemsstrasse 15, 7310 Bad Ragaz"
+   },
+   "truth": {
+    "lat": 46.98882783708121,
+    "lon": 9.522356227826815
+   },
+   "register": "Bidemsstrasse 15, 7310 Bad Ragaz",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0273",
+   "kind": "clean",
+   "input": {
+    "address": "Klusweg 101, 4148 Pfeffingen"
+   },
+   "truth": {
+    "lat": 47.46282491021046,
+    "lon": 7.584610957166926
+   },
+   "register": "Klusweg 101, 4148 Pfeffingen",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0274",
+   "kind": "clean",
+   "input": {
+    "address": "Rickenstrasse 10",
+    "postcode": "6122",
+    "city": "Menznau"
+   },
+   "truth": {
+    "lat": 47.081081299739395,
+    "lon": 8.034649520394723
+   },
+   "register": "Rickenstrasse 10, 6122 Menznau",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0275",
+   "kind": "clean",
+   "input": {
+    "address": "Ledergasse 3, 6004 Luzern"
+   },
+   "truth": {
+    "lat": 47.05324660764765,
+    "lon": 8.308179744061615
+   },
+   "register": "Ledergasse 3, 6004 Luzern",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0276",
+   "kind": "clean",
+   "input": {
+    "address": "la Cantonál 146",
+    "postcode": "6674",
+    "city": "Someo"
+   },
+   "truth": {
+    "lat": 46.28672092150416,
+    "lon": 8.662611746871825
+   },
+   "register": "la Cantonál 146, 6674 Someo",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0277",
+   "kind": "clean",
+   "input": {
+    "address": "Gloriastrasse 84",
+    "postcode": "8044",
+    "city": "Zürich"
+   },
+   "truth": {
+    "lat": 47.375332968547134,
+    "lon": 8.558551930852852
+   },
+   "register": "Gloriastrasse 84, 8044 Zürich",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0278",
+   "kind": "clean",
+   "input": {
+    "address": "Au Coteau 3, 1356 Les Clées"
+   },
+   "truth": {
+    "lat": 46.736015220012455,
+    "lon": 6.4794876100260135
+   },
+   "register": "Au Coteau 3, 1356 La Russille",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0279",
+   "kind": "clean",
+   "input": {
+    "address": "Flüelistrasse 26, 6064 Kerns"
+   },
+   "truth": {
+    "lat": 46.897275704483356,
+    "lon": 8.273610715550026
+   },
+   "register": "Flüelistrasse 26, 6064 Kerns",
+   "canton": "OW",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0280",
+   "kind": "clean",
+   "input": {
+    "address": "Hauptstrasse 36",
+    "postcode": "8265",
+    "city": "Mammern"
+   },
+   "truth": {
+    "lat": 47.64378703151967,
+    "lon": 8.907221044051061
+   },
+   "register": "Hauptstrasse 36, 8265 Mammern",
+   "canton": "TG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0281",
+   "kind": "clean",
+   "input": {
+    "address": "Avenue de la Poste 26, 1020 Renens VD"
+   },
+   "truth": {
+    "lat": 46.53954948702714,
+    "lon": 6.5846922590671895
+   },
+   "register": "Avenue de la Poste 26, 1020 Renens VD",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0282",
+   "kind": "clean",
+   "input": {
+    "address": "Rue de Mont-le-Grand 24",
+    "postcode": "1185",
+    "city": "Mont-sur-Rolle"
+   },
+   "truth": {
+    "lat": 46.471962452777284,
+    "lon": 6.340094205411553
+   },
+   "register": "Rue de Mont-le-Grand 24, 1185 Mont-sur-Rolle",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0283",
+   "kind": "clean",
+   "input": {
+    "address": "Klosterstrasse 4a",
+    "postcode": "6440",
+    "city": "Brunnen"
+   },
+   "truth": {
+    "lat": 47.00052811855018,
+    "lon": 8.615671077066285
+   },
+   "register": "Klosterstrasse 4a, 6440 Brunnen",
+   "canton": "SZ",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0284",
+   "kind": "clean",
+   "input": {
+    "address": "rue des jardins 15",
+    "postcode": "CH-1180",
+    "city": "rolle"
+   },
+   "truth": {
+    "lat": 46.4595185388591,
+    "lon": 6.33921699280435
+   },
+   "register": "Rue des Jardins 15, 1180 Rolle",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0285",
+   "kind": "clean",
+   "input": {
+    "address": "Waldhofweg 27b",
+    "postcode": "5034",
+    "city": "Suhr"
+   },
+   "truth": {
+    "lat": 47.380307672288325,
+    "lon": 8.071044069477182
+   },
+   "register": "Waldhofweg 27b, 5034 Suhr",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0286",
+   "kind": "clean",
+   "input": {
+    "address": "Hauptstrasse 16, 4702 Oensingen"
+   },
+   "truth": {
+    "lat": 47.29004130596871,
+    "lon": 7.716741151724991
+   },
+   "register": "Hauptstrasse 16, 4702 Oensingen",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0287",
+   "kind": "clean",
+   "input": {
+    "address": "HÜBELSTRASSE 390, 5732 ZETZWIL"
+   },
+   "truth": {
+    "lat": 47.28816747255919,
+    "lon": 8.154314122591954
+   },
+   "register": "Hübelstrasse 390, 5732 Zetzwil",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0288",
+   "kind": "clean",
+   "input": {
+    "address": "Chilpen 7, 5420 Ehrendingen"
+   },
+   "truth": {
+    "lat": 47.50176606970186,
+    "lon": 8.351741419884156
+   },
+   "register": "Chilpen 7, 5420 Ehrendingen",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0289",
+   "kind": "clean",
+   "input": {
+    "address": "Understock 39",
+    "postcode": "3862",
+    "city": "Innertkirchen"
+   },
+   "truth": {
+    "lat": 46.69153381265436,
+    "lon": 8.23038107859554
+   },
+   "register": "Understock 39, 3862 Innertkirchen",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0290",
+   "kind": "clean",
+   "input": {
+    "address": "Nevedone 6, 6614 Brissago"
+   },
+   "truth": {
+    "lat": 46.125085576213316,
+    "lon": 8.712420331468639
+   },
+   "register": "Nevedone 6, 6614 Brissago",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0291",
+   "kind": "clean",
+   "input": {
+    "address": "Akazienstrasse 5, 4142 Münchenstein"
+   },
+   "truth": {
+    "lat": 47.51505440465432,
+    "lon": 7.609243438794544
+   },
+   "register": "Akazienstrasse 5, 4142 Münchenstein",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0292",
+   "kind": "clean",
+   "input": {
+    "address": "Via Mattarello 1 6952 Canobbio"
+   },
+   "truth": {
+    "lat": 46.03393180298278,
+    "lon": 8.969789552718424
+   },
+   "register": "Via Mattarello 1, 6952 Canobbio",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0293",
+   "kind": "garbage",
+   "input": {
+    "address": "Homeoffice"
+   },
+   "expect": {
+    "status": [
+     "notfound"
+    ]
+   }
+  },
+  {
+   "id": "a0294",
+   "kind": "clean",
+   "input": {
+    "address": "Coin du Jonc 11",
+    "postcode": "2942",
+    "city": "Alle"
+   },
+   "truth": {
+    "lat": 47.42343599431455,
+    "lon": 7.130032932433194
+   },
+   "register": "Coin du Jonc 11, 2942 Alle",
+   "canton": "JU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0295",
+   "kind": "clean",
+   "input": {
+    "address": "15 rue du Chételon",
+    "postcode": "2854",
+    "city": "Haute-Sorne"
+   },
+   "truth": {
+    "lat": 47.34006057386959,
+    "lon": 7.237931892577221
+   },
+   "register": "Rue du Chételon 15, 2854 Bassecourt",
+   "canton": "JU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0296",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Venelle 2, 2034 Peseux"
+   },
+   "truth": {
+    "lat": 46.98622890388472,
+    "lon": 6.884220879803817
+   },
+   "register": "Chemin de la Venelle 2, 2034 Peseux",
+   "canton": "NE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0297",
+   "kind": "clean",
+   "input": {
+    "address": "Aarauerstr. 72",
+    "postcode": "5712",
+    "city": "Beinwil am See"
+   },
+   "truth": {
+    "lat": 47.272068627806895,
+    "lon": 8.202150144523346
+   },
+   "register": "Aarauerstrasse 72, 5712 Beinwil am See",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0298",
+   "kind": "clean",
+   "input": {
+    "address": "Vatchal 1d, 2827 Mervelier"
+   },
+   "truth": {
+    "lat": 47.33864788252461,
+    "lon": 7.506007661114284
+   },
+   "register": "Vatchal 1d, 2827 Mervelier",
+   "canton": "JU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0299",
+   "kind": "clean",
+   "input": {
+    "address": "Oberdorfgasse 15",
+    "postcode": "4107",
+    "city": "Ettingen"
+   },
+   "truth": {
+    "lat": 47.47685670789642,
+    "lon": 7.544594063539892
+   },
+   "register": "Oberdorfgasse 15, 4107 Ettingen",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0300",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Paix 45, 1803 Chardonne"
+   },
+   "truth": {
+    "lat": 46.470560201903645,
+    "lon": 6.807324142816329
+   },
+   "register": "Chemin de la Paix 45, 1803 Chardonne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0301",
+   "kind": "clean",
+   "input": {
+    "address": "Rue des Fontaines 18",
+    "postcode": "1274",
+    "city": "Signy"
+   },
+   "truth": {
+    "lat": 46.39135720459185,
+    "lon": 6.202436662626029
+   },
+   "register": "Rue des Fontaines 18, 1274 Signy",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0302",
+   "kind": "clean",
+   "input": {
+    "address": "Kantonsstrasse 461, 3925 Grächen"
+   },
+   "truth": {
+    "lat": 46.200781610229285,
+    "lon": 7.839913432603057
+   },
+   "register": "Kantonsstrasse 461, 3925 Grächen",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0303",
+   "kind": "clean",
+   "input": {
+    "address": "kernserstrasse 27",
+    "postcode": "CH-6372",
+    "city": "ennetmoos"
+   },
+   "truth": {
+    "lat": 46.94141151970382,
+    "lon": 8.320752212216616
+   },
+   "register": "Kernserstrasse 27, 6372 Ennetmoos",
+   "canton": "NW",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0304",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Portaux 1, 1815 Clarens"
+   },
+   "truth": {
+    "lat": 46.44697701287587,
+    "lon": 6.896640949868425
+   },
+   "register": "Chemin des Portaux 1, 1815 Clarens",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0305",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Val d'Or 1",
+    "postcode": "1009",
+    "city": "Pully"
+   },
+   "truth": {
+    "lat": 46.512158934064075,
+    "lon": 6.655766562836177
+   },
+   "register": "Chemin du Val d'Or 1, 1009 Pully",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0306",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Pièce 7 1423 Villars-Burquin"
+   },
+   "truth": {
+    "lat": 46.850851465520364,
+    "lon": 6.632147574703256
+   },
+   "register": "Chemin de la Pièce 7, 1423 Villars-Burquin",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0307",
+   "kind": "clean",
+   "input": {
+    "address": "Avenue des Bergières 28d",
+    "postcode": "1004",
+    "city": "Lausanne"
+   },
+   "truth": {
+    "lat": 46.529861906485145,
+    "lon": 6.620782738360313
+   },
+   "register": "Avenue des Bergières 28d, 1004 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0308",
+   "kind": "numberMissingInRegister",
+   "truth": {
+    "lat": 47.27681385630125,
+    "lon": 8.943606057873085
+   },
+   "register": "Chrinnenstrasse 10, 8636 Wald ZH",
+   "canton": "ZH",
+   "twin": false,
+   "input": {
+    "address": "Chrinnenstrasse 45",
+    "postcode": "8636",
+    "city": "Wald ZH"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "houseNumber"
+    ]
+   },
+   "note": "number 10 -> 45, not in the register"
+  },
+  {
+   "id": "a0309",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Rolle 5",
+    "postcode": "1188",
+    "city": "Gimel"
+   },
+   "truth": {
+    "lat": 46.50726708734861,
+    "lon": 6.312227544172114
+   },
+   "register": "Route de Rolle 5, 1188 Gimel",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0310",
+   "kind": "clean",
+   "input": {
+    "address": "Oberi Matta 12",
+    "postcode": "1715",
+    "city": "Tafers"
+   },
+   "truth": {
+    "lat": 46.796181045185214,
+    "lon": 7.260684579773133
+   },
+   "register": "Oberi Matta 12, 1715 Alterswil FR",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0311",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Solalex 59",
+    "postcode": "1882",
+    "city": "Gryon"
+   },
+   "truth": {
+    "lat": 46.2840369068227,
+    "lon": 7.082271611587062
+   },
+   "register": "Route de Solalex 59, 1882 Gryon",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0312",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Planajeur 3",
+    "postcode": "1923",
+    "city": "Les Marécottes"
+   },
+   "truth": {
+    "lat": 46.11099818726328,
+    "lon": 7.00441857180836
+   },
+   "register": "Route de Planajeur 3, 1923 Les Marécottes",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0313",
+   "kind": "clean",
+   "input": {
+    "address": "14 route de la Gare",
+    "postcode": "1271",
+    "city": "Givrins"
+   },
+   "truth": {
+    "lat": 46.428758638613274,
+    "lon": 6.204552837583917
+   },
+   "register": "Route de la Gare 14, 1271 Givrins",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0314",
+   "kind": "clean",
+   "input": {
+    "address": "Farbwiesstr. 35, 8867 Niederurnen"
+   },
+   "truth": {
+    "lat": 47.12323887247597,
+    "lon": 9.054200656661992
+   },
+   "register": "Farbwiesstrasse 35, 8867 Niederurnen",
+   "canton": "GL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0315",
+   "kind": "clean",
+   "input": {
+    "address": "Spiezstrasse 2",
+    "postcode": "3704",
+    "city": "Krattigen"
+   },
+   "truth": {
+    "lat": 46.65828817507056,
+    "lon": 7.72186061771884
+   },
+   "register": "Spiezstrasse 2, 3704 Krattigen",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0316",
+   "kind": "clean",
+   "input": {
+    "address": "Neuquartierstr. 11",
+    "postcode": "8868",
+    "city": "Oberurnen"
+   },
+   "truth": {
+    "lat": 47.11477096828805,
+    "lon": 9.060588676487017
+   },
+   "register": "Neuquartierstrasse 11, 8868 Oberurnen",
+   "canton": "GL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0317",
+   "kind": "clean",
+   "input": {
+    "address": "16 chemin du Vigneron",
+    "postcode": "1009",
+    "city": "Pully"
+   },
+   "truth": {
+    "lat": 46.512565411951584,
+    "lon": 6.669772608776589
+   },
+   "register": "Chemin du Vigneron 16, 1009 Pully",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0318",
+   "kind": "clean",
+   "input": {
+    "address": "Rotachstrasse 68a, 8003 Zürich"
+   },
+   "truth": {
+    "lat": 47.37276109338767,
+    "lon": 8.513153489214162
+   },
+   "register": "Rotachstrasse 68a, 8003 Zürich",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0319",
+   "kind": "clean",
+   "input": {
+    "address": "Via Monte Boglia 17, 6900 Lugano"
+   },
+   "truth": {
+    "lat": 46.01790715721711,
+    "lon": 8.96065945354367
+   },
+   "register": "Via Monte Boglia 17, 6900 Lugano",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0320",
+   "kind": "clean",
+   "input": {
+    "address": "chemin de pré yonnet 2",
+    "postcode": "CH-1860",
+    "city": "aigle"
+   },
+   "truth": {
+    "lat": 46.32115999191707,
+    "lon": 6.96637964365139
+   },
+   "register": "Chemin de Pré Yonnet 2, 1860 Aigle",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0321",
+   "kind": "clean",
+   "input": {
+    "address": "Route du Village 2",
+    "postcode": "1070",
+    "city": "Puidoux"
+   },
+   "truth": {
+    "lat": 46.49890744973583,
+    "lon": 6.769414715329417
+   },
+   "register": "Route du Village 2, 1070 Puidoux",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0322",
+   "kind": "clean",
+   "input": {
+    "address": "Marktgasse 51, 3011 Bern"
+   },
+   "truth": {
+    "lat": 46.94791579987841,
+    "lon": 7.444867643745308
+   },
+   "register": "Marktgasse 51, 3011 Bern",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0323",
+   "kind": "clean",
+   "input": {
+    "address": "LES RIVES-DE-LA-MORGES 6, 1110 MORGES"
+   },
+   "truth": {
+    "lat": 46.507823105198064,
+    "lon": 6.4953195181776415
+   },
+   "register": "Les Rives-de-la-Morges 6, 1110 Morges",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0324",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de Champs Dernier 7",
+    "postcode": "2073",
+    "city": "Laténa"
+   },
+   "truth": {
+    "lat": 47.05700117935674,
+    "lon": 7.01907161120128
+   },
+   "register": "Chemin de Champs Dernier 7, 2073 Enges",
+   "canton": "NE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0325",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Tirage 7d 1299 Crans VD"
+   },
+   "truth": {
+    "lat": 46.360474426539525,
+    "lon": 6.2081610117852035
+   },
+   "register": "Chemin du Tirage 7d, 1299 Crans VD",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0326",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Peney 93a 1214 Vernier"
+   },
+   "truth": {
+    "lat": 46.20949133565615,
+    "lon": 6.075318682458914
+   },
+   "register": "Route de Peney 93a, 1214 Vernier",
+   "canton": "GE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0327",
+   "kind": "clean",
+   "input": {
+    "address": "Vers la Cour 20, 1853 Yvorne"
+   },
+   "truth": {
+    "lat": 46.331197054793684,
+    "lon": 6.9615739159120995
+   },
+   "register": "Vers la Cour 20, 1853 Yvorne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0328",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Alpes 5, 1418 Vuarrens"
+   },
+   "truth": {
+    "lat": 46.683016033688666,
+    "lon": 6.647179873672072
+   },
+   "register": "Chemin des Alpes 5, 1418 Vuarrens",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0329",
+   "kind": "clean",
+   "input": {
+    "address": "Mettlenweg 1",
+    "postcode": "8217",
+    "city": "Wilchingen"
+   },
+   "truth": {
+    "lat": 47.66631402712176,
+    "lon": 8.466238327547247
+   },
+   "register": "Mettlenweg 1, 8217 Wilchingen",
+   "canton": "SH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0330",
+   "kind": "clean",
+   "input": {
+    "address": "Sur les Moulins 38, 1026 Denges"
+   },
+   "truth": {
+    "lat": 46.516441743544256,
+    "lon": 6.537246169953755
+   },
+   "register": "Sur les Moulins 38, 1026 Denges",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0331",
+   "kind": "clean",
+   "input": {
+    "address": "Quellenweg 2",
+    "postcode": "4418",
+    "city": "Reigoldswil"
+   },
+   "truth": {
+    "lat": 47.39772965579575,
+    "lon": 7.695337716363631
+   },
+   "register": "Quellenweg 2, 4418 Reigoldswil",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0332",
+   "kind": "clean",
+   "input": {
+    "address": "CHEMIN DE LA GAY 8, 1801 LE MONT-PÈLERIN"
+   },
+   "truth": {
+    "lat": 46.48777565405748,
+    "lon": 6.836872061066147
+   },
+   "register": "Chemin de la Gay 8, 1801 Le Mont-Pèlerin",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0333",
+   "kind": "clean",
+   "input": {
+    "address": "chemin de la lune 5",
+    "postcode": "CH-1132",
+    "city": "lully vd"
+   },
+   "truth": {
+    "lat": 46.5089905102861,
+    "lon": 6.467147650108975
+   },
+   "register": "Chemin de la Lune 5, 1132 Lully VD",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0334",
+   "kind": "clean",
+   "input": {
+    "address": "Rue du Casino 2",
+    "postcode": "1462",
+    "city": "Yvonand"
+   },
+   "truth": {
+    "lat": 46.779719935458886,
+    "lon": 6.721897213938392
+   },
+   "register": "Rue du Casino 2, 1462 Yvonand",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0335",
+   "kind": "clean",
+   "input": {
+    "address": "Leimensteigstrasse 8c",
+    "postcode": "9054",
+    "city": "Haslen AI"
+   },
+   "truth": {
+    "lat": 47.36488573516508,
+    "lon": 9.379490653929428
+   },
+   "register": "Leimensteigstrasse 8c, 9054 Haslen AI",
+   "canton": "AI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0336",
+   "kind": "clean",
+   "input": {
+    "address": "freiherrenstrasse 40",
+    "postcode": "CH-6468",
+    "city": "attinghausen"
+   },
+   "truth": {
+    "lat": 46.86119107538317,
+    "lon": 8.629725712434162
+   },
+   "register": "Freiherrenstrasse 40, 6468 Attinghausen",
+   "canton": "UR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0337",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Chêne 4",
+    "postcode": "1110",
+    "city": "Morges"
+   },
+   "truth": {
+    "lat": 46.516423164668566,
+    "lon": 6.49436583608154
+   },
+   "register": "Chemin du Chêne 4, 1110 Morges",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0338",
+   "kind": "clean",
+   "input": {
+    "address": "Rue du Moulin 8",
+    "postcode": "2740",
+    "city": "Moutier"
+   },
+   "truth": {
+    "lat": 47.27842511676491,
+    "lon": 7.369571290573813
+   },
+   "register": "Rue du Moulin 8, 2740 Moutier",
+   "canton": "JU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0339",
+   "kind": "clean",
+   "input": {
+    "address": "Brämhof 11, 8164 Bachs"
+   },
+   "truth": {
+    "lat": 47.536685710589666,
+    "lon": 8.413832738703247
+   },
+   "register": "Brämhof 11, 8164 Bachs",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0340",
+   "kind": "clean",
+   "input": {
+    "address": "scheidgasse 71",
+    "postcode": "CH-3800",
+    "city": "unterseen"
+   },
+   "truth": {
+    "lat": 46.688146182639684,
+    "lon": 7.843389989175858
+   },
+   "register": "Scheidgasse 71, 3800 Unterseen",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0341",
+   "kind": "clean",
+   "input": {
+    "address": "Grand-Rue 25",
+    "postcode": "1260",
+    "city": "Nyon"
+   },
+   "truth": {
+    "lat": 46.38139920751467,
+    "lon": 6.238536100157007
+   },
+   "register": "Grand-Rue 25, 1260 Nyon",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0342",
+   "kind": "clean",
+   "input": {
+    "address": "26 rue du Collège",
+    "postcode": "1063",
+    "city": "Martherenges"
+   },
+   "truth": {
+    "lat": 46.65972887494747,
+    "lon": 6.752241047811895
+   },
+   "register": "Rue du Collège 26, 1063 Martherenges",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0343",
+   "kind": "clean",
+   "input": {
+    "address": "Im Südelmoos 28, 6174 Sörenberg"
+   },
+   "truth": {
+    "lat": 46.83435443613355,
+    "lon": 8.011621231632201
+   },
+   "register": "Im Südelmoos 28, 6174 Sörenberg",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0344",
+   "kind": "clean",
+   "input": {
+    "address": "Rue des Esserts 8",
+    "postcode": "1976",
+    "city": "Aven"
+   },
+   "truth": {
+    "lat": 46.237403315195785,
+    "lon": 7.27152878144924
+   },
+   "register": "Rue des Esserts 8, 1976 Aven",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0345",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de Court Champ 5",
+    "postcode": "1040",
+    "city": "Echallens"
+   },
+   "truth": {
+    "lat": 46.63706070671472,
+    "lon": 6.629588658584334
+   },
+   "register": "Chemin de Court Champ 5, 1040 Echallens",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0346",
+   "kind": "clean",
+   "input": {
+    "address": "Im Winkel 4",
+    "postcode": "8240",
+    "city": "Thayngen"
+   },
+   "truth": {
+    "lat": 47.74691338986154,
+    "lon": 8.7115443760958
+   },
+   "register": "Im Winkel 4, 8240 Thayngen",
+   "canton": "SH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0347",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Cure 20 1008 Jouxtens-Mézery"
+   },
+   "truth": {
+    "lat": 46.54349259201273,
+    "lon": 6.598074081070688
+   },
+   "register": "Chemin de la Cure 20, 1008 Jouxtens-Mézery",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0348",
+   "kind": "clean",
+   "input": {
+    "address": "bergstrasse 4",
+    "postcode": "CH-8103",
+    "city": "unterengstringen"
+   },
+   "truth": {
+    "lat": 47.41308054052405,
+    "lon": 8.45130389248955
+   },
+   "register": "Bergstrasse 4, 8103 Unterengstringen",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0349",
+   "kind": "clean",
+   "input": {
+    "address": "Via Mattarello 13",
+    "postcode": "6952",
+    "city": "Canobbio"
+   },
+   "truth": {
+    "lat": 46.03443671994715,
+    "lon": 8.970372092676936
+   },
+   "register": "Via Mattarello 13, 6952 Canobbio",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0350",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Bochet 16",
+    "postcode": "1196",
+    "city": "Gland"
+   },
+   "truth": {
+    "lat": 46.41453305007696,
+    "lon": 6.277180934015161
+   },
+   "register": "Chemin du Bochet 16, 1196 Gland",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0351",
+   "kind": "clean",
+   "input": {
+    "address": "NUOLERSTRASSE 47, 8855 WANGEN SZ"
+   },
+   "truth": {
+    "lat": 47.19575176021447,
+    "lon": 8.886339444552785
+   },
+   "register": "Nuolerstrasse 47, 8855 Wangen SZ",
+   "canton": "SZ",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0352",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Marais 10b, 1291 Commugny"
+   },
+   "truth": {
+    "lat": 46.326805753090795,
+    "lon": 6.177201134857013
+   },
+   "register": "Chemin des Marais 10b, 1291 Commugny",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0353",
+   "kind": "postcodeSwapped",
+   "truth": {
+    "lat": 46.424478135958935,
+    "lon": 6.267434433816952
+   },
+   "register": "Grand'Rue 54c, 1196 Gland",
+   "canton": "VD",
+   "twin": false,
+   "input": {
+    "address": "Grand'Rue 54c",
+    "postcode": "1916",
+    "city": "Gland"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   },
+   "note": "postcode 1196 -> 1916"
+  },
+  {
+   "id": "a0354",
+   "kind": "clean",
+   "input": {
+    "address": "Bächliweg 6, 6376 Emmetten"
+   },
+   "truth": {
+    "lat": 46.956538441768394,
+    "lon": 8.50851396563309
+   },
+   "register": "Bächliweg 6, 6376 Emmetten",
+   "canton": "NW",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0355",
+   "kind": "noPostcode",
+   "truth": {
+    "lat": 46.78116354587925,
+    "lon": 7.620763688155459
+   },
+   "register": "Ortbühlweg 68c, 3612 Steffisburg",
+   "canton": "BE",
+   "twin": false,
+   "input": {
+    "address": "Ortbühlweg 68c",
+    "city": "Steffisburg"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "postcode"
+    ]
+   }
+  },
+  {
+   "id": "a0356",
+   "kind": "clean",
+   "input": {
+    "address": "Klusstrasse 15 4142 Münchenstein"
+   },
+   "truth": {
+    "lat": 47.51668762252542,
+    "lon": 7.599249783401949
+   },
+   "register": "Klusstrasse 15, 4142 Münchenstein",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0357",
+   "kind": "clean",
+   "input": {
+    "address": "Av. William-de-Charrière-de-Sévery 10",
+    "postcode": "1004",
+    "city": "Lausanne"
+   },
+   "truth": {
+    "lat": 46.52849718007817,
+    "lon": 6.610826831085873
+   },
+   "register": "Avenue William-de-Charrière-de-Sévery 10, 1004 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0358",
+   "kind": "clean",
+   "input": {
+    "address": "Hermann-Götz-Strasse 7",
+    "postcode": "8400",
+    "city": "Winterthur"
+   },
+   "truth": {
+    "lat": 47.50371567322608,
+    "lon": 8.733855717228359
+   },
+   "register": "Hermann-Götz-Strasse 7, 8400 Winterthur",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0359",
+   "kind": "clean",
+   "input": {
+    "address": "rue sainte-claire 11b",
+    "postcode": "CH-1350",
+    "city": "orbe"
+   },
+   "truth": {
+    "lat": 46.7233031448106,
+    "lon": 6.531817686016363
+   },
+   "register": "Rue Sainte-Claire 11b, 1350 Orbe",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0360",
+   "kind": "clean",
+   "input": {
+    "address": "Allmendstrasse 1 8919 Rottenschwil"
+   },
+   "truth": {
+    "lat": 47.319034519695364,
+    "lon": 8.37074027683675
+   },
+   "register": "Allmendstrasse 1, 8919 Rottenschwil",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0361",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Ponty 14 1522 Lucens"
+   },
+   "truth": {
+    "lat": 46.70665385949856,
+    "lon": 6.829530908926538
+   },
+   "register": "Route de Ponty 14, 1522 Lucens",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0362",
+   "kind": "clean",
+   "input": {
+    "address": "chemin haut des bossons audry 18",
+    "postcode": "CH-1273",
+    "city": "arzier-le muids"
+   },
+   "truth": {
+    "lat": 46.45959570390809,
+    "lon": 6.2153115056649355
+   },
+   "register": "Chemin Haut des Bossons Audry 18, 1273 Arzier-Le Muids",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0363",
+   "kind": "clean",
+   "input": {
+    "address": "Neudörfli 5, 5603 Staufen"
+   },
+   "truth": {
+    "lat": 47.38237500868946,
+    "lon": 8.173893763596764
+   },
+   "register": "Neudörfli 5, 5603 Staufen",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0364",
+   "kind": "clean",
+   "input": {
+    "address": "Birseckstrasse 14",
+    "postcode": "4059",
+    "city": "Basel"
+   },
+   "truth": {
+    "lat": 47.530721571853356,
+    "lon": 7.601757458679056
+   },
+   "register": "Birseckstrasse 14, 4059 Basel",
+   "canton": "BS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0365",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Isles 10 1865 Les Diablerets"
+   },
+   "truth": {
+    "lat": 46.344799119422575,
+    "lon": 7.1567572989703585
+   },
+   "register": "Chemin des Isles 10, 1865 Les Diablerets",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0366",
+   "kind": "clean",
+   "input": {
+    "address": "Chuewart 5",
+    "postcode": "6314",
+    "city": "Unterageri"
+   },
+   "truth": {
+    "lat": 47.12963156795982,
+    "lon": 8.552884103960242
+   },
+   "register": "Chuewart 5, 6314 Unterägeri",
+   "canton": "ZG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0367",
+   "kind": "clean",
+   "input": {
+    "address": "Route de France 42b",
+    "postcode": "2812",
+    "city": "Movelier"
+   },
+   "truth": {
+    "lat": 47.40961189655871,
+    "lon": 7.322363342094925
+   },
+   "register": "Route de France 42b, 2812 Movelier",
+   "canton": "JU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0368",
+   "kind": "clean",
+   "input": {
+    "address": "Rainstrasse 5 3098 Köniz"
+   },
+   "truth": {
+    "lat": 46.92553787501534,
+    "lon": 7.423605323479781
+   },
+   "register": "Rainstrasse 5, 3098 Köniz",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0369",
+   "kind": "clean",
+   "input": {
+    "address": "Les Mottettes 2, 1375 Penthéréaz"
+   },
+   "truth": {
+    "lat": 46.69328910644486,
+    "lon": 6.624345824577018
+   },
+   "register": "Les Mottettes 2, 1375 Penthéréaz",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0370",
+   "kind": "clean",
+   "input": {
+    "address": "Lindenhof 7, 8852 Altendorf"
+   },
+   "truth": {
+    "lat": 47.1890611540587,
+    "lon": 8.824882580926776
+   },
+   "register": "Lindenhof 7, 8852 Altendorf",
+   "canton": "SZ",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0371",
+   "kind": "clean",
+   "input": {
+    "address": "Rte de Villard 14a",
+    "postcode": "1832",
+    "city": "Chamby"
+   },
+   "truth": {
+    "lat": 46.451202306866875,
+    "lon": 6.916360871676327
+   },
+   "register": "Route de Villard 14a, 1832 Chamby",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0372",
+   "kind": "clean",
+   "input": {
+    "address": "Steinenbachstrasse 22",
+    "postcode": "9642",
+    "city": "Ebnat-Kappel"
+   },
+   "truth": {
+    "lat": 47.255855570628555,
+    "lon": 9.129535878384365
+   },
+   "register": "Steinenbachstrasse 22, 9642 Ebnat-Kappel",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0373",
+   "kind": "numberMissingInRegister",
+   "truth": {
+    "lat": 46.522426245029195,
+    "lon": 6.41412322775565
+   },
+   "register": "Chemin En Oussin 6, 1169 Yens",
+   "canton": "VD",
+   "twin": false,
+   "input": {
+    "address": "Chemin En Oussin 17",
+    "postcode": "1169",
+    "city": "Yens"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "houseNumber"
+    ]
+   },
+   "note": "number 6 -> 17, not in the register"
+  },
+  {
+   "id": "a0374",
+   "kind": "clean",
+   "input": {
+    "address": "Bretzwilerstrasse 1a, 4208 Nunningen"
+   },
+   "truth": {
+    "lat": 47.393724309444174,
+    "lon": 7.619773328284676
+   },
+   "register": "Bretzwilerstrasse 1a, 4208 Nunningen",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0375",
+   "kind": "clean",
+   "input": {
+    "address": "Rue Industrielle 119j",
+    "postcode": "2740",
+    "city": "Moutier"
+   },
+   "truth": {
+    "lat": 47.27119240488862,
+    "lon": 7.364404863150733
+   },
+   "register": "Rue Industrielle 119j, 2740 Moutier",
+   "canton": "JU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0376",
+   "kind": "clean",
+   "input": {
+    "address": "GROSSMATTE 22, 6014 LUZERN"
+   },
+   "truth": {
+    "lat": 47.048694222686386,
+    "lon": 8.267032229432802
+   },
+   "register": "Grossmatte 22, 6014 Luzern",
+   "canton": "LU",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0377",
+   "kind": "clean",
+   "input": {
+    "address": "Oberwiesstrasse 56 8645 Jona"
+   },
+   "truth": {
+    "lat": 47.231662075734704,
+    "lon": 8.84428821123354
+   },
+   "register": "Oberwiesstrasse 56, 8645 Jona",
+   "canton": "SG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0378",
+   "kind": "numberMissingInRegister",
+   "truth": {
+    "lat": 46.53534182901579,
+    "lon": 6.595624328396747
+   },
+   "register": "Chemin de Broye 7, 1020 Renens VD",
+   "canton": "VD",
+   "twin": false,
+   "input": {
+    "address": "Chemin de Broye 47",
+    "postcode": "1020",
+    "city": "Renens VD"
+   },
+   "expect": {
+    "status": [
+     "check"
+    ],
+    "reasons": [
+     "houseNumber"
+    ]
+   },
+   "note": "number 7 -> 47, not in the register"
+  },
+  {
+   "id": "a0379",
+   "kind": "clean",
+   "input": {
+    "address": "7 rue du Temple",
+    "postcode": "2034",
+    "city": "Neuchâtel"
+   },
+   "truth": {
+    "lat": 46.98755549444729,
+    "lon": 6.888433036409471
+   },
+   "register": "Rue du Temple 7, 2034 Peseux",
+   "canton": "NE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0380",
+   "kind": "clean",
+   "input": {
+    "address": "Hiltibergstr. 52",
+    "postcode": "5442",
+    "city": "Fislisbach"
+   },
+   "truth": {
+    "lat": 47.431988429962175,
+    "lon": 8.293360647650927
+   },
+   "register": "Hiltibergstrasse 52, 5442 Fislisbach",
+   "canton": "AG",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0381",
+   "kind": "clean",
+   "input": {
+    "address": "Vorstattstrasse 32",
+    "postcode": "4653",
+    "city": "Obergösgen"
+   },
+   "truth": {
+    "lat": 47.36601541746232,
+    "lon": 7.957398119743682
+   },
+   "register": "Vorstattstrasse 32, 4653 Obergösgen",
+   "canton": "SO",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0382",
+   "kind": "clean",
+   "input": {
+    "address": "Rue de la Pontaise 34 1018 Lausanne"
+   },
+   "truth": {
+    "lat": 46.53047003393013,
+    "lon": 6.629903476522033
+   },
+   "register": "Rue de la Pontaise 34, 1018 Lausanne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0383",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin des Artisans 6",
+    "postcode": "1580",
+    "city": "Avenches"
+   },
+   "truth": {
+    "lat": 46.88073402551069,
+    "lon": 7.03328783671429
+   },
+   "register": "Chemin des Artisans 6, 1580 Avenches",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0384",
+   "kind": "clean",
+   "input": {
+    "address": "Liestalerstrasse 47 A",
+    "postcode": "4419",
+    "city": "Lupsingen"
+   },
+   "truth": {
+    "lat": 47.4491182768479,
+    "lon": 7.698770328660454
+   },
+   "register": "Liestalerstrasse 47a, 4419 Lupsingen",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0385",
+   "kind": "clean",
+   "input": {
+    "address": "Rübeldorfstrasse 42, 3792 Saanen"
+   },
+   "truth": {
+    "lat": 46.48363946867367,
+    "lon": 7.262314606766838
+   },
+   "register": "Rübeldorfstrasse 42, 3792 Saanen",
+   "canton": "BE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0386",
+   "kind": "clean",
+   "input": {
+    "address": "12 chemin du Coteau",
+    "postcode": "1009",
+    "city": "Pully"
+   },
+   "truth": {
+    "lat": 46.511641644954274,
+    "lon": 6.655073523398583
+   },
+   "register": "Chemin du Coteau 12, 1009 Pully",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0387",
+   "kind": "clean",
+   "input": {
+    "address": "Route de Payerne 15 1470 Estavayer"
+   },
+   "truth": {
+    "lat": 46.84577396730946,
+    "lon": 6.852452908957144
+   },
+   "register": "Route de Payerne 15, 1470 Estavayer-le-Lac",
+   "canton": "FR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0388",
+   "kind": "clean",
+   "input": {
+    "address": "Binningerstrasse 91d 4123 Allschwil"
+   },
+   "truth": {
+    "lat": 47.54874725164812,
+    "lon": 7.546461860405511
+   },
+   "register": "Binningerstrasse 91d, 4123 Allschwil",
+   "canton": "BL",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0389",
+   "kind": "clean",
+   "input": {
+    "address": "Rue du Four 8b",
+    "postcode": "1410",
+    "city": "Denezy"
+   },
+   "truth": {
+    "lat": 46.72375165236866,
+    "lon": 6.783729747091215
+   },
+   "register": "Rue du Four 8b, 1410 Denezy",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0390",
+   "kind": "clean",
+   "input": {
+    "address": "Dorfstrasse 7, 8236 Büttenhardt"
+   },
+   "truth": {
+    "lat": 47.75597583803042,
+    "lon": 8.652853893614841
+   },
+   "register": "Dorfstrasse 7, 8236 Büttenhardt",
+   "canton": "SH",
+   "twin": true,
+   "expect": {
+    "status": [
+     "check"
+    ]
+   }
+  },
+  {
+   "id": "a0391",
+   "kind": "clean",
+   "input": {
+    "address": "Les Bulles 55a, 2300 La Chaux-de-Fonds"
+   },
+   "truth": {
+    "lat": 47.13792013055619,
+    "lon": 6.836458517909439
+   },
+   "register": "Les Bulles 55a, 2300 La Chaux-de-Fonds",
+   "canton": "NE",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0392",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin de la Rochette 12",
+    "postcode": "1405",
+    "city": "Pomy"
+   },
+   "truth": {
+    "lat": 46.76533707640935,
+    "lon": 6.670572894892765
+   },
+   "register": "Chemin de la Rochette 12, 1405 Pomy",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0393",
+   "kind": "clean",
+   "input": {
+    "address": "Underem Berg 3, 8475 Ossingen"
+   },
+   "truth": {
+    "lat": 47.614113787975015,
+    "lon": 8.72378292676149
+   },
+   "register": "Underem Berg 3, 8475 Ossingen",
+   "canton": "ZH",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0394",
+   "kind": "clean",
+   "input": {
+    "address": "schellenbergstrasse 13",
+    "postcode": "CH-7000",
+    "city": "chur"
+   },
+   "truth": {
+    "lat": 46.8652671902211,
+    "lon": 9.532291584380374
+   },
+   "register": "Schellenbergstrasse 13, 7000 Chur",
+   "canton": "GR",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0395",
+   "kind": "clean",
+   "input": {
+    "address": "Via alla Fontana 2",
+    "postcode": "6927",
+    "city": "Agra"
+   },
+   "truth": {
+    "lat": 45.973523229169,
+    "lon": 8.914940054307467
+   },
+   "register": "Via alla Fontana 2, 6927 Agra",
+   "canton": "TI",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0396",
+   "kind": "clean",
+   "input": {
+    "address": "CHEMIN DE LA DIX 5, 1865 LES DIABLERETS"
+   },
+   "truth": {
+    "lat": 46.36994647739606,
+    "lon": 7.14630462355186
+   },
+   "register": "Chemin de la Dix 5, 1865 Les Diablerets",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0397",
+   "kind": "clean",
+   "input": {
+    "address": "Gopplerlickaweg 66, 3987 Riederalp"
+   },
+   "truth": {
+    "lat": 46.38912902116123,
+    "lon": 8.051900157538778
+   },
+   "register": "Gopplerlickaweg 66, 3987 Riederalp",
+   "canton": "VS",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0398",
+   "kind": "clean",
+   "input": {
+    "address": "impasse de la roteyre 2",
+    "postcode": "CH-1586",
+    "city": "vully-les-lacs"
+   },
+   "truth": {
+    "lat": 46.92683287722277,
+    "lon": 7.037967890697384
+   },
+   "register": "Impasse de la Roteyre 2, 1586 Vallamand",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0399",
+   "kind": "clean",
+   "input": {
+    "address": "Chemin du Vallon 118",
+    "postcode": "1814",
+    "city": "La Tour-de-Peilz"
+   },
+   "truth": {
+    "lat": 46.44995190505507,
+    "lon": 6.881101256489881
+   },
+   "register": "Chemin du Vallon 118, 1814 La Tour-de-Peilz",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "id": "a0400",
+   "kind": "clean",
+   "input": {
+    "address": "Rue d'Yverdon 25",
+    "postcode": "1530",
+    "city": "Payerne"
+   },
+   "truth": {
+    "lat": 46.820238950582464,
+    "lon": 6.93318496952441
+   },
+   "register": "Rue d'Yverdon 25, 1530 Payerne",
+   "canton": "VD",
+   "twin": false,
+   "expect": {
+    "status": [
+     "exact"
+    ]
+   }
+  }
+ ]
+}

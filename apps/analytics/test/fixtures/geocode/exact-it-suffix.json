@@ -1,0 +1,12 @@
+{
+ "input": {
+  "address": "Via Barchee 22c 6616 Losone"
+ },
+ "swisstopoDown": false,
+ "responses": {
+  "https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=Via%20Barchee%2022c%206616&type=locations&origins=address&limit=5&sr=4326": {
+   "status": 200,
+   "body": "{\"results\":[{\"attrs\":{\"detail\":\"via barchee 22c 6616 losone 5115 losone ch ti\",\"featureId\":\"11124860_0\",\"geom_quadindex\":\"032030132120221322031\",\"geom_st_box2d\":\"BOX(8.762328 46.167052,8.762328 46.167052)\",\"label\":\"Via Barchee 22c <b>6616 Losone</b>\",\"lat\":46.16704559326172,\"links\":[{\"href\":\"/rest/services/ech/MapServer/ch.swisstopo.amtliches-gebaeudeadressverzeichnis/101186232\",\"rel\":\"related\",\"title\":\"ch.swisstopo.amtliches-gebaeudeadressverzeichnis\"},{\"href\":\"/rest/services/ech/MapServer/ch.bfs.gebaeude_wohnungs_register/11124860_0\",\"rel\":\"related\",\"title\":\"ch.bfs.gebaeude_wohnungs_register\"}],\"lon\":8.762328147888184,\"num\":22,\"objectclass\":\"\",\"origin\":\"address\",\"rank\":7,\"x\":8.762328147888184,\"y\":46.16704559326172,\"zoomlevel\":10},\"id\":165606,\"weight\":100}]}\n"
+  }
+ }
+}

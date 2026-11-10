@@ -1,63 +1,57 @@
 ## Human review: things that look implausible
 
-Read as a Swiss commuter would, on the run of 2026-11-10 (timetable 2027, reference day 2027-01-19). Numbers are one-way
-unless stated; yearly CHF for adult, 2nd class, 5 days, 5 weeks off (470 trips). This file is hand-written and copied into
-REPORT.md on every run; update it when you re-review.
+Re-reviewed 2026-11-10 against the current engine code (`rules.ts`, `planner/compare.ts`, `planner/prune.ts`, `routing/motis.ts`,
+`apps/api/src/deps.ts`) and `expected.json`. Numbers are one-way unless stated; yearly CHF for adult, 2nd class, 5 days, 5 weeks off
+(470 trips). This file is hand-written and copied into REPORT.md on every run; update it when you re-review.
 
-1. **Rail kilometres / national tariff km look like straight-line distances, so long-distance route passes are too cheap.**
-   lausanne-bern: rail leg 78.1 km, route pass "km79" at CHF 3'024 (74 % of the 4'095 GA). Real track and tariff distance
-   Lausanne-Fribourg-Bern is about 97 km, and a real Bern-Lausanne annual route pass is close to GA money. vevey-geneve: 73.9 km
-   (real about 87), CHF 2'961. aigle-lausanne: 37.3 km (real about 52). nyon-geneve 20.6 km (real about 25). Also understates CO2.
+### Still open
 
-2. **Car is free-flow speed in the morning peak (carPeakFactor 1, carParkingMin 0).** lausanne-bern car 59 min for 103 km
-   (105 km/h door to door), nyon-geneve 19 min for 26 km, aigle-lausanne 30 min for 44 km, yverdon-lausanne 24 min for 37 km,
-   zurich-hb-winterthur 19 min for 25 km. Real 07:30-08:30 arrivals into Geneva/Lausanne/Zurich take 1.5-2x as long, so
-   "fastest = car" verdicts are overstated.
+1. **Car runs at free-flow speed in the morning peak (`carPeakFactor` 1, `carParkingMin` 0).** lausanne-bern car 59 min for 103 km,
+   nyon-geneve 19 min, aigle-lausanne 30 min, yverdon-lausanne 24 min, zurich-hb-winterthur 19 min. Real 07:30-08:30 arrivals into
+   Geneva, Lausanne and Zurich take 1.5-2x as long, so "fastest = car" verdicts are overstated. Being changed separately.
+2. **Park and ride with unknown parking prices counts as free.** `parkingPerYear` returns null when a site has no day, month or year
+   price, and the option then carries no parking cost (earlier run: Matran, école; Genève, Maison de la Paix). Unknown should be flagged as
+   estimated or the option dropped. Latent: no parkRail option survives in the current golden set.
+3. **National route-pass tariff where regional tariff networks exist.** zurich-hb-winterthur (ZVV) and bulle-fribourg (Frimobil/TPF) still
+   show `routePassYearly` (1'881 and 1'953 for the bus). No regional fare model exists in `packages/engine/src/fares`.
+4. **Included-ticket P+R is assumed, not verified.** chapelle-sur-moudon "Le Mont-sur-L., Grand-Mont" is priced with
+   `zonePassMonthly` 0 (`parking.includesTransit`) and offers no other product. That is deliberate (the parking product includes the
+   ticket), but the zones and the month/day basis come from the parking data and were not re-checked against the operator.
 
-3. **E-bike (cost CHF 0) wins "cheapest" and "greenest" on 15-22 km commutes.** chapelle-sur-moudon-lausanne ebike 21.7 km / 59 min,
-   nyon-geneve ebike 21.9 km / 60 min (beats the train at CHF 1'674 on cost), echallens-lausanne-flon 15.0 km / 41 min.
-   Nobody commutes 22 km each way by e-bike through a year; no bike purchase, battery or maintenance cost; no hill/weather penalty.
-   ebikeAllWayMaxMin is 60 min each way, which is too generous.
+### Resolved
 
-4. **P+Rail that is really "drive the whole way".** aigle-lausanne: parkRail-2 Puidoux drives 31.8 km of a 42.6 km trip (rail 10.8 km)
-   for CHF 13'048 vs transit 2'475, parkRail-5 "Vevey, funiculaire" drives 25.7 km then takes bus 212 to a station (CHF 11'551).
-   bulle-fribourg: parkRail "Fribourg, Pl. Gare" drives 28.1 km then 1 km of bus (CHF 11'899). nyon-geneve: parkRail "Genève, Maison
-   de la Paix" drives 25 km, then 1.2 km tram, parking CHF 0 (CHF 9'303). A park-and-ride that is 95 % car adds nothing.
+1. **Rail kilometres looked like straight-line distances** (route passes too cheap, CO2 too low). Resolved by `transitDistanceFactor`
+   (rail 1.25, other 1.15) in `apps/api/src/deps.ts`, applied in `routing/motis.ts`. Tariff km now: lausanne-bern 98 (real about 97),
+   nyon-geneve 26 (about 25), vevey-geneve 93 (about 87, slightly high), lausanne-bern pass CHF 3'375.
+2. **E-bike cost CHF 0 won cheapest and greenest on 15-22 km commutes.** Resolved: bike and e-bike carry per-km costs
+   (`bikeFullCostPerKm` 0.05, `ebikeFullCostPerKm` 0.23 in `rules.ts`; sources in `packages/engine/data/factors/BIKE-COST-SOURCES.md`).
+   `compare.ts` also drops bike/e-bike when walking takes `walkInsteadOfBikeMaxMin` (15) or less, or when public transport is faster
+   and cheaper. Only morges-epfl, chailly-flon and renens-chuv keep a bike or e-bike now. `ebikeAllWayMaxMin` is still 60 min.
+3. **P+Rail that is really "drive the whole way".** Resolved by `parkRailMaxDriveShare` (drive at most 0.5 of the direct drive),
+   `accessMinKmFromWork` (site at least 2 km from work) and the `noBetterThanTransit` rule (must save 5 minutes on public transport or
+   cost less). No parkRail option remains for aigle-lausanne, bulle-fribourg or nyon-geneve.
+4. **City P+R proposed when the car already passes the destination.** Resolved by `cityParkRideMaxDetour` (now 1: the drive to the site
+   may not exceed the direct drive), `accessMinKmFromWork` and `noBetterThanTransit`. morges-epfl, renens-chuv and chailly-flon no
+   longer get one; the remaining ones (lucens, chapelle-sur-moudon) are long trips.
+5. **bikeRide with a trivial or backwards ride.** Resolved by `bikeRideMinMin` (4 min) and `noBetterThanTransit`. Only
+   zurich-hb-winterthur keeps one (Stadelhofen, 27 min against 32 min by transit).
+6. **No GA on city P+R options.** Resolved: cityParkRide products now list the GA (lucens, chapelle-sur-moudon Vennes). The
+   included-ticket option (open point 4) lists only its included ticket.
+7. **Near-duplicate transit options.** Resolved by dominance and the cap per kind in `planner/prune.ts`, plus the
+   twice-the-fastest-plus-30-minutes limit in `compare.ts`. bulle-fribourg now has two distinct options (bus 63 min, rail + bus 56 min).
 
-5. **Same origin and destination, different price depending on the first leg.** lucens-lausanne-gare: bus 361 + m2 = 7 zones CHF 2'052,
-   rail R8/R9 = 9 zones CHF 2'376 (stops 400 m apart). aigle-lausanne: IR from the station 10 zones / 2'475 vs bus-then-IR from
-   "Aigle, place du Marché" 12 zones / 2'583. bulle-fribourg: bus route pass km26 CHF 1'809 vs rail km37 CHF 2'268 for the same
-   Bulle -> Fribourg pair. A Mobilis pass priced by the zones crossed should not depend on the vehicle.
+### Checked and correct — do not change
 
-6. **Senior annual Mobilis pass is out of line with its monthly price.** yverdon-lausanne-senior: zonePassYearly CHF 1'071 (45 % of
-   adult 2'376) but zonePassMonthly 2'618 (90 % of adult 2'904, so monthly x1 is 2.4x the annual). Youth: yearly 833 vs monthly 2'035.
-   Possibly the Vaud resident discount applies only to the annual, but a 55-65 % discount needs checking.
-
-7. **National route-pass tariff used where regional tariff networks exist.** zurich-hb-winterthur (ZVV zones) and bulle-fribourg
-   (Frimobil) show "routePassYearly" (CHF 1'674 for km22; 1'809 for a bus). Bus Bulle -> Fribourg priced with the national tariff
-   (TPF/Frimobil zones should apply). Not Vaud, but the bus pricing is the thing to check.
-
-8. **City P+R proposed when the car already passes the destination.** morges-epfl: cityParkRide Bourdonnette drives 10.4 km vs 6.4 km
-   direct (1.62x, over cityParkRideMaxDetour 1.3) and costs CHF 5'161 vs transit 1'305. renens-chuv: drive 3.2 km to Bourdonnette to
-   save 3 km of a 6 km trip (CHF 2'666 vs 729). chailly-flon: Vennes P+R for a 3 km trip (CHF 2'703). Pass component is priced
-   "zonePassMonthly: 0, z11+12", i.e. the ticket is assumed included in a CHF 1'560/yr P+R (Parc Vélodrome) while Vennes is CHF 990/yr.
-
-9. **bikeRide (e-bike to a station) with a trivial or backwards ride.** yverdon-lausanne bikeRide-1: e-bike 0.5 km + rail, same CHF 2'376 as
-   plain transit, differs by 1 min. aigle-lausanne 0.9 km, nyon-geneve 0.6 km, renens-chuv e-bikes 1.7 km to Renens for a 5 km trip.
-   chailly-flon: "Lausanne, gare -> Flon" e-bike 2.7 km then walk + m2 0.3 km (17 min) while e-bike all the way takes 8 min.
-   These are near-duplicates of transit and clutter the list.
-
-10. **P+Rail parking CHF 0.** bulle-fribourg "Matran, école" and nyon-geneve "Genève, Maison de la Paix" have parking.day 0.
-    Probably unknown rather than free; should be flagged as estimated or dropped.
-
-11. **Door-to-door time looks long for IC trips.** zurich-hb-winterthur 32 min Zürich HB -> Winterthur (IC takes 20 min); nyon-geneve
-    31 min (IR 15-20 min); bikeRide from Stadelhofen is 5 min faster than leaving from HB.
-
-12. **No GA alternative on city P+R options.** cityParkRide products never include the GA (10 WARNs in the first run), although a GA is always
-    possible, and they carry zonePassMonthly = 0.
-
-13. **Near-duplicate transit options.** bulle-fribourg transit-2 and transit-3 (same stops, 63 vs 75 min, same price).
-
-Checked and looked fine: Echallens LEB 35 min / 4 zones / CHF 1'305; Renens -> CHUV 2 zones CHF 729; Yverdon IC 37 min / 9 zones CHF 2'376;
-GA 4'095 (2nd) and 6'770 (1st); Half Fare holder gets no discount on zone passes (correct); 1st class 1.7x; youth/senior GA 2'875/3'260;
-the part-timer (188 trips) correctly flips to a Flexi pass (CHF 1'320); chapelle-sur-moudon has no train but a 57 min bus + m2 with only 2 departures in the window.
+1. **Same origin and destination, different price depending on the first leg.** sbb.ch sells Lucens -> Lausanne as 7 zones via Epalinges
+   (bus 361 + m2, CHF 2'052) and 9 zones direct (train R8/R9, CHF 2'376); Pendular matches to the franc. See
+   `packages/engine/data/zones/REFERENCE-CHECKS.md` (Lucens -> Lausanne rows; also Lovatens -> EPFL). SBB prices the pass per route.
+   The aigle-lausanne (10 against 12 zones) and bulle-fribourg (bus route pass against rail route pass) differences come from the same
+   mechanism but were not compared with sbb.ch individually.
+2. **Senior and youth annual passes are far below the monthly ones.** Expected: the canton of Vaud's 50 % discount applies only to
+   annual Mobilis passes, not to monthly ones (yverdon-lausanne-senior 1'071 yearly against 2'618 monthly; youth 833 against 2'035).
+3. **Door-to-door time looks long for IC trips.** zurich-hb-winterthur 32 min = 6 min walk + 25 min rail (typical connection, not only the
+   IC) + 1 min walk; nyon-geneve 31 min = 13 min walk + 16 min rail + 2 min walk. The time includes walking to the station.
+4. Echallens LEB 35 min / 4 zones / CHF 1'305 (SBB 2027 price); Renens -> CHUV 2 zones CHF 729; Yverdon IC 37 min / 9 zones CHF 2'376;
+   GA 4'095 (2nd) and 6'770 (1st); Half Fare holder gets no discount on zone passes; 1st class 1.7x; youth/senior GA 2'875/3'260;
+   the part-timer (188 trips) flips to a Flexi pass (CHF 1'320); chapelle-sur-moudon has no train but a 57 min bus + m2 with only 2
+   departures in the window.

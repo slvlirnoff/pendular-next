@@ -1,4 +1,4 @@
-# big or regenerable outputs
+# Big or regenerable outputs. The acceptance set itself (set/) is small and is kept.
 data/
 cache/
 out/

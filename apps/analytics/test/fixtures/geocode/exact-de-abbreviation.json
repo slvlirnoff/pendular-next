@@ -1,0 +1,12 @@
+{
+ "input": {
+  "address": "Buchhofstr. 10a, 3308 Grafenried"
+ },
+ "swisstopoDown": false,
+ "responses": {
+  "https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=Buchhofstrasse%2010a%203308&type=locations&origins=address&limit=5&sr=4326": {
+   "status": 200,
+   "body": "{\"results\":[{\"attrs\":{\"detail\":\"buchhofstrasse 10a 3308 grafenried 538 fraubrunnen ch be\",\"featureId\":\"192112171_0\",\"geom_quadindex\":\"021122212330300231331\",\"geom_st_box2d\":\"BOX(7.508254 47.077683,7.508254 47.077683)\",\"label\":\"Buchhofstrasse 10a <b>3308 Grafenried</b>\",\"lat\":47.07768630981445,\"links\":[{\"href\":\"/rest/services/ech/MapServer/ch.swisstopo.amtliches-gebaeudeadressverzeichnis/103692361\",\"rel\":\"related\",\"title\":\"ch.swisstopo.amtliches-gebaeudeadressverzeichnis\"},{\"href\":\"/rest/services/ech/MapServer/ch.bfs.gebaeude_wohnungs_register/192112171_0\",\"rel\":\"related\",\"title\":\"ch.bfs.gebaeude_wohnungs_register\"}],\"lon\":7.5082573890686035,\"num\":10,\"objectclass\":\"\",\"origin\":\"address\",\"rank\":7,\"x\":7.5082573890686035,\"y\":47.07768630981445,\"zoomlevel\":10},\"id\":3278776,\"weight\":100}]}\n"
+  }
+ }
+}

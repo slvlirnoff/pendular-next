@@ -1,0 +1,14 @@
+{
+ "input": {
+  "address": "Loogartenstrasse 52",
+  "postcode": "8048",
+  "city": "Zürich"
+ },
+ "swisstopoDown": false,
+ "responses": {
+  "https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=Loogartenstrasse%2052%208048&type=locations&origins=address&limit=5&sr=4326": {
+   "status": 200,
+   "body": "{\"results\":[{\"attrs\":{\"detail\":\"loogartenstrasse 52 8048 zuerich 261 zuerich ch zh\",\"featureId\":\"302019689_0\",\"geom_quadindex\":\"030003023101030121310\",\"geom_st_box2d\":\"BOX(8.473399 47.389958,8.473399 47.389958)\",\"label\":\"Loogartenstrasse 52 <b>8048 Z\\u00fcrich</b>\",\"lat\":47.389957427978516,\"links\":[{\"href\":\"/rest/services/ech/MapServer/ch.swisstopo.amtliches-gebaeudeadressverzeichnis/101725441\",\"rel\":\"related\",\"title\":\"ch.swisstopo.amtliches-gebaeudeadressverzeichnis\"},{\"href\":\"/rest/services/ech/MapServer/ch.bfs.gebaeude_wohnungs_register/302019689_0\",\"rel\":\"related\",\"title\":\"ch.bfs.gebaeude_wohnungs_register\"}],\"lon\":8.473410606384277,\"num\":52,\"objectclass\":\"\",\"origin\":\"address\",\"rank\":7,\"x\":8.473410606384277,\"y\":47.389957427978516,\"zoomlevel\":10},\"id\":1962464,\"weight\":100}]}\n"
+  }
+ }
+}

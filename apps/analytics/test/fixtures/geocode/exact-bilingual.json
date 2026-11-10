@@ -1,0 +1,12 @@
+{
+ "input": {
+  "address": "COLLÈGEGASSE / RUE DU COLLÈGE 23A, 2502 BIEL/BIENNE"
+ },
+ "swisstopoDown": false,
+ "responses": {
+  "https://api3.geo.admin.ch/rest/services/api/SearchServer?searchText=COLL%C3%88GEGASSE%20%2F%20RUE%20DU%20COLL%C3%88GE%2023a%202502&type=locations&origins=address&limit=5&sr=4326": {
+   "status": 200,
+   "body": "{\"results\":[{\"attrs\":{\"detail\":\"rue du college / collegegasse 23a 2502 biel/bienne 371 biel/bienne ch be\",\"featureId\":\"191965454_0\",\"geom_quadindex\":\"021033020010221303302\",\"geom_st_box2d\":\"BOX(7.247728 47.1403,7.247728 47.1403)\",\"label\":\"Rue du Coll\\u00e8ge / Coll\\u00e8gegasse 23a <b>2502 Biel/Bienne</b>\",\"lat\":47.14030456542969,\"links\":[{\"href\":\"/rest/services/ech/MapServer/ch.swisstopo.amtliches-gebaeudeadressverzeichnis/103165611\",\"rel\":\"related\",\"title\":\"ch.swisstopo.amtliches-gebaeudeadressverzeichnis\"},{\"href\":\"/rest/services/ech/MapServer/ch.bfs.gebaeude_wohnungs_register/191965454_0\",\"rel\":\"related\",\"title\":\"ch.bfs.gebaeude_wohnungs_register\"}],\"lon\":7.247730255126953,\"num\":23,\"objectclass\":\"\",\"origin\":\"address\",\"rank\":7,\"x\":7.247730255126953,\"y\":47.14030456542969,\"zoomlevel\":10},\"id\":1657046,\"weight\":4}]}\n"
+  }
+ }
+}
