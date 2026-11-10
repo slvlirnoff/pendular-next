@@ -57,6 +57,11 @@ export interface MotisOptions {
   timezone: string;
   /** E-bike cruising speed, m/s (bike uses the MOTIS default). */
   ebikeSpeed?: number;
+  /**
+   * The timetable has no route shapes, so a leg's length is measured along straight lines between
+   * its stops. These factors bring that closer to the distance travelled (rail, other modes).
+   */
+  transitDistanceFactor?: { rail: number; other: number };
   /** Any instant inside the loaded timetable (MOTIS rejects street queries outside it). */
   referenceTime: string;
   /** Safety cap on result pages fetched per window. */
@@ -160,7 +165,11 @@ export class MotisRouting implements RoutingProvider {
       departure: l.startTime,
       arrival: l.endTime,
       durationMin: Math.round(l.duration / 60),
-      distanceM: Math.round(l.distance ?? (geometry ? pathLength(geometry) : 0)),
+      distanceM: Math.round(
+        l.distance ??
+          (geometry ? pathLength(geometry) : 0) *
+            (transit ? (mode === 'rail' ? (this.o.transitDistanceFactor?.rail ?? 1) : (this.o.transitDistanceFactor?.other ?? 1)) : 1),
+      ),
       line: transit
         ? {
             name: l.displayName ?? l.routeShortName ?? l.tripShortName ?? l.category?.shortName ?? '',

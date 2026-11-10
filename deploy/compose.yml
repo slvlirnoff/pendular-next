@@ -90,6 +90,10 @@ services:
     image: pendular-data:local
     entrypoint: []
     network_mode: bridge
+    environment:   # optional overrides of the fetch.sh defaults (empty = default)
+      GTFS_URL: ${GTFS_URL:-}
+      OSM_URL: ${OSM_URL:-}
+      PARKING_URL: ${PARKING_URL:-}
 
 volumes:
   caddy_data:

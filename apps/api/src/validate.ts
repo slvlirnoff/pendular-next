@@ -56,6 +56,13 @@ export function parseRequest(body: unknown): CommuteRequest {
       costPerKm: num(b.car?.costPerKm ?? 0.74, 'car.costPerKm', 0, 5),
       parkingAtWorkPerMonth: num(b.car?.parkingAtWorkPerMonth ?? 260, 'car.parkingAtWorkPerMonth', 0, 2000),
     },
+    bike:
+      b.bike && typeof b.bike === 'object'
+        ? {
+            costPerKm: b.bike.costPerKm === undefined ? undefined : num(b.bike.costPerKm, 'bike.costPerKm', 0, 2),
+            ebikeCostPerKm: b.bike.ebikeCostPerKm === undefined ? undefined : num(b.bike.ebikeCostPerKm, 'bike.ebikeCostPerKm', 0, 2),
+          }
+        : undefined,
     kinds: kinds?.length ? kinds : undefined,
   };
 }

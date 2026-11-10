@@ -7,7 +7,8 @@ import { useI18n } from '../i18n/index.js';
 const STREET = new Set(['walk', 'bike', 'ebike', 'car']);
 
 function legCoords(l: Leg): [number, number][] {
-  if (l.geometry && l.geometry.length > 1) return l.geometry;
+  const viaStops = (l.intermediateStops?.length ?? 0) + 2;
+  if (l.geometry && l.geometry.length > 1 && l.geometry.length >= viaStops) return l.geometry;
   // The timetable has no shapes: draw through the stops the vehicle calls at.
   return [l.from, ...(l.intermediateStops ?? []), l.to].map((s) => [s.lon, s.lat] as [number, number]);
 }

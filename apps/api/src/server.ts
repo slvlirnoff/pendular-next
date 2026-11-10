@@ -58,5 +58,8 @@ app.post('/api/compare', async (c) => {
 
 // The built site, when present (production).
 app.use('/*', serveStatic({ root: '../web/dist' }));
+// Pages of the single-page site (/fr/, /de/method…) all load the same shell.
+app.get('/:lang{fr|de|it|en}/*', serveStatic({ root: '../web/dist', path: 'index.html' }));
+app.get('/:lang{fr|de|it|en}', serveStatic({ root: '../web/dist', path: 'index.html' }));
 
 serve({ fetch: app.fetch, port: cfg.port }, (info) => console.log(`pendular api on :${info.port}, motis ${cfg.motisUrl}`));

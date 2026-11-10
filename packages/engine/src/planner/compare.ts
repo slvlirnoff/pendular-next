@@ -212,7 +212,10 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     const reachable = cands
       .map((site, i) => ({ site, route: routes[i] ?? null }))
       .filter((c): c is { site: AccessCandidate; route: StreetRoute } => c.route !== null)
+      // Driving most of the way and then changing is not park and ride; a two-minute ride is a walk.
       .filter((c) => kind !== 'cityParkRide' || c.route.durationMin * rules.carPeakFactor <= carMin * rules.cityParkRideMaxDetour)
+      .filter((c) => kind !== 'parkRail' || c.route.durationMin * rules.carPeakFactor <= carMin * rules.parkRailMaxDriveShare)
+      .filter((c) => kind !== 'bikeRide' || c.route.durationMin >= rules.bikeRideMinMin)
       // Cheap pre-selection: access time plus a straight-line guess of the onward trip.
       .map((c) => ({ ...c, guess: c.route.durationMin + (haversineKm(c.site, req.work) / 55) * 60 }))
       .sort((a, b) => a.guess - b.guess)
@@ -313,6 +316,12 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     const carKm = legs.filter((l) => l.mode === 'car').reduce((s, l) => s + l.distanceM, 0) / 1000;
     if (carKm > 0) {
       extras.push({ key: 'car.distance', params: { km: Math.round(carKm * 10) / 10, rate: req.car.costPerKm }, yearly: Math.round(carKm * trips * req.car.costPerKm), provenance: 'estimated', source: 'TCS' });
+    }
+    for (const mode of ['bike', 'ebike'] as const) {
+      const km = legs.filter((l) => l.mode === mode).reduce((sum, l) => sum + l.distanceM, 0) / 1000;
+      if (km <= 0) continue;
+      const rate = mode === 'bike' ? (req.bike?.costPerKm ?? rules.bikeFullCostPerKm) : (req.bike?.ebikeCostPerKm ?? rules.ebikeFullCostPerKm);
+      extras.push({ key: `${mode}.distance`, params: { km: Math.round(km * 10) / 10, rate }, yearly: Math.round(km * trips * rate), provenance: 'estimated' });
     }
     if (d.kind === 'car') {
       extras.push({ key: 'parking.work', yearly: Math.round(req.car.parkingAtWorkPerMonth * 12), provenance: 'estimated' });

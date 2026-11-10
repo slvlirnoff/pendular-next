@@ -9,10 +9,10 @@
   },
   "parkRail": {
    "count": 1,
-   "bestDurationMin": 54,
-   "cheapestYearly": 9136,
+   "bestDurationMin": 64,
+   "cheapestYearly": 6527,
    "cheapestProduct": "zonePassYearly",
-   "zones": 6
+   "zones": 9
   },
   "cityParkRide": {
    "count": 1,
@@ -29,18 +29,19 @@
   }
  },
  "echallens-lausanne-flon": {
-  "ebike": {
-   "count": 1,
-   "bestDurationMin": 41,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
-  },
   "transit": {
    "count": 1,
    "bestDurationMin": 35,
    "cheapestYearly": 1305,
    "cheapestProduct": "zonePassYearly",
    "zones": 4
+  },
+  "ebike": {
+   "count": 1,
+   "bestDurationMin": 41,
+   "cheapestYearly": 1623,
+   "cheapestProduct": null,
+   "tariffKm": 15
   },
   "cityParkRide": {
    "count": 2,
@@ -59,14 +60,16 @@
   "bike": {
    "count": 1,
    "bestDurationMin": 26,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
+   "cheapestYearly": 156,
+   "cheapestProduct": null,
+   "tariffKm": 6.6
   },
   "ebike": {
    "count": 1,
    "bestDurationMin": 18,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
+   "cheapestYearly": 718,
+   "cheapestProduct": null,
+   "tariffKm": 6.6
   },
   "transit": {
    "count": 1,
@@ -74,19 +77,6 @@
    "cheapestYearly": 1305,
    "cheapestProduct": "zonePassYearly",
    "zones": 4
-  },
-  "parkRail": {
-   "count": 1,
-   "bestDurationMin": 31,
-   "cheapestYearly": 3315,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 4
-  },
-  "cityParkRide": {
-   "count": 1,
-   "bestDurationMin": 21,
-   "cheapestYearly": 5161,
-   "cheapestProduct": "zonePassMonthly"
   },
   "car": {
    "count": 1,
@@ -99,9 +89,9 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 74,
-   "cheapestYearly": 2961,
+   "cheapestYearly": 3303,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 74
+   "tariffKm": 93
   },
   "car": {
    "count": 1,
@@ -114,9 +104,9 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 75,
-   "cheapestYearly": 3024,
+   "cheapestYearly": 3375,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 79
+   "tariffKm": 98
   },
   "car": {
    "count": 1,
@@ -126,12 +116,6 @@
   }
  },
  "chapelle-sur-moudon-lausanne": {
-  "ebike": {
-   "count": 1,
-   "bestDurationMin": 59,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
-  },
   "transit": {
    "count": 1,
    "bestDurationMin": 57,
@@ -139,18 +123,25 @@
    "cheapestProduct": "zonePassYearly",
    "zones": 5
   },
+  "ebike": {
+   "count": 1,
+   "bestDurationMin": 59,
+   "cheapestYearly": 2351,
+   "cheapestProduct": null,
+   "tariffKm": 21.7
+  },
+  "parkRail": {
+   "count": 1,
+   "bestDurationMin": 62,
+   "cheapestYearly": 5995,
+   "cheapestProduct": "zonePassYearly",
+   "zones": 8
+  },
   "cityParkRide": {
    "count": 2,
    "bestDurationMin": 39,
    "cheapestYearly": 7189,
    "cheapestProduct": "zonePassMonthly"
-  },
-  "parkRail": {
-   "count": 1,
-   "bestDurationMin": 52,
-   "cheapestYearly": 8082,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 6
   },
   "car": {
    "count": 1,
@@ -163,13 +154,6 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 37,
-   "cheapestYearly": 2376,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 9
-  },
-  "bikeRide": {
-   "count": 1,
-   "bestDurationMin": 36,
    "cheapestYearly": 2376,
    "cheapestProduct": "zonePassYearly",
    "zones": 9
@@ -188,32 +172,33 @@
   }
  },
  "nyon-geneve": {
-  "ebike": {
-   "count": 1,
-   "bestDurationMin": 60,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
-  },
   "transit": {
    "count": 1,
    "bestDurationMin": 31,
-   "cheapestYearly": 1674,
+   "cheapestYearly": 1809,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 21
+   "tariffKm": 26
+  },
+  "ebike": {
+   "count": 1,
+   "bestDurationMin": 60,
+   "cheapestYearly": 2370,
+   "cheapestProduct": null,
+   "tariffKm": 21.9
   },
   "bikeRide": {
    "count": 1,
-   "bestDurationMin": 28,
-   "cheapestYearly": 1674,
+   "bestDurationMin": 49,
+   "cheapestYearly": 2668,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 21
+   "tariffKm": 32
   },
   "parkRail": {
    "count": 1,
-   "bestDurationMin": 32,
-   "cheapestYearly": 9303,
+   "bestDurationMin": 31,
+   "cheapestYearly": 3024,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 2
+   "tariffKm": 26
   },
   "car": {
    "count": 1,
@@ -230,19 +215,19 @@
    "cheapestProduct": "zonePassYearly",
    "zones": 10
   },
-  "bikeRide": {
+  "parkRail": {
    "count": 1,
-   "bestDurationMin": 50,
-   "cheapestYearly": 2475,
+   "bestDurationMin": 53,
+   "cheapestYearly": 3483,
    "cheapestProduct": "zonePassYearly",
    "zones": 10
   },
-  "parkRail": {
-   "count": 2,
-   "bestDurationMin": 41,
-   "cheapestYearly": 11551,
+  "cityParkRide": {
+   "count": 1,
+   "bestDurationMin": 48,
+   "cheapestYearly": 16351,
    "cheapestProduct": "zonePassYearly",
-   "zones": 6
+   "zones": 2
   },
   "car": {
    "count": 1,
@@ -261,14 +246,16 @@
   "bike": {
    "count": 1,
    "bestDurationMin": 11,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
+   "cheapestYearly": 63,
+   "cheapestProduct": null,
+   "tariffKm": 2.7
   },
   "ebike": {
    "count": 1,
    "bestDurationMin": 8,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
+   "cheapestYearly": 296,
+   "cheapestProduct": null,
+   "tariffKm": 2.7
   },
   "transit": {
    "count": 1,
@@ -280,9 +267,10 @@
   "bikeRide": {
    "count": 2,
    "bestDurationMin": 17,
-   "cheapestYearly": 729,
+   "cheapestYearly": 1020,
    "cheapestProduct": "zonePassYearly",
-   "zones": 2
+   "zones": 2,
+   "tariffKm": 2.7
   },
   "cityParkRide": {
    "count": 1,
@@ -302,14 +290,16 @@
   "bike": {
    "count": 1,
    "bestDurationMin": 21,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
+   "cheapestYearly": 125,
+   "cheapestProduct": null,
+   "tariffKm": 5.3
   },
   "ebike": {
    "count": 1,
    "bestDurationMin": 15,
-   "cheapestYearly": 0,
-   "cheapestProduct": null
+   "cheapestYearly": 573,
+   "cheapestProduct": null,
+   "tariffKm": 5.3
   },
   "transit": {
    "count": 1,
@@ -321,13 +311,14 @@
   "bikeRide": {
    "count": 2,
    "bestDurationMin": 28,
-   "cheapestYearly": 729,
+   "cheapestYearly": 896,
    "cheapestProduct": "zonePassYearly",
-   "zones": 2
+   "zones": 2,
+   "tariffKm": 1.5
   },
   "cityParkRide": {
-   "count": 2,
-   "bestDurationMin": 21,
+   "count": 1,
+   "bestDurationMin": 30,
    "cheapestYearly": 2666,
    "cheapestProduct": "zonePassMonthly"
   },
@@ -342,16 +333,9 @@
   "transit": {
    "count": 3,
    "bestDurationMin": 53,
-   "cheapestYearly": 1809,
+   "cheapestYearly": 1953,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 26
-  },
-  "parkRail": {
-   "count": 3,
-   "bestDurationMin": 36,
-   "cheapestYearly": 8670,
-   "cheapestProduct": "routePassYearly",
-   "tariffKm": 6
+   "tariffKm": 30
   },
   "car": {
    "count": 1,
@@ -361,19 +345,19 @@
   }
  },
  "zurich-hb-winterthur": {
-  "bikeRide": {
-   "count": 2,
-   "bestDurationMin": 27,
-   "cheapestYearly": 1602,
-   "cheapestProduct": "routePassYearly",
-   "tariffKm": 20
-  },
   "transit": {
    "count": 1,
    "bestDurationMin": 32,
-   "cheapestYearly": 1674,
+   "cheapestYearly": 1881,
    "cheapestProduct": "routePassYearly",
-   "tariffKm": 22
+   "tariffKm": 27
+  },
+  "bikeRide": {
+   "count": 1,
+   "bestDurationMin": 27,
+   "cheapestYearly": 2002,
+   "cheapestProduct": "routePassYearly",
+   "tariffKm": 25
   },
   "car": {
    "count": 1,
@@ -386,13 +370,6 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 37,
-   "cheapestYearly": 833,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 9
-  },
-  "bikeRide": {
-   "count": 1,
-   "bestDurationMin": 36,
    "cheapestYearly": 833,
    "cheapestProduct": "zonePassYearly",
    "zones": 9
@@ -418,13 +395,6 @@
    "cheapestProduct": "zonePassYearly",
    "zones": 9
   },
-  "bikeRide": {
-   "count": 1,
-   "bestDurationMin": 36,
-   "cheapestYearly": 1071,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 9
-  },
   "cityParkRide": {
    "count": 1,
    "bestDurationMin": 47,
@@ -442,13 +412,6 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 37,
-   "cheapestYearly": 2376,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 9
-  },
-  "bikeRide": {
-   "count": 1,
-   "bestDurationMin": 36,
    "cheapestYearly": 2376,
    "cheapestProduct": "zonePassYearly",
    "zones": 9
@@ -474,13 +437,6 @@
    "cheapestProduct": "zonePassYearly",
    "zones": 9
   },
-  "bikeRide": {
-   "count": 1,
-   "bestDurationMin": 36,
-   "cheapestYearly": 4041,
-   "cheapestProduct": "zonePassYearly",
-   "zones": 9
-  },
   "cityParkRide": {
    "count": 1,
    "bestDurationMin": 47,
@@ -498,13 +454,6 @@
   "transit": {
    "count": 1,
    "bestDurationMin": 37,
-   "cheapestYearly": 1320,
-   "cheapestProduct": "flexiPass",
-   "zones": 9
-  },
-  "bikeRide": {
-   "count": 1,
-   "bestDurationMin": 36,
    "cheapestYearly": 1320,
    "cheapestProduct": "flexiPass",
    "zones": 9

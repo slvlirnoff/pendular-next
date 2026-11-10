@@ -86,6 +86,9 @@ export function buildDeps(cfg: Config): EngineDeps {
     routing: new MotisRouting({
       baseUrl: cfg.motisUrl,
       timezone: PENDULAR_RULES.timezone,
+      // Calibrated on Lausanne–Bern, Vevey–Genève and Aigle–Lausanne (straight-line 78, 74, 37 km
+      // against about 97, 87 and 52 km of track): a rough correction until legs follow the tracks.
+      transitDistanceFactor: { rail: 1.25, other: 1.15 },
       referenceTime: `${PENDULAR_RULES.referenceDate}T11:00:00Z`,
       versions: { timetable: `GTFS 2027, fetched ${readVersion(gtfs) ?? '?'}`, streets: `OSM, fetched ${readVersion(osm) ?? '?'}`, engine: 'MOTIS 2' },
     }),

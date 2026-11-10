@@ -19,13 +19,22 @@ export const PENDULAR_RULES: RuleSet = {
   ebikeAllWayMaxMin: 60,
   parkRailMaxDriveMin: 25,
   bikeRideMaxMin: 20,
-  cityParkRideMaxDetour: 1.3,
+  cityParkRideMaxDetour: 1,
+  parkRailMaxDriveShare: 0.5,
+  bikeRideMinMin: 4,
   accessCandidates: 4,
   maxOptionsPerKind: 3,
   arrivalSliceMin: 30,
   returnWindow: { from: '16:00', to: '23:59' },
   carFullCostPerKm: 0.74,
   carRunningCostPerKm: 0.276,
+  // Rounded from the model in data/factors/BIKE-COST-SOURCES.md (3,520 km a year):
+  // bike CHF 800 over 10 years + CHF 100 upkeep; e-bike CHF 4,000 over 8 years, one battery
+  // at CHF 750, CHF 200 upkeep, electricity. Lifetimes and upkeep are assumptions.
+  bikeFullCostPerKm: 0.05,
+  bikeRunningCostPerKm: 0.03,
+  ebikeFullCostPerKm: 0.23,
+  ebikeRunningCostPerKm: 0.09,
 };
 
 export function resolveRules(base: RuleSet, overrides?: Partial<RuleSet>): RuleSet {

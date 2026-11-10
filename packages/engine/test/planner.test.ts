@@ -186,6 +186,17 @@ describe('compare', () => {
     expect(r.stamp.rules.id).toBe('pendular-2027');
   });
 
+  it('charges bike and e-bike kilometres at the rule set rates', async () => {
+    const r = await compare({ ...REQUEST, rules: { ebikeAllWayMaxMin: 120, bikeAllWayMaxMin: 120 } }, deps());
+    const ebike = r.options.find((o) => o.kind === 'ebike')!;
+    expect(ebike.cost.yearly).toBe(Math.round(30 * 470 * PENDULAR_RULES.ebikeFullCostPerKm));
+    const bike = r.options.find((o) => o.kind === 'bike')!;
+    expect(bike.cost.extras[0]!.key).toBe('bike.distance');
+    expect(bike.cost.yearly).toBe(Math.round(30 * 470 * PENDULAR_RULES.bikeFullCostPerKm));
+    const owned = await compare({ ...REQUEST, bike: { ebikeCostPerKm: PENDULAR_RULES.ebikeRunningCostPerKm }, rules: { ebikeAllWayMaxMin: 120 } }, deps());
+    expect(owned.options.find((o) => o.kind === 'ebike')!.cost.yearly).toBe(Math.round(30 * 470 * 0.09));
+  });
+
   it('never lets a car option remove public transport', async () => {
     const r = await compare(REQUEST, deps());
     expect(r.options.filter((o) => o.kind === 'transit')).toHaveLength(1);

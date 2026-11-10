@@ -42,6 +42,13 @@ export interface WorkPattern {
   weeksOff: number;
 }
 
+export interface BikeSettings {
+  /** CHF per km for a conventional bicycle; the rule set's full cost when omitted. */
+  costPerKm?: number;
+  /** CHF per km for an e-bike; the rule set's full cost when omitted. */
+  ebikeCostPerKm?: number;
+}
+
 export interface CarSettings {
   /** CHF per km used for the headline car cost. */
   costPerKm: number;
@@ -67,6 +74,7 @@ export interface CommuteRequest {
   pattern: WorkPattern;
   traveller: Traveller;
   car: CarSettings;
+  bike?: BikeSettings;
   /** Option kinds to consider; all when omitted. */
   kinds?: OptionKind[];
   /** Reference day, "YYYY-MM-DD"; the rule set's default when omitted. */
@@ -100,8 +108,12 @@ export interface RuleSet {
   parkRailMaxDriveMin: number;
   /** Longest e-bike ride to a station considered. */
   bikeRideMaxMin: number;
-  /** Detour limit for a city P+R against the direct drive, as a ratio (1.3 = 30 % longer). */
+  /** A city P+R is offered only when driving to it takes at most this share of the direct drive. */
   cityParkRideMaxDetour: number;
+  /** A P+Rail site is offered only when driving to it takes at most this share of the direct drive. */
+  parkRailMaxDriveShare: number;
+  /** Shortest ride for which a bike-and-ride option is worth showing, minutes. */
+  bikeRideMinMin: number;
   /** Access stations tried per access type after the cheap pre-selection. */
   accessCandidates: number;
   /** Options kept per kind after pruning. */
@@ -113,6 +125,14 @@ export interface RuleSet {
   /** TCS reference values, CHF per km. */
   carFullCostPerKm: number;
   carRunningCostPerKm: number;
+  /**
+   * Bicycle and e-bike cost, CHF per km: full cost (purchase spread over its life, upkeep,
+   * battery, electricity) and running cost only. See data/factors/BIKE-COST-SOURCES.md.
+   */
+  bikeFullCostPerKm: number;
+  bikeRunningCostPerKm: number;
+  ebikeFullCostPerKm: number;
+  ebikeRunningCostPerKm: number;
 }
 
 // ---------------------------------------------------------------------------------------------
