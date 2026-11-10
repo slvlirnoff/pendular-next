@@ -128,7 +128,8 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
   const frequency = departuresSummary(o, t);
   const assumptions = o.kind === 'car' ? carNote(props.car, t) : null;
   const conns = o.connections ?? [];
-  const early = o.returnTrips ? o.returnTrips.last < '19:30' : false;
+  // A departure after midnight (before 04:00) is a late one, not an early one.
+  const early = o.returnTrips ? o.returnTrips.last >= '04:00' && o.returnTrips.last < '19:30' : false;
   return (
     <li className={`option card${props.selected ? ' is-selected' : ''}`}>
       <h3>
