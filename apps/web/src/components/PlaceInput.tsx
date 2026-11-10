@@ -68,19 +68,30 @@ export function PlaceInput(props: { label: string; value: Place | null; onChange
           if (e.key === 'ArrowDown') {
             e.preventDefault();
             setOpen(true);
-            setActive((a) => Math.min(a + 1, hits.length - 1));
+            setActive((a) => Math.max(0, Math.min(a + 1, hits.length - 1)));
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             setActive((a) => Math.max(a - 1, 0));
           } else if (e.key === 'Enter' && showList && hits[active]) {
             e.preventDefault();
             choose(hits[active]!);
-          } else if (e.key === 'Escape') setOpen(false);
+          } else if (e.key === 'Escape' && showList) {
+            e.preventDefault();
+            setOpen(false);
+          }
         }}
       />
-      {showList && (
-        <ul id={`${id}-list`} role="listbox" className="place-list">
-          {hits.length === 0 && <li className="place-empty">{t('form.noResults')}</li>}
+      <div className="sr-only" role="status">
+        {showList ? (hits.length > 0 ? t('form.found', { n: hits.length }) : t('form.noResults')) : ''}
+      </div>
+      <ul id={`${id}-list`} role="listbox" aria-label={props.label} className="place-list" hidden={!showList}>
+        {showList && (
+          <>
+          {hits.length === 0 && (
+            <li role="presentation" className="place-empty">
+              {t('form.noResults')}
+            </li>
+          )}
           {hits.map((h, i) => (
             <li
               key={`${h.lat},${h.lon},${h.label}`}
@@ -98,8 +109,9 @@ export function PlaceInput(props: { label: string; value: Place | null; onChange
               <span>{h.label}</span>
             </li>
           ))}
-        </ul>
-      )}
+          </>
+        )}
+      </ul>
     </div>
   );
 }

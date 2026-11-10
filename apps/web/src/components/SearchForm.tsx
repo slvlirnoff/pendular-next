@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { AgeGroup, Weekday } from '@pendular/engine/types';
 import { useI18n } from '../i18n/index.js';
 import type { SearchState } from '../lib/state.js';
@@ -8,7 +8,8 @@ const DAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const AGES: AgeGroup[] = ['child', 'youth', 'adult', 'senior'];
 
 export function SearchForm(props: { state: SearchState; onChange: (s: SearchState) => void; onSubmit: () => void; busy: boolean }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const moreId = useId();
   const s = props.state;
   const set = <K extends keyof SearchState>(k: K, v: SearchState[K]) => props.onChange({ ...s, [k]: v });
   const [more, setMore] = useState(s.carCost !== 'full' || s.parkingPerMonth !== 260 || s.weeksOff !== 5 || !s.vaudResident);
@@ -17,6 +18,7 @@ export function SearchForm(props: { state: SearchState; onChange: (s: SearchStat
   return (
     <form
       className="search card"
+      role="search"
       onSubmit={(e) => {
         e.preventDefault();
         if (ready) props.onSubmit();
@@ -34,9 +36,9 @@ export function SearchForm(props: { state: SearchState; onChange: (s: SearchStat
         <fieldset className="field">
           <legend>{t('form.arrival')}</legend>
           <div className="inline">
-            <input type="time" aria-label={t('form.arrival')} value={s.from} onChange={(e) => set('from', e.target.value)} required />
-            <span>{t('form.and')}</span>
-            <input type="time" aria-label={t('form.and')} value={s.to} onChange={(e) => set('to', e.target.value)} required />
+            <input type="time" aria-label={t('form.arrivalFrom')} value={s.from} onChange={(e) => set('from', e.target.value)} required />
+            <span aria-hidden="true">{t('form.and')}</span>
+            <input type="time" aria-label={t('form.arrivalTo')} value={s.to} onChange={(e) => set('to', e.target.value)} required />
           </div>
         </fieldset>
         <fieldset className="field">
@@ -45,7 +47,7 @@ export function SearchForm(props: { state: SearchState; onChange: (s: SearchStat
             {DAYS.map((d) => {
               const on = s.weekdays.includes(d);
               return (
-                <button key={d} type="button" className={`chip${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => set('weekdays', on ? s.weekdays.filter((x) => x !== d) : [...s.weekdays, d])}>
+                <button key={d} type="button" className={`chip${on ? ' is-on' : ''}`} aria-pressed={on} aria-label={new Date(2024, 0, 1 + DAYS.indexOf(d)).toLocaleDateString(lang, { weekday: 'long' })} onClick={() => set('weekdays', on ? s.weekdays.filter((x) => x !== d) : [...s.weekdays, d])}>
                   {t(`day.${d}`)}
                 </button>
               );
@@ -75,7 +77,7 @@ export function SearchForm(props: { state: SearchState; onChange: (s: SearchStat
       </div>
 
       <div className="search-actions">
-        <button type="button" className="link-button" aria-expanded={more} onClick={() => setMore(!more)}>
+        <button type="button" className="link-button" aria-expanded={more} aria-controls={moreId} onClick={() => setMore(!more)}>
           {t('form.more')}
         </button>
         <button type="submit" className="primary" disabled={!ready || props.busy}>
@@ -84,7 +86,7 @@ export function SearchForm(props: { state: SearchState; onChange: (s: SearchStat
       </div>
 
       {more && (
-        <div className="search-row more">
+        <div className="search-row more" id={moreId}>
           <label className="field">
             <span>{t('form.weeksOff')}</span>
             <input type="number" min={0} max={51} value={s.weeksOff} onChange={(e) => set('weeksOff', Math.max(0, Math.min(51, Number(e.target.value) || 0)))} />

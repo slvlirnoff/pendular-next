@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+# MOTIS routing server. The binary is downloaded at build time from a PINNED release, not
+# copied from data/motis/bin: the image then builds the same way on any machine, and the data
+# image (Dockerfile.data) takes the very same binary, so `motis import` and `motis server`
+# always run the same version (an index written by one version is not guaranteed to load in another).
+# Bump MOTIS_VERSION deliberately, then rebuild both images and re-run update-data.sh.
+
+FROM debian:bookworm-slim AS fetch
+ARG MOTIS_VERSION=v2.11.4
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates bzip2 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /dl
+RUN curl -fsSL --retry 4 -o motis.tar.bz2 \
+      "https://github.com/motis-project/motis/releases/download/${MOTIS_VERSION}/motis-linux-amd64.tar.bz2" \
+    && tar -xjf motis.tar.bz2 motis && chmod 0755 motis && ./motis --version
+
+# Shared with Dockerfile.data (copied from here by the compose build).
+FROM scratch AS binary
+COPY --from=fetch /dl/motis /motis
+
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10001 --home-dir /nonexistent --shell /usr/sbin/nologin motis
+COPY --from=binary /motis /usr/local/bin/motis
+USER motis
+# The data directory is mounted here: it holds config.yml and the indexes written by `motis import`.
+WORKDIR /data
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=5s --start-period=120s --retries=5 \
+  CMD curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null || exit 1
+CMD ["motis", "server", "-d", "/data"]

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FROM DOCUMENTATION (cookbook "Preisauskunft mit OJP Fare"), NOT a recorded response: the live service answered HTTP 500 to every request on 2026-11-10. -->
+<ojp:OJPFareDelivery xmlns="http://www.siri.org.uk/siri" xmlns:ojp="http://www.vdv.de/ojp">
+  <ResponseTimestamp>2023-10-02T11:56:13.536149</ResponseTimestamp>
+  <Status>true</Status>
+  <ojp:FareResult>
+    <ojp:ResultId>ID-20932163-8A85-4648-80A2-661D2D388361</ojp:ResultId>
+    <ojp:TripFareResult>
+      <ojp:FromTripLegIdRef>2</ojp:FromTripLegIdRef>
+      <ojp:ToTripLegIdRef>2</ojp:ToTripLegIdRef>
+      <ojp:FareProduct>
+        <ojp:FareProductId>10972</ojp:FareProductId>
+        <ojp:FareProductName>10972</ojp:FareProductName>
+        <ojp:FareAuthorityRef>NOVA</ojp:FareAuthorityRef>
+        <ojp:FareAuthorityText>NOVA</ojp:FareAuthorityText>
+        <ojp:Price>2.80</ojp:Price>
+        <ojp:NetPrice>2.58</ojp:NetPrice>
+        <ojp:Currency>CHF</ojp:Currency>
+        <ojp:VatRate>7.7</ojp:VatRate>
+        <ojp:TravelClass>second</ojp:TravelClass>
+      </ojp:FareProduct>
+    </ojp:TripFareResult>
+    <ojp:TripFareResult>
+      <ojp:FromTripLegIdRef>2</ojp:FromTripLegIdRef>
+      <ojp:ToTripLegIdRef>2</ojp:ToTripLegIdRef>
+      <ojp:FareProduct>
+        <ojp:FareProductId>10972</ojp:FareProductId>
+        <ojp:FareProductName>10972</ojp:FareProductName>
+        <ojp:FareAuthorityRef>NOVA</ojp:FareAuthorityRef>
+        <ojp:FareAuthorityText>NOVA</ojp:FareAuthorityText>
+        <ojp:Price>4.80</ojp:Price>
+        <ojp:NetPrice>4.43</ojp:NetPrice>
+        <ojp:Currency>CHF</ojp:Currency>
+        <ojp:VatRate>7.7</ojp:VatRate>
+        <ojp:TravelClass>first</ojp:TravelClass>
+      </ojp:FareProduct>
+    </ojp:TripFareResult>
+  </ojp:FareResult>
+</ojp:OJPFareDelivery>

@@ -54,6 +54,12 @@ def main(markers_p, gtfs_p, modes_p, out):
             for k in town_keys(s['name']): by_full2[k].append(s)
         if ', ' in s['name']: by_part[norm(s['name'].split(', ', 1)[1])].append(s)
     names = [s['nn'] for s in st]
+    abbr = []   # towns abbreviated by GTFS ('Cheseaux-sur-L.', 'Corcelles-sur-Chav.')
+    for s in st:
+        town = s['name'].split(', ')[0].split(',')[0]
+        if town.endswith('.') and ' ' not in town.strip('.') or (town.endswith('.') and '-' in town):
+            tk = norm(town).split()
+            if len(tk) > 1: abbr.append((tk, s))
     def cand(s, match, score): return dict(stopId=s['stopId'], gtfsId=s['gtfsId'], name=s['name'], lat=s['lat'], lon=s['lon'], match=match, score=round(score, 3), rail=s['rail'], bus=s['bus'], served=s['served'])
     TIER = {'exact': 4, 'normalised': 3, 'locality': 2, 'fuzzy': 1}
     def okkind(c, kind):
@@ -78,6 +84,10 @@ def main(markers_p, gtfs_p, modes_p, out):
         ss = [s for s in by_part.get(n, []) if ok(s)]
         ss.sort(key=lambda s: (not (s['rail'] if kind == 'rail' else s['bus']), len(s['name'])))
         if ss: out.append([dict(cand(s, 'locality', 0.7 if len(ss) == 1 else 0.55), via='stop-part') for s in ss[:10]])
+        tk = n.split()
+        ss = [s for t, s in abbr if len(t) == len(tk) and t[:-1] == tk[:-1] and tk[-1].startswith(t[-1]) and ok(s)]
+        ss.sort(key=lambda s: (not (s['rail'] if kind == 'rail' else s['bus']), pref_rank(s['name']), len(s['name'])))
+        if ss: out.append([dict(cand(s, 'locality', 0.7 if len(ss) == 1 else 0.55), via='town-abbrev') for s in ss[:10]])
         hits = [(sc, i) for _, sc, i in process.extract(n, names, scorer=fuzz.ratio, limit=5, score_cutoff=86) if ok(st[i])]
         if hits:
             top = hits[0][0]; out.append([cand(st[i], 'fuzzy', sc / 100) for sc, i in hits if sc >= top - 1.5])
@@ -87,6 +97,7 @@ def main(markers_p, gtfs_p, modes_p, out):
         if not ts: return []
         # first tier that offers a station of the right kind (rail marker: railway station; bus marker: bus-served stop)
         for t in ts:
+            if t[0]['match'] == 'fuzzy': break
             r = [c for c in t if okkind(c, kind)]
             if r: return r
         return ts[0]
@@ -119,6 +130,12 @@ def main(markers_p, gtfs_p, modes_p, out):
                     r = [c for c in x if okkind(c, m['kind'])] or x
                     if r: best, used = r[:10], t; break
                 if best: break
+        if m['kind'] == 'rail' and not any(c['rail'] for c in best):
+            # 'Cheseaux-sur-Lausanne' is the plan's name for the railway station 'Cheseaux': first part of an X-sur-Y label
+            t = L[m['label']]['text']; mm = re.match(r"^(.+?)[- ](?:sur|sous|près|en)[- ]", t)
+            if mm:
+                ss = [x for x in by_full.get(norm(mm.group(1)), []) if x['rail'] and x['stopId'] not in excl]
+                if ss and (not best or best[0]['match'] in ('locality', 'fuzzy')): best, used = [dict(cand(x, 'locality', 0.6), via='label-prefix') for x in ss], t
         seen = set(); cands = []
         for c in best:
             if c['stopId'] in seen: continue

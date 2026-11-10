@@ -92,7 +92,7 @@ function sanity(c: Commute, r: CompareResult) {
     check(sorted, w, `products sorted cheapest first (${ps.map((p) => `${p.kind}:${Math.round(p.yearly)}`).join(', ')})`);
     const ga = ps.find((p) => p.kind === 'ga');
     if (ps.length && ga) check(ps[0]!.yearly <= ga.yearly * 1.05, w, `cheapest product ${Math.round(ps[0]!.yearly)} <= GA ${Math.round(ga.yearly)} x1.05`);
-    else if (ps.length) log('WARN', w, 'product list has no GA alternative');
+    else if (ps.length && o.kind !== 'cityParkRide') log('WARN', w, 'product list has no GA alternative');
     if (o.kind === 'transit') check(o.cost.yearly <= (ga?.yearly ?? Infinity) * 1.05, w, `transit yearly ${Math.round(o.cost.yearly)} <= GA x1.05`);
   }
   if (car) {

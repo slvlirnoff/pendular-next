@@ -1,10 +1,14 @@
 """Assemble final outputs.
 usage: build_output.py matched.json svg.json pdf.json adjacency.json mobilis-plan.json gtfs.zip out_json out_report"""
-import sys, json, random, collections, zipfile, io, csv, datetime, math, itertools
+import sys, re, unicodedata, json, random, collections, zipfile, io, csv, datetime, math, itertools
 import numpy as np
 from scipy.spatial import cKDTree
 from shapely.geometry import Polygon
 from shapely.validation import make_valid
+
+def nrm(t):
+    t = unicodedata.normalize('NFKD', unicodedata.normalize('NFKC', t)); t = ''.join(c for c in t if not unicodedata.combining(c)).lower()
+    return ' '.join(re.sub(r"[-–—,/.'‘’()]+", ' ', t).replace('saint', 'st').split())
 
 matched_p, svg_p, pdf_p, adj_p, plan_p, gtfs_p, out_json, out_md = sys.argv[1:9]
 D = json.load(open(matched_p)); M = D['markers']; L = D['labels']
@@ -179,8 +183,32 @@ for k in ['exact', 'normalised', 'locality', 'fuzzy', 'none']:
     A('| %s | %d | %d | %d | %d |' % (k, mt[k], ct[k]['high'], ct[k]['medium'], ct[k]['low']))
 A('| **total** | %d | %d | %d | %d |' % (len(stops), conf['high'], conf['medium'], conf['low']))
 A('\nFlags: ' + ', '.join('%s=%d' % kv for kv in sorted(flags.items())))
-A('\nWhat the match types mean: `exact` = identical GTFS station name; `normalised` = identical after case/accent/hyphen/comma/Saint folding; `locality` = the plan label is a village name and the candidates are the GTFS stops of that village (`via: town`) or the plan label equals the stop part of "Town, Stop" (`via: stop-part`); the first candidate is the preferred one (gare/village/centre/poste first) but **the zone applies to the whole village drawn as one point, the specific stop is not identified**; `fuzzy` = similar spelling (rapidfuzz ratio >= 86).')
+A('\nWhat the match types mean: `exact` = the whole label equals the whole GTFS station name (a label \"X-sur-Y\" never matches \"Y\"; the individual lines of a stacked label are used only as weak `locality` hints, via `label-line`); `normalised` = identical after case/accent/hyphen/comma/Saint folding; `locality` = the plan label is a village name and the candidates are the GTFS stops of that village (`via: town`) or the plan label equals the stop part of "Town, Stop" (`via: stop-part`); the first candidate is the preferred one (gare/village/centre/poste first) but **the zone applies to the whole village drawn as one point, the specific stop is not identified**; `fuzzy` = similar spelling (rapidfuzz ratio >= 86).')
 A('Confidence: high = exact/normalised, label within 9 pt, no flags; medium = locality (<=3 candidates) or high with one flag; low = more than 3 locality candidates, fuzzy, geographic outlier, no GTFS match. Candidates that are geographic outliers of a zone are dropped from locality lists when others remain (`geoFiltered`).\n')
+A('### Station check (plan label -> zones)\n')
+A('Entries whose normalised label equals the station name (a trailing `*` in the query = starts with). Zones come from the marker geometry only; "-" = no label with that name has a zoned marker.\n')
+A('| station | plan label(s) | kind | zones | first GTFS candidate |\n|---|---|---|---|---|')
+QUERY = [('Renens VD (8501118)', ['renens']), ('Prilly-Malley', ['prilly malley']), ('Pully', ['pully']), ('Lutry', ['lutry']), ('Cully', ['cully']), ('Bussigny', ['bussigny']),
+         ('Cossonay-Penthalaz', ['cossonay penthalaz']), ('Montreux', ['montreux']), ('Aigle', ['aigle']), ('Bex', ['bex']), ('Payerne', ['payerne']), ('Avenches', ['avenches']),
+         ('Vallorbe', ['vallorbe']), ("Le Sentier-L'Orient", ['le sentier l orient', 'le sentier orient']), ('Gland', ['gland']), ('Rolle', ['rolle']), ('Allaman', ['allaman']),
+         ('St-Prex', ['st prex']), ('Yverdon-les-Bains', ['yverdon les bains']), ('Grandson', ['grandson']), ('Ste-Croix', ['ste croix']), ('Orbe', ['orbe']), ('Chavornay', ['chavornay']),
+         ('La Sarraz', ['la sarraz']), ('Echallens', ['echallens']), ('Bercher', ['bercher']), ('Cheseaux(-sur-Lausanne)', ['cheseaux sur lausanne', 'cheseaux']), ('Romanel(-sur-Lausanne)', ['romanel sur lausanne', 'romanel']),
+         ('Epalinges', ['epalinges']), ('Le Mont-sur-Lausanne', ['le mont sur lausanne', 'mont sur lausanne']), ('Savigny', ['savigny']), ('Oron', ['oron', 'oron la ville', 'oron le chatel']),
+         ('Palezieux', ['palezieux']), ('Puidoux', ['puidoux']), ('Chexbres', ['chexbres', 'chexbres village']), ('Vevey', ['vevey']), ('La Tour-de-Peilz', ['la tour de peilz']),
+         ('Blonay', ['blonay']), ('Villeneuve VD', ['villeneuve', 'villeneuve vd']), ('Leysin', ['leysin*']), ('Les Diablerets', ['les diablerets']), ("Chateau-d'Oex", ['chateau d oex'])]
+for name, keys in QUERY:
+    hit = [s_ for s_ in stops if any((nrm(s_['label']).startswith(k[:-1]) if k.endswith('*') else nrm(s_['label']) == k) for k in keys)]
+    if hit:
+        for s_ in hit:
+            g = s_['gtfs'][0] if s_['gtfs'] else None
+            A('| %s | %s | %s | %s | %s |' % (name, s_['label'], s_['kind'], ','.join(map(str, s_['zones'])), ('%s (%s) %s' % (g['name'], g['stopId'], g['match'])) if g else 'no GTFS match'))
+    else:
+        other = [u for u in unm_markers + unm_labels if u.get('label') and any(nrm(u['label']) == k for k in keys)]
+        A('| %s | %s | - | - | %s |' % (name, other[0]['label'] if other else '-', ('NOT FOUND with a zone (label on plan: %s)' % other[0]['reason']) if other else 'NOT FOUND (no such label on the plan)'))
+A('')
+A('### Station-claim conflicts\n')
+cf = D.get('conflicts', {'demoted': [], 'remaining': []})
+A('Each GTFS station may be an exact/normalised match of only one marker. %d later claims were demoted (the weaker marker lost the station and was re-matched without it: %s). **Remaining conflicts: %d**%s.\n' % (len(cf['demoted']), '; '.join('%s %s zones %s lost %s' % (x['label'], x['kind'], x['zones'], x['stopId']) for x in cf['demoted']) or 'none', len(cf['remaining']), (' (' + '; '.join('%s: %s' % (x['stopId'], ' / '.join(x['labels'])) for x in cf['remaining']) + ')') if cf['remaining'] else ''))
 A('## Zone derivation\n')
 h = D['border_hist']
 A('Distance from each marker centre to the second-nearest polygon (for markers inside one polygon; to the nearest one for markers outside all) has bins %s (svg units) with counts %s. Gap: nothing between 3 and 6 units, so the tolerance of 4 units (marker radius 4-8.5 units, polygon strokes ~4.5) separates "on the border" from "inside" without ambiguity. Markers beyond 6 units are either interior markers or the outside-zone diamond markers. Edge-of-map markers within tolerance of only one polygon get that single zone.\n' % (h[1][:-1], h[0]))
