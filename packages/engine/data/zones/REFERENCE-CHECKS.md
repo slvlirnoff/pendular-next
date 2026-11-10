@@ -8,8 +8,13 @@ Prices on sbb.ch are those valid on the day of the check; Pendular uses the grid
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-10 | Lucens → Lausanne | via Epalinges, Croisettes (bus 361 + m2) | 7: 11, 12, 18, 60, 61, 65, 103 | CHF 1989 | 7 | CHF 2052 |
 | 2026-11-10 | Lucens → Lausanne | direct (train R8/R9) | 9: 11, 12, 19, 60, 61, 62, 63, 64, 103 | CHF 2313 | 9 | CHF 2376 |
+| 2026-11-10 | Lucens → Lausanne, validity from 04.01.2027 | via Epalinges, Croisettes | 7 | CHF 2052 | 7 | CHF 2052 |
+| 2026-11-10 | Lucens → Lausanne, validity from 04.01.2027 | direct | 9 | CHF 2376 | 9 | CHF 2376 |
 
-Also shown by SBB for the same trip: 10 zones "via billet de raccordement avec zone 71" (CHF 2376)
+With a validity date in the 2027 tariff year the prices agree to the franc; SBB also shows all
+zones at CHF 2583 and FlexiAbo 100 days from CHF 1140, both equal to the grid used by Pendular.
+
+Also shown by SBB for the same trip (validity 10.11.2026): 10 zones "via billet de raccordement avec zone 71" (CHF 2376)
 and all zones (CHF 2475); FlexiAbo 100 days from CHF 1105.
 
 What the check taught:
