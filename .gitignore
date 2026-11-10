@@ -9,3 +9,7 @@ data/motis/input/
 .env
 data/build/
 *.whl
+data/pg/
+tools/address-test/data/
+tools/address-test/cache/
+tools/address-test/out/
