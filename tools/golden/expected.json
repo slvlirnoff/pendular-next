@@ -52,8 +52,8 @@
    "tariffKm": 6.6
   },
   "transit": {
-   "count": 1,
-   "bestDurationMin": 33,
+   "count": 2,
+   "bestDurationMin": 28,
    "cheapestYearly": 1305,
    "cheapestProduct": "zonePassYearly",
    "zones": 4
@@ -97,7 +97,7 @@
  },
  "chapelle-sur-moudon-lausanne": {
   "transit": {
-   "count": 1,
+   "count": 2,
    "bestDurationMin": 57,
    "cheapestYearly": 1575,
    "cheapestProduct": "zonePassYearly",
@@ -148,8 +148,8 @@
  },
  "aigle-lausanne": {
   "transit": {
-   "count": 1,
-   "bestDurationMin": 47,
+   "count": 2,
+   "bestDurationMin": 44,
    "cheapestYearly": 2475,
    "cheapestProduct": "zonePassYearly",
    "zones": 10
@@ -183,8 +183,8 @@
    "tariffKm": 2.7
   },
   "transit": {
-   "count": 1,
-   "bestDurationMin": 24,
+   "count": 3,
+   "bestDurationMin": 20,
    "cheapestYearly": 729,
    "cheapestProduct": "zonePassYearly",
    "zones": 2
@@ -227,7 +227,7 @@
  },
  "bulle-fribourg": {
   "transit": {
-   "count": 3,
+   "count": 4,
    "bestDurationMin": 56,
    "cheapestYearly": 1926,
    "cheapestProduct": "routePassYearly",

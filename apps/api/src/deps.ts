@@ -16,6 +16,7 @@ import {
   trafficFactorAlong,
   loadParking,
   priceTransit,
+  zoneSearches,
   type AccessCandidate,
   type EngineDeps,
   type Leg,
@@ -119,7 +120,7 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
       // against about 97, 87 and 52 km of track): a rough correction until legs follow the tracks.
       transitDistanceFactor: { rail: 1.25, other: 1.15 },
       referenceTime: `${PENDULAR_RULES.referenceDate}T11:00:00Z`,
-      // Last trip home inside the zones of a pass: needs the MOTIS fork (tools/motis-fork) behind MOTIS_URL.
+      // Last trip home inside the zones of a pass, and searches inside the zones of a cheaper pass: need the MOTIS fork (tools/motis-fork) behind MOTIS_URL.
       segmentFilter: env.MOTIS_SEGMENT_FILTER === '1',
       versions: { timetable: `GTFS 2027, fetched ${readVersion(gtfs) ?? '?'}`, streets: `OSM, fetched ${readVersion(osm) ?? '?'}`, engine: 'MOTIS 2' },
     }),
@@ -150,6 +151,8 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
         }
       : undefined,
     coveredByZones: (legs, z) => coveredByZones(legs, z, zones, nova, networks),
+    // Zone sets searched one by one for connections on a cheaper pass (needs the MOTIS fork too).
+    zoneSearches: (trips, opts) => zoneSearches(trips, { nova, networks }, opts),
     co2KgPerYear,
     parkRail: sites.filter((s) => s.kind === 'parkRail').map(toCandidate),
     bikeParking: sites.filter((s) => s.kind === 'bikeParking').map(toCandidate),

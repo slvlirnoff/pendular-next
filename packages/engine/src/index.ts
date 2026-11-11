@@ -1,12 +1,13 @@
 export * from './types.js';
 export * from './rules.js';
 export * from './time.js';
-export { compare, parkingPerYear, type EngineDeps, type FareContext, type AccessCandidate } from './planner/compare.js';
+export { compare, parkingPerYear, type EngineDeps, type FareContext, type AccessCandidate, type ZoneSearchSet } from './planner/compare.js';
 export { groupItineraries, type RouteGroup } from './planner/group.js';
 export { priceTransit, coveredByZones, estimatedTariffKm, type PriceDeps } from './fares/price.js';
 export { createZoneIndex, type ZoneIndex, type ZoneIndexOptions, type ZoneTable } from './fares/zones.js';
 export { MotisRouting, decodePolyline, type MotisOptions } from './routing/motis.js';
 export * as mobilis from './fares/mobilis.js';
+export { zoneGraph, zonePaths, zoneSearches, type ZoneGraph, type ZonePath, type ZonePathOptions, type ZoneSearch, type ZoneSearchOptions } from './fares/zonePaths.js';
 export { segmentTag, segmentTagsOfZones, zonalPassPlans, sectionTags, formatSectionTags, gtfsStationNumber, type SectionZones, type SectionTags } from './fares/segmentTags.js';
 export { loadNetworks, createNetworks, networkPlans, createNetwork, createTripResolver, TARIFF_YEAR, type Network, type Networks, type NetworkGrid, type NetworkRules, type NetworkDiscount, type OwnZonesFile, type TripNetwork, type TripNetworks, type LoadNetworksOptions } from './fares/networks.js';
 export * as national from './fares/national.js';

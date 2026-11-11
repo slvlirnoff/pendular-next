@@ -76,11 +76,26 @@ export interface EngineDeps {
   parkRail: AccessCandidate[];
   bikeParking: AccessCandidate[];
   cityParkRide: AccessCandidate[];
+  /**
+   * The sets of fare zones worth a timetable search of their own, given the public transport
+   * legs of the connections a search without restriction found: zone paths between the two ends
+   * that need fewer or other zones (fares/zonePaths.ts). Used only with a routing engine that
+   * can restrict a search (`segmentFilter`); without it nothing changes.
+   */
+  zoneSearches?: (trips: Leg[][], opts: { max: number; extra: number }) => ZoneSearchSet[];
   /** Station-based bike-share operators and their prices; without it no shared bike is suggested. */
   bikeShare?: BikeShareOperator[];
   tariffVersion?: string;
   parkingVersion?: string;
   now?: () => Date;
+}
+
+/** A set of fare zones to restrict a search to; `cheaper` when it counts fewer zones than every connection already found. */
+export interface ZoneSearchSet {
+  alliance: string;
+  zones: number[];
+  tags: string[];
+  cheaper?: boolean;
 }
 
 /** Longest public transport time considered from an access station to work, minutes. */
@@ -90,6 +105,10 @@ const REACH_MARGIN_MIN = 20;
 
 /** Minutes a car or bike access must save on public transport from home to be shown. */
 const ACCESS_MIN_SAVING = 5;
+
+/** A connection found inside a zone set may take this many times the fastest one, plus these minutes. */
+const ZONE_SEARCH_MAX_SLOWER = 1.5;
+const ZONE_SEARCH_MAX_EXTRA_MIN = 15;
 
 /** Tickets valid on every line inside their zones: the way home need not be the way there. */
 const ZONE_PASSES: ReadonlySet<string> = new Set(['zonePassYearly', 'zonePassMonthly', 'zonePassAllYearly', 'flexiPass']);
@@ -264,7 +283,10 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       return `route:${legs[0]!.from.stopId ?? legs[0]!.from.name}>${legs[legs.length - 1]!.to.stopId ?? legs[legs.length - 1]!.to.name}`;
     }
     // The network is part of the ticket: two networks can sell as many zones at the same price.
-    return `${cheapest.kind}:${cheapest.components.map((c) => `${c.key}:${c.params?.network ? `${c.params.network}:` : ''}${c.params?.zones ?? ''}:${c.yearly}`).join(',')}`;
+    // So are the zones: two passes of seven zones are two tickets when the zones differ. Not at
+    // the price of the whole network, which is one ticket whatever the trip uses.
+    const where = cheapest.allZones ? '@all' : cheapest.zones?.length ? `@${cheapest.zones.join('+')}` : '';
+    return `${cheapest.kind}${where}:${cheapest.components.map((c) => `${c.key}:${c.params?.network ? `${c.params.network}:` : ''}${cheapest.allZones ? '' : (c.params?.zones ?? '')}:${c.yearly}`).join(',')}`;
   };
 
   const safe = <T,>(p: Promise<T>, fallback: T): Promise<T> => p.catch(() => fallback);
@@ -278,11 +300,59 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     }
     return its;
   };
-  const transitTo = (from: LatLon & { name?: string }, window: TimeWindow = req.arrival, alternateTies = false) =>
+  const transitTo = (from: LatLon & { name?: string }, window: TimeWindow = req.arrival, alternateTies = false, within?: { tags: string[]; maxTravelMin: number }) =>
     safe(
-      routing.transit({ from, to: req.work, date, window, by: 'arrive', alternateTies, maxWalkToStopMin: from === home ? rules.walkToStopMaxMin : undefined }).then((its) => relabel(its, from.name, work.name)),
+      routing
+        .transit({
+          from,
+          to: req.work,
+          date,
+          window,
+          by: 'arrive',
+          alternateTies,
+          maxWalkToStopMin: from === home ? rules.walkToStopMaxMin : undefined,
+          ...(within ? { allowedSegmentTags: within.tags, maxTravelMin: within.maxTravelMin } : {}),
+        })
+        .then((its) => relabel(its, from.name, work.name)),
       [] as Itinerary[],
     );
+  /**
+   * The search returns the connections that nothing beats on departure, arrival and changes. A
+   * slower one inside fewer fare zones (a cheaper pass) is therefore often missing. Where the
+   * routing engine can restrict a search to a list of zones, the zone sets that may hold such
+   * connections are searched too, one call each, all at once: `found` is the answer without
+   * restriction, from which the two ends and the zones already seen are read. Each call asks
+   * for the same window. Inside a few zones the best connection can be a very bad one (two
+   * hours through four villages against one hour by train): only those taking at most half as
+   * long again as the fastest found, plus a quarter of an hour, are kept.
+   */
+  const zoneSearchOn = routing.segmentFilter === true && !!deps.zoneSearches && rules.zoneSearches > 0;
+  const withinZones = async (from: LatLon & { name?: string }, found: Itinerary[], max: number, cheaperOnly = false): Promise<Itinerary[]> => {
+    if (!zoneSearchOn || found.length === 0 || max <= 0) return [];
+    let sets: ZoneSearchSet[] = [];
+    try {
+      sets = deps.zoneSearches!(found.map((it) => it.legs.filter(isTransit)), { max, extra: rules.zoneSearchExtraZones });
+    } catch {
+      return [];
+    }
+    if (cheaperOnly) sets = sets.filter((z) => z.cheaper);
+    const maxTravelMin = Math.round(Math.min(...found.map((it) => it.durationMin)) * ZONE_SEARCH_MAX_SLOWER + ZONE_SEARCH_MAX_EXTRA_MIN);
+    const answers = (await Promise.all(sets.slice(0, max).map((z) => transitTo(from, req.arrival, false, { tags: z.tags, maxTravelMin })))).map((its) =>
+      its.filter((it) => it.durationMin <= maxTravelMin),
+    );
+    if (typeof process !== 'undefined' && process.env?.PENDULAR_DEBUG) sets.slice(0, max).forEach((z, i) => console.log('zone search', from.name, z.alliance, z.zones.join(','), '=>', answers[i]!.map((it) => `${localHHMM(it.departure, tz)}-${localHHMM(it.arrival, tz)}`).join(' ')));
+    return answers.flat();
+  };
+  /** Several answers as one list: the same vehicles at the same times once. */
+  const merged = (...lists: Itinerary[][]): Itinerary[] => {
+    const seen = new Set<string>();
+    return lists.flat().filter((it) => {
+      const key = `${it.departure}|${it.arrival}|${vehiclesOf(it).join('>')}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
   /**
    * From home the search runs twice, the second time resolving ties the other way: two routes
    * with the same times and changes can differ in price, and only one of them comes back per call.
@@ -393,7 +463,6 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     return best;
   };
 
-  const drafts: Draft[] = [];
   const leftOut: CompareResult['leftOut'] = [];
   for (const kind of ['walk', 'bike', 'ebike'] as const) {
     if (want(kind) && tooFar[kind]) leftOut.push({ kind, title: kind, code: 'tooLong' });
@@ -401,10 +470,9 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
 
   // --- 2. Public transport door to door -----------------------------------------------------
   // A connection taking more than twice the fastest (plus half an hour) is not an alternative.
-  const withTransit = direct.filter((it) => it.legs.some(isTransit));
+  // The two calls from home mostly return the same connections: each once.
+  const withTransit = merged(direct).filter((it) => it.legs.some(isTransit));
   const quickest = Math.min(...withTransit.map((it) => it.durationMin));
-  const usable = withTransit.filter((it) => it.durationMin <= quickest * 2 + 30);
-  const transitGroups = groupItineraries(usable, fareKey);
   const toConn = (it: Itinerary, leadMs = 0): Conn => ({
     dep: ms(it.departure) - leadMs,
     arr: ms(it.arrival),
@@ -412,13 +480,19 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     changes: it.changes,
     vehicles: vehiclesOf(it),
   });
-  /** Every connection from home, to recognise a drive to a train one could have walked to. */
-  const fromHome = usable.map((it) => toConn(it));
-  if (want('transit')) {
-    for (const g of transitGroups) {
-      drafts.push({ kind: 'transit', title: g.title, itinerary: g.typical, durationMin: g.typicalMin, changes: g.changes, group: g, conns: g.itineraries.map((it) => toConn(it)), fareKey: fareKey(g.typical) });
+  // The searches inside zone sets start now and run beside those from the car parks (step 3),
+  // which wait for them only to know every connection from home.
+  const homeTransit = withinZones(home, withTransit, rules.zoneSearches).then((more) => {
+    const usable = merged(withTransit, more.filter((it) => it.legs.some(isTransit))).filter((it) => it.durationMin <= quickest * 2 + 30);
+    const drafts: Draft[] = [];
+    if (want('transit')) {
+      for (const g of groupItineraries(usable, fareKey)) {
+        drafts.push({ kind: 'transit', title: g.title, itinerary: g.typical, durationMin: g.typicalMin, changes: g.changes, group: g, conns: g.itineraries.map((it) => toConn(it)), fareKey: fareKey(g.typical) });
+      }
     }
-  }
+    /** `fromHome`: every connection from home, to recognise a drive to a train one could have walked to. */
+    return { drafts, fromHome: usable.map((it) => toConn(it)) };
+  });
 
   // --- 3. Access options: drive or ride to a station, then public transport -------------------
   async function accessOptions(
@@ -427,7 +501,8 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     routes: (StreetRoute | null)[],
     legMode: LegMode,
     transferMin: number,
-  ) {
+  ): Promise<Draft[]> {
+    const drafts: Draft[] = [];
     const carMin = car ? car.durationMin * peakOf(car, req.work) : Infinity;
     const reachable = cands
       .map((site, i) => ({ site, route: routes[i] ?? null }))
@@ -451,12 +526,24 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       .slice(0, rules.accessCandidates);
 
     if (typeof process !== 'undefined' && process.env?.PENDULAR_DEBUG) console.log(kind, 'quickest', quickest, cands.map((site, i) => `${site.name}:${routes[i] ? Math.round(routes[i]!.durationMin) : '-'}/${onward(site) === null ? '-' : Math.round(onward(site)!)}`).join(' '), '=>', reachable.map((c) => `${c.site.name}:${Math.round(c.guess)}`).join(' '));
-    const results = await Promise.all(reachable.map((c) => transitTo(c.site)));
+    const [results, { fromHome }] = await Promise.all([
+      // From a site too a cheaper pass can be hidden by faster connections: one more search per
+      // site, inside the cheapest zone path, and only when that path needs fewer zones than
+      // every connection found from the site (so most sites cost nothing more).
+      Promise.all(
+        reachable.map(async (c) => {
+          const found = (await transitTo(c.site)).filter((it) => it.legs.some(isTransit));
+          return merged(found, (await withinZones(c.site, found, Math.min(1, rules.zoneSearchesPerSite), true)).filter((it) => it.legs.some(isTransit)));
+        }),
+      ),
+      homeTransit,
+    ]);
     const best = reachable.map((c, i) => {
-      const its = (results[i] ?? []).filter((it) => it.legs.some(isTransit));
-      const groups = groupItineraries(its, fareKey);
+      const its = results[i] ?? [];
       const factor = legMode === 'car' ? peakOf(c.route, c.site) : 1;
-      return { its, g: [...groups].sort((a, b) => a.typicalMin - b.typicalMin)[0], factor, rideMs: c.route.durationMin * factor * 60000 };
+      // Every route from the site, fastest first: the train and the bus from the same car park
+      // are two routes, and two tickets when their zones differ.
+      return { its, groups: groupItineraries(its, fareKey), factor, rideMs: c.route.durationMin * factor * 60000 };
     });
     // The same train or bus can be boarded at several sites along its way: the one with the
     // shortest drive or ride from home is the one to use.
@@ -470,55 +557,59 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       }
     }
     reachable.forEach((c, i) => {
-      const { g, factor, rideMs } = best[i]!;
-      if (!g) return;
-      // The search from the site already walks from the car park to the platform: parking and
-      // that walk together take the transfer time, or the walk itself when it is longer.
-      const leadOf = (it: Itinerary) => {
-        const first = it.legs[0]!;
-        const walkMs = isTransit(first) ? 0 : ms(first.arrival) - ms(first.departure);
-        return rideMs + Math.max(0, transferMin * 60000 - walkMs);
-      };
-      // Each departure on its own. A vehicle that one can walk to from home, or board at a
-      // site nearer home, is not chased by car further down its line. One reached from home
-      // only through a feeder bus is worth driving to when one leaves home clearly later.
-      const timed = g.itineraries
-        .map((it) => ({ it, conn: toConn(it, leadOf(it)) }))
-        .filter(({ it, conn }) => {
-          const main = mainVehicle(it);
-          if (main === undefined) return true;
-          if ((shortestRide.get(main) ?? Infinity) < rideMs - 60000) return false;
-          const same = fromHome.filter((h) => h.vehicles?.includes(main));
-          if (same.some((h) => h.vehicles?.[0] === main)) return false;
-          return same.every((h) => conn.dep - h.dep >= rules.sameVehicleMinSaving * 60000);
-        })
-        .sort((a, b) => a.conn.min - b.conn.min);
-      if (timed.length === 0) {
-        leftOut.push({ kind, title: c.site.name, code: 'noBetterThanTransit' });
-        return;
+      const { groups, factor, rideMs } = best[i]!;
+      let shown = 0;
+      for (const g of groups) {
+        // The search from the site already walks from the car park to the platform: parking and
+        // that walk together take the transfer time, or the walk itself when it is longer.
+        const leadOf = (it: Itinerary) => {
+          const first = it.legs[0]!;
+          const walkMs = isTransit(first) ? 0 : ms(first.arrival) - ms(first.departure);
+          return rideMs + Math.max(0, transferMin * 60000 - walkMs);
+        };
+        // Each departure on its own. A vehicle that one can walk to from home, or board at a
+        // site nearer home, is not chased by car further down its line. One reached from home
+        // only through a feeder bus is worth driving to when one leaves home clearly later.
+        const timed = g.itineraries
+          .map((it) => ({ it, conn: toConn(it, leadOf(it)) }))
+          .filter(({ it, conn }) => {
+            const main = mainVehicle(it);
+            if (main === undefined) return true;
+            if ((shortestRide.get(main) ?? Infinity) < rideMs - 60000) return false;
+            const same = fromHome.filter((h) => h.vehicles?.includes(main));
+            if (same.some((h) => h.vehicles?.[0] === main)) return false;
+            return same.every((h) => conn.dep - h.dep >= rules.sameVehicleMinSaving * 60000);
+          })
+          .sort((a, b) => a.conn.min - b.conn.min);
+        if (timed.length === 0) continue;
+        shown++;
+        const typical = timed[Math.floor((timed.length - 1) / 2)]!;
+        const total = typical.conn.min;
+        const boardAt = new Date(ms(typical.it.departure) - Math.max(0, leadOf(typical.it) - rideMs));
+        const accessLeg = streetLeg(legMode, home, { ...c.site, name: c.site.name }, { ...c.route, durationMin: c.route.durationMin * factor }, boardAt, 0);
+        const itinerary: Itinerary = {
+          departure: accessLeg.departure,
+          arrival: typical.it.arrival,
+          durationMin: total,
+          changes: typical.it.changes,
+          legs: [accessLeg, ...typical.it.legs],
+        };
+        const kept: RouteGroup = { ...g, itineraries: timed.map((x) => x.it), departures: timed.length, arrivals: timed.map((x) => x.it.arrival).sort() };
+        kept.firstArrival = kept.arrivals[0]!;
+        kept.lastArrival = kept.arrivals[kept.arrivals.length - 1]!;
+        drafts.push({ kind, title: g.title, itinerary, durationMin: total, changes: typical.it.changes, group: kept, access: c.site, accessRoute: c.route, conns: timed.map((x) => x.conn), fareKey: fareKey(typical.it) });
       }
-      const typical = timed[Math.floor((timed.length - 1) / 2)]!;
-      const total = typical.conn.min;
-      const boardAt = new Date(ms(typical.it.departure) - Math.max(0, leadOf(typical.it) - rideMs));
-      const accessLeg = streetLeg(legMode, home, { ...c.site, name: c.site.name }, { ...c.route, durationMin: c.route.durationMin * factor }, boardAt, 0);
-      const itinerary: Itinerary = {
-        departure: accessLeg.departure,
-        arrival: typical.it.arrival,
-        durationMin: total,
-        changes: typical.it.changes,
-        legs: [accessLeg, ...typical.it.legs],
-      };
-      const kept: RouteGroup = { ...g, itineraries: timed.map((x) => x.it), departures: timed.length, arrivals: timed.map((x) => x.it.arrival).sort() };
-      kept.firstArrival = kept.arrivals[0]!;
-      kept.lastArrival = kept.arrivals[kept.arrivals.length - 1]!;
-      drafts.push({ kind, title: g.title, itinerary, durationMin: total, changes: typical.it.changes, group: kept, access: c.site, accessRoute: c.route, conns: timed.map((x) => x.conn), fareKey: fareKey(typical.it) });
+      if (groups.length > 0 && shown === 0) leftOut.push({ kind, title: c.site.name, code: 'noBetterThanTransit' });
     });
+    return drafts;
   }
-  await Promise.all([
+  const [fromHomeDrafts, ...accessDrafts] = await Promise.all([
+    homeTransit.then((h) => h.drafts),
     accessOptions('parkRail', prCand, prDrive, 'car', rules.parkTransferMin),
     accessOptions('cityParkRide', cityCand, cityDrive, 'car', rules.parkTransferMin),
     accessOptions('bikeRide', brCand, brRide, 'ebike', rules.bikeTransferMin),
   ]);
+  const drafts: Draft[] = [...fromHomeDrafts, ...accessDrafts.flat()];
 
   // --- 4. All the way by one mode -------------------------------------------------------------
   const arriveAt = new Date(drafts[0]?.itinerary.arrival ?? Date.now());
@@ -604,6 +695,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
         ? [...d.conns].sort((a, b) => a.dep - b.dep).map((c) => ({ departure: localHHMM(new Date(c.dep).toISOString(), tz), arrival: localHHMM(new Date(c.arr).toISOString(), tz), durationMin: c.min, changes: c.changes }))
         : undefined,
       fareKey: d.fareKey,
+      ticketGroup: `${d.kind}|${d.access?.id ?? ''}|${d.fareKey ?? ''}`,
       // Used by pruning only.
       ...(d.conns ? { _conns: d.conns } : {}),
     } as CommuteOption;
@@ -621,11 +713,20 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   if (pt.length) {
     const fastestPt = pt.reduce((a, b) => (b.durationMin < a.durationMin ? b : a));
     const cheapestPt = pt.reduce((a, b) => (b.cost.yearly < a.cost.yearly ? b : a));
+    const removed: CommuteOption[] = [];
     for (let i = options.length - 1; i >= 0; i--) {
       const o = options[i]!;
       if (o.kind !== 'parkRail' && o.kind !== 'cityParkRide' && o.kind !== 'bikeRide') continue;
       if (o.durationMin <= fastestPt.durationMin - ACCESS_MIN_SAVING || o.cost.yearly < cheapestPt.cost.yearly) continue;
       options.splice(i, 1);
+      removed.unshift(o);
+    }
+    // A site is named once, with its fastest route, and only when none of its routes stays.
+    const named = new Set<string>();
+    for (const o of removed.sort((a, b) => a.durationMin - b.durationMin)) {
+      const site = `${o.kind}|${o.access?.id ?? o.title}`;
+      if (named.has(site) || options.some((x) => x.kind === o.kind && x.access?.id === o.access?.id)) continue;
+      named.add(site);
       leftOut.push({
         kind: o.kind,
         title: o.access?.name ?? o.title,
@@ -704,11 +805,16 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   );
 
   // --- 8. Geometry for the access legs of kept options ----------------------------------------
+  // Several routes can start at the same site: one street search per site and vehicle.
+  const shapeCache = new Map<string, Promise<StreetRoute | null>>();
   const shapes = Promise.all(
     kept.map(async (o) => {
       const first = o.itinerary.legs[0];
       if (!o.access || !first || first.geometry) return;
-      const r = await safe(routing.street({ from: req.home, to: o.access, profile: first.mode === 'car' ? 'car' : 'ebike' }), null);
+      const profile = first.mode === 'car' ? 'car' : 'ebike';
+      const key = `${o.access.id}|${profile}`;
+      if (!shapeCache.has(key)) shapeCache.set(key, safe(routing.street({ from: req.home, to: o.access, profile }), null));
+      const r = await shapeCache.get(key)!;
       if (r?.geometry) first.geometry = r.geometry;
     }),
   );

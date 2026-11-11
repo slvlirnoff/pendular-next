@@ -153,6 +153,11 @@ export interface RuleSet {
   zoneSearches: number;
   /** A zone set is searched when it counts at most this many zones more than the cheapest path. */
   zoneSearchExtraZones: number;
+  /**
+   * The same from each car park or bike park tried: at most this many searches per site (0 or 1),
+   * made only for a zone path with fewer zones than every connection found from the site.
+   */
+  zoneSearchesPerSite: number;
   /** Size of the arrival slices used by the "only way to arrive at that time" rule, minutes. */
   arrivalSliceMin: number;
   /**

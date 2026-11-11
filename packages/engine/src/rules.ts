@@ -42,6 +42,8 @@ export const PENDULAR_RULES: RuleSet = {
   // the searches from the car parks. Two zones more is the train against the bus from Lucens.
   zoneSearches: 4,
   zoneSearchExtraZones: 2,
+  // One more search per car park, only for a cheaper zone path: about 0.1 s on Lovatens – EPFL.
+  zoneSearchesPerSite: 1,
   arrivalSliceMin: 30,
   lastTripHomeBy: '02:00',
   carFullCostPerKm: 0.74,

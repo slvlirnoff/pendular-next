@@ -164,3 +164,55 @@ describe('MotisRouting.lastTrip with the segment filter', () => {
     expect(urls[0]!.searchParams.has('maxTravelTime')).toBe(false);
   });
 });
+
+describe('MotisRouting.transit restricted to fare zones', () => {
+  const answer = {
+    itineraries: [
+      {
+        duration: 3300,
+        startTime: '2027-01-19T05:50:00Z',
+        endTime: '2027-01-19T06:45:00Z',
+        transfers: 0,
+        legs: [{ mode: 'BUS', from: { name: 'A', lat: 46.7, lon: 6.8 }, to: { name: 'B', lat: 46.5, lon: 6.6 }, duration: 3300, startTime: '2027-01-19T05:50:00Z', endTime: '2027-01-19T06:45:00Z' }],
+      },
+    ],
+  };
+  const make = (segmentFilter: boolean, urls: URL[]) =>
+    new MotisRouting({
+      baseUrl: 'http://motis.test',
+      timezone: 'Europe/Zurich',
+      referenceTime: '2027-01-19T11:00:00Z',
+      segmentFilter,
+      fetch: (async (u: URL) => {
+        urls.push(u);
+        return new Response(JSON.stringify(answer));
+      }) as unknown as typeof fetch,
+    });
+  const q = { from: { lat: 46.7085, lon: 6.8393 }, to: { lat: 46.5167, lon: 6.6291 }, date: '2027-01-19', window: { from: '07:30', to: '08:30' }, by: 'arrive' as const };
+
+  it('sends the tags, asks for one connection and limits the travel time', async () => {
+    const urls: URL[] = [];
+    const its = await make(true, urls).transit({ ...q, allowedSegmentTags: ['mobilis:11', 'mobilis:12'], maxTravelMin: 96 });
+    expect(its).toHaveLength(1);
+    const p = urls[0]!.searchParams;
+    expect(p.get('allowedSegmentTags')).toBe('mobilis:11,mobilis:12');
+    expect(p.get('numItineraries')).toBe('1');
+    expect(p.get('maxTravelTime')).toBe('96');
+    // The same window as the search without restriction.
+    expect(p.get('arriveBy')).toBe('true');
+    expect(p.get('searchWindow')).toBe('3600');
+    // Without a limit from the caller: four hours.
+    await make(true, urls).transit({ ...q, allowedSegmentTags: ['mobilis:11'] });
+    expect(urls[1]!.searchParams.get('maxTravelTime')).toBe('240');
+  });
+  it('the search without tags is unchanged', async () => {
+    const urls: URL[] = [];
+    await make(true, urls).transit(q);
+    for (const k of ['allowedSegmentTags', 'numItineraries', 'maxTravelTime']) expect(urls[0]!.searchParams.has(k)).toBe(false);
+  });
+  it('without the fork a restricted search returns nothing, and asks nothing', async () => {
+    const urls: URL[] = [];
+    expect(await make(false, urls).transit({ ...q, allowedSegmentTags: ['mobilis:11'] })).toEqual([]);
+    expect(urls).toEqual([]);
+  });
+});

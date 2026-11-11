@@ -255,6 +255,8 @@ export interface ZoneSearch {
   why: 'path' | 'present' | 'network';
   /** The value for the routing engine: "<alliance>:<zone>" per zone. */
   tags: string[];
+  /** True when the set counts fewer zones than every connection already found in the network (or none was). */
+  cheaper: boolean;
 }
 
 export interface ZoneSearchOptions extends ZonePathOptions {
@@ -277,7 +279,8 @@ const stopId = (p: { stopId?: string; name: string }) => p.stopId;
  *  3. where a set reaches the count from which the network charges its all-zones price, the
  *     whole network instead (the pass is valid everywhere).
  * Left out: a set that contains every connection already found (the restricted search would
- * return the same answer), a set that contains a set already chosen (it costs more and allows
+ * return the same answer), a set that counts as many zones as the dearest connection found or
+ * more (see below), a set that contains a set already chosen (it costs more and allows
  * the same connections and more: the least useful), and, where the data says which zones are a
  * network's own, a set with none (the network does not sell it). Cheapest first, at most `max`.
  */
@@ -316,11 +319,18 @@ export function zoneSearches(trips: Leg[][], deps: { nova: NovaData; networks: N
     const own = networks.ownZones?.alliances?.[alliance]?.[plans.pass];
 
     const sets = new Map<string, ZoneSearch>();
+    const foundCounts = inNetwork.filter((m) => m.has(alliance)).map((m) => graph.count(m.get(alliance)!));
+    const leastFound = Math.min(Infinity, ...foundCounts);
+    // What a restricted search adds is, by construction, beaten on times and changes by a
+    // connection already found: it is worth having only if its pass is cheaper than that one's.
+    // So no set that counts as many zones as the dearest connection found, when all of them
+    // are priced in this network.
+    const dearestFound = foundCounts.length === inNetwork.length ? Math.max(...foundCounts) : Infinity;
     const put = (zones: number[], count: number, why: ZoneSearch['why']) => {
       const whole = count >= allFrom;
       const z = whole ? graph.zones : zones;
       const key = z.join(',');
-      if (!sets.has(key)) sets.set(key, { alliance, zones: z, count: whole ? graph.count(z) : count, why: whole ? 'network' : why, tags: segmentTagsOfZones(alliance, z) });
+      if (!sets.has(key)) sets.set(key, { alliance, zones: z, count: whole ? graph.count(z) : count, why: whole ? 'network' : why, tags: segmentTagsOfZones(alliance, z), cheaper: !whole && count < leastFound });
     };
     for (const p of paths) put(p.zones, p.count, 'path');
     for (const m of inNetwork) {
@@ -335,6 +345,7 @@ export function zoneSearches(trips: Leg[][], deps: { nova: NovaData; networks: N
     const within = (inner: number[], outer: number[]) => inner.every((z) => outer.includes(z));
     for (const s of [...sets.values()].sort((a, b) => a.count - b.count || a.zones.length - b.zones.length)) {
       if (inNetwork.every((m) => m.has(alliance) && within(m.get(alliance)!, s.zones))) continue;
+      if (s.count >= dearestFound) continue;
       if (own && !s.zones.some((z) => own[String(z)]?.own === true)) continue;
       if (chosen.some((c) => within(c.zones, s.zones))) continue;
       chosen.push(s);
