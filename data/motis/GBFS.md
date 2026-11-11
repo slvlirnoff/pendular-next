@@ -7,26 +7,31 @@ after an import) and restart the server; no re-import is needed:
 gbfs:
   feeds:
     sharedmobility:
-      url: https://sharedmobility.ch/gbfs.json
+      # One sub-feed per provider, with vehicle types. The service asks for a contact e-mail
+      # address in this header (not kept in the repository).
+      url: https://gbfs.prod.sharedmobility.ch/v2/gbfs
+      headers:
+        Authorization: <contact e-mail address>
   update_interval: 300
   http_timeout: 60
 ```
 
 What the trial showed (MOTIS 2.11.4):
 
-- The open national feed (Swiss Federal Office of Energy, GBFS 2.0, one feed for all 46
-  providers, 12,602 stations, about 7 MB of free vehicles) loads in about 8 seconds.
-- `GET /api/v1/rentals?min=lat,lon&max=lat,lon` lists stations and vehicles; `/api/v6/plan`
-  accepts `RENTAL` in `directModes`, `preTransitModes` and `postTransitModes`.
-- **Not usable as is:** this feed has no vehicle types, so MOTIS treats everything as one
-  provider of bicycles. Car-sharing cars (Mobility, 2EM) are then ridden as bikes: a "rental"
-  from Lausanne station to EPFL came back on a BMW M4.
-- The newer service (`gbfs.prod.sharedmobility.ch/v2/gbfs`, one sub-feed per provider with
-  vehicle types) asks for a contact e-mail address in the `Authorization` header
-  (https://github.com/SFOE/sharedmobility/blob/main/Access%20the%20data.md). MOTIS can send
-  headers per feed (`headers:` under the feed). Not tried: it needs an address to give.
+- The per-provider service loads all 46 providers in about 30 seconds at start, with proper
+  vehicle types: Mobility and 2EM are cars, Donkey Republic bicycles, Voi scooters and bikes.
+- `GET /api/v1/rentals?min=lat,lon&max=lat,lon` lists stations and vehicles. `/api/v6/plan`
+  accepts `RENTAL` in `directModes`, `preTransitModes` and `postTransitModes`, and
+  `directRentalFormFactors=BICYCLE` (and the `preTransit…` / `postTransit…` forms) keeps cars
+  and scooters out.
+- Geneva Cornavin - Plan-les-Ouates on a timetable morning: tram and walking 37 min; shared
+  bike all the way 29 min; train to Lancy-Bachet and a shared bike for the last leg 25-26 min.
+- Lausanne gare - EPFL with bicycles only: no result (no bike-share network there in the feed).
+- The older open feed (`https://sharedmobility.ch/gbfs.json`, no header needed) is not usable:
+  it has no vehicle types, so MOTIS rides car-sharing cars as bicycles.
 - Availability is today's. For a commute planned on a timetable day in 2027 only the existence
   and place of stations matters, not the live counts.
+- Terms: open use, source must be named (Swiss Federal Office of Energy, sharedmobility.ch).
 
 Stations per provider in the open feed (bounding boxes): Geneva canton: Donkey Republic 621,
 2EM 313, Mobility 129, carvelo2go 29, Voi 17. Lausanne area: 2EM 270, Mobility 125, carvelo2go
