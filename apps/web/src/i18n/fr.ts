@@ -215,9 +215,6 @@ export const fr = {
   'opt.depOne': "Un seul départ : {time}",
   'opt.depList': "Départs {times}",
   'opt.depEvery': "{first} – {last}, toutes les {n} min",
-  'opt.times': "Départs et arrivées",
-  'ticket.same': "Même titre de transport que « {name} »",
-  'ticket.sameDetail': "Même titre de transport que « {name} » : {product}, {chf} par an.",
   'car.peak': "trafic de pointe (+{pct} %)",
   'car.park': "{min} min pour se garer",
   'car.parkKind': "{min} min pour se garer ({kind})",
@@ -237,7 +234,7 @@ export const fr = {
   'cat.bikeRide': "Vélo + train",
   'overview.via': "via {via}",
   'overview.km': "{km} km",
-  'overview.also': "Autres options de ce type",
+  'overview.also': "Autres titres de transport",
   'flex.title': "Du télétravail certains jours ?",
   'flex.intro': "{name} : le billet le moins cher selon le nombre de jours sur le lieu de travail.",
   'flex.days': "1 jour par semaine|{n} jours par semaine",
@@ -279,6 +276,15 @@ export const fr = {
   'sbike.caveat.availability': "Un vélo, ou une place pour le rendre, n’est pas garanti aux heures de pointe.",
   'sbike.caveat.electric': "Vélo électrique : {price} de plus par trajet.",
   'sbike.map': "Voir sur la carte",
+  // One card per ticket: the routes it covers.
+  'group.routes': "1 itinéraire|{n} itinéraires",
+  'group.departures': "1 départ|{n} départs",
+  'group.changesUpTo': "direct à 1 changement|direct à {n} changements",
+  'group.changesRange': "{min} à {n} changements",
+  'group.depTitle': "Départs",
+  'group.depSummary': "{count} départs entre {first} et {last}, toutes les {n} min",
+  'group.routesTitle': "Les {n} itinéraires",
+  'group.routeShown': "affiché",
 } as const;
 
 export type Key = keyof typeof fr;

@@ -1,7 +1,8 @@
 import type { CommuteOption, CompareResult, FlexibleWork, FlexibleWorkRow, Leg, OptionKind, SharedBikeSuggestion } from '@pendular/engine/types';
 import { useI18n, type Key, type T } from '../i18n/index.js';
-import { chf, chf2, duration, num } from '../lib/format.js';
+import { chf, chf2, duration, durationRange, num } from '../lib/format.js';
 import { changeStops, optionName } from '../lib/names.js';
+import { groupRoute, ticketGroups, type TicketGroup } from '../lib/groups.js';
 import { carNote } from '../lib/carNote.js';
 import { modeIcon } from '../lib/pictograms.js';
 import { ModeChain } from './ModeChain.js';
@@ -32,9 +33,9 @@ function viaLabel(o: CommuteOption, t: T, lang: string): string {
 function ModeCard(props: { category: (typeof CATEGORIES)[number]; result: CompareResult; selected: string | null; onSelect: (id: string) => void }) {
   const { t, lang } = useI18n();
   const { category, result } = props;
-  // Cheapest of the card's kinds; the faster one when two cost the same.
-  const mine = result.options.filter((o) => category.kinds.includes(o.kind)).sort((a, b) => a.cost.yearly - b.cost.yearly || a.durationMin - b.durationMin);
-  const best = mine[0];
+  // One entry per ticket: the cheapest of the card's kinds first; the faster one when two cost the same.
+  const mine = ticketGroups(result.options.filter((o) => category.kinds.includes(o.kind))).sort((a, b) => a.yearly - b.yearly || a.minDuration - b.minDuration);
+  const group = mine[0];
   const icons = (names: string[]) => (
     <span className="mode-icons" aria-hidden="true">
       {names.map((n) => (
@@ -44,29 +45,35 @@ function ModeCard(props: { category: (typeof CATEGORIES)[number]; result: Compar
   );
 
   // A way of commuting this search does not offer has no card; the list below says why.
-  if (!best) return null;
+  if (!group) return null;
+  // The route the card draws: the selected one when it is on this ticket, else the best one.
+  const best = groupRoute(group, props.selected);
+  const has = (g: TicketGroup, id: string | null | undefined) => g.routes.some((o) => o.id === id);
+  // Several routes on one ticket: say how many, the list below tells them apart.
+  const label = (g: TicketGroup) => (g.routes.length > 1 ? t('group.routes', { n: g.routes.length }) : viaLabel(g.routes[0]!, t, lang));
   // A city park and ride is not a P+Rail: the card takes the name of what it shows.
-  const label = best.kind === 'cityParkRide' ? t('kind.cityParkRide') : t(`cat.${category.id}`);
+  const name = best.kind === 'cityParkRide' ? t('kind.cityParkRide') : t(`cat.${category.id}`);
 
   const v = result.verdict;
-  const tags = [v.cheapest === best.id && t('verdict.cheapest'), v.fastest === best.id && t('verdict.fastest'), v.greenest === best.id && t('verdict.greenest')].filter(Boolean) as string[];
+  const tags = [has(group, v.cheapest) && t('verdict.cheapest'), has(group, v.fastest) && t('verdict.fastest'), has(group, v.greenest) && t('verdict.greenest')].filter(Boolean) as string[];
   const note = best.kind === 'car' ? carNote(result.stamp.car, t) : null;
   const others = mine.slice(1, 3);
+  const active = has(group, props.selected);
   return (
-    <li className={`mode-card card${best.id === props.selected ? ' is-selected' : ''}`}>
-      <button type="button" className="mode-main" aria-pressed={best.id === props.selected} onClick={() => props.onSelect(best.id)}>
+    <li className={`mode-card card${active ? ' is-selected' : ''}`}>
+      <button type="button" className="mode-main" aria-pressed={active} onClick={() => props.onSelect(best.id)}>
         <span className="mode-label">
           {icons(category.id === 'active' ? [modeIcon(best.kind)] : category.icons)}
-          <span className="eyebrow">{label}</span>
+          <span className="eyebrow">{name}</span>
         </span>
         <span className="mode-figures">
-          <span className="figure">{duration(best.durationMin)}</span>
+          <span className="figure">{durationRange(group.minDuration, group.maxDuration)}</span>
           <span className="mode-cost">
-            {chf(best.cost.yearly, lang)} <small>{t('verdict.perYear')}</small>
+            {chf(group.yearly, lang)} <small>{t('verdict.perYear')}</small>
           </span>
         </span>
-        <span className="mode-via">{viaLabel(best, t, lang)}</span>
-        {best.itinerary.legs.some((l) => l.line) && <ModeChain legs={best.itinerary.legs} />}
+        <span className="mode-via">{label(group)}</span>
+        {group.routes.length === 1 && best.itinerary.legs.some((l) => l.line) && <ModeChain legs={best.itinerary.legs} />}
         {note && <span className="mode-note">{note}</span>}
         {tags.length > 0 && (
           <span className="mode-tags">
@@ -80,16 +87,19 @@ function ModeCard(props: { category: (typeof CATEGORIES)[number]; result: Compar
       </button>
       {others.length > 0 && (
         <ul className="mode-also" aria-label={t('overview.also')}>
-          {others.map((o) => (
-            <li key={o.id}>
-              <button type="button" aria-pressed={o.id === props.selected} title={optionName(o, t)} onClick={() => props.onSelect(o.id)}>
-                <span>{viaLabel(o, t, lang)}</span>
-                <span>
-                  {duration(o.durationMin)} · {chf(o.cost.yearly, lang)}
-                </span>
-              </button>
-            </li>
-          ))}
+          {others.map((g) => {
+            const o = groupRoute(g, props.selected);
+            return (
+              <li key={g.key}>
+                <button type="button" aria-pressed={has(g, props.selected)} title={optionName(o, t)} onClick={() => props.onSelect(o.id)}>
+                  <span>{label(g)}</span>
+                  <span>
+                    {durationRange(g.minDuration, g.maxDuration)} · {chf(g.yearly, lang)}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </li>

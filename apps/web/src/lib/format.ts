@@ -18,3 +18,11 @@ export function duration(min: number): string {
 
 export const hhmm = (iso: string) =>
   new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+
+/** 57, 59 → "57–59 min"; 55, 72 → "55 min – 1 h 12"; equal values → one duration. */
+export function durationRange(min: number, max: number): string {
+  const a = Math.round(min);
+  const b = Math.round(max);
+  if (a === b) return duration(a);
+  return b < 60 ? `${a}–${b} min` : `${duration(a)} – ${duration(b)}`;
+}

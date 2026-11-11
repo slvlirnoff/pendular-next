@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CompareResult } from '@pendular/engine/types';
 import { I18n, LANGS, langFromPath, translator, type Lang } from './i18n/index.js';
 import { compareCommute } from './lib/api.js';
+import { ticketGroups } from './lib/groups.js';
 import { fromQuery, toQuery, toRequest, type SearchState } from './lib/state.js';
 import { SearchForm } from './components/SearchForm.js';
 import { Overview } from './components/Overview.js';
@@ -66,7 +67,9 @@ export function App() {
         .then((r) => {
           setResult(r);
           setSearched(s);
-          setSelected(r.verdict.cheapest ?? null);
+          // The cheapest ticket opens on its best route (fewest changes, then fastest).
+          const cheapest = ticketGroups(r.options).find((g) => g.routes.some((o) => o.id === r.verdict.cheapest));
+          setSelected(cheapest?.routes[0]?.id ?? r.verdict.cheapest ?? null);
           setStatus('done');
         })
         .catch((e: unknown) => {

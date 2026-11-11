@@ -1,9 +1,10 @@
 import { useId, useState } from 'react';
 import type { CarAssumptions, CommuteOption, CostComponent, Leg, PricedProduct } from '@pendular/engine/types';
 import { useI18n, type Key } from '../i18n/index.js';
-import { chf, chf2, duration, hhmm, num } from '../lib/format.js';
-import { optionName } from '../lib/names.js';
-import { departuresSummary } from '../lib/schedule.js';
+import { chf, chf2, duration, durationRange, hhmm, num } from '../lib/format.js';
+import { changeStops, optionName } from '../lib/names.js';
+import { departuresSummary, medianGap } from '../lib/schedule.js';
+import { groupBest, groupDepartures, groupRoute, isEarlyReturn, lastReturn, ticketGroups, type TicketGroup } from '../lib/groups.js';
 import { carNote } from '../lib/carNote.js';
 import { LegBadge, ModeChain } from './ModeChain.js';
 
@@ -46,19 +47,10 @@ export function PriceYear({ product }: { product: PricedProduct }) {
 }
 
 /** The ticket to buy, stated once; the alternatives stay one click away. */
-function Products({ products, sameAs }: { products: PricedProduct[]; sameAs?: string }) {
+function Products({ products }: { products: PricedProduct[] }) {
   const { t, lang } = useI18n();
   const best = products[0];
   if (!best) return null;
-  // Same pass as an option listed above: say so instead of repeating the block.
-  if (sameAs) {
-    return (
-      <div className="detail-block">
-        <h4>{t('ticket.buy')}</h4>
-        <p>{t('ticket.sameDetail', { name: sameAs, product: productName(best, t), chf: chf(best.yearly, lang) })}</p>
-      </div>
-    );
-  }
   // A day pass at the price of two singles adds nothing to read.
   const others = products.slice(1).filter((p, i, list) => !(p.kind.includes('DayPass') && list.some((q) => q !== p && q.yearly === p.yearly)));
   const estimated = best.provenance === 'estimated';
@@ -107,13 +99,16 @@ function Products({ products, sameAs }: { products: PricedProduct[]; sameAs?: st
   );
 }
 
-function Timeline({ legs: allLegs }: { legs: Leg[] }) {
+function Timeline({ legs: allLegs, note }: { legs: Leg[]; note?: string }) {
   const { t } = useI18n();
   // A one- or two-minute walk to, from or between vehicles is not a step worth a line.
   const legs = allLegs.filter((l, i) => !(l.mode === 'walk' && l.durationMin <= 2 && allLegs.length > 1));
   return (
     <div className="detail-block">
-      <h4>{t('opt.trip')}</h4>
+      <h4>
+        {t('opt.trip')}
+        {note && <span className="h4-note"> · {note}</span>}
+      </h4>
       <ol className="timeline">
         {legs.map((l, i) => (
           <li key={i}>
@@ -146,49 +141,243 @@ function Timeline({ legs: allLegs }: { legs: Leg[] }) {
   );
 }
 
-function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () => void; hasCar: boolean; car?: CarAssumptions; sameAs?: string }) {
+/** The ticket in one line for the head of a card: its name and, where zones make the price, how many. */
+function headTicket(p: PricedProduct, t: ReturnType<typeof useI18n>['t']): string {
+  const only = p.components.length === 1 ? p.components[0]! : undefined;
+  if (only?.key.startsWith('network.') && !only.key.startsWith('network.year.all')) {
+    const zones = typeof only.params?.zones === 'number' ? only.params.zones : 0;
+    return t(only.key as Key, { network: only.params?.network ?? '', zones, n: zones });
+  }
+  const zoned = p.components.find((c) => c.key.startsWith('mobilis.') && typeof c.params?.zones === 'number');
+  return zoned ? `${productName(p, t)} · ${t('product.zones', { n: zoned.params!.zones as number })}` : productName(p, t);
+}
+
+function Extras({ o }: { o: CommuteOption }) {
+  const { t, lang } = useI18n();
+  if (o.cost.extras.length === 0) return null;
+  return (
+    <div className="detail-block">
+      <h4>{t('opt.extras')}</h4>
+      <table className="products">
+        <tbody>
+          {o.cost.extras.map((c, i) => (
+            <tr key={i}>
+              <th scope="row">{componentLabel(c, t, lang)}</th>
+              <td className="amount">{chf(c.yearly, lang)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** What tells a route from the others on the same ticket: where one changes. */
+function routeVia(o: CommuteOption, t: ReturnType<typeof useI18n>['t']): string {
+  const via = changeStops(o);
+  return via.length ? t('overview.via', { via: via.join(', ') }) : t('opt.direct');
+}
+
+/** The lines of a route, without the walks: for a row of the timetable. */
+const lineLegs = (o: CommuteOption) => {
+  const legs = o.itinerary.legs.filter((l) => l.mode !== 'walk');
+  return legs.length ? legs : o.itinerary.legs;
+};
+
+/** Up to this many departures are listed at once; more wait behind their summary. */
+const DEPARTURES_OPEN = 6;
+
+/** When to leave home, all routes of the ticket together. */
+function Departures({ group, shown }: { group: TicketGroup; shown: CommuteOption }) {
+  const { t } = useI18n();
+  const rows = groupDepartures(group);
+  if (rows.length === 0) return null;
+  const several = group.routes.length > 1;
+  const list = (
+    <ul className={several ? 'departures has-lines' : 'departures'}>
+      {rows.map((c) => (
+        <li key={`${c.route.id}-${c.departure}`} className={several && c.route === shown ? 'is-shown' : undefined}>
+          <span className="dep-times">
+            {c.departure} → {c.arrival}
+          </span>
+          {several && <ModeChain legs={lineLegs(c.route)} />}
+          <span className="dep-duration">{duration(c.durationMin)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+  if (rows.length <= DEPARTURES_OPEN) {
+    return (
+      <div className="detail-block">
+        <h4>{t('group.depTitle')}</h4>
+        {list}
+      </div>
+    );
+  }
+  const times = rows.map((c) => c.departure);
+  return (
+    <details className="detail-fold">
+      <summary>{t('group.depSummary', { count: rows.length, first: times[0]!, last: times[times.length - 1]!, n: medianGap(times) })}</summary>
+      {list}
+    </details>
+  );
+}
+
+/** The routes the ticket covers; choosing one shows it below and on the map. */
+function Routes(props: { group: TicketGroup; shown: CommuteOption; onSelect: (id: string) => void }) {
+  const { t } = useI18n();
+  const { group, shown } = props;
+  // Closed unless the route on screen is not the one the card opens with.
+  const [open, setOpen] = useState(shown !== group.routes[0]);
+  return (
+    <details className="detail-fold" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary>{t('group.routesTitle', { n: group.routes.length })}</summary>
+      <ul className="routes">
+        {group.routes.map((o) => {
+          const times = departuresSummary(o, t);
+          const back = o.returnTrips;
+          return (
+            <li key={o.id}>
+              <button type="button" aria-pressed={o === shown} onClick={() => props.onSelect(o.id)}>
+                <span className="route-top">
+                  <ModeChain legs={lineLegs(o)} />
+                  {o === shown && <span className="mode-tag">{t('group.routeShown')}</span>}
+                </span>
+                <span className="route-facts">
+                  <span>
+                    <strong>{duration(o.durationMin)}</strong> · {routeVia(o, t)}
+                    {o.changes > 0 && <> · {t('opt.changes', { n: o.changes })}</>}
+                  </span>
+                  {times && <span>{times}</span>}
+                  {back && <span className={isEarlyReturn(back) ? 'warn' : undefined}>{t('opt.lastHomeShort', { last: back.last, arrival: back.lastArrival })}</span>}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </details>
+  );
+}
+
+/** One card per ticket: what it costs and what it allows; the routes inside. */
+function GroupCard(props: { group: TicketGroup; selected: string | null; onSelect: (id: string | null) => void; hasCar: boolean }) {
+  const { t, lang } = useI18n();
+  const { group } = props;
+  const open = group.routes.some((o) => o.id === props.selected);
+  const shown = groupRoute(group, props.selected);
+  const detailId = useId();
+  const n = group.routes.length;
+  const cheapest = group.routes.find((o) => o.cost.yearly === group.yearly) ?? shown;
+  const ticket = cheapest.cost.products[0];
+  const title = shown.kind === 'transit' ? t('kind.transit') : optionName(shown, t);
+  const changes =
+    group.minChanges === group.maxChanges
+      ? group.maxChanges === 0
+        ? t('opt.direct')
+        : t('opt.changes', { n: group.maxChanges })
+      : group.minChanges === 0
+        ? t('group.changesUpTo', { n: group.maxChanges })
+        : t('group.changesRange', { min: group.minChanges, n: group.maxChanges });
+  const co2 = group.routes.map((o) => o.co2KgPerYear);
+  const co2Low = num(Math.min(...co2), lang);
+  const co2High = num(Math.max(...co2), lang);
+  const back = lastReturn(group);
+  // Which search gave the last trip home: any line the pass covers, or the route of the morning trip.
+  const within = back?.within === 'pass' ? t('opt.lastHomePass') : back?.within === 'route' ? t('opt.lastHomeRoute') : null;
+  const saved = shown.co2SavedKgPerYear;
+  return (
+    <li className={`option card${open ? ' is-selected' : ''}`}>
+      <h3>
+        <button type="button" className="option-head" aria-expanded={open} aria-controls={open ? detailId : undefined} onClick={() => props.onSelect(open ? null : shown.id)}>
+          <span className="option-main">
+            <span className="option-title">{title}</span>
+            {n === 1 && <ModeChain legs={shown.itinerary.legs} />}
+          </span>
+          <span className="option-figures">
+            <span className="option-cost">
+              {chf(group.yearly, lang)}
+              <small>{t('verdict.perYear')}</small>
+            </span>
+          </span>
+          {ticket && (
+            <span className="option-ticket">
+              {headTicket(ticket, t)}
+              {ticket.yearly > 0 && <span className="option-month"> · {t('ticket.perMonth', { chf: chf(ticket.yearly / 12, lang) })}</span>}
+            </span>
+          )}
+          <span className="option-meta">
+            <span>
+              <strong>{durationRange(group.minDuration, group.maxDuration)}</strong> · {changes}
+            </span>
+            {group.departures > 0 && (
+              <span>
+                {t('group.departures', { n: group.departures })}
+                {n > 1 && `, ${t('group.routes', { n })}`}
+              </span>
+            )}
+            <span>{t('opt.co2short', { kg: co2Low === co2High ? co2Low : `${co2Low}–${co2High}` })}</span>
+            {back && (
+              <span className={isEarlyReturn(back) ? 'warn' : undefined}>
+                {t('opt.lastHomeShort', { last: back.last, arrival: back.lastArrival })}
+                {within && <span className="qualifier"> · {within}</span>}
+              </span>
+            )}
+          </span>
+        </button>
+      </h3>
+      {open && (
+        <div className="option-detail" id={detailId}>
+          {!back && group.routes.some((o) => o.returnTrips === null) && <p className="detail-facts warn">{t('opt.noReturn')}</p>}
+          <Departures group={group} shown={shown} />
+          {n > 1 && <Routes group={group} shown={shown} onSelect={props.onSelect} />}
+          <Products products={shown.cost.products} />
+          <Extras o={shown} />
+          <Timeline legs={shown.itinerary.legs} note={n > 1 ? routeVia(shown, t) : undefined} />
+          <p className="detail-facts">
+            {t('opt.hours', { h: num(shown.hoursPerYear, lang) })}
+            {saved !== undefined && saved > 0 && props.hasCar && <> · <span className="good">{t('opt.saved', { kg: num(saved, lang) })}</span></>}
+          </p>
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** A way without a ticket (car, walk, bike): one route, one card. */
+function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () => void; hasCar: boolean; car?: CarAssumptions }) {
   const { t, lang } = useI18n();
   const { o } = props;
   const saved = o.co2SavedKgPerYear;
   const detailId = useId();
   const frequency = departuresSummary(o, t);
   const assumptions = o.kind === 'car' ? carNote(props.car, t) : null;
-  const conns = o.connections ?? [];
-  // A departure after midnight (before 04:00) is a late one, not an early one.
-  const early = o.returnTrips ? o.returnTrips.last >= '04:00' && o.returnTrips.last < '19:30' : false;
-  // Which search gave the last trip home: any line the pass covers, or the route of the morning trip.
-  const within = o.returnTrips?.within === 'pass' ? t('opt.lastHomePass') : o.returnTrips?.within === 'route' ? t('opt.lastHomeRoute') : null;
+  const early = o.returnTrips ? isEarlyReturn(o.returnTrips) : false;
   return (
     <li className={`option card${props.selected ? ' is-selected' : ''}`}>
       <h3>
-      <button type="button" className="option-head" aria-expanded={props.selected} aria-controls={props.selected ? detailId : undefined} onClick={props.onSelect}>
-        <span className="option-main">
-          <span className="option-title">{optionName(o, t)}</span>
-          <ModeChain legs={o.itinerary.legs} />
-        </span>
-        <span className="option-figures">
-          <span className="option-cost">
-            {chf(o.cost.yearly, lang)}
-            <small>{t('verdict.perYear')}</small>
+        <button type="button" className="option-head" aria-expanded={props.selected} aria-controls={props.selected ? detailId : undefined} onClick={props.onSelect}>
+          <span className="option-main">
+            <span className="option-title">{optionName(o, t)}</span>
+            <ModeChain legs={o.itinerary.legs} />
           </span>
-        </span>
-        <span className="option-meta">
-          <span>
-            <strong>{duration(o.durationMin)}</strong>
-            {o.itinerary.legs.some((l) => l.line) && <> · {o.changes === 0 ? t('opt.direct') : t('opt.changes', { n: o.changes })}</>}
-          </span>
-          {frequency && <span>{frequency}</span>}
-          <span>{t('opt.co2short', { kg: num(o.co2KgPerYear, lang) })}</span>
-          {early && o.returnTrips && (
-            <span className="warn">
-              {t('opt.lastHomeShort', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}
-              {within && <span className="qualifier"> · {within}</span>}
+          <span className="option-figures">
+            <span className="option-cost">
+              {chf(o.cost.yearly, lang)}
+              <small>{t('verdict.perYear')}</small>
             </span>
-          )}
-        </span>
-        {props.sameAs && <span className="option-note">{t('ticket.same', { name: props.sameAs })}</span>}
-        {assumptions && <span className="option-note">{assumptions}</span>}
-      </button>
+          </span>
+          <span className="option-meta">
+            <span>
+              <strong>{duration(o.durationMin)}</strong>
+              {o.itinerary.legs.some((l) => l.line) && <> · {o.changes === 0 ? t('opt.direct') : t('opt.changes', { n: o.changes })}</>}
+            </span>
+            {frequency && <span>{frequency}</span>}
+            <span>{t('opt.co2short', { kg: num(o.co2KgPerYear, lang) })}</span>
+            {early && o.returnTrips && <span className="warn">{t('opt.lastHomeShort', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}</span>}
+          </span>
+          {assumptions && <span className="option-note">{assumptions}</span>}
+        </button>
       </h3>
       {props.selected && (
         <div className="option-detail" id={detailId}>
@@ -197,40 +386,9 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
             {saved !== undefined && saved > 0 && props.hasCar && <> · <span className="good">{t('opt.saved', { kg: num(saved, lang) })}</span></>}
           </p>
           {o.returnTrips === null && <p className="detail-facts warn">{t('opt.noReturn')}</p>}
-          {o.returnTrips && !early && (
-            <p className="detail-facts">
-              {t('opt.lastHome', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}
-              {within && <> · {within}</>}
-            </p>
-          )}
-          {conns.length >= 2 && conns.length <= 4 && (
-            <div className="detail-block">
-              <h4>{t('opt.times')}</h4>
-              <p className="conn-times">
-                {conns.map((c) => (
-                  <span key={c.departure}>
-                    {c.departure} → {c.arrival}
-                  </span>
-                ))}
-              </p>
-            </div>
-          )}
-          <Products products={o.cost.products} sameAs={props.sameAs} />
-          {o.cost.extras.length > 0 && (
-            <div className="detail-block">
-              <h4>{t('opt.extras')}</h4>
-              <table className="products">
-                <tbody>
-                  {o.cost.extras.map((c, i) => (
-                    <tr key={i}>
-                      <th scope="row">{componentLabel(c, t, lang)}</th>
-                      <td className="amount">{chf(c.yearly, lang)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {o.returnTrips && !early && <p className="detail-facts">{t('opt.lastHome', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}</p>}
+          <Products products={o.cost.products} />
+          <Extras o={o} />
           <Timeline legs={o.itinerary.legs} />
         </div>
       )}
@@ -243,23 +401,14 @@ export type SortKey = 'cost' | 'time' | 'co2';
 export function OptionList(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string | null) => void; sort: SortKey; onSort: (s: SortKey) => void; car?: CarAssumptions }) {
   const { t } = useI18n();
   const f = { cost: (o: CommuteOption) => o.cost.yearly, time: (o: CommuteOption) => o.durationMin, co2: (o: CommuteOption) => o.co2KgPerYear }[props.sort];
-  const sorted = [...props.options].sort((a, b) => f(a) - f(b));
+  // One card per ticket; a card sorts by its best route.
+  const sorted = ticketGroups(props.options).sort((a, b) => groupBest(a, f) - groupBest(b, f));
   const hasCar = props.options.some((o) => o.kind === 'car');
   const [all, setAll] = useState(false);
-  // Five options answer the question; the rest, and the selected one, stay within reach.
+  // Five cards answer the question; the rest, and the selected one, stay within reach.
   const LIMIT = 5;
-  const shown = all ? sorted : sorted.filter((o, i) => i < LIMIT || o.id === props.selected);
+  const shown = all ? sorted : sorted.filter((g, i) => i < LIMIT || g.routes.some((o) => o.id === props.selected));
   const hidden = sorted.length - shown.length;
-  // Options needing the same ticket at the same price: the first listed shows it, the others point to it.
-  const ticketOwner = new Map<string, CommuteOption>();
-  const sameAs = (o: CommuteOption): string | undefined => {
-    const best = o.cost.products[0];
-    if (!o.fareKey || !best) return undefined;
-    const key = `${o.fareKey}|${best.kind}|${Math.round(best.yearly)}`;
-    const owner = ticketOwner.get(key);
-    if (!owner) ticketOwner.set(key, o);
-    return owner && owner !== o ? optionName(owner, t) : undefined;
-  };
   return (
     <section className="options" id="options" aria-labelledby="options-h">
       <header className="options-head">
@@ -273,9 +422,14 @@ export function OptionList(props: { options: CommuteOption[]; selected: string |
         </div>
       </header>
       <ul>
-        {shown.map((o) => (
-          <OptionRow key={o.id} o={o} hasCar={hasCar} car={props.car} sameAs={sameAs(o)} selected={o.id === props.selected} onSelect={() => props.onSelect(o.id === props.selected ? null : o.id)} />
-        ))}
+        {shown.map((g) => {
+          const o = g.routes[0]!;
+          return g.ticketed ? (
+            <GroupCard key={g.key} group={g} hasCar={hasCar} selected={props.selected} onSelect={props.onSelect} />
+          ) : (
+            <OptionRow key={g.key} o={o} hasCar={hasCar} car={props.car} selected={o.id === props.selected} onSelect={() => props.onSelect(o.id === props.selected ? null : o.id)} />
+          );
+        })}
       </ul>
       {hidden > 0 && (
         <button type="button" className="link-button more-options" onClick={() => setAll(true)}>

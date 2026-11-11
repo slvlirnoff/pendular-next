@@ -331,3 +331,38 @@ button.mode-main:hover { background: var(--bg-alt); }
   .flex-rows th { grid-column: 1 / -1; }
   .flex-rows tr + tr { border-top: 1px solid var(--border); }
 }
+
+/* --- One card per ticket: the ticket in the head, departures and routes inside ---------------- */
+.options > ul { display: grid; gap: 8px; }
+.option-ticket { grid-column: 1 / -1; font-size: 14px; font-weight: 500; }
+.option-month { font-weight: 400; color: var(--text-muted); white-space: nowrap; }
+.h4-note { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.detail-fold > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); min-height: 24px; }
+.detail-fold > summary:hover { color: var(--accent-dark); }
+.detail-fold[open] > summary { margin-bottom: 8px; }
+.departures { display: grid; gap: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+.options .departures, .options .routes { gap: 0; }
+.departures li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 16px; align-items: center; padding: 6px 0; }
+.departures li + li { border-top: 1px solid var(--border); }
+.departures:not(.has-lines) li { grid-template-columns: minmax(0, 1fr) auto; }
+.dep-times { white-space: nowrap; }
+.departures li.is-shown .dep-times { font-weight: 600; }
+.dep-duration { color: var(--text-muted); white-space: nowrap; text-align: right; }
+.routes { display: grid; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.routes li + li { border-top: 1px solid var(--border); }
+.routes button { width: 100%; background: none; border: 0; text-align: left; padding: 10px 14px; display: grid; gap: 6px; border-radius: var(--radius-md); }
+.routes button:hover { background: var(--bg-alt); }
+.routes button[aria-pressed='true'] { background: var(--accent-tint); }
+.routes button:focus-visible { outline-offset: -3px; }
+.route-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.route-facts { display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 13px; color: var(--text-muted); }
+.route-facts strong { color: var(--text); }
+.route-facts .warn { font-weight: 600; }
+@media (max-width: 520px) {
+  /* On a phone the name takes the full width; the price follows on its own line. */
+  .option-main, .option-figures { grid-column: 1 / -1; }
+  .option-figures { justify-items: start; }
+  .departures.has-lines li { grid-template-columns: minmax(0, 1fr) auto; }
+  .departures.has-lines .mode-chain { grid-column: 1 / -1; grid-row: 2; }
+}
+.route-top .mode-tag { flex: none; }
