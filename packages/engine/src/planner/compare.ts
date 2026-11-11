@@ -30,6 +30,8 @@ import { segmentTagsOfZones } from '../fares/segmentTags.js';
 import { groupItineraries, type RouteGroup } from './group.js';
 import { prune, type Conn } from './prune.js';
 import { verdict } from './verdict.js';
+import type { BikeShareOperator } from '../sharing/bikeShare.js';
+import { pickSharedBike, sharedBikeCandidate, sharedBikeSuggestion, type SharedBikeCandidate } from './sharedBike.js';
 
 export interface FareContext {
   traveller: Traveller;
@@ -74,6 +76,8 @@ export interface EngineDeps {
   parkRail: AccessCandidate[];
   bikeParking: AccessCandidate[];
   cityParkRide: AccessCandidate[];
+  /** Station-based bike-share operators and their prices; without it no shared bike is suggested. */
+  bikeShare?: BikeShareOperator[];
   tariffVersion?: string;
   parkingVersion?: string;
   now?: () => Date;
@@ -324,6 +328,36 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     }
     return returnCache.get(key)!;
   };
+  // Shared bikes: three searches (the whole trip, the last leg, the first leg) that run beside
+  // everything else and are read once the options are known.
+  const bikeProviders = (deps.bikeShare ?? []).flatMap((o) => o.providers);
+  const sharedBikeOn = rules.sharedBike && !!routing.sharedBike && bikeProviders.length > 0 && (want('transit') || want('bike'));
+  const sharedSearch = (use: SharedBikeCandidate['kind']) =>
+    safe(
+      routing.sharedBike!({
+        from: req.home,
+        to: req.work,
+        date,
+        window: req.arrival,
+        use,
+        providers: bikeProviders,
+        maxStationWalkM: rules.sharedBikeStationMaxWalkM,
+        maxMin: use === 'whole' ? rules.sharedBikeMaxRideMin : rules.sharedBikeLegMaxMin,
+      }).then((its) => relabel(its, home.name, work.name)),
+      [] as Itinerary[],
+    );
+  const sharedBikeTrips: Promise<SharedBikeCandidate[]> = sharedBikeOn
+    ? Promise.all([
+        // No ride of half an hour fits a straight line longer than this.
+        crow <= (rules.sharedBikeMaxRideMin / 60) * 25 ? sharedSearch('whole') : Promise.resolve([] as Itinerary[]),
+        want('transit') ? sharedSearch('lastLeg') : Promise.resolve([] as Itinerary[]),
+        want('transit') ? sharedSearch('firstLeg') : Promise.resolve([] as Itinerary[]),
+      ]).then(([whole, last, first]) =>
+        [sharedBikeCandidate('whole', whole, rules), sharedBikeCandidate('lastLeg', last, rules), sharedBikeCandidate('firstLeg', first, rules)].filter(
+          (c): c is SharedBikeCandidate => c !== undefined,
+        ),
+      )
+    : Promise.resolve([]);
   const anyAccess = prCand.length + brCand.length + cityCand.length > 0;
   const [direct, car, bike, ebike, walk, prDrive, cityDrive, brRide, reach] = await Promise.all([
     want('transit') || prCand.length || brCand.length ? transitFromHome() : Promise.resolve([] as Itinerary[]),
@@ -702,11 +736,35 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     if (rows.length) flexibleWork = { optionId: reference.id, rows };
   }
 
+  // --- 10. A shared bike, when it makes the commute better ---------------------------------------
+  // Not an option of the list: one suggestion, measured against the fastest public transport
+  // option shown (the rule is in planner/sharedBike.ts). A walk of a quarter of an hour needs
+  // no bike.
+  let sharedBike: CompareResult['sharedBike'];
+  // Awaited only here, so that the searches never hold up the options.
+  const sharedBikeCandidates = await sharedBikeTrips;
+  if (sharedBikeCandidates.length && !(walk && walk.durationMin <= rules.walkInsteadOfBikeMaxMin)) {
+    const shown = kept.filter((o) => o.kind === 'transit');
+    const fastest = shown.length ? shown.reduce((a, b) => (b.durationMin < a.durationMin || (b.durationMin === a.durationMin && b.cost.yearly < a.cost.yearly) ? b : a)) : undefined;
+    const picked = pickSharedBike(sharedBikeCandidates, fastest, rules);
+    if (picked) {
+      const transitLegs = picked.candidate.itinerary.legs.filter(isTransit);
+      sharedBike = sharedBikeSuggestion(picked, {
+        operators: deps.bikeShare ?? [],
+        ticket: transitLegs.length ? priceLegs(transitLegs)[0] : undefined,
+        against: fastest,
+        tripsPerYear: trips,
+        co2KgPerYear: deps.co2KgPerYear,
+      });
+    }
+  }
+
   return {
     options: kept,
     leftOut,
     verdict: verdict(kept),
     flexibleWork,
+    sharedBike,
     stamp: {
       generatedAt: (deps.now?.() ?? new Date()).toISOString(),
       car: carAssumptions,

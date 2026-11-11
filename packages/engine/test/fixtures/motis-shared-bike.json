@@ -1,0 +1,763 @@
+{
+ "note": "Trimmed answers of MOTIS 2.11.4 with the sharedmobility.ch feed, recorded 11.11.2026: Geneve Cornavin (46.2102, 6.1424) to Plan-les-Ouates ZIPLO (46.1667, 6.1050), arrival 07:30-08:30 on 19.01.2027. Geometry, steps and deep links removed.",
+ "lastLeg": {
+  "itineraries": [
+   {
+    "duration": 1560,
+    "startTime": "2027-01-19T05:59:00Z",
+    "endTime": "2027-01-19T06:25:00Z",
+    "transfers": 0,
+    "legs": [
+     {
+      "mode": "WALK",
+      "duration": 120,
+      "startTime": "2027-01-19T05:59:00Z",
+      "endTime": "2027-01-19T06:01:00Z",
+      "distance": 122.0,
+      "from": {
+       "name": "START",
+       "lat": 46.2102,
+       "lon": 6.1424,
+       "vertexType": "NORMAL"
+      },
+      "to": {
+       "name": "Genève",
+       "stopId": "ch_ch:1:sloid:1008:2:2",
+       "parentId": "ch_Parentch:1:sloid:1008",
+       "lat": 46.21047887,
+       "lon": 6.142509229999999,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "REGIONAL_RAIL",
+      "duration": 540,
+      "startTime": "2027-01-19T06:01:00Z",
+      "endTime": "2027-01-19T06:10:00Z",
+      "tripId": "20270119_06:34_ch_.ojp-91-L1-B.1.TA.36.j27",
+      "headsign": "Evian-les-Bains",
+      "routeShortName": "RL1",
+      "displayName": "RL1",
+      "agencyName": "Schweizerische Bundesbahnen SBB",
+      "from": {
+       "name": "Genève",
+       "stopId": "ch_ch:1:sloid:1008:2:2",
+       "parentId": "ch_Parentch:1:sloid:1008",
+       "lat": 46.21047887,
+       "lon": 6.142509229999999,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Lancy-Bachet",
+       "stopId": "ch_ch:1:sloid:17142:1:1",
+       "parentId": "ch_Parentch:1:sloid:17142",
+       "lat": 46.17431836000001,
+       "lon": 6.12929502,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "WALK",
+      "duration": 180,
+      "startTime": "2027-01-19T06:10:00Z",
+      "endTime": "2027-01-19T06:13:00Z",
+      "distance": 215.0,
+      "from": {
+       "name": "Lancy-Bachet",
+       "stopId": "ch_ch:1:sloid:17142:1:1",
+       "parentId": "ch_Parentch:1:sloid:17142",
+       "lat": 46.17431836000001,
+       "lon": 6.12929502,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Lancy-Bachet-Gare (Pôle de Mobilité)",
+       "lat": 46.17395,
+       "lon": 6.1299677,
+       "vertexType": "BIKESHARE"
+      }
+     },
+     {
+      "mode": "RENTAL",
+      "duration": 720,
+      "startTime": "2027-01-19T06:13:00Z",
+      "endTime": "2027-01-19T06:25:00Z",
+      "distance": 2670.0,
+      "rental": {
+       "providerId": "sharedmobility:donkey_ge",
+       "providerGroupId": "Donkey Republic Geneva",
+       "systemId": "donkey_ge",
+       "systemName": "Donkey Republic Geneva",
+       "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
+       "fromStationName": "Lancy-Bachet-Gare (Pôle de Mobilité)",
+       "formFactor": "BICYCLE",
+       "propulsionType": "ELECTRIC_ASSIST",
+       "returnConstraint": "NONE"
+      },
+      "from": {
+       "name": "Lancy-Bachet-Gare (Pôle de Mobilité)",
+       "lat": 46.17395,
+       "lon": 6.1299677,
+       "vertexType": "BIKESHARE"
+      },
+      "to": {
+       "name": "END",
+       "lat": 46.1667,
+       "lon": 6.105,
+       "vertexType": "NORMAL"
+      }
+     }
+    ]
+   },
+   {
+    "duration": 2160,
+    "startTime": "2027-01-19T06:00:00Z",
+    "endTime": "2027-01-19T06:36:00Z",
+    "transfers": 1,
+    "legs": [
+     {
+      "mode": "WALK",
+      "duration": 60,
+      "startTime": "2027-01-19T06:00:00Z",
+      "endTime": "2027-01-19T06:01:00Z",
+      "distance": 35.0,
+      "from": {
+       "name": "START",
+       "lat": 46.2102,
+       "lon": 6.1424,
+       "vertexType": "NORMAL"
+      },
+      "to": {
+       "name": "Genève, gare Cornavin",
+       "stopId": "ch_ch:1:sloid:87057:0:651350",
+       "parentId": "ch_Parentch:1:sloid:87057",
+       "lat": 46.21009966,
+       "lon": 6.142832629999999,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "BUS",
+      "duration": 240,
+      "startTime": "2027-01-19T06:01:00Z",
+      "endTime": "2027-01-19T06:05:00Z",
+      "tripId": "20270119_06:42_ch_.ojp-92-20-B.1.TA.354.j27",
+      "headsign": "Veyrier, Tournettes",
+      "routeShortName": "20",
+      "displayName": "20",
+      "agencyName": "Transports Publics Genevois",
+      "from": {
+       "name": "Genève, gare Cornavin",
+       "stopId": "ch_ch:1:sloid:87057:0:651350",
+       "parentId": "ch_Parentch:1:sloid:87057",
+       "lat": 46.21009966,
+       "lon": 6.142832629999999,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Genève, Bel-Air",
+       "stopId": "ch_ch:1:sloid:87387:0:547827",
+       "parentId": "ch_Parentch:1:sloid:87387",
+       "lat": 46.2042372,
+       "lon": 6.14206008,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "WALK",
+      "duration": 120,
+      "startTime": "2027-01-19T06:05:00Z",
+      "endTime": "2027-01-19T06:07:00Z",
+      "from": {
+       "name": "Genève, Bel-Air",
+       "stopId": "ch_ch:1:sloid:87387:0:547827",
+       "parentId": "ch_Parentch:1:sloid:87387",
+       "lat": 46.2042372,
+       "lon": 6.14206008,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Genève, Bel-Air",
+       "stopId": "ch_ch:1:sloid:87387:0:491369",
+       "parentId": "ch_Parentch:1:sloid:87387",
+       "lat": 46.20332949,
+       "lon": 6.142518219999999,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "BUS",
+      "duration": 960,
+      "startTime": "2027-01-19T06:07:00Z",
+      "endTime": "2027-01-19T06:23:00Z",
+      "tripId": "20270119_07:07_ch_.ojp-92-80-D.1.TA.179.j27",
+      "headsign": "Saint-Julien, gare",
+      "routeShortName": "80",
+      "displayName": "80",
+      "agencyName": "Transports Publics Genevois",
+      "from": {
+       "name": "Genève, Bel-Air",
+       "stopId": "ch_ch:1:sloid:87387:0:491369",
+       "parentId": "ch_Parentch:1:sloid:87387",
+       "lat": 46.20332949,
+       "lon": 6.142518219999999,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Lancy-Bachet, gare",
+       "stopId": "ch_ch:1:sloid:87075:0:439820",
+       "parentId": "ch_Parentch:1:sloid:87075",
+       "lat": 46.17428725999999,
+       "lon": 6.128738059999999,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "WALK",
+      "duration": 60,
+      "startTime": "2027-01-19T06:23:00Z",
+      "endTime": "2027-01-19T06:24:00Z",
+      "distance": 61.0,
+      "from": {
+       "name": "Lancy-Bachet, gare",
+       "stopId": "ch_ch:1:sloid:87075:0:439820",
+       "parentId": "ch_Parentch:1:sloid:87075",
+       "lat": 46.17428725999999,
+       "lon": 6.128738059999999,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Carrefour Bachet",
+       "lat": 46.17418,
+       "lon": 6.1284356,
+       "vertexType": "BIKESHARE"
+      }
+     },
+     {
+      "mode": "RENTAL",
+      "duration": 720,
+      "startTime": "2027-01-19T06:24:00Z",
+      "endTime": "2027-01-19T06:36:00Z",
+      "distance": 2656.0,
+      "rental": {
+       "providerId": "sharedmobility:donkey_ge",
+       "providerGroupId": "Donkey Republic Geneva",
+       "systemId": "donkey_ge",
+       "systemName": "Donkey Republic Geneva",
+       "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
+       "fromStationName": "Carrefour Bachet",
+       "formFactor": "BICYCLE",
+       "propulsionType": "ELECTRIC_ASSIST",
+       "returnConstraint": "NONE"
+      },
+      "from": {
+       "name": "Carrefour Bachet",
+       "lat": 46.17418,
+       "lon": 6.1284356,
+       "vertexType": "BIKESHARE"
+      },
+      "to": {
+       "name": "END",
+       "lat": 46.1667,
+       "lon": 6.105,
+       "vertexType": "NORMAL"
+      }
+     }
+    ]
+   },
+   {
+    "duration": 2160,
+    "startTime": "2027-01-19T06:01:00Z",
+    "endTime": "2027-01-19T06:37:00Z",
+    "transfers": 0,
+    "legs": [
+     {
+      "mode": "WALK",
+      "duration": 120,
+      "startTime": "2027-01-19T06:01:00Z",
+      "endTime": "2027-01-19T06:03:00Z",
+      "distance": 96.0,
+      "from": {
+       "name": "START",
+       "lat": 46.2102,
+       "lon": 6.1424,
+       "vertexType": "NORMAL"
+      },
+      "to": {
+       "name": "Genève, gare Cornavin",
+       "stopId": "ch_ch:1:sloid:87057:0:233278",
+       "parentId": "ch_Parentch:1:sloid:87057",
+       "lat": 46.20957747,
+       "lon": 6.1418444800000005,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "TRAM",
+      "duration": 1200,
+      "startTime": "2027-01-19T06:03:00Z",
+      "endTime": "2027-01-19T06:23:00Z",
+      "tripId": "20270119_06:42_ch_.ojp-91-14-D.1.TA.2802.j27",
+      "headsign": "Bernex, Vailly",
+      "routeShortName": "14",
+      "displayName": "14",
+      "agencyName": "Transports Publics Genevois",
+      "from": {
+       "name": "Genève, gare Cornavin",
+       "stopId": "ch_ch:1:sloid:87057:0:233278",
+       "parentId": "ch_Parentch:1:sloid:87057",
+       "lat": 46.20957747,
+       "lon": 6.1418444800000005,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Onex, Salle communale",
+       "stopId": "ch_ch:1:sloid:87080:0:779455",
+       "parentId": "ch_Parentch:1:sloid:87080",
+       "lat": 46.18323788,
+       "lon": 6.0998392599999995,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "WALK",
+      "duration": 60,
+      "startTime": "2027-01-19T06:23:00Z",
+      "endTime": "2027-01-19T06:24:00Z",
+      "distance": 77.0,
+      "from": {
+       "name": "Onex, Salle communale",
+       "stopId": "ch_ch:1:sloid:87080:0:779455",
+       "parentId": "ch_Parentch:1:sloid:87080",
+       "lat": 46.18323788,
+       "lon": 6.0998392599999995,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Onex",
+       "lat": 46.183365,
+       "lon": 6.1005354,
+       "vertexType": "BIKESHARE"
+      }
+     },
+     {
+      "mode": "RENTAL",
+      "duration": 780,
+      "startTime": "2027-01-19T06:24:00Z",
+      "endTime": "2027-01-19T06:37:00Z",
+      "distance": 2934.0,
+      "rental": {
+       "providerId": "sharedmobility:donkey_ge",
+       "providerGroupId": "Donkey Republic Geneva",
+       "systemId": "donkey_ge",
+       "systemName": "Donkey Republic Geneva",
+       "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
+       "fromStationName": "Onex",
+       "formFactor": "BICYCLE",
+       "propulsionType": "HUMAN",
+       "returnConstraint": "NONE"
+      },
+      "from": {
+       "name": "Onex",
+       "lat": 46.183365,
+       "lon": 6.1005354,
+       "vertexType": "BIKESHARE"
+      },
+      "to": {
+       "name": "END",
+       "lat": 46.1667,
+       "lon": 6.105,
+       "vertexType": "NORMAL"
+      }
+     }
+    ]
+   },
+   {
+    "duration": 2040,
+    "startTime": "2027-01-19T06:04:00Z",
+    "endTime": "2027-01-19T06:38:00Z",
+    "transfers": 0,
+    "legs": [
+     {
+      "mode": "WALK",
+      "duration": 60,
+      "startTime": "2027-01-19T06:04:00Z",
+      "endTime": "2027-01-19T06:05:00Z",
+      "distance": 62.0,
+      "from": {
+       "name": "START",
+       "lat": 46.2102,
+       "lon": 6.1424,
+       "vertexType": "NORMAL"
+      },
+      "to": {
+       "name": "Genève, gare Cornavin",
+       "stopId": "ch_ch:1:sloid:87057:0:46188",
+       "parentId": "ch_Parentch:1:sloid:87057",
+       "lat": 46.20989452,
+       "lon": 6.14294941,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "TRAM",
+      "duration": 1200,
+      "startTime": "2027-01-19T06:05:00Z",
+      "endTime": "2027-01-19T06:25:00Z",
+      "tripId": "20270119_06:59_ch_.ojp-91-15-D.1.TA.1907.j27",
+      "headsign": "Plan-les-Ouates, ZIPLO",
+      "routeShortName": "15",
+      "displayName": "15",
+      "agencyName": "Transports Publics Genevois",
+      "from": {
+       "name": "Genève, gare Cornavin",
+       "stopId": "ch_ch:1:sloid:87057:0:46188",
+       "parentId": "ch_Parentch:1:sloid:87057",
+       "lat": 46.20989452,
+       "lon": 6.14294941,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Grand-Lancy, Place du 1er-Août",
+       "stopId": "ch_ch:1:sloid:92983:0:736131",
+       "parentId": "ch_Parentch:1:sloid:92983",
+       "lat": 46.18177005,
+       "lon": 6.12070712,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "WALK",
+      "duration": 60,
+      "startTime": "2027-01-19T06:25:00Z",
+      "endTime": "2027-01-19T06:26:00Z",
+      "distance": 61.0,
+      "from": {
+       "name": "Grand-Lancy, Place du 1er-Août",
+       "stopId": "ch_ch:1:sloid:92983:0:736131",
+       "parentId": "ch_Parentch:1:sloid:92983",
+       "lat": 46.18177005,
+       "lon": 6.12070712,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Lancy-Place du 1e Août 2 (Pôle de Mobilité)",
+       "lat": 46.18215,
+       "lon": 6.1204333,
+       "vertexType": "BIKESHARE"
+      }
+     },
+     {
+      "mode": "RENTAL",
+      "duration": 720,
+      "startTime": "2027-01-19T06:26:00Z",
+      "endTime": "2027-01-19T06:38:00Z",
+      "distance": 2701.0,
+      "rental": {
+       "providerId": "sharedmobility:donkey_ge",
+       "providerGroupId": "Donkey Republic Geneva",
+       "systemId": "donkey_ge",
+       "systemName": "Donkey Republic Geneva",
+       "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
+       "fromStationName": "Lancy-Place du 1e Août 2 (Pôle de Mobilité)",
+       "formFactor": "BICYCLE",
+       "propulsionType": "ELECTRIC_ASSIST",
+       "returnConstraint": "NONE"
+      },
+      "from": {
+       "name": "Lancy-Place du 1e Août 2 (Pôle de Mobilité)",
+       "lat": 46.18215,
+       "lon": 6.1204333,
+       "vertexType": "BIKESHARE"
+      },
+      "to": {
+       "name": "END",
+       "lat": 46.1667,
+       "lon": 6.105,
+       "vertexType": "NORMAL"
+      }
+     }
+    ]
+   },
+   {
+    "duration": 1560,
+    "startTime": "2027-01-19T06:14:00Z",
+    "endTime": "2027-01-19T06:40:00Z",
+    "transfers": 0,
+    "legs": [
+     {
+      "mode": "WALK",
+      "duration": 120,
+      "startTime": "2027-01-19T06:14:00Z",
+      "endTime": "2027-01-19T06:16:00Z",
+      "distance": 122.0,
+      "from": {
+       "name": "START",
+       "lat": 46.2102,
+       "lon": 6.1424,
+       "vertexType": "NORMAL"
+      },
+      "to": {
+       "name": "Genève",
+       "stopId": "ch_ch:1:sloid:1008:2:2",
+       "parentId": "ch_Parentch:1:sloid:1008",
+       "lat": 46.21047887,
+       "lon": 6.142509229999999,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "REGIONAL_RAIL",
+      "duration": 540,
+      "startTime": "2027-01-19T06:16:00Z",
+      "endTime": "2027-01-19T06:25:00Z",
+      "tripId": "20270119_06:49_ch_.ojp-91-L4-A.1.TA.54.j27",
+      "headsign": "Annemasse",
+      "routeShortName": "RL4",
+      "displayName": "RL4",
+      "agencyName": "Schweizerische Bundesbahnen SBB",
+      "from": {
+       "name": "Genève",
+       "stopId": "ch_ch:1:sloid:1008:2:2",
+       "parentId": "ch_Parentch:1:sloid:1008",
+       "lat": 46.21047887,
+       "lon": 6.142509229999999,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Lancy-Bachet",
+       "stopId": "ch_ch:1:sloid:17142:1:1",
+       "parentId": "ch_Parentch:1:sloid:17142",
+       "lat": 46.17431836000001,
+       "lon": 6.12929502,
+       "vertexType": "TRANSIT"
+      }
+     },
+     {
+      "mode": "WALK",
+      "duration": 180,
+      "startTime": "2027-01-19T06:25:00Z",
+      "endTime": "2027-01-19T06:28:00Z",
+      "distance": 215.0,
+      "from": {
+       "name": "Lancy-Bachet",
+       "stopId": "ch_ch:1:sloid:17142:1:1",
+       "parentId": "ch_Parentch:1:sloid:17142",
+       "lat": 46.17431836000001,
+       "lon": 6.12929502,
+       "vertexType": "TRANSIT"
+      },
+      "to": {
+       "name": "Lancy-Bachet-Gare (Pôle de Mobilité)",
+       "lat": 46.17395,
+       "lon": 6.1299677,
+       "vertexType": "BIKESHARE"
+      }
+     },
+     {
+      "mode": "RENTAL",
+      "duration": 720,
+      "startTime": "2027-01-19T06:28:00Z",
+      "endTime": "2027-01-19T06:40:00Z",
+      "distance": 2670.0,
+      "rental": {
+       "providerId": "sharedmobility:donkey_ge",
+       "providerGroupId": "Donkey Republic Geneva",
+       "systemId": "donkey_ge",
+       "systemName": "Donkey Republic Geneva",
+       "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
+       "fromStationName": "Lancy-Bachet-Gare (Pôle de Mobilité)",
+       "formFactor": "BICYCLE",
+       "propulsionType": "ELECTRIC_ASSIST",
+       "returnConstraint": "NONE"
+      },
+      "from": {
+       "name": "Lancy-Bachet-Gare (Pôle de Mobilité)",
+       "lat": 46.17395,
+       "lon": 6.1299677,
+       "vertexType": "BIKESHARE"
+      },
+      "to": {
+       "name": "END",
+       "lat": 46.1667,
+       "lon": 6.105,
+       "vertexType": "NORMAL"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "whole": {
+  "direct": [
+   {
+    "duration": 1792,
+    "startTime": "2027-01-19T06:30:00Z",
+    "endTime": "2027-01-19T06:59:00Z",
+    "transfers": 0,
+    "legs": [
+     {
+      "mode": "WALK",
+      "duration": 113,
+      "startTime": "2027-01-19T06:30:00Z",
+      "endTime": "2027-01-19T06:31:00Z",
+      "distance": 129.0,
+      "from": {
+       "name": "START",
+       "lat": 46.2102,
+       "lon": 6.1424,
+       "vertexType": "NORMAL"
+      },
+      "to": {
+       "name": "Genève Cornavin",
+       "lat": 46.209354,
+       "lon": 6.1424212,
+       "vertexType": "BIKESHARE"
+      }
+     },
+     {
+      "mode": "RENTAL",
+      "duration": 1679,
+      "startTime": "2027-01-19T06:31:00Z",
+      "endTime": "2027-01-19T06:59:00Z",
+      "distance": 6795.0,
+      "rental": {
+       "providerId": "sharedmobility:donkey_ge",
+       "providerGroupId": "Donkey Republic Geneva",
+       "systemId": "donkey_ge",
+       "systemName": "Donkey Republic Geneva",
+       "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
+       "fromStationName": "Genève Cornavin",
+       "formFactor": "BICYCLE",
+       "propulsionType": "ELECTRIC_ASSIST",
+       "returnConstraint": "NONE"
+      },
+      "from": {
+       "name": "Genève Cornavin",
+       "lat": 46.209354,
+       "lon": 6.1424212,
+       "vertexType": "BIKESHARE"
+      },
+      "to": {
+       "name": "END",
+       "lat": 46.1667,
+       "lon": 6.105,
+       "vertexType": "NORMAL"
+      }
+     }
+    ]
+   },
+   {
+    "duration": 1823,
+    "startTime": "2027-01-19T06:30:00Z",
+    "endTime": "2027-01-19T07:00:00Z",
+    "transfers": 0,
+    "legs": [
+     {
+      "mode": "WALK",
+      "duration": 137,
+      "startTime": "2027-01-19T06:30:00Z",
+      "endTime": "2027-01-19T06:32:00Z",
+      "distance": 158.0,
+      "from": {
+       "name": "START",
+       "lat": 46.2102,
+       "lon": 6.1424,
+       "vertexType": "NORMAL"
+      },
+      "to": {
+       "name": "Genève Cornavin",
+       "lat": 46.209324,
+       "lon": 6.142485,
+       "vertexType": "BIKESHARE"
+      }
+     },
+     {
+      "mode": "RENTAL",
+      "duration": 1686,
+      "startTime": "2027-01-19T06:32:00Z",
+      "endTime": "2027-01-19T07:00:00Z",
+      "distance": 6824.0,
+      "rental": {
+       "providerId": "sharedmobility:donkey_ge",
+       "providerGroupId": "Donkey Republic Geneva",
+       "systemId": "donkey_ge",
+       "systemName": "Donkey Republic Geneva",
+       "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
+       "fromStationName": "Genève Cornavin",
+       "formFactor": "BICYCLE",
+       "propulsionType": "HUMAN",
+       "returnConstraint": "NONE"
+      },
+      "from": {
+       "name": "Genève Cornavin",
+       "lat": 46.209324,
+       "lon": 6.142485,
+       "vertexType": "BIKESHARE"
+      },
+      "to": {
+       "name": "END",
+       "lat": 46.1667,
+       "lon": 6.105,
+       "vertexType": "NORMAL"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "stations": {
+  "stations": [
+   {
+    "id": "20509",
+    "providerId": "sharedmobility:donkey_ge",
+    "name": "Galaise 17",
+    "lat": 46.165035,
+    "lon": 6.102103,
+    "formFactors": [
+     "BICYCLE"
+    ]
+   },
+   {
+    "id": "20510",
+    "providerId": "sharedmobility:donkey_ge",
+    "name": "Galaise 15",
+    "lat": 46.165276,
+    "lon": 6.102673,
+    "formFactors": [
+     "BICYCLE"
+    ]
+   },
+   {
+    "id": "20511",
+    "providerId": "sharedmobility:donkey_ge",
+    "name": "Galaise 13",
+    "lat": 46.16578,
+    "lon": 6.1038046,
+    "formFactors": [
+     "BICYCLE"
+    ]
+   },
+   {
+    "id": "26368",
+    "providerId": "sharedmobility:donkey_ge",
+    "name": "Tourbillon (Pôle de Mobilité)",
+    "lat": 46.16644,
+    "lon": 6.1037073,
+    "formFactors": [
+     "BICYCLE"
+    ]
+   },
+   {
+    "id": "29944",
+    "providerId": "sharedmobility:donkey_ge",
+    "name": "Champs-Blanchod",
+    "lat": 46.166306,
+    "lon": 6.1087594,
+    "formFactors": [
+     "BICYCLE"
+    ]
+   }
+  ]
+ }
+}

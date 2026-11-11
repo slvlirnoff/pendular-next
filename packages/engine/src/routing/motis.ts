@@ -403,7 +403,7 @@ export class MotisRouting implements RoutingProvider {
   private providers?: { at: number; ids: Promise<Set<string>> };
   private readonly stationCache = new Map<string, Promise<MotisRentalStation[]>>();
 
-  /** Bike stations of one provider around a point. */
+  /** Bike stations of one provider (or several, comma-separated) in a box of `radiusM` around a point. */
   private stationsNear(p: LatLon, providerId: string, radiusM: number): Promise<MotisRentalStation[]> {
     const key = `${providerId}|${p.lat.toFixed(4)},${p.lon.toFixed(4)}|${radiusM}`;
     let hit = this.stationCache.get(key);
@@ -418,7 +418,7 @@ export class MotisRouting implements RoutingProvider {
         withZones: false,
         withProviders: false,
       })
-        .then((r) => (r.stations ?? []).filter((s) => s.providerId === providerId && (s.formFactors ?? ['BICYCLE']).includes('BICYCLE')))
+        .then((r) => (r.stations ?? []).filter((s) => providerId.split(',').includes(s.providerId) && (s.formFactors ?? ['BICYCLE']).includes('BICYCLE')))
         .catch(() => []);
       if (this.stationCache.size > 500) this.stationCache.clear();
       this.stationCache.set(key, hit);
@@ -500,7 +500,14 @@ export class MotisRouting implements RoutingProvider {
     maxMin: number;
   }): Promise<Itinerary[]> {
     const loaded = await this.rentalProviders();
-    const providers = q.providers.filter((p) => loaded.has(p));
+    const offered = q.providers.filter((p) => loaded.has(p));
+    if (offered.length === 0) return [];
+    // A look at the stations first (a millisecond) spares the search wherever no network is
+    // near: the bike is returned near the destination (last leg, whole trip) and taken near
+    // the origin (first leg, whole trip).
+    const around = async (p: LatLon) => new Set((await this.stationsNear(p, offered.join(','), q.maxStationWalkM)).map((s) => s.providerId));
+    const [atFrom, atTo] = await Promise.all([q.use === 'lastLeg' ? null : around(q.from), q.use === 'firstLeg' ? null : around(q.to)]);
+    const providers = offered.filter((p) => (atFrom?.has(p) ?? true) && (atTo?.has(p) ?? true));
     if (providers.length === 0) return [];
     const { start, end } = windowToUtc(q.date, q.window, this.o.timezone);
     const common = { fromPlace: place(q.from), toPlace: place(q.to), detailedTransfers: false };

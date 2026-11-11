@@ -7,6 +7,7 @@ import {
   createOjpFareClient,
   stopSequenceKey,
   createZoneIndex,
+  loadBikeShare,
   loadCityParkRide,
   loadDensity,
   loadNetworks,
@@ -51,7 +52,9 @@ function readVersion(path: string): string | undefined {
 function co2KgPerYear(legs: Leg[], trips: number): number {
   let g = 0;
   for (const l of legs) {
-    const f = co2Factor(l.mode, { category: l.line?.category });
+    // A shared bike counts as a bike, or as an e-bike when the one at the station was electric.
+    const mode = l.mode === 'sharedBike' ? (l.sharedBike?.electric ? 'ebike' : 'bike') : l.mode;
+    const f = co2Factor(mode, { category: l.line?.category });
     if (f) g += f.gPerKm * (l.distanceM / 1000);
   }
   return (g * trips) / 1000;
@@ -151,6 +154,8 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
     parkRail: sites.filter((s) => s.kind === 'parkRail').map(toCandidate),
     bikeParking: sites.filter((s) => s.kind === 'bikeParking').map(toCandidate),
     cityParkRide: city,
+    // Station-based bike sharing (packages/engine/data/sharing): used when MOTIS has the GBFS feed.
+    bikeShare: loadBikeShare(),
     tariffVersion: 'Mobilis 13.12.2026; GA/Half Fare 13.12.2026; T601/T650 edition 01.06.2026',
     parkingVersion: readVersion(cfg.parkingPath),
   };
