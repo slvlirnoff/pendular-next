@@ -145,6 +145,37 @@ function FlexibleWorkCard(props: { flex: FlexibleWork; option: CommuteOption; da
   );
 }
 
+/** The all-zones pass is worth a line when it costs at most this much more than the pass for the trip. */
+const ALL_ZONES_MAX_EXTRA = 0.3;
+
+/** Shown when the trip calls for an annual zone pass and the whole network costs little more. */
+function AllZonesCard({ option }: { option: CommuteOption }) {
+  const { t, lang } = useI18n();
+  const own = option.cost.products[0];
+  const all = option.cost.products.find((p) => p.kind === 'zonePassAllYearly');
+  if (!own || own.kind !== 'zonePassYearly' || !all) return null;
+  const extra = all.yearly - own.yearly;
+  if (extra <= 0 || extra > own.yearly * ALL_ZONES_MAX_EXTRA) return null;
+  return (
+    <section className="allzones card" aria-labelledby="allzones-h">
+      <img src="/icons/sbb/train-station-small.svg" alt="" width={24} height={24} />
+      <div>
+        <h2 id="allzones-h">{t('allzones.title', { chf: chf(extra, lang) })}</h2>
+        <p>{t('allzones.text', { network: all.network ?? 'Mobilis', month: chf(extra / 12, lang), own: chf(own.yearly, lang) })}</p>
+      </div>
+      <p className="allzones-price">
+        <span>
+          {productName(all, t)}
+          <PriceYear product={all} />
+        </span>
+        <strong>
+          {chf(all.yearly, lang)} <small>{t('verdict.perYear')}</small>
+        </strong>
+      </p>
+    </section>
+  );
+}
+
 export function Overview(props: { result: CompareResult; daysSearched: number; selected: string | null; onSelect: (id: string) => void }) {
   const { t } = useI18n();
   const { result } = props;
@@ -162,6 +193,7 @@ export function Overview(props: { result: CompareResult; daysSearched: number; s
         ))}
       </ul>
       {flex && flexOption && <FlexibleWorkCard flex={flex} option={flexOption} daysSearched={props.daysSearched} />}
+      {flexOption && <AllZonesCard option={flexOption} />}
     </section>
   );
 }

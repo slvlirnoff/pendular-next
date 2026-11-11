@@ -278,10 +278,16 @@ button.mode-main:hover { background: var(--bg-alt); }
 .flex-rows .flex-price { text-align: right; font-weight: 700; white-space: nowrap; }
 .flex-rows tr + tr th, .flex-rows tr + tr td { border-top: 1px solid var(--border); }
 
+.allzones { padding: 14px 20px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; }
+.allzones > img { align-self: start; }
+.allzones p { font-size: 14px; color: var(--text-muted); margin-top: 2px; max-width: 70ch; }
+.allzones .allzones-price { display: grid; justify-items: end; text-align: right; margin: 0 0 0 20px; }
+.allzones-price strong { color: var(--text); font-size: 15px; white-space: nowrap; }
+
 /* Few cards: the cards and the working-from-home box share one line. */
 @media (min-width: 1081px) {
   .overview.is-inline { grid-template-columns: minmax(0, 1fr); display: flex; flex-wrap: wrap; align-items: stretch; }
-  .overview.is-inline > h2 { flex: 0 0 100%; }
+  .overview.is-inline > h2, .overview.is-inline .allzones { flex: 0 0 100%; }
   .overview.is-inline .mode-cards { flex: var(--cards) 1 0; grid-template-columns: repeat(var(--cards), minmax(0, 1fr)); }
   .overview.is-inline .flex { flex: 2 1 0; min-width: 0; grid-template-columns: minmax(0, 1fr); align-content: start; padding: 14px 16px; }
   .overview.is-inline .flex-rows tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 6px 0; }
@@ -301,6 +307,8 @@ button.mode-main:hover { background: var(--bg-alt); }
   .mode-main > .mode-chain, .mode-note, .mode-tags { grid-column: 1 / -1; }
   .mode-also button { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; min-height: 36px; align-items: center; }
   .flex { padding: 14px 16px; }
+  .allzones { padding: 14px 16px; grid-template-columns: auto minmax(0, 1fr); }
+  .allzones .allzones-price { grid-column: 1 / -1; margin: 0; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; text-align: left; border-top: 1px solid var(--border); padding-top: 8px; }
   .flex-rows tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 8px 0; }
   .flex-rows th, .flex-rows td { padding: 0; border: 0 !important; white-space: normal; }
   .flex-rows th { grid-column: 1 / -1; }

@@ -242,4 +242,6 @@ export const it: Dict = {
   'flex.days': "1 giorno alla settimana|{n} giorni alla settimana",
   'flex.daysRange': "da {from} a {to} giorni alla settimana",
   'flex.yours': "la sua ricerca",
+  'allzones.title': "Tutta la rete per {chf} in più all’anno",
+  'allzones.text': "L’abbonamento annuale per tutte le zone {network} costa {month} in più al mese rispetto a quello per questo tragitto ({own} all’anno) e vale anche per tutti gli altri tragitti nella rete.",
 };

@@ -241,6 +241,8 @@ export const fr = {
   'flex.days': "1 jour par semaine|{n} jours par semaine",
   'flex.daysRange': "{from} à {to} jours par semaine",
   'flex.yours': "votre recherche",
+  'allzones.title': "Tout le réseau pour {chf} de plus par an",
+  'allzones.text': "L’abonnement annuel pour toutes les zones {network} coûte {month} de plus par mois que celui de ce trajet ({own} par an), et couvre aussi tous les autres trajets dans le réseau.",
 } as const;
 
 export type Key = keyof typeof fr;
