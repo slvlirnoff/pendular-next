@@ -252,6 +252,21 @@ describe('compare', () => {
     expect(r.leftOut.every((l) => l.kind !== 'transit')).toBe(true);
   });
 
+  it('prices public transport for one to five days a week at the workplace', async () => {
+    const r = await compare(REQUEST, deps());
+    const flex = r.flexibleWork!;
+    const transit = r.options.find((o) => o.kind === 'transit')!;
+    expect(flex.optionId).toBe(transit.id);
+    expect(flex.rows.map((x) => x.daysPerWeek)).toEqual([1, 2, 3, 4, 5]);
+    expect(flex.rows.map((x) => x.workingDaysPerYear)).toEqual([46, 92, 138, 184, 230]);
+    // The searched pattern shows the ticket of the listed option.
+    expect(flex.rows[4]!.product).toEqual(transit.cost.products[0]);
+    // Fewer days never cost more, and one day a week is paid by the trip.
+    for (let i = 1; i < flex.rows.length; i++) expect(flex.rows[i]!.product.yearly).toBeGreaterThanOrEqual(flex.rows[i - 1]!.product.yearly);
+    expect(flex.rows[0]!.product.kind).toMatch(/ingles|ayPasses/);
+    expect((await compare({ ...REQUEST, kinds: ['car'] }, deps())).flexibleWork).toBeUndefined();
+  });
+
   it('stamps overridden rules', async () => {
     const r = await compare({ ...REQUEST, rules: { carPeakFactor: 1.3, carParkingMin: 10 } }, deps());
     expect(r.stamp.rules.id).toBe('pendular-2027+custom');

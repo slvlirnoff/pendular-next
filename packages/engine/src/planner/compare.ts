@@ -5,6 +5,8 @@ import type {
   CommuteRequest,
   CompareResult,
   CostComponent,
+  FlexibleWork,
+  FlexibleWorkRow,
   Itinerary,
   LatLon,
   Leg,
@@ -609,10 +611,29 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   for (const o of kept) delete (o as { _conns?: unknown })._conns;
   kept.sort((a, b) => a.cost.yearly - b.cost.yearly);
 
+  // --- 9. Working from home some days: the cheapest ticket by days at the workplace ------------
+  // Days per year in proportion to a Monday-to-Friday week; the searched pattern keeps its own
+  // count, so that its row shows the price of the option in the list.
+  let flexibleWork: FlexibleWork | undefined;
+  const reference = kept.find((o) => o.kind === 'transit');
+  if (reference) {
+    const legs = reference.itinerary.legs.filter(isTransit);
+    const fullWeek = workingDaysPerYear({ weekdays: ['mon', 'tue', 'wed', 'thu', 'fri'], weeksOff: req.pattern.weeksOff }, rules);
+    const rows: FlexibleWorkRow[] = [];
+    for (let d = 1; d <= 5; d++) {
+      const searched = d === req.pattern.weekdays.length;
+      const n = searched ? days : Math.round((fullWeek * d) / 5);
+      const product = searched ? reference.cost.products[0] : deps.priceTransit(legs, { ...ctx, tripsPerYear: 2 * n, workingDaysPerYear: n })[0];
+      if (product) rows.push({ daysPerWeek: d, workingDaysPerYear: n, product });
+    }
+    if (rows.length) flexibleWork = { optionId: reference.id, rows };
+  }
+
   return {
     options: kept,
     leftOut,
     verdict: verdict(kept),
+    flexibleWork,
     stamp: {
       generatedAt: (deps.now?.() ?? new Date()).toISOString(),
       car: carAssumptions,

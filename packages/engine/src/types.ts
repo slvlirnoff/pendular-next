@@ -441,9 +441,25 @@ export interface ResultStamp {
   workingDaysPerYear: number;
 }
 
+/** Public transport for someone at the workplace `daysPerWeek` days a week: the cheapest ticket. */
+export interface FlexibleWorkRow {
+  daysPerWeek: number;
+  workingDaysPerYear: number;
+  product: PricedProduct;
+}
+
+export interface FlexibleWork {
+  /** The public transport option the tickets are for. */
+  optionId: string;
+  /** One row per number of days, 1 to 5. */
+  rows: FlexibleWorkRow[];
+}
+
 export interface CompareResult {
   options: CommuteOption[];
   leftOut: LeftOut[];
   verdict: Verdict;
+  /** Absent when no public transport option is listed. */
+  flexibleWork?: FlexibleWork;
   stamp: ResultStamp;
 }
