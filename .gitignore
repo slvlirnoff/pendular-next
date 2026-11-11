@@ -21,3 +21,4 @@ data/motis-shapes/*
 data/motis-shapes-*/
 
 .venv/
+data/motis-*/

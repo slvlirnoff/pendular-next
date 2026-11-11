@@ -17,6 +17,8 @@ fetch() { # url dest
 
 GTFS_URL="${GTFS_URL:-https://data.opentransportdata.swiss/dataset/timetable-2027-gtfs2020/permalink}"
 OSM_URL="${OSM_URL:-https://planet.osm.ch/switzerland-padded.osm.pbf}"
+# Départements next to Geneva (Haute-Savoie, Ain). Add others the same way, separated by spaces.
+OSM_EXTRA="${OSM_EXTRA-https://download.openstreetmap.fr/extracts/europe/france/rhone_alpes/haute_savoie-latest.osm.pbf https://download.openstreetmap.fr/extracts/europe/france/rhone_alpes/ain-latest.osm.pbf}"
 PARKING_URL="${PARKING_URL:-https://data.opentransportdata.swiss/dataset/bike-and-car-parking/permalink}"
 # MOTIS is pinned to the version everything was tested with. The asset is chosen by platform;
 # set MOTIS_URL to override (asset names as on the MOTIS release page).
@@ -35,8 +37,26 @@ case "${1:-all}" in
   osm|all)
     # Clipped extracts hold ways whose nodes lie outside the clip; MOTIS refuses those.
     fetch "$OSM_URL" "$RAW/switzerland-raw.osm.pbf"
+    # The Swiss extract is padded by some 20 km only: commuters from further across the border
+    # (Annecy, Bonneville, Bellegarde for Geneva) would have no streets, hence no car route
+    # and no walk to their stop. OSM_EXTRA lists further extracts to merge in.
+    merge=("$RAW/switzerland-raw.osm.pbf")
+    for url in $OSM_EXTRA; do
+      name="$(basename "$url")"
+      fetch "$url" "$RAW/extra-$name"
+      merge+=("$RAW/extra-$name")
+    done
+    if [ "${#merge[@]}" -gt 1 ]; then
+      osmium merge "${merge[@]}" -o "$RAW/merged-raw.osm.pbf" --overwrite --no-progress
+      # Extracts of different dates overlap: keep the latest version of each object.
+      osmium time-filter "$RAW/merged-raw.osm.pbf" -o "$RAW/merged.osm.pbf" --overwrite --no-progress
+      rm -f "$RAW/merged-raw.osm.pbf"
+    else
+      cp "$RAW/switzerland-raw.osm.pbf" "$RAW/merged.osm.pbf"
+    fi
     # The temporary name keeps the .osm.pbf ending: the writer picks the format from it.
-    scripts/complete-ways.sh "$RAW/switzerland-raw.osm.pbf" "$RAW/switzerland-part.osm.pbf"
+    scripts/complete-ways.sh "$RAW/merged.osm.pbf" "$RAW/switzerland-part.osm.pbf"
+    rm -f "$RAW/merged.osm.pbf"
     mv "$RAW/switzerland-part.osm.pbf" "$RAW/switzerland.osm.pbf" ;;&
   parking|all) fetch "$PARKING_URL" "$RAW/bike-and-car-parking.json" ;;&
   motis|all) fetch "$MOTIS_URL" "$RAW/motis.tar.bz2"; tar -xjf "$RAW/motis.tar.bz2" -C motis/bin ;;&
