@@ -209,6 +209,8 @@ export const it: Dict = {
   'form.summary': '{home} → {work}',
   'method.link': 'Metodo, fonti e limiti',
   'opt.lastHomeShort': 'ultimo ritorno: partenza {last}, arrivo {arrival}',
+  'opt.lastHomePass': 'con questo abbonamento',
+  'opt.lastHomeRoute': 'sullo stesso percorso',
   'answer.vsCar': 'Sono {chf} all’anno in meno rispetto all’auto.',
   'left.tooFar': 'troppo lontano per questo mezzo',
   'opt.depOne': "Una sola partenza: {time}",

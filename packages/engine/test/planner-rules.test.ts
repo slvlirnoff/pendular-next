@@ -424,7 +424,7 @@ describe('last trip home follows the route of the morning trip', () => {
       }),
     );
     expect(asked).toContainEqual(['8500003', '8500002']);
-    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '19:10', lastArrival: '19:45' });
+    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '19:10', lastArrival: '19:45', within: 'route' });
   });
 
   it('falls back to the last connection by any route when none runs that way', async () => {
@@ -437,6 +437,96 @@ describe('last trip home follows the route of the morning trip', () => {
         },
       }),
     );
-    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '22:00', lastArrival: '22:35' });
+    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '22:00', lastArrival: '22:35', within: 'any' });
+  });
+});
+
+describe('last trip home with a zone pass', () => {
+  const H = { ...HOME, stopId: '8500001' };
+  const X = { ...STATION, stopId: '8500002' };
+  const C = { ...CITY, stopId: '8500003' };
+  const morning = [trip(leg('bus', H, X, '07:00', '07:10', '10', 'b1', 5), rail(X, C, '07:15', '07:50', 'R1', 'T1'))];
+  const evening = (dep: string, arr: string) => trip(rail(C, X, dep, arr, 'R1', 'E'));
+  const zonePass = (over: Partial<PricedProduct> = {}): PricedProduct => ({ ...product(900), kind: 'zonePassYearly', network: 'Mobilis', alliance: 'mobilis', zones: [11, 12, 60], ...over });
+  type Asked = { via?: string[]; tags?: string[] };
+  /** Records what was asked; answers by the kind of search. */
+  const provider = (answers: { pass?: Itinerary | null; route?: Itinerary | null; any?: Itinerary | null }, segmentFilter: boolean, asked: Asked[] = []): RoutingProvider => ({
+    ...routing(morning, []),
+    segmentFilter,
+    async lastTrip(q) {
+      asked.push({ via: q.via, tags: q.allowedSegmentTags });
+      if (q.allowedSegmentTags?.length) return answers.pass ?? null;
+      return (q.via?.length ? answers.route : answers.any) ?? null;
+    },
+  });
+  const run = async (r: RoutingProvider, ticket: PricedProduct, kinds: OptionKind[] = ['transit']) =>
+    compare({ ...REQUEST, kinds }, deps(r, { priceTransit: () => [ticket, product(2000)] }));
+
+  it('asks for the last trip inside the zones of the pass, without a via', async () => {
+    const asked: Asked[] = [];
+    const r = await run(provider({ pass: evening('23:05', '23:40'), route: evening('19:10', '19:45'), any: evening('23:50', '00:25') }, true, asked), zonePass());
+    expect(asked).toEqual([{ via: undefined, tags: ['mobilis:11', 'mobilis:12', 'mobilis:60'] }]);
+    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '23:05', lastArrival: '23:40', within: 'pass' });
+  });
+
+  it('keeps the route of the morning trip when the server cannot filter', async () => {
+    const asked: Asked[] = [];
+    const r = await run(provider({ pass: evening('23:05', '23:40'), route: evening('19:10', '19:45') }, false, asked), zonePass());
+    expect(asked).toEqual([{ via: ['8500003', '8500002'], tags: undefined }]);
+    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '19:10', lastArrival: '19:45', within: 'route' });
+  });
+
+  it('keeps the route of the morning trip for a route pass, singles, or a zone ticket without zones', async () => {
+    for (const ticket of [
+      { ...product(900), kind: 'routePassYearly' as const },
+      zonePass({ kind: 'singles' }),
+      zonePass({ zones: undefined }),
+      zonePass({ alliance: undefined }),
+    ]) {
+      const asked: Asked[] = [];
+      const r = await run(provider({ pass: evening('23:05', '23:40'), route: evening('19:10', '19:45') }, true, asked), ticket);
+      expect(asked.every((a) => !a.tags)).toBe(true);
+      expect(r.options.find((o) => o.kind === 'transit')!.returnTrips?.within).toBe('route');
+    }
+  });
+
+  it('falls back to the route, then to any connection, when the pass search finds nothing', async () => {
+    const asked: Asked[] = [];
+    const viaRoute = await run(provider({ pass: null, route: evening('19:10', '19:45'), any: evening('23:50', '00:25') }, true, asked), zonePass());
+    expect(asked.map((a) => (a.tags ? 'pass' : a.via?.length ? 'route' : 'any'))).toEqual(['pass', 'route']);
+    expect(viaRoute.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '19:10', lastArrival: '19:45', within: 'route' });
+
+    const order: Asked[] = [];
+    const anyRoute = await run(provider({ pass: null, route: null, any: evening('22:00', '22:35') }, true, order), zonePass());
+    expect(order.map((a) => (a.tags ? 'pass' : a.via?.length ? 'route' : 'any'))).toEqual(['pass', 'route', 'any']);
+    expect(anyRoute.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '22:00', lastArrival: '22:35', within: 'any' });
+  });
+
+  it('does not take a pass trip that is far longer than the morning trip', async () => {
+    // 50 min in the morning: at most 130 min back. The filtered search found a night detour.
+    const r = await run(provider({ pass: evening('20:00', '23:40'), route: evening('19:10', '19:45') }, true), zonePass());
+    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '19:10', lastArrival: '19:45', within: 'route' });
+  });
+
+  it('searches back to the car park for a park-and-ride option', async () => {
+    const asked: { to: { lat: number; lon: number }; tags?: string[] }[] = [];
+    const fromSite = [trip(rail(X, C, '07:20', '07:40', 'IR 1', 'S1')), trip(rail(X, C, '07:50', '08:10', 'IR 1', 'S2'))];
+    const r = await compare(
+      { ...REQUEST, kinds: ['parkRail'] },
+      deps(
+        {
+          ...routing(morning, fromSite),
+          segmentFilter: true,
+          async lastTrip(q) {
+            asked.push({ to: q.to, tags: q.allowedSegmentTags });
+            return q.allowedSegmentTags?.length ? evening('23:05', '23:30') : null;
+          },
+        },
+        { priceTransit: () => [zonePass()] },
+      ),
+    );
+    const pr = r.options.find((o) => o.kind === 'parkRail')!;
+    expect(pr.returnTrips).toEqual({ last: '23:05', lastArrival: '23:30', within: 'pass' });
+    expect(asked.filter((a) => a.tags).every((a) => a.to.lat === STATION.lat && a.to.lon === STATION.lon)).toBe(true);
   });
 });

@@ -208,6 +208,8 @@ export const fr = {
   'form.summary': '{home} → {work}',
   'method.link': 'Méthode, sources et limites',
   'opt.lastHomeShort': 'dernier retour : départ {last}, arrivée {arrival}',
+  'opt.lastHomePass': 'avec cet abonnement',
+  'opt.lastHomeRoute': 'par le même trajet',
   'answer.vsCar': 'C’est {chf} de moins par an qu’en voiture.',
   'left.tooFar': 'trop loin pour ce mode',
   'opt.depOne': "Un seul départ : {time}",

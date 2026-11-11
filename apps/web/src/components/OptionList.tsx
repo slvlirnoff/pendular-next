@@ -156,6 +156,8 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
   const conns = o.connections ?? [];
   // A departure after midnight (before 04:00) is a late one, not an early one.
   const early = o.returnTrips ? o.returnTrips.last >= '04:00' && o.returnTrips.last < '19:30' : false;
+  // Which search gave the last trip home: any line the pass covers, or the route of the morning trip.
+  const within = o.returnTrips?.within === 'pass' ? t('opt.lastHomePass') : o.returnTrips?.within === 'route' ? t('opt.lastHomeRoute') : null;
   return (
     <li className={`option card${props.selected ? ' is-selected' : ''}`}>
       <h3>
@@ -177,7 +179,12 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
           </span>
           {frequency && <span>{frequency}</span>}
           <span>{t('opt.co2short', { kg: num(o.co2KgPerYear, lang) })}</span>
-          {early && o.returnTrips && <span className="warn">{t('opt.lastHomeShort', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}</span>}
+          {early && o.returnTrips && (
+            <span className="warn">
+              {t('opt.lastHomeShort', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}
+              {within && <span className="qualifier"> · {within}</span>}
+            </span>
+          )}
         </span>
         {props.sameAs && <span className="option-note">{t('ticket.same', { name: props.sameAs })}</span>}
         {assumptions && <span className="option-note">{assumptions}</span>}
@@ -190,6 +197,12 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
             {saved !== undefined && saved > 0 && props.hasCar && <> · <span className="good">{t('opt.saved', { kg: num(saved, lang) })}</span></>}
           </p>
           {o.returnTrips === null && <p className="detail-facts warn">{t('opt.noReturn')}</p>}
+          {o.returnTrips && !early && (
+            <p className="detail-facts">
+              {t('opt.lastHome', { last: o.returnTrips.last, arrival: o.returnTrips.lastArrival })}
+              {within && <> · {within}</>}
+            </p>
+          )}
           {conns.length >= 2 && conns.length <= 4 && (
             <div className="detail-block">
               <h4>{t('opt.times')}</h4>

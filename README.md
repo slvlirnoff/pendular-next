@@ -57,6 +57,23 @@ Good to know:
 - An example staff list for Commute Analytics: `apps/analytics/examples/staff-chuv.csv`
   (60 invented people around Lausanne, with a few wrong addresses on purpose).
 
+### MOTIS fork (optional)
+
+With the release MOTIS, the last trip home of a public-transport option is the last connection by
+the route of the morning trip. A patched MOTIS (`tools/motis-fork`, see its README for the build)
+can search on every line a zone pass covers instead. It reads the same imported data, on its own
+port, with the segment file `tools/motis-fork/segments.csv` (zones of every section between two
+consecutive stops, all zonal networks; rewrite it with `pnpm tsx tools/motis-fork/export-segments.ts`):
+
+```sh
+MOTIS_SEGMENT_TAGS=$PWD/tools/motis-fork/segments.csv <motis-build>/motis server -d <copy of data/motis/data, port 8082>
+(cd apps/api && MOTIS_URL=http://127.0.0.1:8082 MOTIS_SEGMENT_FILTER=1 pnpm start)
+```
+
+`MOTIS_SEGMENT_FILTER=1` is off by default and must only be set when `MOTIS_URL` is the fork.
+Each option then says which search gave its last trip home (`returnTrips.within`: `pass`, `route`
+or `any`). Deployment: `deploy/README.md`.
+
 ## Data and credits
 
 Timetable and parking: opentransportdata.swiss. Streets and places: © OpenStreetMap contributors.

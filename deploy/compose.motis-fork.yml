@@ -1,0 +1,29 @@
+# Optional overlay: serve routing with the patched MOTIS (tools/motis-fork), so that the last trip
+# home of an option with a zone pass is searched on every line the pass covers.
+# The default stack (compose.yml alone) is unchanged and keeps the release MOTIS.
+#
+#   GHCR_OWNER=<github owner, lower case> docker compose -f compose.yml -f compose.motis-fork.yml up -d
+#   or, once and for all, in .env:  COMPOSE_FILE=compose.yml:compose.motis-fork.yml  and  GHCR_OWNER=…
+#
+# The image is built by .github/workflows/motis-fork-image.yml (same MOTIS version as the release:
+# it reads the same imported data). The segment file is the one in the checkout; regenerate it
+# after a new timetable or fare data import:  pnpm tsx tools/motis-fork/export-segments.ts
+# Needs Docker Compose 2.24 or later (`!reset`).
+services:
+  motis:
+    build: !reset null
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER to the owner of the image}/pendular-motis:${MOTIS_FORK_TAG:-fork-latest}
+    pull_policy: always
+    environment:
+      MOTIS_SEGMENT_TAGS: /segments/segments.csv
+    volumes:
+      - type: bind
+        source: ${SEGMENTS_FILE:-../tools/motis-fork/segments.csv}
+        target: /segments/segments.csv
+        read_only: true
+        bind: { create_host_path: false }
+
+  app:
+    environment:
+      # Only with the fork behind MOTIS_URL: the release MOTIS rejects the extra parameter.
+      MOTIS_SEGMENT_FILTER: "1"

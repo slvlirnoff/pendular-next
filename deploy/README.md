@@ -15,6 +15,7 @@ Data (timetable index, parking) is built by a one-off container and mounted read
 | `Dockerfile.app` | site build + API (Node 22, pnpm via corepack, non-root `node`, cwd `apps/api`) |
 | `Dockerfile.motis` | MOTIS binary from a **pinned** release, non-root, serves a mounted data dir |
 | `Dockerfile.data` | one-off tooling: curl, bzip2, python3 + osmium, node + tsx, the same MOTIS binary |
+| `compose.motis-fork.yml`, `Dockerfile.motis-fork` | optional: the patched MOTIS (last trip home inside the zones of a pass), see below |
 | `update-data.sh` | builds new data aside, checks it, swaps it in (also the first data build) |
 
 Why the MOTIS binary is downloaded at build time (pinned `MOTIS_VERSION`) instead of copied from
@@ -74,6 +75,30 @@ cd deploy && docker compose up -d --build app caddy
 `app` is rebuilt (lockfile is respected: `pnpm install --frozen-lockfile`). To change the MOTIS
 version, edit `MOTIS_VERSION` in `.env`, then `docker compose build motis data && ./update-data.sh`
 (the index must be rebuilt with the new binary).
+
+## Optional: the MOTIS fork (last trip home with a zone pass)
+
+Off by default. The patched MOTIS (`tools/motis-fork`) can restrict a search to the route sections
+a zone pass covers; the app then shows the last trip home by any line of the pass instead of the
+last one by the morning's route. The image `ghcr.io/<owner>/pendular-motis:fork-latest` is built by
+`.github/workflows/motis-fork-image.yml` (never on the VM: 25 minutes on 4 cores). To use it, add to `.env`:
+
+```sh
+COMPOSE_FILE=compose.yml:compose.motis-fork.yml
+GHCR_OWNER=<github owner of the repository, lower case>
+```
+
+and run `docker compose up -d`. The overlay replaces the `motis` image, mounts
+`tools/motis-fork/segments.csv` from the checkout (`SEGMENTS_FILE` to use another file) at the path
+given in `MOTIS_SEGMENT_TAGS`, and sets `MOTIS_SEGMENT_FILTER=1` on `app`. Both must go together:
+the filter with the release MOTIS makes every last-trip search fail (the app then falls back to
+the route search, so nothing breaks, but nothing is gained either). The fork is the same MOTIS
+version, so the imported data and `update-data.sh` are unchanged; a private image needs
+`docker login ghcr.io` first. Regenerate the segment file after a new timetable year or a fare
+data import (`pnpm tsx tools/motis-fork/export-segments.ts`, about 20 seconds, needs
+`data/raw/gtfs.zip`) and recreate `motis`. Check the log line
+`segments.csv: … rows, … route sections tagged` in `docker compose logs motis`.
+This overlay has not been run on a VM yet (needs Docker Compose 2.24 or later for `!reset`).
 
 ## Weekly data refresh
 

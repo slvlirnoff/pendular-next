@@ -218,7 +218,7 @@ describe('compare', () => {
     // Cheapest parking: the yearly pass (500) beats 12 × 60 and 230 × 5.
     expect(pr.cost.extras.find((e) => e.key === 'parking.year')!.yearly).toBe(500);
     expect(pr.cost.extras.some((e) => e.key === 'car.distance')).toBe(true);
-    expect(pr.returnTrips).toEqual({ last: '22:35', lastArrival: '23:15' });
+    expect(pr.returnTrips).toMatchObject({ last: '22:35', lastArrival: '23:15' });
 
     const car = r.options.find((o) => o.kind === 'car')!;
     expect(car.cost.yearly).toBe(Math.round(30 * 460 * 0.74) + 260 * 12);

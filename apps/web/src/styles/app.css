@@ -240,6 +240,7 @@ details.chart:not([open]) { padding: 12px 0; }
 /* --- Third pass ------------------------------------------------------------------------------ */
 .option-title { white-space: normal; overflow: visible; text-wrap: balance; line-height: 1.3; }
 .option-meta .warn { font-weight: 600; }
+.option-meta .warn .qualifier { font-weight: 400; color: var(--text-muted); }
 
 /* --- Departures, shared ticket, car assumptions ---------------------------------------------- */
 .option-note { grid-column: 1 / -1; font-size: 13px; color: var(--text-muted); }
