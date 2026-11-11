@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1
+# MOTIS built from source with our patches (tools/motis-fork): the per-request filter on allowed
+# route segments. Same version as the release binary of Dockerfile.motis, so both read the same
+# imported data. Building takes about 25 minutes on 4 cores; the image is built by the workflow
+# .github/workflows/motis-fork-image.yml and pulled everywhere else.
+#
+#   docker build -f deploy/Dockerfile.motis-fork -t pendular-motis-fork .
+
+ARG BASE=ubuntu:24.04
+
+FROM ${BASE} AS build
+ARG MOTIS_VERSION=v2.11.4
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl git cmake ninja-build gcc-13 g++-13 \
+    && rm -rf /var/lib/apt/lists/*
+# MOTIS's dependency tool clones over ssh by default.
+RUN git config --global url."https://github.com/".insteadOf "git@github.com:" \
+    && git clone --depth 1 --branch "${MOTIS_VERSION}" https://github.com/motis-project/motis.git /src/motis
+WORKDIR /build
+# Configure first: this fetches the pinned dependencies (nigiri among them) into /src/motis/deps.
+RUN CC=gcc-13 CXX=g++-13 cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DNO_BUILDCACHE=ON \
+      -DCMAKE_JOB_POOLS=link=1 -DCMAKE_JOB_POOL_LINK=link /src/motis
+COPY tools/motis-fork/nigiri.patch tools/motis-fork/motis.patch /patches/
+RUN git -C /src/motis/deps/nigiri apply /patches/nigiri.patch \
+    && git -C /src/motis apply /patches/motis.patch
+RUN cmake . && ninja motis && ./motis --version
+
+FROM ${BASE} AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10001 --home-dir /nonexistent --shell /usr/sbin/nologin motis
+COPY --from=build /build/motis /usr/local/bin/motis
+USER motis
+# The data directory is mounted here: config.yml and the indexes written by `motis import`.
+# MOTIS_SEGMENT_TAGS points to the hop table (tools/motis-fork/export-segments.ts writes it).
+WORKDIR /data
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=5s --start-period=120s --retries=5 \
+  CMD curl -fsS http://127.0.0.1:8080/api/v1/health >/dev/null || exit 1
+CMD ["motis", "server", "-d", "/data"]
