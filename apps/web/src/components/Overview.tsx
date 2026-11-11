@@ -149,8 +149,11 @@ export function Overview(props: { result: CompareResult; daysSearched: number; s
   const { result } = props;
   const flex = result.flexibleWork;
   const flexOption = flex && result.options.find((o) => o.id === flex.optionId);
+  // Up to three cards leave room for the working-from-home box on the same line.
+  const cards = CATEGORIES.filter((c) => result.options.some((o) => c.kinds.includes(o.kind))).length;
+  const inline = !!flexOption && cards <= 3;
   return (
-    <section className="overview" aria-labelledby="overview-h">
+    <section className={inline ? 'overview is-inline' : 'overview'} style={{ '--cards': cards } as React.CSSProperties} aria-labelledby="overview-h">
       <h2 id="overview-h">{t('overview.title')}</h2>
       <ul className="mode-cards">
         {CATEGORIES.map((c) => (

@@ -278,6 +278,18 @@ button.mode-main:hover { background: var(--bg-alt); }
 .flex-rows .flex-price { text-align: right; font-weight: 700; white-space: nowrap; }
 .flex-rows tr + tr th, .flex-rows tr + tr td { border-top: 1px solid var(--border); }
 
+/* Few cards: the cards and the working-from-home box share one line. */
+@media (min-width: 1081px) {
+  .overview.is-inline { grid-template-columns: minmax(0, 1fr); display: flex; flex-wrap: wrap; align-items: stretch; }
+  .overview.is-inline > h2 { flex: 0 0 100%; }
+  .overview.is-inline .mode-cards { flex: var(--cards) 1 0; grid-template-columns: repeat(var(--cards), minmax(0, 1fr)); }
+  .overview.is-inline .flex { flex: 2 1 0; min-width: 0; grid-template-columns: minmax(0, 1fr); align-content: start; padding: 14px 16px; }
+  .overview.is-inline .flex-rows tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 6px 0; }
+  .overview.is-inline .flex-rows th, .overview.is-inline .flex-rows td { padding: 0; border: 0; white-space: normal; }
+  .overview.is-inline .flex-rows th { grid-column: 1 / -1; }
+  .overview.is-inline .flex-rows tr + tr { border-top: 1px solid var(--border); }
+}
+
 @media (max-width: 1080px) {
   .flex { grid-template-columns: minmax(0, 1fr); }
 }
