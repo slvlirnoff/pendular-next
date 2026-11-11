@@ -17,7 +17,17 @@ fetch() { # url dest
 GTFS_URL="${GTFS_URL:-https://data.opentransportdata.swiss/dataset/timetable-2027-gtfs2020/permalink}"
 OSM_URL="${OSM_URL:-https://planet.osm.ch/switzerland-padded.osm.pbf}"
 PARKING_URL="${PARKING_URL:-https://data.opentransportdata.swiss/dataset/bike-and-car-parking/permalink}"
-MOTIS_URL="${MOTIS_URL:-https://github.com/motis-project/motis/releases/latest/download/motis-linux-amd64.tar.bz2}"
+# MOTIS is pinned to the version everything was tested with. The asset is chosen by platform;
+# set MOTIS_URL to override (asset names as on the MOTIS release page).
+MOTIS_VERSION="${MOTIS_VERSION:-v2.11.4}"
+case "$(uname -s)-$(uname -m)" in
+  Linux-x86_64) MOTIS_ASSET=motis-linux-amd64.tar.bz2 ;;
+  Linux-aarch64|Linux-arm64) MOTIS_ASSET=motis-linux-arm64.tar.bz2 ;;
+  Darwin-arm64) MOTIS_ASSET=motis-macos-arm64.tar.bz2 ;;
+  Darwin-x86_64) MOTIS_ASSET=motis-macos-x86_64.tar.bz2 ;;
+  *) MOTIS_ASSET=motis-linux-amd64.tar.bz2 ;;
+esac
+MOTIS_URL="${MOTIS_URL:-https://github.com/motis-project/motis/releases/download/$MOTIS_VERSION/$MOTIS_ASSET}"
 
 case "${1:-all}" in
   gtfs|all) fetch "$GTFS_URL" "$RAW/gtfs.zip" ;;&
@@ -29,5 +39,9 @@ case "${1:-all}" in
   parking|all) fetch "$PARKING_URL" "$RAW/bike-and-car-parking.json" ;;&
   motis|all) fetch "$MOTIS_URL" "$RAW/motis.tar.bz2"; tar -xjf "$RAW/motis.tar.bz2" -C motis/bin ;;&
 esac
+# MOTIS reads its inputs from motis/input (see motis/config.yml).
+mkdir -p motis/input
+[ -f "$RAW/gtfs.zip" ] && ln -sf ../../raw/gtfs.zip motis/input/gtfs.zip
+[ -f "$RAW/switzerland.osm.pbf" ] && ln -sf ../../raw/switzerland.osm.pbf motis/input/switzerland.osm.pbf
 date -u +%FT%TZ > "$RAW/fetched-at.txt"
 ls -la "$RAW"

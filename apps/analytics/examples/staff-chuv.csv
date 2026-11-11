@@ -1,0 +1,62 @@
+matricule;adresse;npa;localite;service;horaire
+S001;Avenue de la Gare 10;1003;Lausanne;Soins;jour
+S002;Rue de Bourg 27;1003;Lausanne;Administration;tôt
+S003;Avenue de Cour 33;1007;Lausanne;Technique;tard
+S004;Avenue de Morges 60;1004;Lausanne;Pharmacie;jour
+S005;Route de Berne 20;1010;Lausanne;Soins;tôt
+S006;Avenue d'Ouchy 50;1006;Lausanne;Administration;tard
+S007;Avenue de Rhodanie 50;1007;Lausanne;Technique;jour
+S008;Rue du Midi 15;1003;Lausanne;Pharmacie;tôt
+S009;Avenue de Beaulieu 9;1004;Lausanne;Soins;tard
+S010;Avenue de Provence 20;1007;Lausanne;Administration;jour
+S011;Chemin de Chandieu 10;1006;Lausanne;Technique;tôt
+S012;Avenue de Montchoisi 15;1006;Lausanne;Pharmacie;tard
+S013;Rue Centrale 10;1003;Lausanne;Soins;jour
+S014;Boulevard de Grancy 20;1006;Lausanne;Administration;tôt
+S015;Route d'Oron 20;1010;Lausanne;Technique;tard
+S016;Avenue de Tivoli 10;1007;Lausanne;Pharmacie;jour
+S017;Route de Cheseaux 30;1004;Lausanne;Soins;tôt
+S018;Avenue de Béthusy 30;1012;Lausanne;Administration;tard
+S019;Rue de Lausanne 20;1020;Renens;Technique;jour
+S020;Avenue du 14-Avril 10;1020;Renens;Pharmacie;tôt
+S021;Rue du Midi 10;1020;Renens;Soins;tard
+S022;Rue de Lausanne 20;1110;Morges;Administration;jour
+S023;Rue Louis-de-Savoie 40;1110;Morges;Technique;tôt
+S024;Grand-Rue 20;1110;Morges;Pharmacie;tard
+S025;Rue de la Plaine 20;1400;Yverdon-les-Bains;Soins;jour
+S026;Avenue Haldimand 30;1400;Yverdon-les-Bains;Administration;tôt
+S027;Rue du Lac 15;1400;Yverdon-les-Bains;Technique;tard
+S028;Rue du Bourg 10;1040;Echallens;Pharmacie;jour
+S029;Grand-Rue 5;1510;Moudon;Soins;tôt
+S030;Rue du Château 3;1510;Moudon;Administration;tard
+S031;Rue du Temple 8;1510;Moudon;Technique;jour
+S032;Grand-Rue 10;1522;Lucens;Pharmacie;tôt
+S033;Rue du Simplon 20;1800;Vevey;Soins;tard
+S034;Rue du Lac 10;1800;Vevey;Administration;jour
+S035;Rue des Deux-Gares 10;1800;Vevey;Technique;tôt
+S036;Rue du Bourg 10;1860;Aigle;Pharmacie;tard
+S037;Rue Colomb 5;1860;Aigle;Soins;jour
+S038;Rue de la Gare 10;1260;Nyon;Administration;tôt
+S039;Rue de Rive 20;1260;Nyon;Technique;tard
+S040;Grand-Rue 20;1680;Romont;Pharmacie;jour
+S041;Rue de Vevey 20;1630;Bulle;Soins;tôt
+S042;Rue de Gruyères 10;1630;Bulle;Administration;tard
+S043;Route de Cossonay 5;1304;Cossonay-Ville;Technique;jour
+S044;Route de Lausanne 5;1052;Le Mont-sur-Lausanne;Pharmacie;tôt
+S045;Route de Genève 10;1028;Préverenges;Soins;tard
+S046;Chemin de la Gare 5;1032;Romanel-sur-Lausanne;Administration;jour
+S047;Route de Berne 5;1066;Epalinges;Technique;tôt
+S048;Grand-Rue 10;1095;Lutry;Pharmacie;tard
+S049;Rue Davel 5;1096;Cully;Soins;jour
+S050;Route de Pully 10;1009;Pully;Administration;tôt
+S051;Avenue du Général-Guisan 20;1009;Pully;Technique;tard
+S052;Avenue de Longemalle 10;1020;Renens;Pharmacie;jour
+S053;Rue de la Paix 5;1180;Rolle;Soins;tôt
+S054;Rue du Collège 5;1032;Romanel-sur-Lausanne;Administration;tard
+S055;Avenue de la Gare 10;1003;Lausanne;Technique;jour
+S056;Avenue de la Garre 10;1003;Lausanne;Pharmacie;tôt
+S057;Rue de Lausane 20;1110;Morges;Soins;tard
+S058;Avenue d'Oushy 50;1006;Lausanne;Administration;jour
+S059;Grand-Rue 5;1530;Moudon;Technique;tôt
+S060;Rue de Vevey 20;1633;Bulle;Pharmacie;tard
+S061;xqzv wplk 999;0000;Nowhere;Soins;jour
