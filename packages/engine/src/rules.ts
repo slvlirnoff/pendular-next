@@ -33,7 +33,9 @@ export const PENDULAR_RULES: RuleSet = {
   walkToStopMaxMin: 25,
   accessMinKmFromWork: 2,
   walkInsteadOfBikeMaxMin: 15,
-  accessCandidates: 4,
+  // Several stations of one line often rank first (they share a train): six leave room for
+  // a station on another line.
+  accessCandidates: 6,
   maxOptionsPerKind: 3,
   arrivalSliceMin: 30,
   lastTripHomeBy: '02:00',

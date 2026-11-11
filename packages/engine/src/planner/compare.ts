@@ -166,6 +166,30 @@ function mainVehicle(it: Itinerary): string | undefined {
 }
 const ms = (iso: string) => new Date(iso).getTime();
 
+/** Arrival times at which the time from every stop is asked: every quarter of the window. */
+function reachTimes(w: TimeWindow): string[] {
+  const min = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+  const from = min(w.from);
+  const span = (min(w.to) - from + 1440) % 1440;
+  const hhmm = (m: number) => `${String(Math.floor((m % 1440) / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  return [...new Set([1, 0.75, 0.5, 0.25].map((share) => hhmm(from + Math.round(span * share))))];
+}
+
+/** The shortest time per stop over several answers; null when none came back. */
+function mergeReach(answers: (ReachableStop[] | null)[]): ReachableStop[] | null {
+  const ok = answers.filter((a): a is ReachableStop[] => a !== null);
+  if (ok.length === 0) return null;
+  const best = new Map<string, ReachableStop>();
+  for (const a of ok) {
+    for (const r of a) {
+      const key = `${r.lat},${r.lon}`;
+      const prev = best.get(key);
+      if (!prev || r.minutes < prev.minutes) best.set(key, r);
+    }
+  }
+  return [...best.values()];
+}
+
 interface Draft {
   conns?: Conn[];
   fareKey?: string;
@@ -310,8 +334,11 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     safe(routing.streetMatrix({ points: brCand, anchor: req.home, profile: 'ebike', direction: 'fromAnchor', maxMin: rules.bikeRideMaxMin }), brCand.map(() => null)),
     // Public transport time from every stop to work, in one call: it tells which stations are
     // worth a full search.
+    // Asked for several arrival times across the window, keeping the best per stop: measured
+    // against the end of the window alone, a fast train that arrives early in it looks half an
+    // hour slower than it is, and its station loses its place to slower ones.
     anyAccess && routing.reachability
-      ? safe(routing.reachability({ to: req.work, date, time: req.arrival.to, maxMin: REACH_MAX_MIN }), null as ReachableStop[] | null)
+      ? Promise.all(reachTimes(req.arrival).map((time) => safe(routing.reachability!({ to: req.work, date, time, maxMin: REACH_MAX_MIN }), null as ReachableStop[] | null))).then(mergeReach)
       : Promise.resolve(null as ReachableStop[] | null),
   ]);
 
@@ -385,17 +412,21 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       .sort((a, b) => a.guess - b.guess)
       .slice(0, rules.accessCandidates);
 
+    if (typeof process !== 'undefined' && process.env?.PENDULAR_DEBUG) console.log(kind, 'quickest', quickest, cands.map((site, i) => `${site.name}:${routes[i] ? Math.round(routes[i]!.durationMin) : '-'}/${onward(site) === null ? '-' : Math.round(onward(site)!)}`).join(' '), '=>', reachable.map((c) => `${c.site.name}:${Math.round(c.guess)}`).join(' '));
     const results = await Promise.all(reachable.map((c) => transitTo(c.site)));
     const best = reachable.map((c, i) => {
-      const groups = groupItineraries((results[i] ?? []).filter((it) => it.legs.some(isTransit)), fareKey);
+      const its = (results[i] ?? []).filter((it) => it.legs.some(isTransit));
+      const groups = groupItineraries(its, fareKey);
       const factor = legMode === 'car' ? peakOf(c.route, c.site) : 1;
-      return { g: [...groups].sort((a, b) => a.typicalMin - b.typicalMin)[0], factor, rideMs: c.route.durationMin * factor * 60000 };
+      return { its, g: [...groups].sort((a, b) => a.typicalMin - b.typicalMin)[0], factor, rideMs: c.route.durationMin * factor * 60000 };
     });
     // The same train or bus can be boarded at several sites along its way: the one with the
     // shortest drive or ride from home is the one to use.
     const shortestRide = new Map<string, number>();
+    // Every connection of every site counts here, not only those of the route a site is shown
+    // with: a train that calls at a nearer station is not driven after to a further one.
     for (const b of best) {
-      for (const it of b.g?.itineraries ?? []) {
+      for (const it of b.its) {
         const v = mainVehicle(it);
         if (v !== undefined && b.rideMs < (shortestRide.get(v) ?? Infinity)) shortestRide.set(v, b.rideMs);
       }
