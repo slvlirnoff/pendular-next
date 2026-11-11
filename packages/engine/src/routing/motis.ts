@@ -259,7 +259,13 @@ export class MotisRouting implements RoutingProvider {
     by: 'arrive' | 'depart';
     alternateTies?: boolean;
     maxWalkToStopMin?: number;
+    allowedSegmentTags?: string[];
+    maxTravelMin?: number;
   }): Promise<Itinerary[]> {
+    // A search restricted to fare zones: only the fork knows the parameter. Without it the
+    // answer would be the unrestricted one under a false name, so there is none.
+    if (q.allowedSegmentTags?.length && !this.segmentFilter) return [];
+    const tags = q.allowedSegmentTags?.length ? q.allowedSegmentTags : null;
     const { start, end } = windowToUtc(q.date, q.window, this.o.timezone);
     const arriveBy = q.by === 'arrive';
     const out = new Map<string, Itinerary>();
@@ -278,6 +284,11 @@ export class MotisRouting implements RoutingProvider {
         detailedTransfers: false,
         ...(q.alternateTies ? { algorithm: TIE_ALGORITHM } : {}),
         ...(q.maxWalkToStopMin ? { maxPreTransitTime: Math.round(q.maxWalkToStopMin * 60) } : {}),
+        // Restricted to zones, connections are rare: MOTIS would widen the search by hours, to
+        // the day before, until it has five of them (0.4 s against 0.1 s on Lovatens – EPFL).
+        // One is asked for, which still returns every connection of the window, and none that
+        // takes longer than the limit (minutes).
+        ...(tags ? { allowedSegmentTags: tags.join(','), numItineraries: 1, maxTravelTime: Math.round(q.maxTravelMin ?? RESTRICTED_MAX_HOURS * 60) } : {}),
         ...(cursor ? { pageCursor: cursor } : {}),
       });
       let outside = 0;
@@ -581,6 +592,9 @@ export class MotisRouting implements RoutingProvider {
 
 /** With a segment filter, the last trip may not leave more than this long before the arrive-by time. */
 const LAST_TRIP_MAX_HOURS = 12;
+
+/** A search restricted to fare zones looks no further than this without a limit from the caller. */
+const RESTRICTED_MAX_HOURS = 4;
 
 /** MOTIS returns at most 256 connections per call; only an answer this long may be cut short. */
 const NEAR_RESULT_CAP = 200;

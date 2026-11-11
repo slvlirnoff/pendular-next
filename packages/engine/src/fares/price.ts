@@ -91,6 +91,9 @@ function discountNote(net: Network, section: string, t: Traveller): string | und
   return labels.length ? labels.join('; ') : undefined;
 }
 
+/** A zone count no network has: asking a grid for it gives its all-zones price. */
+const ALL_ZONES_PROBE = 9999;
+
 /** The zones with those always sold together, sorted. */
 function withTogether(net: Network, zones: number[]): number[] {
   const used = new Set(zones);
@@ -157,6 +160,9 @@ function networkProducts(
     };
     const made = card ? withCard(kind, comp, ctx) : product(kind, [comp]);
     if (!made) return;
+    // The price of the whole network (from a number of zones on, or beyond the last column of
+    // the grid): the same ticket whichever zones the trip uses.
+    if (p === price(ALL_ZONES_PROBE)) made.allZones = true;
     if (!exact) {
       const lo = price(Math.max(1, n - 1));
       const hi = price(n + 1);
@@ -216,6 +222,7 @@ function networkProducts(
         area.allZones,
       ),
     );
+    out[out.length - 1]!.allZones = true;
   }
   return out;
 }

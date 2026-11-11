@@ -359,7 +359,7 @@ export interface RoutingProvider {
     /** Longest ride (whole trip), or longest leg with the walk to the station. Minutes. */
     maxMin: number;
   }): Promise<Itinerary[]>;
-  /** True when `lastTrip` can restrict the search with `allowedSegmentTags` (the MOTIS fork). */
+  /** True when `transit` and `lastTrip` can restrict the search with `allowedSegmentTags` (the MOTIS fork). */
   readonly segmentFilter?: boolean;
   /**
    * Public transport time from every stop to `to`, arriving by `time` on `date` (one call for
