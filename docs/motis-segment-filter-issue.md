@@ -1,4 +1,10 @@
-<!-- Draft of a feature request for github.com/motis-project/motis. Not posted. -->
+<!--
+Notes for a feature request to github.com/motis-project/motis. NOT to be posted as written.
+
+MOTIS's README (Contributing) says: "Communication intended to be read by humans on any channel
+(Matrix, Issues, PRs, etc.) should be written by humans, not by AI." This file was drafted by an
+AI assistant: use it as a checklist of facts and write the issue in your own words.
+-->
 
 # Feature request: restrict a search to allowed route segments (per-request filter)
 
