@@ -1,6 +1,6 @@
 # Which zones are a network's own
 
-Written by `tools/nova-import/derive.ts` on 2026-11-10 with `network-zones.json`; do not edit.
+Written by `tools/nova-import/derive.ts` on 2026-11-11 with `network-zones.json`; do not edit.
 
 ## The question
 
@@ -14,7 +14,7 @@ Where two fare networks overlap, both have a zone over the same stops (Lucens: M
 - Where the tariff of one of the two networks names the tariff that applies inside the shared zone (tools/nova-import/zone-primacy.json), that decides `own`; `ownByRule` keeps what the rule said.
 - Zones of joint products (umbrellas) are own only where no zonal network covers them.
 
-**The stops alone do not answer the question.** Overlap zones mirror each other: the two networks' zones hold the same stops, so the share is high on both sides. Who has primacy is a decision written in the tariffs. The canton rule is a guess for zones no tariff we read covers: on the 55 zones where a tariff names the answer it is right for 40 and wrong for 15:
+**The stops alone do not answer the question.** Overlap zones mirror each other: the two networks' zones hold the same stops, so the share is high on both sides. Who has primacy is a decision written in the tariffs. The canton rule is a guess for zones no tariff we read covers: on the 57 zones where a tariff names the answer it is right for 41 and wrong for 16:
 
 - frimobil 14 (Flamatt): tariff says libero, rule says own
 - frimobil 51 (Avenches): tariff says frimobil, rule says not own
@@ -31,6 +31,7 @@ Where two fare networks overlap, both have a zone over the same stops (Lucens: M
 - mobilis 135 (Châtonnaye): tariff says frimobil, rule says own
 - mobilis 182 (Allières): tariff says frimobil, rule says own
 - mobilis 183 (Montbovon): tariff says frimobil, rule says own
+- unireso 10 (Genève): tariff says unireso, rule says not own
 
 A second guess was tried and not kept: counting the edges from the zone to stops only one of the two networks serves. It was right on about as many of the same zones, and wrong on other ones.
 
@@ -41,6 +42,7 @@ Zones decided by a tariff have `basis: "tariff"`; all others `basis: "rule"` and
 - T651.22: Mobilis, Règlement tarifaire T651.22, 'dès le 01.06.2025', https://www.mobilis-vaud.ch/download/reglement-tarifaire-t651-22/ (fetched 2026-11-10)
 - T651.4: Frimobil, Tarif T651.4, edition 01.06.2026, https://frimobil.ch/fileadmin/user_upload/public/Frimobil/T651.4_au_1er_juin_2026_FR.pdf (fetched 2026-11-10)
 - T651.3: Onde Verte, Tarif T651.3, edition 01.06.2026, https://www.ondeverte.ch/fileadmin/pdf/T651.3_juillet_2026.pdf (fetched 2026-11-10)
+- T651.11: unireso, Conditions générales de vente T651.11, edition 01.06.2026, https://www.unireso.com/wp-content/uploads/2026/06/CGV-unireso-Juin-2026-1.pdf (read 2026-11-10); confirmed in the SBB shop on 2026-11-11 (packages/engine/data/zones/sbb-checks-leman-pass/RESULTS.md)
 
 - Open: onde-verte 31 (La Ferrière/Sonvilier) and 66 (Cormoret/Chasseral), shared with Libero: T651.3 names only zones 42 and 65 as overlap zones 'sans primauté tarifaire' of Onde Verte, which suggests 31 and 66 are Onde Verte's own; no table says so and the Libero tariff T651.10 was not read. Left to the rule (not own).
 - Open: libero 697 (Kerzers), all of its stops also Frimobil stops (zone 56): not in the list of T651.4 1.3.1; the Libero tariff T651.10 was not read. Left to the rule (not own).
@@ -49,8 +51,8 @@ Zones decided by a tariff have `basis: "tariff"`; all others `basis: "rule"` and
 
 ## Networks
 
-- Zonal networks (they have a pass plan; the plan taken as their area): a-welle (`a-welle-abo-amp-billett`), arcobaleno (`arcobaleno-abo-abo`), bs (`sierre-siders-abo-amp-billett`), engadin-mobil (`oberengadin-abo`), frimobil (`frimobil-billett-amp-abo`), li-emobil (`li-emobil-abo-amp-billett`), libero (`libero-abo-abo-libero`), mobilis (`mobilis-abo-abo`), onde-verte (`onde-verte-abo-abo`), ostwind (`ostwind-abo`), passepartout (`passepartout-abo-abo`), tarifverbund-davos (`davos-abo-amp-billett`), tarifverbund-klosters (`klosters-abo-amp-billett`), tarifverbund-schwyz (`schwyzerpass-abo-amp-billett`), tarifverbund-zug (`zugerpass-abo-amp-billett`), tnw (`tnw-abo`), transreno (`transreno-abo-amp-billett`), unireso (`unireso-abo-amp-billett-zone-10`), vagabond (`vagabond-abo`), zvv (`zvv-abo-amp-billett`).
-- Joint products, never counted as "another network": **leman-pass** (cross-border tariff of the Geneva area (T651.12): unireso zone 10 plus French zones and routes; 76 % of the stops of its pass plans are unireso stops); **z-pass-a-welle-zvv** (joint pass ZVV + A-Welle: every stop is also a ZVV or A-Welle stop); **z-pass-ostwind-zvv** (joint pass ZVV + Ostwind: every stop is also a ZVV or Ostwind stop); **z-pass-tv-schwyz-zug-zvv** (joint pass ZVV + Schwyz/Zug: every stop is also a ZVV, Schwyz or Zug stop); **bodensee-ticket-bahn-bus-fahre** (tourist day ticket around Lake Constance over Ostwind, Vorarlberg, Liechtenstein and German networks; no pass plan).
+- Zonal networks (they have a pass plan; the plan taken as their area): a-welle (`a-welle-abo-amp-billett`), arcobaleno (`arcobaleno-abo-abo`), bs (`sierre-siders-abo-amp-billett`), engadin-mobil (`oberengadin-abo`), frimobil (`frimobil-billett-amp-abo`), leman-pass (`leman-pass-abo-amp-billett`), li-emobil (`li-emobil-abo-amp-billett`), libero (`libero-abo-abo-libero`), mobilis (`mobilis-abo-abo`), onde-verte (`onde-verte-abo-abo`), ostwind (`ostwind-abo`), passepartout (`passepartout-abo-abo`), tarifverbund-davos (`davos-abo-amp-billett`), tarifverbund-klosters (`klosters-abo-amp-billett`), tarifverbund-schwyz (`schwyzerpass-abo-amp-billett`), tarifverbund-zug (`zugerpass-abo-amp-billett`), tnw (`tnw-abo`), transreno (`transreno-abo-amp-billett`), unireso (`unireso-abo-amp-billett-zone-10`), vagabond (`vagabond-abo`), zvv (`zvv-abo-amp-billett`).
+- Joint products, never counted as "another network": **z-pass-a-welle-zvv** (joint pass ZVV + A-Welle: every stop is also a ZVV or A-Welle stop); **z-pass-ostwind-zvv** (joint pass ZVV + Ostwind: every stop is also a ZVV or Ostwind stop); **z-pass-tv-schwyz-zug-zvv** (joint pass ZVV + Schwyz/Zug: every stop is also a ZVV, Schwyz or Zug stop); **bodensee-ticket-bahn-bus-fahre** (tourist day ticket around Lake Constance over Ostwind, Vorarlberg, Liechtenstein and German networks; no pass plan).
 - Alliances without a pass plan in the snapshot (local or foreign tariffs; listed in the file with no zones, not counted as neighbours): bcs, bum, communaute-de-communes-pays-d-evian-vallee-d-abondance, pag, regio-verkehrsverbund-lorrach, tarifverbund-waldshut, tpc, vbd, vhb, vvv.
 - Joint plans inside a zonal network (a combined pass with a neighbour, the plan of a former network) are in the file with their zones but are not the network's area.
 - Passepartout, TNW, Ostwind, A-Welle and the like are zonal networks, not umbrellas: they have zones and prices of their own.
@@ -121,11 +123,10 @@ Every zone of one network of the pair that holds stops of the other. Columns: st
 | Network | Zone | Stops | Shared with | Cantons | Rule | Tariff | Flag |
 | --- | --- | ---: | --- | --- | --- | --- | --- |
 | mobilis | 90 Chavannes-de-Bogis | 8 | unireso 13 %, leman-pass 13 % | VD 8 | own | – | **own** |
-| unireso | 10 Genève | 789 | mobilis 0 %, leman-pass 100 % | ? 8, GE 780, VD 1 | own | – | **own** |
-| leman-pass | 10  | 795 | mobilis 0 %, unireso 99 % | GE 780, ? 14, VD 1 | not own | – | **not own** |
+| unireso | 10 Genève | 789 | mobilis 0 %, leman-pass 100 % | ? 8, GE 780, VD 1 | not own | unireso (T651.11 1.1.2: the unireso tariff applies to trips entirely inside zone 10; Léman Pass (T651.12) only across the border (T651.11 7.1)) | **own** |
+| leman-pass | 10  | 795 | mobilis 0 %, unireso 99 % | GE 780, ? 14, VD 1 | not own | unireso (T651.11 1.1.2 and 7.1: zone 10 is part of every Léman Pass zone pass but a trip inside it is unireso's; Léman Pass sells the trips that use one of its French zones 200, 210, 230, 240, 250) | **not own** |
 | leman-pass | 210  | 128 | unireso 1 % | ? 127, GE 1 | own | – | **own** |
 | leman-pass | 230  | 38 | unireso 8 % | ? 37, GE 1 | own | – | **own** |
-| leman-pass | 10  | 791 | mobilis 0 %, unireso 99 % | ? 12, GE 778, VD 1 | not own | – | **not own** |
 
 ### Mobilis and Onde Verte
 

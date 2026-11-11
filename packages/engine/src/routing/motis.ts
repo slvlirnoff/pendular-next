@@ -148,7 +148,8 @@ const place = (p: LatLon) => `${p.lat.toFixed(6)},${p.lon.toFixed(6)}`;
 /**
  * Station-level id as a Swiss stop number (DiDok/UIC, e.g. "8504121").
  * MOTIS ids look like "ch_Parentch:1:sloid:4121" or "ch_ch:1:sloid:4121:1:2"; the number after
- * "sloid" is the stop number without the country prefix 85.
+ * "sloid" is the stop number without the country prefix 85; for a stop abroad it is the whole
+ * number ("ch_Parentch:1:sloid:1400679" → "1400679"), as the fare data (NOVA) has it.
  */
 /** The station-level MOTIS id of a Swiss stop number ("8504121" → "ch_Parentch:1:sloid:4121"); null for others. */
 export function motisStationId(stopNumber: string): string | null {
@@ -161,7 +162,9 @@ export function stationId(p: { stopId?: string; parentId?: string }): string | u
   if (!raw) return undefined;
   const id = raw.replace(/^[a-z0-9]+_/i, '').replace(/^Parent/, '');
   const sloid = /^ch:1:sloid:(\d+)/.exec(id);
-  if (sloid) return `85${sloid[1]!.padStart(5, '0')}`;
+  // Swiss stops: the number without the country prefix 85 (up to five digits). Stops abroad
+  // (French bus stops around Geneva: "ch:1:sloid:1400679" Ferney, mairie) carry their whole number.
+  if (sloid) return sloid[1]!.length > 5 ? sloid[1]! : `85${sloid[1]!.padStart(5, '0')}`;
   return id.split(':')[0];
 }
 

@@ -227,6 +227,50 @@ function networkProducts(
   return out;
 }
 
+/**
+ * The products of a network whose passes are priced per zone set (Léman Pass): the monthly and
+ * the yearly pass for exactly these zones. Empty when the grid has no price for the set.
+ */
+function zoneSetProducts(net: Network, zones: number[], exact: boolean, ctx: FareContext, zoneNotes: string[]): PricedProduct[] {
+  const t = ctx.traveller;
+  const thisYear = net.origin === 'tariff' && net.year === TARIFF_YEAR;
+  const category = passCategory(t.ageGroup);
+  const notes = [...zoneNotes];
+  if (!net.hasTickets) notes.push(`${net.label}: single tickets and day passes are not in the price data, only the monthly and the yearly pass`);
+  const out: PricedProduct[] = [];
+  const one = (kind: ProductKind, period: 'month' | 'year', times: number) => {
+    const p = net.setPass(period, zones, { category, travelClass: t.travelClass });
+    if (!p) return;
+    const discounts = discountNote(net, `passes.${period}`, t);
+    const made = product(kind, [
+      {
+        key: `network.${period}`,
+        params: {
+          network: net.label,
+          zones: zones.length,
+          zoneSet: zones.join('+'),
+          ...(thisYear ? {} : { priceYear: net.year }),
+          ...(notes.length || p.derived ? { note: [...notes, ...(p.derived ? ['price worked out from the prices read for other zone sets or categories, not read from the tariff'] : [])].join('; ') } : {}),
+          ...(discounts ? { discounts } : {}),
+          unit: p.price,
+          times,
+        },
+        yearly: p.price * times,
+        provenance: exact && thisYear && !p.derived ? 'tariff' : 'estimated',
+        source: net.source,
+      },
+    ]);
+    made.network = net.label;
+    made.alliance = net.alliance;
+    made.zones = withTogether(net, zones);
+    if (!thisYear) made.priceYear = net.year;
+    out.push(made);
+  };
+  one('zonePassMonthly', 'month', passMonths(ctx));
+  one('zonePassYearly', 'year', 1);
+  return out;
+}
+
 /** The annual pass of a network for the trip, to compare networks; the cheapest product when it sells none. */
 const yearlyPassCost = (products: PricedProduct[]): number =>
   products.find((p) => p.kind === 'zonePassYearly')?.yearly ?? Math.min(Infinity, ...products.map((p) => p.yearly));
@@ -356,7 +400,9 @@ export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}
       c,
       products: c.alliance === MOBILIS
           ? mobilisProducts(c.passCount, c.exact, c.notes, c.zones)
-          : networkProducts(c.network!, { pass: c.passCount, ticket: c.ticketCount }, c.exact, ctx, c.notes, { zones: c.zones, allZones: allZones(c.alliance, c.passPlan) }),
+          : c.network!.bySet
+            ? zoneSetProducts(c.network!, c.zones, c.exact, ctx, c.notes)
+            : networkProducts(c.network!, { pass: c.passCount, ticket: c.ticketCount }, c.exact, ctx, c.notes, { zones: c.zones, allZones: allZones(c.alliance, c.passPlan) }),
     }))
     .filter((x) => x.products.length > 0)
     .sort((a, b) => yearlyPassCost(a.products) - yearlyPassCost(b.products));
@@ -368,7 +414,7 @@ export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}
     const best = priced[0]!;
     const others = [
       ...priced.slice(1).map((x) => `also inside ${x.c.label}: annual pass CHF ${Math.round(yearlyPassCost(x.products))}`),
-      ...unpriced.map((c) => `also inside ${c.label}: no price grid`),
+      ...unpriced.map((c) => `also inside ${c.label}: ${c.network?.bySet ? 'no price for this zone combination' : 'no price grid'}`),
     ];
     if (others.length) {
       for (const p of best.products) {
@@ -382,7 +428,13 @@ export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}
     products.push(...mobilisProducts(table.zones.length, table.exact, table.notes, table.zones));
   } else {
     // Inside a zone network we have no prices for: the national distance tariff stands in, and says so.
-    const note = unpriced.length ? `inside ${unpriced.map((c) => c.label).join(', ')}: no price grid for this network, priced by distance` : undefined;
+    // Or inside one that prices per zone set and has no price for the zones of this trip.
+    const noGrid = unpriced.filter((c) => !c.network?.bySet);
+    const note =
+      [
+        ...unpriced.filter((c) => c.network?.bySet).map((c) => `inside ${c.label}: no price for this zone combination (${c.zones.join('+')}), priced by distance`),
+        ...(noGrid.length ? [`inside ${noGrid.map((c) => c.label).join(', ')}: no price grid for this network, priced by distance`] : []),
+      ].join('; ') || undefined;
     products.push(...nationalProducts(legs, ctx, deps, note));
   }
   const ga = gaProduct(ctx);

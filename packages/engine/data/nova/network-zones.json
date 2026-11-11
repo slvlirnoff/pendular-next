@@ -1,6 +1,6 @@
 {
  "_about": "Which zones are a fare network's own. Written by tools/nova-import/derive.ts from the NOVA snapshot; do not edit (documented exceptions: tools/nova-import/zone-primacy.json). Explanation and the lists to check by hand: NETWORK-ZONES.md.",
- "generated": "2026-11-10",
+ "generated": "2026-11-11",
  "source": "https://lindas.admin.ch/query (graphs https://lindas.admin.ch/sbb/nova, https://lindas.admin.ch/sbb/didok), published through opentransportdata.swiss",
  "rule": {
   "threshold": 0.8,
@@ -11,8 +11,8 @@
    "Where the tariff of one of the two networks names the tariff that applies inside the shared zone (tools/nova-import/zone-primacy.json), that decides `own`; `ownByRule` keeps what the rule said.",
    "Zones of joint products (umbrellas) are own only where no zonal network covers them."
   ],
-  "documentedZones": 55,
-  "ruleAgreesWithTariff": 40,
+  "documentedZones": 57,
+  "ruleAgreesWithTariff": 41,
   "ruleDisagrees": [
    "frimobil 14 (Flamatt): tariff says libero, rule says own",
    "frimobil 51 (Avenches): tariff says frimobil, rule says not own",
@@ -28,18 +28,17 @@
    "mobilis 132 (Montmagny): tariff says frimobil, rule says own",
    "mobilis 135 (Châtonnaye): tariff says frimobil, rule says own",
    "mobilis 182 (Allières): tariff says frimobil, rule says own",
-   "mobilis 183 (Montbovon): tariff says frimobil, rule says own"
+   "mobilis 183 (Montbovon): tariff says frimobil, rule says own",
+   "unireso 10 (Genève): tariff says unireso, rule says not own"
   ]
  },
  "umbrellas": [
-  "leman-pass",
   "z-pass-a-welle-zvv",
   "z-pass-ostwind-zvv",
   "z-pass-tv-schwyz-zug-zvv",
   "bodensee-ticket-bahn-bus-fahre"
  ],
  "umbrellaReasons": {
-  "leman-pass": "cross-border tariff of the Geneva area (T651.12): unireso zone 10 plus French zones and routes; 76 % of the stops of its pass plans are unireso stops",
   "z-pass-a-welle-zvv": "joint pass ZVV + A-Welle: every stop is also a ZVV or A-Welle stop",
   "z-pass-ostwind-zvv": "joint pass ZVV + Ostwind: every stop is also a ZVV or Ostwind stop",
   "z-pass-tv-schwyz-zug-zvv": "joint pass ZVV + Schwyz/Zug: every stop is also a ZVV, Schwyz or Zug stop",
@@ -51,6 +50,7 @@
   "bs",
   "engadin-mobil",
   "frimobil",
+  "leman-pass",
   "li-emobil",
   "libero",
   "mobilis",
@@ -85,6 +85,7 @@
   "bs": "sierre-siders-abo-amp-billett",
   "engadin-mobil": "oberengadin-abo",
   "frimobil": "frimobil-billett-amp-abo",
+  "leman-pass": "leman-pass-abo-amp-billett",
   "li-emobil": "li-emobil-abo-amp-billett",
   "libero": "libero-abo-abo-libero",
   "mobilis": "mobilis-abo-abo",
@@ -2635,9 +2636,14 @@
       "VD": 1
      },
      "own": false,
-     "basis": "rule",
+     "basis": "tariff",
      "ownByRule": false,
-     "rule": "joint product: 99 % of the stops are unireso stops"
+     "rule": "99 % of the stops are also unireso stops; most stops of the zone lie in GE, where leman-pass has 0 stops of its own and unireso 0",
+     "documented": {
+      "tariff": "unireso",
+      "partner": "unireso",
+      "source": "T651.11 1.1.2 and 7.1: zone 10 is part of every Léman Pass zone pass but a trip inside it is unireso's; Léman Pass sells the trips that use one of its French zones 200, 210, 230, 240, 250"
+     }
     },
     "200": {
      "label": "",
@@ -2752,9 +2758,14 @@
       "VD": 1
      },
      "own": false,
-     "basis": "rule",
+     "basis": "tariff",
      "ownByRule": false,
-     "rule": "joint product: 99 % of the stops are unireso stops"
+     "rule": "99 % of the stops are also unireso stops; most stops of the zone lie in GE, where leman-pass has 0 stops of its own and unireso 0",
+     "documented": {
+      "tariff": "unireso",
+      "partner": "unireso",
+      "source": "T651.11 1.1.2 and 7.1: zone 10 is part of every Léman Pass zone pass but a trip inside it is unireso's; Léman Pass sells the trips that use one of its French zones 200, 210, 230, 240, 250"
+     }
     }
    }
   },
@@ -8754,9 +8765,15 @@
      "label": "Chavannes-de-Bogis",
      "stops": 8,
      "sharedShare": 0.13,
-     "partner": "unireso",
+     "partner": "leman-pass",
      "partnerShare": 0.13,
      "sharedWith": {
+      "leman-pass": {
+       "share": 0.13,
+       "zones": {
+        "10": 1
+       }
+      },
       "unireso": {
        "share": 0.13,
        "zones": {
@@ -8770,7 +8787,7 @@
      "own": true,
      "basis": "rule",
      "ownByRule": true,
-     "rule": "13 % of the stops are also unireso stops: below the threshold"
+     "rule": "13 % of the stops are also leman-pass stops: below the threshold"
     },
     "91": {
      "label": "Trélex",
@@ -15145,10 +15162,18 @@
     "10": {
      "label": "Genève",
      "stops": 789,
-     "sharedShare": 0,
-     "partner": "mobilis",
-     "partnerShare": 0,
+     "sharedShare": 1,
+     "partner": "leman-pass",
+     "partnerShare": 1,
      "sharedWith": {
+      "leman-pass": {
+       "share": 1,
+       "zones": {
+        "10": 789,
+        "210": 1,
+        "230": 3
+       }
+      },
       "mobilis": {
        "share": 0,
        "zones": {
@@ -15162,9 +15187,14 @@
       "VD": 1
      },
      "own": true,
-     "basis": "rule",
-     "ownByRule": true,
-     "rule": "0 % of the stops are also mobilis stops: below the threshold"
+     "basis": "tariff",
+     "ownByRule": false,
+     "rule": "100 % of the stops are also leman-pass stops; most stops of the zone lie in GE, where unireso has 0 stops of its own and leman-pass 0",
+     "documented": {
+      "tariff": "unireso",
+      "partner": "leman-pass",
+      "source": "T651.11 1.1.2: the unireso tariff applies to trips entirely inside zone 10; Léman Pass (T651.12) only across the border (T651.11 7.1)"
+     }
     }
    }
   },

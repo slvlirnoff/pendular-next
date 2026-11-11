@@ -3,7 +3,8 @@
  "sources": {
   "T651.22": "Mobilis, Règlement tarifaire T651.22, 'dès le 01.06.2025', https://www.mobilis-vaud.ch/download/reglement-tarifaire-t651-22/ (fetched 2026-11-10)",
   "T651.4": "Frimobil, Tarif T651.4, edition 01.06.2026, https://frimobil.ch/fileadmin/user_upload/public/Frimobil/T651.4_au_1er_juin_2026_FR.pdf (fetched 2026-11-10)",
-  "T651.3": "Onde Verte, Tarif T651.3, edition 01.06.2026, https://www.ondeverte.ch/fileadmin/pdf/T651.3_juillet_2026.pdf (fetched 2026-11-10)"
+  "T651.3": "Onde Verte, Tarif T651.3, edition 01.06.2026, https://www.ondeverte.ch/fileadmin/pdf/T651.3_juillet_2026.pdf (fetched 2026-11-10)",
+  "T651.11": "unireso, Conditions générales de vente T651.11, edition 01.06.2026, https://www.unireso.com/wp-content/uploads/2026/06/CGV-unireso-Juin-2026-1.pdf (read 2026-11-10); confirmed in the SBB shop on 2026-11-11 (packages/engine/data/zones/sbb-checks-leman-pass/RESULTS.md)"
  },
  "open": [
   "onde-verte 31 (La Ferrière/Sonvilier) and 66 (Cormoret/Chasseral), shared with Libero: T651.3 names only zones 42 and 65 as overlap zones 'sans primauté tarifaire' of Onde Verte, which suggests 31 and 66 are Onde Verte's own; no table says so and the Libero tariff T651.10 was not read. Left to the rule (not own).",
@@ -25,6 +26,8 @@
   {"alliance": "onde-verte", "zones": [42], "partner": "vagabond", "partnerZones": [42], "tariff": "vagabond", "source": "T651.3 ch. 1 'Zones de chevauchement': passes at the Vagabond tariff, tickets at the national tariff"},
   {"alliance": "vagabond", "zones": [42], "partner": "onde-verte", "partnerZones": [42], "tariff": "vagabond", "source": "T651.3 ch. 1 'Zones de chevauchement'"},
   {"alliance": "onde-verte", "zones": [65], "partner": "libero", "partnerZones": [314, 315], "tariff": "libero", "source": "T651.3 ch. 1 'Zones de chevauchement' (Lignières – Le Landeron excepted: Onde Verte)"},
-  {"alliance": "libero", "zones": [314, 315], "partner": "onde-verte", "partnerZones": [65], "tariff": "libero", "source": "T651.3 ch. 1 'Zones de chevauchement'"}
+  {"alliance": "libero", "zones": [314, 315], "partner": "onde-verte", "partnerZones": [65], "tariff": "libero", "source": "T651.3 ch. 1 'Zones de chevauchement'"},
+  {"alliance": "unireso", "zones": [10], "partner": "leman-pass", "partnerZones": [10], "tariff": "unireso", "source": "T651.11 1.1.2: the unireso tariff applies to trips entirely inside zone 10; Léman Pass (T651.12) only across the border (T651.11 7.1)"},
+  {"alliance": "leman-pass", "zones": [10], "partner": "unireso", "partnerZones": [10], "tariff": "unireso", "source": "T651.11 1.1.2 and 7.1: zone 10 is part of every Léman Pass zone pass but a trip inside it is unireso's; Léman Pass sells the trips that use one of its French zones 200, 210, 230, 240, 250"}
  ]
 }

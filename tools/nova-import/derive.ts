@@ -568,9 +568,13 @@ export async function deriveLadders(opts: DeriveOptions): Promise<void> {
 // Which zones are a network's own
 // =====================================================================================
 
-/** Joint products laid over several zonal networks: never "the other network" of a zone. */
+/**
+ * Joint products laid over several zonal networks: never "the other network" of a zone.
+ * Léman Pass is not one of them: its French ring zones (200, 210, 230, 240, 250) are its own and
+ * it sells every trip that uses one; that Geneva's zone 10 is unireso's is written in
+ * zone-primacy.json.
+ */
 export const UMBRELLAS: Record<string, string> = {
-  'leman-pass': 'cross-border tariff of the Geneva area (T651.12): unireso zone 10 plus French zones and routes; 76 % of the stops of its pass plans are unireso stops',
   'z-pass-a-welle-zvv': 'joint pass ZVV + A-Welle: every stop is also a ZVV or A-Welle stop',
   'z-pass-ostwind-zvv': 'joint pass ZVV + Ostwind: every stop is also a ZVV or Ostwind stop',
   'z-pass-tv-schwyz-zug-zvv': 'joint pass ZVV + Schwyz/Zug: every stop is also a ZVV, Schwyz or Zug stop',

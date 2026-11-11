@@ -64,7 +64,7 @@ const graphs = new WeakMap<NovaData, Map<string, ZoneGraph>>();
 export function zoneGraph(nova: NovaData, alliance: string, plan: string, net?: Network): ZoneGraph {
   let byPlan = graphs.get(nova);
   if (!byPlan) graphs.set(nova, (byPlan = new Map()));
-  const key = `${alliance}|${plan}|${net?.rules.countBy ?? ''}|${JSON.stringify(net?.rules.together ?? [])}`;
+  const key = `${alliance}|${plan}|${net?.rules.countBy ?? ''}|${JSON.stringify(net?.rules.together ?? [])}|${(net?.rules.always ?? []).join(',')}`;
   const hit = byPlan.get(key);
   if (hit) return hit;
 
@@ -133,7 +133,8 @@ export function zoneGraph(nova: NovaData, alliance: string, plan: string, net?: 
   }
 
   const complete = (zones: Iterable<number>): number[] => {
-    const set = new Set(zones);
+    // Zones every pass of the network includes (Léman Pass: zone 10) belong to every set.
+    const set = new Set([...zones, ...(net?.rules.always ?? [])]);
     for (const group of together) if (group.some((z) => set.has(z))) for (const z of group) set.add(z);
     return [...set].sort((x, y) => x - y);
   };

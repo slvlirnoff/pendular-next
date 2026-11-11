@@ -12,6 +12,10 @@ import mobilisGrid from '../../data/tariffs/mobilis-2027.json' with { type: 'jso
  *    current year), used only for networks without a tariff grid;
  *  - data/tariffs/mobilis-2027.json: the Mobilis grid, built in.
  * Which network prices a trip is decided here too (see `createTripResolver`).
+ *
+ * A grid prices passes by the NUMBER of zones (`passes`) or, where the price depends on WHICH
+ * zones are used, per zone set (`passesBySet`: Léman Pass, whose zone 210 costs more than the
+ * other ring zones). Any grid file may carry either or both; a set price wins over a count price.
  */
 
 /** Timetable year of the tariff grids; a grid of another year is shown as an estimate. */
@@ -46,7 +50,24 @@ export interface NetworkRules {
   allZonesFrom?: number;
   /** 'factor': a few large zones count double (NOVA's factor); 'zones': every zone counts once. */
   countBy?: 'factor' | 'zones';
+  /** Zones that are part of every ticket and pass of the network, whatever the trip (Léman Pass: zone 10). */
+  always?: number[];
   text?: string[];
+}
+
+/** Category → class ("1", "2") → price. */
+type SetPrices = Readonly<Record<string, Readonly<Record<string, number>>>>;
+
+/** Pass prices of one set of zones (and of the sets listed in `like`, which cost the same). */
+export interface ZoneSetPrices {
+  zones: number[];
+  like?: number[][];
+  /** Cells not read from the tariff but worked out: "<category>.<class>", for every period. */
+  derived?: string[];
+  week?: SetPrices;
+  month?: SetPrices;
+  year?: SetPrices;
+  flexi?: SetPrices;
 }
 
 /** A grid file, as written by hand from a tariff or by tools/nova-import. Any section may be missing. */
@@ -66,6 +87,8 @@ export interface NetworkGrid {
   tickets?: { single?: { full?: ByClass; half?: ByClass } };
   dayPass?: { full?: ByClass; half?: ByClass };
   passes?: Partial<Record<string, Readonly<Record<string, ByClass>>>>;
+  /** Passes priced per zone set instead of per zone count. */
+  passesBySet?: ZoneSetPrices[];
   ages?: unknown;
   discounts?: NetworkDiscount[];
 }
@@ -82,14 +105,25 @@ export interface Network {
   /** NOVA zoning plans the zones of passes and of tickets are read from. */
   passPlan?: string;
   ticketPlan?: string;
-  rules: { together: number[][]; minZones: { pass: number; ticket: number }; allZonesFrom?: number; countBy: 'factor' | 'zones' };
+  rules: { together: number[][]; minZones: { pass: number; ticket: number }; allZonesFrom?: number; countBy: 'factor' | 'zones'; always: number[] };
   discounts: NetworkDiscount[];
+  /** True when passes are priced per zone set (`setPass`) and not per zone count (`pass`). */
+  bySet: boolean;
+  /** False when the grid has no single tickets and no day passes: only passes can be compared. */
+  hasTickets: boolean;
   /** Zone count actually paid for: the network's minimum applies. */
   paidZones(zones: number, family: 'pass' | 'ticket'): number;
   /** Single ticket in CHF; null when the grid has none or the zone count is invalid. */
   single(zones: ZoneCount, opts: { travelClass: TravelClass; half: boolean }): number | null;
   dayPass(zones: ZoneCount, opts: { travelClass: TravelClass; half: boolean }): number | null;
   pass(period: PassPeriod, zones: ZoneCount, opts: { category: PassCategory; travelClass: TravelClass }): number | null;
+  /**
+   * Pass for exactly this set of zones (the zones in `rules.always` are added); null when the
+   * grid has no price for the set. `derived`: the price was not read from the tariff. A category
+   * or class the grid has no cell for is sold the adult pass of that class; for the young that
+   * is marked derived (their own price exists but was not read).
+   */
+  setPass(period: PassPeriod, zones: number[], opts: { category: PassCategory; travelClass: TravelClass }): { price: number; derived: boolean } | null;
   /** The zone count whose single ticket costs exactly this; null when none or several do. */
   zonesFromSinglePrice(price: number, opts: { travelClass: TravelClass; half: boolean }): ZoneCount | null;
 }
@@ -120,6 +154,10 @@ export function createNetwork(grid: NetworkGrid): Network {
     const key = (allFrom !== undefined && n >= allFrom) || n > lastNumbered ? 'all' : String(n);
     return row[key] ?? null;
   }
+  const always = [...(grid.rules?.always ?? [])];
+  const setKey = (zones: Iterable<number>) => [...new Set([...zones, ...always])].sort((a, b) => a - b).join('+');
+  const sets = new Map<string, ZoneSetPrices>();
+  for (const s of grid.passesBySet ?? []) for (const z of [s.zones, ...(s.like ?? [])]) if (!sets.has(setKey(z))) sets.set(setKey(z), s);
   const ticketRow = (family: { full?: ByClass; half?: ByClass } | undefined, opts: { travelClass: TravelClass; half: boolean }) =>
     family?.[opts.half ? 'half' : 'full']?.[classKey(opts.travelClass)];
 
@@ -132,8 +170,21 @@ export function createNetwork(grid: NetworkGrid): Network {
     source: grid.source ?? '',
     passPlan: grid.passPlan,
     ticketPlan: grid.ticketPlan,
-    rules: { together: grid.rules?.together ?? [], minZones: min, allZonesFrom: allFrom, countBy: grid.rules?.countBy ?? 'factor' },
+    rules: { together: grid.rules?.together ?? [], minZones: min, allZonesFrom: allFrom, countBy: grid.rules?.countBy ?? 'factor', always },
     discounts: grid.discounts ?? [],
+    bySet: sets.size > 0,
+    hasTickets: !!(grid.tickets?.single || grid.dayPass),
+    setPass(period, zones, opts) {
+      const set = sets.get(setKey(zones));
+      const prices = set?.[period];
+      if (!set || !prices) return null;
+      const cls = classKey(opts.travelClass);
+      const own = prices[opts.category]?.[cls];
+      if (own != null) return { price: own, derived: !!set.derived?.includes(`${opts.category}.${cls}`) };
+      const adult = prices.adult?.[cls];
+      if (adult == null || opts.category === 'adult') return null;
+      return { price: adult, derived: opts.category === 'junior' || !!set.derived?.includes(`adult.${cls}`) };
+    },
     paidZones,
     single: (zones, opts) => lookup(ticketRow(grid.tickets?.single, opts), zones, 'ticket'),
     dayPass: (zones, opts) => lookup(ticketRow(grid.dayPass, opts), zones, 'ticket'),
@@ -180,7 +231,7 @@ export interface OwnZonesFile {
 }
 
 /** Alliances laid over other networks (joint passes): never the network of a trip in this version. */
-const isBuiltInUmbrella = (alliance: string) => alliance === 'leman-pass' || alliance.startsWith('z-pass');
+const isBuiltInUmbrella = (alliance: string) => alliance.startsWith('z-pass');
 
 export interface Networks {
   /** The network with a price grid for this alliance, if any. */
@@ -397,10 +448,14 @@ export function createTripResolver(nova: NovaData, networks: Networks): TripReso
         const zones = [...used].sort((a, b) => a - b);
         return net?.rules.countBy === 'zones' ? zones.length : nova.zoneCount(alliance, plan, zones);
       };
+      // Own zones are judged on the zones the trip really uses; the zones every pass of the
+      // network includes (Léman Pass: Geneva's zone 10) are then added for the price.
       rawZones.set(alliance, [...onPass.zones]);
+      for (const z of net?.rules.always ?? []) onPass.zones.add(z);
       const passCount = count(p.pass, onPass.zones);
       // Tickets on their own plan where the network has one; the pass plan's zones when that plan lacks a hop.
       const onTicket = p.ticket !== p.pass ? zonesOn(alliance, p.ticket, seqs) : null;
+      if (onTicket) for (const z of net?.rules.always ?? []) onTicket.zones.add(z);
       const bridged = onPass.bridged + (onTicket?.bridged ?? 0);
       candidates.push({
         alliance,

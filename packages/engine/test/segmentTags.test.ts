@@ -31,7 +31,8 @@ describe('segment tags of a section', () => {
     expect(plans.get('mobilis')).toBe('mobilis-abo-abo');
     expect(plans.has('frimobil')).toBe(true);
     expect(plans.has('zvv')).toBe(true);
-    expect(plans.has('leman-pass')).toBe(false);
+    // Léman Pass sells the trips that use one of its French zones: a network like the others.
+    expect(plans.get('leman-pass')).toBe('leman-pass-abo-amp-billett');
     expect([...plans.keys()].some((a) => a.startsWith('z-pass'))).toBe(false);
   });
 
