@@ -295,6 +295,19 @@ function defaultPlan(nova: NovaData, alliance: string, kind: 'pass' | 'ticket'):
 }
 
 /**
+ * The zoning plans a network's passes and tickets are read from; null for joint passes
+ * ("umbrellas") and alliances without a pass plan. The one place that decides it: the trip
+ * resolver and the segment exporter (tools/motis-fork) must agree.
+ */
+export function networkPlans(nova: NovaData, networks: Networks, alliance: string): { pass: string; ticket: string } | null {
+  const net = networks.get(alliance);
+  const pass = networks.isUmbrella(alliance) ? undefined : (net?.passPlan ?? defaultPlan(nova, alliance, 'pass'));
+  // With a grid, tickets are zoned as the grid says (the pass plan when it names no other).
+  const ticket = net ? (net.ticketPlan ?? pass) : (defaultPlan(nova, alliance, 'ticket') ?? pass);
+  return pass && nova.plan(alliance, pass)?.id === pass ? { pass, ticket: ticket ?? pass } : null;
+}
+
+/**
  * Decides which fare network(s) can sell a trip, from the official zone data.
  *
  * Candidates: networks with a pass plan, joint passes ("umbrellas") left out, in which every
@@ -314,13 +327,7 @@ export function createTripResolver(nova: NovaData, networks: Networks): TripReso
   /** Pass and ticket plan of a zonal network; null for umbrellas and alliances without a pass plan. */
   function plansOf(alliance: string): { pass: string; ticket: string } | null {
     let hit = plans.get(alliance);
-    if (hit === undefined) {
-      const net = networks.get(alliance);
-      const pass = networks.isUmbrella(alliance) ? undefined : (net?.passPlan ?? defaultPlan(nova, alliance, 'pass'));
-      // With a grid, tickets are zoned as the grid says (the pass plan when it names no other).
-      const ticket = net ? (net.ticketPlan ?? pass) : (defaultPlan(nova, alliance, 'ticket') ?? pass);
-      plans.set(alliance, (hit = pass && nova.plan(alliance, pass)?.id === pass ? { pass, ticket: ticket ?? pass } : null));
-    }
+    if (hit === undefined) plans.set(alliance, (hit = networkPlans(nova, networks, alliance)));
     return hit;
   }
   const zonalAt = (stop: string) => nova.alliancesAt(stop).filter((a) => plansOf(a) !== null);

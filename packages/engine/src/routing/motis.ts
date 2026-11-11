@@ -70,6 +70,11 @@ export interface MotisOptions {
   maxPages?: number;
   versions?: DataVersions;
   fetch?: typeof fetch;
+  /**
+   * The server is the fork that understands `allowedSegmentTags` (tools/motis-fork) and was
+   * started with a segment file. Off by default: the release MOTIS rejects the parameter.
+   */
+  segmentFilter?: boolean;
 }
 
 const MODE_MAP: Record<string, LegMode> = {
@@ -147,8 +152,10 @@ function toStop(p: MotisPlace): StopPoint {
 
 export class MotisRouting implements RoutingProvider {
   private readonly f: typeof fetch;
+  readonly segmentFilter: boolean;
   constructor(private readonly o: MotisOptions) {
     this.f = o.fetch ?? fetch;
+    this.segmentFilter = o.segmentFilter === true;
   }
 
   private async get<T>(path: string, params: Record<string, string | number | boolean>): Promise<T> {
@@ -317,22 +324,32 @@ export class MotisRouting implements RoutingProvider {
     return out;
   }
 
-  async lastTrip(q: { from: LatLon; to: LatLon; date: string; time: string; via?: string[] }): Promise<Itinerary | null> {
+  async lastTrip(q: { from: LatLon; to: LatLon; date: string; time: string; via?: string[]; allowedSegmentTags?: string[] }): Promise<Itinerary | null> {
     const via = (q.via ?? []).map(motisStationId).filter((x): x is string => x !== null).slice(0, 2);
+    const tags = this.segmentFilter && q.allowedSegmentTags?.length ? q.allowedSegmentTags : null;
+    const by = localToUtc(q.date, q.time, this.o.timezone);
     // Not a timetable view: "arrive by T" alone returns the connections that leave last.
     const res = await this.get<MotisPlanResponse>('/api/v6/plan', {
       fromPlace: place(q.from),
       toPlace: place(q.to),
-      time: localToUtc(q.date, q.time, this.o.timezone).toISOString(),
+      time: by.toISOString(),
       arriveBy: true,
       timetableView: false,
       directModes: 'WALK',
       detailedTransfers: false,
       ...(via.length ? { via: via.join(','), viaMinimumStay: via.map(() => 0).join(',') } : {}),
+      // With the filter the direct connection no longer cuts the search short: without a limit
+      // it goes back days for a trip with fewer changes. Minutes.
+      ...(tags ? { allowedSegmentTags: tags.join(','), maxTravelTime: LAST_TRIP_MAX_HOURS * 60 } : {}),
     });
-    const its = (res.itineraries ?? []).filter((it) => it.legs.some((l) => !['WALK', 'BIKE', 'CAR'].includes(l.mode)));
+    // With the filter, older trips come back too (one per number of changes): only those of
+    // the evening in question count.
+    const earliest = tags ? new Date(by.getTime() - LAST_TRIP_MAX_HOURS * 3600_000).toISOString() : '';
+    const its = (res.itineraries ?? []).filter(
+      (it) => it.legs.some((l) => !['WALK', 'BIKE', 'CAR'].includes(l.mode)) && (!tags || new Date(it.startTime).toISOString() >= earliest),
+    );
     if (its.length === 0) return null;
-    const last = its.reduce((a, b) => (b.startTime > a.startTime ? b : a));
+    const last = its.reduce((a, b) => (new Date(b.startTime).getTime() > new Date(a.startTime).getTime() ? b : a));
     return this.toItinerary(last);
   }
 
@@ -354,6 +371,9 @@ export class MotisRouting implements RoutingProvider {
     return this.o.versions ?? {};
   }
 }
+
+/** With a segment filter, the last trip may not leave more than this long before the arrive-by time. */
+const LAST_TRIP_MAX_HOURS = 12;
 
 /** MOTIS returns at most 256 connections per call; only an answer this long may be cut short. */
 const NEAR_RESULT_CAP = 200;

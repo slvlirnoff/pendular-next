@@ -289,7 +289,14 @@ export interface RoutingProvider {
     time: string;
     /** Stops (timetable ids) the connection has to pass, in order: at most two. */
     via?: string[];
+    /**
+     * Only rides on route sections these tags allow ("<alliance>:<zone>": the zones of a pass).
+     * Honoured only by a provider with `segmentFilter`; others ignore it.
+     */
+    allowedSegmentTags?: string[];
   }): Promise<Itinerary | null>;
+  /** True when `lastTrip` can restrict the search with `allowedSegmentTags` (the MOTIS fork). */
+  readonly segmentFilter?: boolean;
   /**
    * Public transport time from every stop to `to`, arriving by `time` on `date` (one call for
    * the whole network). Used to choose which stations are worth a full search.
@@ -344,6 +351,10 @@ export interface PricedProduct {
   range?: { low: number; high: number };
   /** Name of the fare network whose zones the product is for ("Mobilis", "Frimobil"). */
   network?: string;
+  /** For zone products: id of the fare network in the official fare data ("mobilis", "frimobil"). */
+  alliance?: string;
+  /** For zone products: the zone codes the product is valid in (with zones always sold together). */
+  zones?: number[];
   /** Year of the prices, only when they are not those of the coming timetable year. */
   priceYear?: number;
 }
@@ -392,7 +403,15 @@ export interface CommuteOption {
   firstArrival?: string;
   lastArrival?: string;
   /** The last trip home: its departure from work and its arrival, "HH:MM". Null when there is none. */
-  returnTrips?: { last: string; lastArrival: string } | null;
+  returnTrips?: {
+    last: string;
+    lastArrival: string;
+    /**
+     * Which search gave the time: 'pass' = the last trip on any route the zone pass covers,
+     * 'route' = the last one by the route of the morning trip, 'any' = the last one at all.
+     */
+    within?: 'pass' | 'route' | 'any';
+  } | null;
   /** Kilometres per one-way trip by leg mode. */
   kmByMode: Partial<Record<LegMode, number>>;
   cost: OptionCost;

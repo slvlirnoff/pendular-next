@@ -116,6 +116,8 @@ export function buildDeps(cfg: Config, env = process.env): EngineDeps {
       // against about 97, 87 and 52 km of track): a rough correction until legs follow the tracks.
       transitDistanceFactor: { rail: 1.25, other: 1.15 },
       referenceTime: `${PENDULAR_RULES.referenceDate}T11:00:00Z`,
+      // Last trip home inside the zones of a pass: needs the MOTIS fork (tools/motis-fork) behind MOTIS_URL.
+      segmentFilter: env.MOTIS_SEGMENT_FILTER === '1',
       versions: { timetable: `GTFS 2027, fetched ${readVersion(gtfs) ?? '?'}`, streets: `OSM, fetched ${readVersion(osm) ?? '?'}`, engine: 'MOTIS 2' },
     }),
     rules: PENDULAR_RULES,

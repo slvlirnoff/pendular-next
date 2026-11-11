@@ -91,6 +91,13 @@ function discountNote(net: Network, section: string, t: Traveller): string | und
   return labels.length ? labels.join('; ') : undefined;
 }
 
+/** The zones with those always sold together, sorted. */
+function withTogether(net: Network, zones: number[]): number[] {
+  const used = new Set(zones);
+  for (const group of net.rules.together) if (group.some((z) => used.has(z))) for (const z of group) used.add(z);
+  return [...used].sort((a, b) => a - b);
+}
+
 /**
  * The products of one zone network for a number of zones. `counts` are the price-relevant zone
  * counts of the trip on the pass plan and on the ticket plan (the same for most networks).
@@ -101,6 +108,8 @@ function networkProducts(
   exact: boolean,
   ctx: FareContext,
   notes: string[],
+  /** Zone codes the products are for, and those of the whole network (for the all-zones pass). */
+  area: { zones?: number[]; allZones?: number[] } = {},
 ): PricedProduct[] {
   const t = ctx.traveller;
   const cls = t.travelClass;
@@ -117,8 +126,10 @@ function networkProducts(
     const discounts = discountNote(net, section, t);
     return { network: net.label, zones, ...(thisYear ? {} : { priceYear: net.year }), ...note, ...(discounts ? { discounts } : {}) };
   };
-  const tag = (p: PricedProduct): PricedProduct => {
+  const tag = (p: PricedProduct, zones: number[] | undefined = area.zones): PricedProduct => {
     p.network = net.label;
+    p.alliance = net.alliance;
+    if (zones?.length) p.zones = withTogether(net, zones);
     if (!thisYear) p.priceYear = net.year;
     return p;
   };
@@ -202,6 +213,7 @@ function networkProducts(
             source: src,
           },
         ]),
+        area.allZones,
       ),
     );
   }
@@ -313,7 +325,8 @@ export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}
   const trip = networksOfTrip(legs, deps);
 
   /** Mobilis: a quoted single confirms (or corrects) the zone count, as each count has its own price. */
-  const mobilisProducts = (count: number, exactZones: boolean, zoneNotes: string[]): PricedProduct[] => {
+  const allZones = (alliance: string, plan: string | undefined) => (plan ? deps.nova?.plan(alliance, plan)?.zones.map((z) => z.code) : undefined);
+  const mobilisProducts = (count: number, exactZones: boolean, zoneNotes: string[], zones: number[]): PricedProduct[] => {
     let n = count;
     let exact = exactZones;
     const notes = [...zoneNotes];
@@ -326,7 +339,7 @@ export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}
         exact = true;
       }
     }
-    return networkProducts(mobilis, { pass: n, ticket: n }, exact, ctx, notes);
+    return networkProducts(mobilis, { pass: n, ticket: n }, exact, ctx, notes, { zones, allZones: allZones(MOBILIS, mobilis.passPlan) });
   };
 
   // Networks that may sell the trip and that we have prices for: the cheapest annual pass decides.
@@ -334,7 +347,9 @@ export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}
     .filter((c) => c.network)
     .map((c) => ({
       c,
-      products: c.alliance === MOBILIS ? mobilisProducts(c.passCount, c.exact, c.notes) : networkProducts(c.network!, { pass: c.passCount, ticket: c.ticketCount }, c.exact, ctx, c.notes),
+      products: c.alliance === MOBILIS
+          ? mobilisProducts(c.passCount, c.exact, c.notes, c.zones)
+          : networkProducts(c.network!, { pass: c.passCount, ticket: c.ticketCount }, c.exact, ctx, c.notes, { zones: c.zones, allZones: allZones(c.alliance, c.passPlan) }),
     }))
     .filter((x) => x.products.length > 0)
     .sort((a, b) => yearlyPassCost(a.products) - yearlyPassCost(b.products));
@@ -357,7 +372,7 @@ export function priceTransit(legs: Leg[], ctx: FareContext, deps: PriceDeps = {}
     }
     products.push(...best.products);
   } else if (table) {
-    products.push(...mobilisProducts(table.zones.length, table.exact, table.notes));
+    products.push(...mobilisProducts(table.zones.length, table.exact, table.notes, table.zones));
   } else {
     // Inside a zone network we have no prices for: the national distance tariff stands in, and says so.
     const note = unpriced.length ? `inside ${unpriced.map((c) => c.label).join(', ')}: no price grid for this network, priced by distance` : undefined;

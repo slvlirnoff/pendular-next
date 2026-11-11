@@ -26,6 +26,7 @@ import type {
 import { TRANSIT_MODES } from '../types.js';
 import { resolveRules, tripsPerYear, workingDaysPerYear } from '../rules.js';
 import { localHHMM } from '../time.js';
+import { segmentTagsOfZones } from '../fares/segmentTags.js';
 import { groupItineraries, type RouteGroup } from './group.js';
 import { prune, type Conn } from './prune.js';
 import { verdict } from './verdict.js';
@@ -85,6 +86,9 @@ const REACH_MARGIN_MIN = 20;
 
 /** Minutes a car or bike access must save on public transport from home to be shown. */
 const ACCESS_MIN_SAVING = 5;
+
+/** Tickets valid on every line inside their zones: the way home need not be the way there. */
+const ZONE_PASSES: ReadonlySet<string> = new Set(['zonePassYearly', 'zonePassMonthly', 'zonePassAllYearly', 'flexiPass']);
 
 const isTransit = (l: Leg) => (TRANSIT_MODES as readonly string[]).includes(l.mode);
 
@@ -312,10 +316,11 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const [hh] = rules.lastTripHomeBy.split(':').map(Number) as [number];
   const lastBy = { date: hh < 12 ? nextDay(date) : date, time: rules.lastTripHomeBy };
   const returnCache = new Map<string, Promise<Itinerary | null>>();
-  const returnTo = (target: LatLon, via: string[] = []) => {
-    const key = `${target.lat},${target.lon}|${via.join('>')}`;
+  const returnTo = (target: LatLon, via: string[] = [], tags: string[] = []) => {
+    const key = `${target.lat},${target.lon}|${via.join('>')}|${tags.join(',')}`;
     if (!returnCache.has(key)) {
-      returnCache.set(key, routing.lastTrip ? safe(routing.lastTrip({ from: req.work, to: target, ...lastBy, via }), null) : Promise.resolve(null));
+      const q = { from: req.work, to: target, ...lastBy, ...(tags.length ? { allowedSegmentTags: tags } : { via }) };
+      returnCache.set(key, routing.lastTrip ? safe(routing.lastTrip(q), null) : Promise.resolve(null));
     }
     return returnCache.get(key)!;
   };
@@ -640,11 +645,27 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       const legs = o.itinerary.legs.filter(isTransit);
       const main = legs.length ? legs.reduce((a, b) => (b.durationMin > a.durationMin ? b : a)) : undefined;
       const via = main?.to.stopId && main.from.stopId ? [main.to.stopId, main.from.stopId] : [];
-      const back = (via.length ? await returnTo(target, via) : null) ?? (await returnTo(target));
-      o.returnTrips =
-        back && back.durationMin <= longest
-          ? { last: localHHMM(back.departure, tz), lastArrival: localHHMM(back.arrival, tz) }
-          : null;
+      // With a zone pass the traveller may come back by any line inside its zones: where the
+      // timetable server can restrict a search to them, that is the last trip home. It needs no
+      // via, and it never uses a section the pass does not cover.
+      const ticket = o.cost.products[0];
+      const tags =
+        routing.segmentFilter && ticket && ZONE_PASSES.has(ticket.kind) && ticket.alliance && ticket.zones?.length
+          ? segmentTagsOfZones(ticket.alliance, ticket.zones)
+          : [];
+      const ok = (it: Itinerary | null) => (it && it.durationMin <= longest ? it : null);
+      let within: 'pass' | 'route' | 'any' = 'pass';
+      let back = tags.length ? ok(await returnTo(target, [], tags)) : null;
+      if (!back) {
+        within = 'route';
+        back = via.length ? await returnTo(target, via) : null;
+        if (!back) {
+          within = 'any';
+          back = await returnTo(target);
+        }
+        back = ok(back);
+      }
+      o.returnTrips = back ? { last: localHHMM(back.departure, tz), lastArrival: localHHMM(back.arrival, tz), within } : null;
     }),
   );
 
