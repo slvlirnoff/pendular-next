@@ -30,10 +30,10 @@ index 0000000..07da1d6
 +
 +}  // namespace motis
 diff --git a/openapi.yaml b/openapi.yaml
-index 11c039d..c087946 100644
+index 11c039d..b10e2fe 100644
 --- a/openapi.yaml
 +++ b/openapi.yaml
-@@ -798,6 +798,22 @@ paths:
+@@ -798,6 +798,23 @@ paths:
              default: 900
              minimum: 0
  
@@ -44,7 +44,8 @@ index 11c039d..c087946 100644
 +            Optional. PROTOTYPE (fork only).
 +
 +            If given, transit rides may only cross route sections (two consecutive stops)
-+            whose segment tags are ALL in this list. Sections without tags are not allowed.
++            that have a group of segment tags lying entirely in this list (a section may carry
++            several groups, e.g. one per fare network). Sections without tags are not allowed.
 +            Requires the server to be started with `MOTIS_SEGMENT_TAGS=<csv file>`.
 +            Forces the RAPTOR algorithm. Example: `mobilis:11,mobilis:12`.
 +          schema:
@@ -56,7 +57,7 @@ index 11c039d..c087946 100644
          - name: requireBikeTransport
            in: query
            required: false
-@@ -2116,6 +2132,22 @@ paths:
+@@ -2116,6 +2133,23 @@ paths:
                $ref: '#/components/schemas/Mode'
            explode: false
  
@@ -67,7 +68,8 @@ index 11c039d..c087946 100644
 +            Optional. PROTOTYPE (fork only).
 +
 +            If given, transit rides may only cross route sections (two consecutive stops)
-+            whose segment tags are ALL in this list. Sections without tags are not allowed.
++            that have a group of segment tags lying entirely in this list (a section may carry
++            several groups, e.g. one per fare network). Sections without tags are not allowed.
 +            Requires the server to be started with `MOTIS_SEGMENT_TAGS=<csv file>`.
 +            Forces the RAPTOR algorithm. Example: `mobilis:11,mobilis:12`.
 +          schema:

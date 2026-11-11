@@ -4,7 +4,9 @@ Question: can MOTIS answer "what is the last trip home that a given zone pass co
 search be restricted, per request, to route sections whose fare zones are all in the pass?
 
 Answer: yes. The prototype built, runs on the unchanged production data (no re-import) and returns
-the expected trip. 409 added lines in 14 files (nigiri 267 lines / 8 files, MOTIS 142 lines / 6 files).
+the expected trip. 431 added lines in 14 files (nigiri 287 lines / 8 files, MOTIS 144 lines / 6 files).
+The engine uses it for the last trip home of options with a zone pass (`MOTIS_SEGMENT_FILTER=1`, see the
+main README).
 
 Nothing here is pushed or upstreamed. Sources and build live outside the repository (scratchpad, see below).
 
@@ -14,8 +16,8 @@ Nothing here is pushed or upstreamed. Sources and build live outside the reposit
 | --- | --- |
 | `nigiri.patch` | `git diff` against nigiri `18bf63c2` (the commit pinned by MOTIS v2.11.4) |
 | `motis.patch` | `git diff` against MOTIS `v2.11.4` (`e020e64d`) |
-| `export-segments.ts` | NOVA snapshot → `segments-mobilis.csv` (`from_station,to_station,tags`) |
-| `segments-mobilis.csv` | generated: Mobilis pass plan `mobilis-abo-abo`, 3743 station pairs, 7486 rows (both directions) |
+| `export-segments.ts` | timetable (GTFS) + NOVA snapshot → `segments.csv` (`from_station,to_station,tags`) |
+| `segments.csv` | generated (1.5 MB): every pair of consecutive stops of a trip, with the zones of every zonal network that has them; 48 106 rows, 21 networks |
 | `commute-zones.ts` | prints the zone set of the Lucens → Lausanne commute (bus 361 + m2) as a parameter value |
 
 ## Request
@@ -25,8 +27,10 @@ GET /api/v6/plan?...&allowedSegmentTags=mobilis:11,mobilis:12,mobilis:18,mobilis
 GET /api/v6/one-to-all?...&allowedSegmentTags=...
 ```
 
-A transit ride may only cross route sections (two consecutive stops of a trip) whose tags are ALL in the
-list. Sections without a row in the file are forbidden as soon as the parameter is given. Walking and
+A transit ride may only cross route sections (two consecutive stops of a trip) that have a tag group lying
+entirely in the list. A section carries one group per fare network (`frimobil:45|frimobil:47;mobilis:60|mobilis:103`:
+`;` between groups, `|` between the tags of a group), so a pass of one network is enough where two networks
+overlap (3027 station pairs). Sections without a row in the file are forbidden as soon as the parameter is given. Walking and
 transfers are not affected. Without the parameter nothing changes. The parameter is declared in
 `openapi.yaml` (the C++ struct `api::plan_params` is generated from it at build time by `openapi_generate`,
 so this was not painful), for GET `plan` and GET `one-to-all` only.
@@ -63,22 +67,72 @@ The fork reads the production import unchanged; it runs on a copy with port 8082
 ```sh
 S=/tmp/claude-0/-home-user/a251acae-5567-5cee-9d37-b3a96dec20c5/scratchpad
 # once: cp -r /home/user/pendular-next/data/motis/data $S/motis-data/data ; set `port: 8082` in $S/motis-data/data/config.yml
-cd /home/user/pendular-next && pnpm tsx tools/motis-fork/export-segments.ts      # writes segments-mobilis.csv
-cd $S/motis-data && MOTIS_SEGMENT_TAGS=/home/user/pendular-next/tools/motis-fork/segments-mobilis.csv \
+cd /home/user/pendular-next && pnpm tsx tools/motis-fork/export-segments.ts      # writes segments.csv (20 s, needs data/raw/gtfs.zip)
+cd $S/motis-data && MOTIS_SEGMENT_TAGS=/home/user/pendular-next/tools/motis-fork/segments.csv \
   nohup $S/motis-build/motis server -d data > fork.log 2>&1 &
 ```
 
 Start-up takes a few seconds (RSS 1.1 GB); the log line confirms the table:
-`segments-mobilis.csv: 7486 rows, 155 tags, 425 tag sets, 49930/661076 route sections tagged`.
+`segments.csv: 48106 rows, 696 tags, 1759 tag sets, 534284/661076 route sections tagged`.
 To restart: `kill $(pgrep -f 'motis-build/motis server')` and run the last command again.
+
+The API that uses it (the normal one on 8787 with the release MOTIS is not affected):
+
+```sh
+cd /home/user/pendular-next/apps/api && PORT=8789 MOTIS_URL=http://127.0.0.1:8082 MOTIS_SEGMENT_FILTER=1 pnpm start
+```
+
+## The segment file
+
+`export-segments.ts` reads the consecutive stops of every trip from the GTFS feed (`stop_times.txt`, streamed;
+stops mapped to station numbers by `gtfsStationNumber()`, the same rule as `station_key` in `motis.patch`) and
+asks the engine for the zones of each pair (`sectionTags()` in `packages/engine/src/fares/segmentTags.ts`): the
+zones of the NOVA edge when there is one, else those along the chain of edges that joins the two stops (a
+vehicle that skips stops) - what the trip resolver does for a leg, so a pass always allows the trip it was
+priced for. Networks: every alliance with a pass plan, chosen as the trip resolver does (`networkPlans()`;
+joint passes such as Léman Pass and Z-Pass are left out). Counts of 2026-11-11:
+
+- 62 864 directed station pairs in the timetable (15.8 million stop times, 976 295 trips);
+- 48 106 tagged: 47 659 have an edge in the fare data in at least one network, 447 only by bridging;
+  3027 carry the tags of several networks;
+- 199 where both stops are in a zonal network but no chain of edges joins them; 14 559 that are not inside
+  one zonal network (long-distance sections, areas without a zonal network, stops abroad).
+
+| network | tagged | edge | bridged | not found |
+| --- | --- | --- | --- | --- |
+| a-welle | 3654 | 3633 | 21 | 0 |
+| arcobaleno | 3914 | 3891 | 23 | 2 |
+| bcs (Sion) | 277 | 269 | 8 | 0 |
+| bs (Sierre) | 120 | 113 | 7 | 0 |
+| engadin-mobil | 307 | 307 | 0 | 15 |
+| frimobil | 2708 | 2690 | 18 | 0 |
+| li-emobil | 509 | 507 | 2 | 0 |
+| libero | 8185 | 8122 | 63 | 2 |
+| mobilis | 5947 | 5880 | 67 | 0 |
+| onde-verte | 1551 | 1486 | 65 | 0 |
+| ostwind | 7120 | 7083 | 37 | 84 |
+| passepartout | 2973 | 2944 | 29 | 2 |
+| tarifverbund-davos | 191 | 191 | 0 | 0 |
+| tarifverbund-klosters | 130 | 130 | 0 | 0 |
+| tarifverbund-schwyz | 799 | 798 | 1 | 733 |
+| tarifverbund-zug | 863 | 859 | 4 | 2 |
+| tnw | 2534 | 2517 | 17 | 70 |
+| transreno | 472 | 465 | 7 | 0 |
+| unireso | 1869 | 1856 | 13 | 0 |
+| vagabond | 957 | 950 | 7 | 0 |
+| zvv | 6125 | 6038 | 87 | 2586 |
+
+"Not found" is mostly stops that an alliance serves only on another plan than its pass plan (ZVV and Schwyz:
+the Z-Pass plans kept under the same alliance), so the pass does not reach them anyway.
 
 ## What the patch changes
 
 nigiri
 - `include/nigiri/routing/segment_filter.h`, `src/routing/segment_filter.cc` (new). `segment_tags`: reads
-  the CSV, interns tags and tag sets, and stores for every route section the id of its tag set (0 = none);
-  also keeps the station-pair hash map for the slow path. `segment_filter`: per request, one byte per tag
-  set = "all its tags are allowed". The hot-path test is two array reads.
+  the CSV, interns tags and tag sets (a tag set = the list of tag groups of a row), and stores for every route
+  section the id of its tag set (0 = none); also keeps the station-pair hash map for the slow path.
+  `segment_filter`: per request, one byte per tag set = "one of its groups is entirely allowed". The hot-path
+  test is two array reads.
 - `routing/query.h`: `std::shared_ptr<segment_filter const> segment_filter_`.
 - `routing/raptor/raptor.h`: `set_segment_filter()`; in `update_route` the current rides are dropped
   (`et = {}`) when the section just crossed is not allowed – same place and same forward/backward index
@@ -162,16 +216,44 @@ One-to-all (`one=46.7085,6.8393&time=2027-01-20T01:00:00Z&arriveBy=true&maxTrave
 locations without the filter (27–30 ms), 396 with it (6–17 ms); Moudon 86 min, Epalinges, Croisettes
 160 min, Lausanne, gare 180 min before 01:00Z, consistent with the trip above.
 
+## Second round (2026-11-11): all networks, tag groups, used by the engine
+
+Fork rebuilt with the tag groups (7 minutes), patches regenerated, server restarted with `segments.csv`.
+The query (b) above gives the same trip (leaves 22:58 local); with `maxTravelTime=720` the Saturday night
+bus no longer comes back and the call takes 37 ms. The engine sends `maxTravelTime=720` (minutes) and ignores
+itineraries leaving more than twelve hours before the arrive-by time.
+
+Through the API (port 8789 with the filter, 8787 without; arrival 07:30–08:30, adult, no Half Fare):
+
+| commute, option | ticket | without | with | search |
+| --- | --- | --- | --- | --- |
+| Lucens → Lausanne gare, bus 361 + m2 | Mobilis 7 zones | 19:11 | 22:58 (m2, bus 362, R9) | pass |
+| Lucens → Lausanne gare, R8/R9 | Mobilis 9 zones | 23:54 | 23:54 | pass |
+| Lucens → Lausanne gare, P+R Vennes + m2 | Mobilis 11, 12 | 00:24 | 00:24 | pass |
+| Lovatens → EPFL, bike or car to Lucens, 361 + m2 + m1 | Mobilis 7 zones | 23:02 | 22:42 | pass |
+| Lovatens → EPFL, 475 + R8 + m1 | Mobilis 9 zones | 18:07 | 18:07 | pass |
+| Lovatens → EPFL, bike or car to Romont, IR/IC + m1 | route pass | 23:52 | 23:52 | route |
+| Lovatens → EPFL, P+R Vennes + m2 + m1 | Mobilis 11, 12 | 00:12 | 00:12 | pass |
+| Bulle → Fribourg, train | Frimobil 9 zones | 23:57 | 23:57 | pass |
+| Bulle → Fribourg, bus 234 | Frimobil 7 zones | 23:57 | 23:35 | pass |
+| Bulle → Fribourg, RE + bus 4 | route pass | 23:57 | 23:57 | route |
+| Zürich HB → Uster, S5/S9/S15 | ZVV 4 zones | 00:17 | 00:17 | pass |
+
+The two earlier times are corrections: 23:02 was the direct R9 from Renens and 23:57 the train from Fribourg,
+both through zones the pass of that option does not have.
+
 ## Prototype-grade, and what an upstream version needs
 
-- **Sections that skip stops are untagged.** NOVA edges join neighbouring stops; a train that does not call
-  at every stop (R9 Puidoux → Lausanne, any IR) crosses a section with no row and is forbidden even if the
-  pass covers the whole line. Only 49 930 of 661 076 route sections got tags (the file is one alliance; but
-  part of the gap inside Vaud is this). The exporter should bridge such sections along the edges
-  (`zonesForStops` already does, per timetable route) – this is our data work, not MOTIS's, and it is the
-  first thing to do before using the filter for real.
+- **Untagged sections** (126 792 of 661 076 route sections): outside every zonal network, or between two
+  networks. A pass never covers them, so this is right; the 199 station pairs inside a network that no chain
+  of edges joins are the real gap (see the table above).
+- **Bridged sections** take the zones along the shortest chain of edges (rail first), which is not always
+  the way the vehicle runs; the zone set can be larger than the truth, never smaller than what the engine
+  prices.
 - **One edge per station pair**: rail and bus edges between the same two stations are merged (fewest zones
   kept; no pair differs in the Mobilis pass plan today). Tags could be keyed by mode/operator.
+- **Stops abroad** with a six-digit and longer `sloid` (7443 stops) have no station number in the fork, in the
+  exporter or in the engine: sections to them are untagged.
 - **Station ids**: the Swiss `sloid` → station number rule is hard-coded in `src/segment_tags.cc`. Upstream
   would take MOTIS stop ids (`<tag>_<stop_id>`) as they are.
 - **Storage**: a global loaded from an environment variable at server start. Upstream: a config key and a
