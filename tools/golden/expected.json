@@ -148,8 +148,8 @@
  },
  "aigle-lausanne": {
   "transit": {
-   "count": 2,
-   "bestDurationMin": 44,
+   "count": 1,
+   "bestDurationMin": 47,
    "cheapestYearly": 2475,
    "cheapestProduct": "zonePassYearly",
    "zones": 10

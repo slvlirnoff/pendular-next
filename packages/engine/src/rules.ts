@@ -44,6 +44,22 @@ export const PENDULAR_RULES: RuleSet = {
   zoneSearchExtraZones: 2,
   // One more search per car park, only for a cheaper zone path: about 0.1 s on Lovatens – EPFL.
   zoneSearchesPerSite: 1,
+  // A quarter of an hour on foot: what the timetable server allows at the end of a trip, and
+  // less than `walkToStopMaxMin` at its start, so every such stop can be the first or the last.
+  zoneSearchWalkMin: 15,
+  // One zone less is CHF 144 to 180 a year in Mobilis: anything smaller is a rounding of the grid.
+  zoneSearchMinSavingChf: 100,
+  // Inside a few zones the best connection can be absurd (Lucens → Lausanne in 1 h 57 through
+  // Thierrens against 54 minutes by train): never more than half as long again plus 15 minutes.
+  zoneSearchMaxSlower: 1.5,
+  zoneSearchMaxExtraMin: 15,
+  // Up to ten minutes slower is shown whatever it saves (bus 361: 5 minutes, CHF 324); beyond,
+  // CHF 3 per extra hour, far below what an hour is worth to most people, so that only the
+  // absurd goes: 20 minutes more each way has to save about CHF 450 a year, 40 minutes CHF 900.
+  zoneSearchFreeExtraMin: 10,
+  zoneSearchMinChfPerHour: 3,
+  // From a car park one takes the line it is on: two routes say enough.
+  maxRoutesPerAccessTicket: 2,
   arrivalSliceMin: 30,
   lastTripHomeBy: '02:00',
   carFullCostPerKm: 0.74,

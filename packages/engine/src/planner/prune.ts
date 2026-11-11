@@ -24,6 +24,9 @@ const COMPETES_WITH: Partial<Record<OptionKind, OptionKind[]>> = {
   bikeRide: ['transit', 'walk', 'bikeRide'],
 };
 
+/** Driving to a station car park and to a city park-and-ride are one kind of access: their sites are compared with each other. */
+const ACCESS_FAMILY: Partial<Record<OptionKind, string>> = { parkRail: 'car', cityParkRide: 'car', bikeRide: 'bike' };
+
 /** Arriving within this many minutes of each other is arriving at the same time. */
 const SAME_ARRIVAL_MIN = 5;
 /** A connection with one more change is kept only when it saves more than this many minutes. */
@@ -119,6 +122,58 @@ export function prune(options: CommuteOption[], leftOut: LeftOut[], rules: RuleS
     if (list) list.push(o);
     else byTicket.set(key, [o]);
   }
+  // --- Car parks and bike parks: what a site is shown with ------------------------------------
+  // Every route from a site is a candidate, and a site can have several tickets (the bus and the
+  // train from the same car park). Shown per site: its cheapest ticket and its fastest ticket,
+  // nothing in between. And a site is not shown at all when another site of the same kind of
+  // access (by car, by bike) has, for each of its tickets, a ticket that is no dearer and no
+  // slower, parking and driving included, and better on one of the two: the far car park that
+  // costs more and takes as long is not an alternative.
+  const fastestMin = (routes: WithConns[]) => Math.min(...routes.map((o) => o.durationMin));
+  const siteOf = (o: WithConns) => (o.access ? `${ACCESS_FAMILY[o.kind] ?? o.kind}|${o.access.id}` : undefined);
+  const sites = new Map<string, WithConns[][]>();
+  for (const routes of byTicket.values()) {
+    const site = siteOf(routes[0]!);
+    if (!site) continue;
+    const l = sites.get(site);
+    if (l) l.push(routes);
+    else sites.set(site, [routes]);
+  }
+  const gone = new Set<WithConns[]>();
+  for (const list of sites.values()) {
+    if (list.length <= 2) continue;
+    const cheapest = list.reduce((a, b) => (b[0]!.cost.yearly < a[0]!.cost.yearly || (b[0]!.cost.yearly === a[0]!.cost.yearly && fastestMin(b) < fastestMin(a)) ? b : a));
+    const fastest = list.reduce((a, b) => (fastestMin(b) < fastestMin(a) || (fastestMin(b) === fastestMin(a) && b[0]!.cost.yearly < a[0]!.cost.yearly) ? b : a));
+    for (const routes of list) {
+      if (routes === cheapest || routes === fastest) continue;
+      gone.add(routes);
+      for (const o of routes) drop(o, 'overCap', cheapest[0]);
+    }
+    list.splice(0, list.length, ...list.filter((t) => !gone.has(t)));
+  }
+  const siteKeys = [...sites.keys()];
+  const beaten = new Set<string>();
+  for (const key of siteKeys) {
+    const mine = sites.get(key)!;
+    const family = key.slice(0, key.indexOf('|'));
+    const by = siteKeys.find((other) => {
+      if (other === key || beaten.has(other) || !other.startsWith(`${family}|`)) return false;
+      const theirs = sites.get(other)!;
+      // Two minutes are noise (`SAME_MINUTES`): a site that much faster is not faster.
+      const noWorse = (s: WithConns[], t: WithConns[]) => t[0]!.cost.yearly <= s[0]!.cost.yearly && fastestMin(t) <= fastestMin(s) + SAME_MINUTES;
+      const better = (s: WithConns[], t: WithConns[]) => t[0]!.cost.yearly < s[0]!.cost.yearly || fastestMin(t) < fastestMin(s) - SAME_MINUTES;
+      return mine.every((s) => theirs.some((t) => noWorse(s, t) && better(s, t)));
+    });
+    if (!by) continue;
+    beaten.add(key);
+    const against = sites.get(by)![0]!.reduce((a, b) => (b.durationMin < a.durationMin ? b : a));
+    for (const routes of mine) {
+      gone.add(routes);
+      for (const o of routes) drop(o, 'dominated', against);
+    }
+  }
+  for (const [key, routes] of [...byTicket]) if (gone.has(routes)) byTicket.delete(key);
+
   const tickets = [...byTicket.values()].map((routes) => routes.sort(best));
   const order = [...tickets.filter((t) => t[0]!.kind === 'transit').sort((a, b) => best(a[0]!, b[0]!)), ...tickets.filter((t) => t[0]!.kind !== 'transit').sort((a, b) => best(a[0]!, b[0]!))];
 
@@ -165,10 +220,11 @@ export function prune(options: CommuteOption[], leftOut: LeftOut[], rules: RuleS
       else stay.push(o);
     }
     // Most routes of a ticket: those whose departures the others of the ticket do not serve.
-    if (stay.length > rules.maxRoutesPerTicket) {
+    const maxRoutes = routes[0]!.access ? Math.min(rules.maxRoutesPerTicket, rules.maxRoutesPerAccessTicket ?? rules.maxRoutesPerTicket) : rules.maxRoutesPerTicket;
+    if (stay.length > maxRoutes) {
       const adds = (o: WithConns) => (o._conns ?? []).filter((c) => !stay.some((r) => r !== o && r._conns?.some((x) => coversStrictly(x, c)))).length;
       const ranked = stay.map((o, i) => ({ o, i, n: adds(o) })).sort((a, b) => b.n - a.n || a.i - b.i);
-      const out = new Set(ranked.slice(rules.maxRoutesPerTicket).map((x) => x.o));
+      const out = new Set(ranked.slice(maxRoutes).map((x) => x.o));
       for (const o of stay) if (out.has(o)) drop(o, 'overCap', ranked[0]!.o);
       stay.splice(0, stay.length, ...stay.filter((o) => !out.has(o)));
     }

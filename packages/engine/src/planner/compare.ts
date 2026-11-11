@@ -15,6 +15,7 @@ import type {
   OptionKind,
   PricedProduct,
   ReachableStop,
+  StopPoint,
   Provenance,
   RoutingProvider,
   RuleSet,
@@ -22,11 +23,13 @@ import type {
   StreetRoute,
   TimeWindow,
   Traveller,
+  WalkableStop,
 } from '../types.js';
 import { TRANSIT_MODES } from '../types.js';
 import { resolveRules, tripsPerYear, workingDaysPerYear } from '../rules.js';
 import { localHHMM } from '../time.js';
 import { segmentTagsOfZones } from '../fares/segmentTags.js';
+import { passCategory, type PassCategory } from '../fares/networks.js';
 import { groupItineraries, type RouteGroup } from './group.js';
 import { prune, type Conn } from './prune.js';
 import { verdict } from './verdict.js';
@@ -82,12 +85,24 @@ export interface EngineDeps {
    * that need fewer or other zones (fares/zonePaths.ts). Used only with a routing engine that
    * can restrict a search (`segmentFilter`); without it nothing changes.
    */
-  zoneSearches?: (trips: Leg[][], opts: { max: number; extra: number }) => ZoneSearchSet[];
+  zoneSearches?: (trips: Leg[][], opts: ZoneSearchRequest) => ZoneSearchSet[];
   /** Station-based bike-share operators and their prices; without it no shared bike is suggested. */
   bikeShare?: BikeShareOperator[];
   tariffVersion?: string;
   parkingVersion?: string;
   now?: () => Date;
+}
+
+/** What the planner tells `EngineDeps.zoneSearches` besides the connections found (see fares/zonePaths.ts, `ZoneSearchOptions`). */
+export interface ZoneSearchRequest {
+  max: number;
+  extra: number;
+  /** Stops within walking reach of the origin and of the destination (stop ids). */
+  fromStops?: string[];
+  toStops?: string[];
+  /** Least yearly saving on the dearest pass found for a set to be searched, CHF. */
+  minSavingChf?: number;
+  pass?: { category: PassCategory; travelClass: 1 | 2 };
 }
 
 /** A set of fare zones to restrict a search to; `cheaper` when it counts fewer zones than every connection already found. */
@@ -96,6 +111,8 @@ export interface ZoneSearchSet {
   zones: number[];
   tags: string[];
   cheaper?: boolean;
+  /** True when a vehicle may run from stop `a` to the next stop `b` inside the set (see `insideSet`). */
+  allows?: (a: string, b: string) => boolean;
 }
 
 /** Longest public transport time considered from an access station to work, minutes. */
@@ -105,10 +122,6 @@ const REACH_MARGIN_MIN = 20;
 
 /** Minutes a car or bike access must save on public transport from home to be shown. */
 const ACCESS_MIN_SAVING = 5;
-
-/** A connection found inside a zone set may take this many times the fastest one, plus these minutes. */
-const ZONE_SEARCH_MAX_SLOWER = 1.5;
-const ZONE_SEARCH_MAX_EXTRA_MIN = 15;
 
 /** Tickets valid on every line inside their zones: the way home need not be the way there. */
 const ZONE_PASSES: ReadonlySet<string> = new Set(['zonePassYearly', 'zonePassMonthly', 'zonePassAllYearly', 'flexiPass']);
@@ -215,6 +228,72 @@ function mergeReach(answers: (ReachableStop[] | null)[]): ReachableStop[] | null
     }
   }
   return [...best.values()];
+}
+
+/**
+ * A connection found inside a zone set, made to lie inside it, or null when it cannot.
+ *
+ * The routing engine checks every section a vehicle crosses, except that it may place the
+ * boarding at an earlier stop of the same vehicle than the search used, when the traveller can
+ * reach that stop too (measured: Echandens → Lausanne inside zones 11 and 12 came back boarding
+ * at Echandens, Chocolatière, in zone 33, one stop before Ecublens, Larges Pièces). Such a
+ * connection is priced with the extra zone and the cheaper pass is lost. Here every section is
+ * checked again (`allows`); a first ride that starts outside the set is boarded at its first
+ * stop inside it, a last ride that ends outside is left at its last stop inside, when that stop
+ * is within walking reach (`walkFrom`, `walkTo`: the walk replaces the one in the answer).
+ * Anything else outside the set drops the connection.
+ */
+export function insideSet(it: Itinerary, set: ZoneSearchSet, walkFrom: WalkableStop[], walkTo: WalkableStop[]): Itinerary | null {
+  if (!set.allows) return it;
+  const rides = it.legs.map((l, i) => ({ l, i })).filter((x) => isTransit(x.l));
+  if (rides.length === 0) return it;
+  const stopsOf = (l: Leg) => [l.from, ...(l.intermediateStops ?? []), l.to];
+  /** For each ride: which of its sections are allowed. */
+  const ok = rides.map(({ l }) => {
+    const seq = stopsOf(l);
+    return seq.slice(1).map((b, k) => !!seq[k]!.stopId && !!b.stopId && set.allows!(seq[k]!.stopId!, b.stopId!));
+  });
+  if (ok.every((sections) => sections.every(Boolean))) return it;
+  // Sections outside the set at the start of the first ride and at the end of the last one.
+  const first = ok[0]!;
+  const last = ok[ok.length - 1]!;
+  const lead = first.findIndex(Boolean);
+  const trail = last.length - 1 - last.lastIndexOf(true);
+  if (lead < 0 || trail >= last.length) return null;
+  // Everything between has to be inside.
+  const between = ok.flatMap((sections, r) => sections.slice(r === 0 ? lead : 0, r === ok.length - 1 ? sections.length - trail : undefined));
+  if (!between.every(Boolean)) return null;
+  const legs = [...it.legs];
+  let { departure, arrival } = it;
+  const bare = ({ arrival: _a, departure: _d, ...stop }: StopPoint): StopPoint => stop;
+  // Leave the last ride earlier (done first: the indices of the legs before it stay).
+  if (trail > 0) {
+    const { l, i } = rides[rides.length - 1]!;
+    const to = last.length - trail;
+    const at = stopsOf(l)[to]!;
+    const walk = walkTo.find((w) => w.stopId === at.stopId);
+    // Only when the ride is the one that ends the trip on foot.
+    if (!at.arrival || !walk || legs.slice(i + 1).some(isTransit)) return null;
+    const ride: Leg = { ...l, to: bare(at), arrival: at.arrival, durationMin: Math.round((ms(at.arrival) - ms(l.departure)) / 60000), distanceM: Math.round((l.distanceM * to) / last.length), intermediateStops: (l.intermediateStops ?? []).slice(0, to - 1), geometry: undefined };
+    arrival = new Date(ms(at.arrival) + walk.walkMin * 60000).toISOString();
+    const onFoot: Leg = { mode: 'walk', from: bare(at), to: legs[legs.length - 1]!.to, departure: at.arrival, arrival, durationMin: Math.round(walk.walkMin), distanceM: Math.round(walk.walkMin * 75) };
+    legs.splice(i, legs.length - i, ride, onFoot);
+  }
+  // Board the first ride later.
+  if (lead > 0) {
+    const i = rides[0]!.i;
+    const l = legs[i]!;
+    const seq = stopsOf(it.legs[i]!);
+    const at = seq[lead]!;
+    const walk = walkFrom.find((w) => w.stopId === at.stopId);
+    // Only when the ride is reached on foot from the origin.
+    if (!at.departure || !walk || legs.slice(0, i).some(isTransit)) return null;
+    const ride: Leg = { ...l, from: bare(at), departure: at.departure, durationMin: Math.round((ms(l.arrival) - ms(at.departure)) / 60000), distanceM: Math.round((l.distanceM * (first.length - lead - (rides.length === 1 ? trail : 0))) / (first.length - (rides.length === 1 ? trail : 0))), intermediateStops: (l.intermediateStops ?? []).slice(lead), geometry: undefined };
+    departure = new Date(ms(at.departure) - walk.walkMin * 60000).toISOString();
+    const onFoot: Leg = { mode: 'walk', from: legs[0]!.from, to: bare(at), departure, arrival: at.departure, durationMin: Math.round(walk.walkMin), distanceM: Math.round(walk.walkMin * 75) };
+    legs.splice(0, i + 1, onFoot, ride);
+  }
+  return { ...it, departure, arrival, durationMin: Math.round((ms(arrival) - ms(departure)) / 60000), legs };
 }
 
 interface Draft {
@@ -327,21 +406,87 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
    * long again as the fastest found, plus a quarter of an hour, are kept.
    */
   const zoneSearchOn = routing.segmentFilter === true && !!deps.zoneSearches && rules.zoneSearches > 0;
-  const withinZones = async (from: LatLon & { name?: string }, found: Itinerary[], max: number, cheaperOnly = false): Promise<Itinerary[]> => {
+  /**
+   * The stops within a walk of each end, asked beside the first searches. The search without
+   * restriction boards where it is fastest; a stop a few minutes further, in another zone, can
+   * make a pass with fewer zones possible (a home between two zones). Their zones are added to
+   * the ends of the zone paths; a stop in a zone already there changes nothing.
+   */
+  const stopsNear = (at: LatLon, direction: 'from' | 'to'): Promise<WalkableStop[]> =>
+    zoneSearchOn && routing.stopsWithinWalk && rules.zoneSearchWalkMin > 0
+      ? safe(routing.stopsWithinWalk({ at, maxMin: rules.zoneSearchWalkMin, direction }), [] as WalkableStop[])
+      : Promise.resolve([] as WalkableStop[]);
+  const nearHome = stopsNear(req.home, 'from');
+  const nearWork = stopsNear(req.work, 'to');
+  const noStops = Promise.resolve([] as WalkableStop[]);
+  const yearlyOf = (it: Itinerary): number | undefined => priceLegs(it.legs.filter(isTransit))[0]?.yearly;
+  const withinZones = async (from: LatLon & { name?: string }, found: Itinerary[], max: number, cheaperOnly = false, fromStops?: Promise<WalkableStop[]>): Promise<Itinerary[]> => {
     if (!zoneSearchOn || found.length === 0 || max <= 0) return [];
     let sets: ZoneSearchSet[] = [];
+    // From a car park the stops around are not asked for: the ends are those of its connections.
+    const [walkFrom, walkTo] = await Promise.all([fromStops ?? noStops, nearWork]);
     try {
-      sets = deps.zoneSearches!(found.map((it) => it.legs.filter(isTransit)), { max, extra: rules.zoneSearchExtraZones });
+      sets = deps.zoneSearches!(found.map((it) => it.legs.filter(isTransit)), {
+        max,
+        extra: rules.zoneSearchExtraZones,
+        fromStops: fromStops ? walkFrom.map((x) => x.stopId) : undefined,
+        toStops: walkTo.map((x) => x.stopId),
+        minSavingChf: rules.zoneSearchMinSavingChf,
+        pass: { category: passCategory(req.traveller.ageGroup), travelClass: req.traveller.travelClass },
+      });
     } catch {
       return [];
     }
     if (cheaperOnly) sets = sets.filter((z) => z.cheaper);
-    const maxTravelMin = Math.round(Math.min(...found.map((it) => it.durationMin)) * ZONE_SEARCH_MAX_SLOWER + ZONE_SEARCH_MAX_EXTRA_MIN);
-    const answers = (await Promise.all(sets.slice(0, max).map((z) => transitTo(from, req.arrival, false, { tags: z.tags, maxTravelMin })))).map((its) =>
-      its.filter((it) => it.durationMin <= maxTravelMin),
-    );
-    if (typeof process !== 'undefined' && process.env?.PENDULAR_DEBUG) sets.slice(0, max).forEach((z, i) => console.log('zone search', from.name, z.alliance, z.zones.join(','), '=>', answers[i]!.map((it) => `${localHHMM(it.departure, tz)}-${localHHMM(it.arrival, tz)}`).join(' ')));
+    if (sets.length === 0) return [];
+    const fastest = Math.min(...found.map((it) => it.durationMin));
+    const maxTravelMin = Math.round(fastest * rules.zoneSearchMaxSlower + rules.zoneSearchMaxExtraMin);
+    // What a slower connection on another ticket has to be worth: against the cheapest ticket
+    // found (its fastest connection), every hour more over a year has to save
+    // `zoneSearchMinChfPerHour`, unless it is only a few minutes slower.
+    const priced = found.map((it) => ({ min: it.durationMin, yearly: yearlyOf(it) })).filter((x): x is { min: number; yearly: number } => x.yearly !== undefined);
+    const ref = priced.length ? priced.reduce((a, b) => (b.yearly < a.yearly || (b.yearly === a.yearly && b.min < a.min) ? b : a)) : undefined;
+    const known = new Set(found.map(fareKey));
+    const worth = (it: Itinerary): boolean => {
+      if (it.durationMin > maxTravelMin) return false;
+      // Another departure of a ticket already found: its holder has no faster one at that time.
+      if (known.has(fareKey(it))) return true;
+      const extraMin = it.durationMin - (ref?.min ?? fastest);
+      if (extraMin <= rules.zoneSearchFreeExtraMin || !ref) return true;
+      const yearly = yearlyOf(it);
+      if (yearly === undefined) return true;
+      return ref.yearly - yearly >= ((extraMin * trips) / 60) * rules.zoneSearchMinChfPerHour;
+    };
+    const raw = await Promise.all(sets.slice(0, max).map((z) => transitTo(from, req.arrival, false, { tags: z.tags, maxTravelMin })));
+    const answers = raw.map((its, i) => its.map((it) => insideSet(it, sets[i]!, walkFrom, walkTo)).filter((it): it is Itinerary => it !== null && worth(it)));
+    if (typeof process !== 'undefined' && process.env?.PENDULAR_DEBUG) {
+      sets.slice(0, max).forEach((z, i) =>
+        console.log('zone search', from.name, z.alliance, z.zones.join(','), '=>', raw[i]!.map((it) => `${localHHMM(it.departure, tz)}-${localHHMM(it.arrival, tz)} ${it.durationMin}′ CHF ${yearlyOf(it)}${answers[i]!.some((x) => x.arrival === it.arrival && vehiclesOf(x).join() === vehiclesOf(it).join()) ? (answers[i]!.includes(it) ? '' : ' (boards or alights elsewhere)') : ' (dropped)'}`).join(' | ') || 'nothing', `[limit ${maxTravelMin}′, reference ${ref?.min}′ CHF ${ref?.yearly}]`),
+      );
+    }
     return answers.flat();
+  };
+  /**
+   * The same vehicle reached another way is not another connection. Among connections on the
+   * same ticket that are the same from their main vehicle on (the one the traveller sits longest
+   * in, then whatever follows it), one with more changes before it (a feeder bus to the station
+   * instead of the walk) is kept only when it leaves home `sameVehicleMinSaving` minutes later.
+   * Otherwise it would be listed as a route of its own, and as the fastest one, for a few
+   * minutes that cost a change (Aigle → Lausanne: the IR 95 with bus 101, four minutes later).
+   * From home only: from a car park the departures are judged one by one against those from
+   * home (step 3). What differs after the main vehicle (a metro for the last stop) is left to
+   * the pruning: that is a faster way to arrive, at every departure.
+   */
+  const sameVehicleOnce = (its: Itinerary[]): Itinerary[] => {
+    const info = its.map((it) => {
+      const vehicles = vehiclesOf(it);
+      const at = vehicles.indexOf(mainVehicle(it) ?? '');
+      return { it, feeders: at, onward: at < 0 ? '' : vehicles.slice(at).join('>'), key: fareKey(it), dep: ms(it.departure), arr: ms(it.arrival) };
+    });
+    const least = rules.sameVehicleMinSaving * 60000;
+    return info
+      .filter((a) => !info.some((b) => b !== a && a.feeders > 0 && b.feeders >= 0 && b.feeders < a.feeders && b.onward === a.onward && b.key === a.key && b.arr <= a.arr && a.dep - b.dep < least))
+      .map((x) => x.it);
   };
   /** Several answers as one list: the same vehicles at the same times once. */
   const merged = (...lists: Itinerary[][]): Itinerary[] => {
@@ -482,8 +627,8 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   });
   // The searches inside zone sets start now and run beside those from the car parks (step 3),
   // which wait for them only to know every connection from home.
-  const homeTransit = withinZones(home, withTransit, rules.zoneSearches).then((more) => {
-    const usable = merged(withTransit, more.filter((it) => it.legs.some(isTransit))).filter((it) => it.durationMin <= quickest * 2 + 30);
+  const homeTransit = withinZones(home, withTransit, rules.zoneSearches, false, nearHome).then((more) => {
+    const usable = sameVehicleOnce(merged(withTransit, more.filter((it) => it.legs.some(isTransit))).filter((it) => it.durationMin <= quickest * 2 + 30));
     const drafts: Draft[] = [];
     if (want('transit')) {
       for (const g of groupItineraries(usable, fareKey)) {

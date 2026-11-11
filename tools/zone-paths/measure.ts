@@ -25,8 +25,8 @@ const CASES: [string, string, number, number, string, number, number][] = [
   ['zurich-uster', 'Zürich HB', 47.3779, 8.5403, 'Uster', 47.351, 8.7185],
   ['geneve-plo', 'Genève Cornavin', 46.2102, 6.1424, 'Plan-les-Ouates', 46.1667, 6.105],
   // Homes between two zones (see ZONE-PATHS.md).
-  ['border-1', process.env.B1_NAME ?? 'Border 1', Number(process.env.B1_LAT ?? 0), Number(process.env.B1_LON ?? 0), 'Lausanne, Flon', 46.5208, 6.6303],
-  ['border-2', process.env.B2_NAME ?? 'Border 2', Number(process.env.B2_LAT ?? 0), Number(process.env.B2_LON ?? 0), 'Lausanne, gare', 46.5167, 6.6291],
+  ['border-echandens', 'Echandens / Ecublens', 46.536, 6.55, 'Lausanne, Flon', 46.5208, 6.6303],
+  ['border-penthereaz', 'Corcelles-sur-Chavornay', 46.696, 6.6196, 'Lausanne, Flon', 46.5208, 6.6303],
 ];
 
 const request = (c: (typeof CASES)[number]): CommuteRequest =>
@@ -37,6 +37,7 @@ const request = (c: (typeof CASES)[number]): CommuteRequest =>
     car: { costPerKm: 0.74, parkingAtWorkPerMonth: 260 },
     home: { label: c[1], lat: c[2], lon: c[3] },
     work: { label: c[4], lat: c[5], lon: c[6] },
+    ...(process.env.RULES ? { rules: JSON.parse(process.env.RULES) } : {}),
   }) as CommuteRequest;
 
 const deps = buildDeps(readConfig());
@@ -44,12 +45,14 @@ const deps = buildDeps(readConfig());
 const routing = deps.routing as unknown as { f: typeof fetch };
 const inner = routing.f;
 let calls: { path: string; ms: number; tags: boolean }[] = [];
+let T0 = 0;
 routing.f = (async (url: URL | string) => {
   const t = performance.now();
   try {
     return await inner(url as URL);
   } finally {
     const u = new URL(String(url));
+    if (process.env.TRACE) console.log(`   ${Math.round(t - T0)} +${Math.round(performance.now() - t)} ms ${u.pathname} ${u.searchParams.get('mode') ?? u.searchParams.get('directModes') ?? ''} ${u.searchParams.get('max') ?? ''} ${(u.searchParams.get('many') ?? '').split(',').length} ${u.searchParams.get('fromPlace') ?? ''} ${u.searchParams.get('algorithm') ?? ''} ${(u.searchParams.get('allowedSegmentTags') ?? '').length ? 'zones' : ''}`);
     calls.push({ path: u.pathname.replace('/api/', '') + (u.searchParams.get('directModes') && u.searchParams.get('transitModes') === '' ? `:${u.searchParams.get('directModes')}` : ''), ms: performance.now() - t, tags: u.searchParams.has('allowedSegmentTags') });
   }
 }) as typeof fetch;
@@ -91,6 +94,7 @@ for (const c of CASES) {
   for (let i = 0; i < RUNS; i++) {
     calls = [];
     const t = performance.now();
+    T0 = t;
     last = await compare(request(c), deps);
     times.push(performance.now() - t);
     lastCalls = calls;

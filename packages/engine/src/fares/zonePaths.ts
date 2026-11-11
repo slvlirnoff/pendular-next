@@ -1,6 +1,8 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Leg } from '../types.js';
 import type { NovaData } from './nova.js';
-import { networkPlans, tripResolver, type Network, type Networks } from './networks.js';
+import { networkPlans, tripResolver, type Network, type Networks, type PassCategory } from './networks.js';
 import { segmentTagsOfZones } from './segmentTags.js';
 import { stationKey } from './zones.js';
 
@@ -42,6 +44,8 @@ export interface ZoneGraph {
   complete(zones: Iterable<number>): number[];
   steps: ReadonlyMap<number, readonly Step[]>;
   weight(zone: number): number;
+  /** The hops at a stop (station number): the stop at the other end and the zones of the hop. */
+  hopsAt?(stop: number): readonly { to: number; zones: number[] }[];
 }
 
 export interface ZonePath {
@@ -148,7 +152,21 @@ export function zoneGraph(nova: NovaData, alliance: string, plan: string, net?: 
     complete,
     steps,
     weight,
+    hopsAt: (stop) => {
+      if (!byStop) {
+        byStop = new Map();
+        for (const h of hops) {
+          for (const [x, y] of [[h.a, h.b], [h.b, h.a]] as const) {
+            const l = byStop.get(x);
+            if (l) l.push({ to: y, zones: h.zones });
+            else byStop.set(x, [{ to: y, zones: h.zones }]);
+          }
+        }
+      }
+      return byStop.get(stop) ?? [];
+    },
   };
+  let byStop: Map<number, { to: number; zones: number[] }[]> | undefined;
   byPlan.set(key, graph);
   return graph;
 }
@@ -238,6 +256,73 @@ export function zonePaths(graph: ZoneGraph, from: number[], to: number[], opts: 
 }
 
 // ---------------------------------------------------------------------------------------------
+// Can a vehicle make the trip inside a zone set?
+// ---------------------------------------------------------------------------------------------
+
+/** Stops within walking distance of each other (data/nova/stop-links.json), by station number. */
+export type StopLinks = ReadonlyMap<number, readonly number[]>;
+
+const linkCache = new WeakMap<NovaData, StopLinks>();
+/** The stop links next to the fare data; empty when the file is missing. */
+export function stopLinks(nova: NovaData): StopLinks {
+  let links = linkCache.get(nova);
+  if (links) return links;
+  const map = new Map<number, number[]>();
+  const file = join(nova.dir, 'stop-links.json');
+  if (existsSync(file)) {
+    const { pairs } = JSON.parse(readFileSync(file, 'utf8')) as { pairs: number[] };
+    for (let i = 0; i + 1 < pairs.length; i += 2) {
+      for (const [a, b] of [[pairs[i]!, pairs[i + 1]!], [pairs[i + 1]!, pairs[i]!]] as const) {
+        const l = map.get(a);
+        if (l) l.push(b);
+        else map.set(a, [b]);
+      }
+    }
+  }
+  linkCache.set(nova, (links = map));
+  return links;
+}
+
+/**
+ * True when a chain of hops joins a stop of `from` to a stop of `to` using only hops whose
+ * zones all lie in `zones`: the zone graph says which zones touch, this says that vehicles can
+ * make the trip inside them. Between two hops the traveller may walk to a stop nearby (`links`),
+ * once: a chain of walks from stop to stop would cross a town, and its zones, for free.
+ *
+ * It is the question the timetable search answers, without the times: a set that fails here
+ * cannot return a connection, so it is not searched. A graph without hops (hand-made) passes.
+ */
+export function realisable(graph: ZoneGraph, zones: Iterable<number>, from: Iterable<number>, to: Iterable<number>, links?: StopLinks): boolean {
+  if (!graph.hopsAt) return true;
+  const allowed = new Set(zones);
+  const targets = new Set(to);
+  // Two states per stop: reached by a vehicle (or a starting stop), or on foot from a stop nearby.
+  const rode = new Set<number>();
+  const walked = new Set<number>();
+  const queue: [number, boolean][] = [];
+  for (const s of new Set(from)) {
+    rode.add(s);
+    queue.push([s, false]);
+  }
+  for (let i = 0; i < queue.length; i++) {
+    const [stop, onFoot] = queue[i]!;
+    if (targets.has(stop)) return true;
+    for (const h of graph.hopsAt(stop)) {
+      if (rode.has(h.to) || !h.zones.every((z) => allowed.has(z))) continue;
+      rode.add(h.to);
+      queue.push([h.to, false]);
+    }
+    if (onFoot) continue;
+    for (const n of links?.get(stop) ?? []) {
+      if (rode.has(n) || walked.has(n)) continue;
+      walked.add(n);
+      queue.push([n, true]);
+    }
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------------------------------------
 // Which zone sets are worth a search of their own
 // ---------------------------------------------------------------------------------------------
 
@@ -258,11 +343,32 @@ export interface ZoneSearch {
   tags: string[];
   /** True when the set counts fewer zones than every connection already found in the network (or none was). */
   cheaper: boolean;
+  /**
+   * True when a vehicle may run from stop `a` to the next stop `b` inside the set: the zones of
+   * the section (as the segment file of the routing engine has them) all lie in it.
+   */
+  allows(a: string, b: string): boolean;
 }
 
 export interface ZoneSearchOptions extends ZonePathOptions {
   /** Most zone sets returned. Default 4. */
   max?: number;
+  /**
+   * Stops within walking reach of the origin and of the destination (stop ids), besides those the
+   * connections found use. A stop in a zone that no stop used lies in adds that zone to the end:
+   * boarding there can need fewer zones. A stop in a zone already there changes nothing.
+   */
+  fromStops?: string[];
+  toStops?: string[];
+  /**
+   * A set is searched only when its yearly pass costs at least this much less (CHF) than the
+   * pass of the dearest connection found. Default 0: any cheaper set. Prices are those of
+   * `pass` (default: adult, 2nd class); a set without a known price is searched.
+   */
+  minSavingChf?: number;
+  pass?: { category: PassCategory; travelClass: 1 | 2 };
+  /** False: also return the sets no chain of hops can make (see `realisable`; checked only when `fromStops` and `toStops` are given). Default true. */
+  realisableOnly?: boolean;
 }
 
 const stopId = (p: { stopId?: string; name: string }) => p.stopId;
@@ -284,6 +390,10 @@ const stopId = (p: { stopId?: string; name: string }) => p.stopId;
  * more (see below), a set that contains a set already chosen (it costs more and allows
  * the same connections and more: the least useful), and, where the data says which zones are a
  * network's own, a set with none (the network does not sell it). Cheapest first, at most `max`.
+ *
+ * With `fromStops` and `toStops` (the stops within walking reach of the two ends) the zones of
+ * those stops join the ends, and a set that no chain of hops can make is left out (`realisable`).
+ * With `minSavingChf`, so is a set whose pass saves less than that on the dearest pass found.
  */
 export function zoneSearches(trips: Leg[][], deps: { nova: NovaData; networks: Networks }, opts: ZoneSearchOptions = {}): ZoneSearch[] {
   const { nova, networks } = deps;
@@ -294,6 +404,11 @@ export function zoneSearches(trips: Leg[][], deps: { nova: NovaData; networks: N
   const firsts = [...new Set(withStops.map((legs) => stopId(legs[0]!.from)).filter((s): s is string => !!s))];
   const lasts = [...new Set(withStops.map((legs) => stopId(legs[legs.length - 1]!.to)).filter((s): s is string => !!s))];
   if (firsts.length === 0 || lasts.length === 0) return [];
+  const startStops = [...new Set([...firsts, ...(opts.fromStops ?? [])])];
+  const endStops = [...new Set([...lasts, ...(opts.toStops ?? [])])];
+  const number = (s: string) => Number(stationKey(s.trim()));
+  const links = stopLinks(nova);
+  const passOf = opts.pass ?? { category: 'adult' as const, travelClass: 2 as const };
   const atFirst = new Set(firsts.flatMap((s) => nova.alliancesAt(s)));
   const atLast = new Set(lasts.flatMap((s) => nova.alliancesAt(s)));
 
@@ -311,8 +426,9 @@ export function zoneSearches(trips: Leg[][], deps: { nova: NovaData; networks: N
     const plans = networkPlans(nova, networks, alliance);
     if (!net || !plans) continue;
     const graph = zoneGraph(nova, alliance, plans.pass, net);
-    const from = [...new Set(firsts.flatMap((s) => graph.zonesOfStop(s)))];
-    const to = [...new Set(lasts.flatMap((s) => graph.zonesOfStop(s)))];
+    // The zones of the stops the connections use, and of every other stop within walking reach.
+    const from = [...new Set(startStops.flatMap((s) => graph.zonesOfStop(s)))];
+    const to = [...new Set(endStops.flatMap((s) => graph.zonesOfStop(s)))];
     const paths = zonePaths(graph, from, to, { extra, maxSteps: opts.maxSteps });
     if (paths.length === 0) continue;
     const least = paths[0]!.count;
@@ -331,7 +447,17 @@ export function zoneSearches(trips: Leg[][], deps: { nova: NovaData; networks: N
       const whole = count >= allFrom;
       const z = whole ? graph.zones : zones;
       const key = z.join(',');
-      if (!sets.has(key)) sets.set(key, { alliance, zones: z, count: whole ? graph.count(z) : count, why: whole ? 'network' : why, tags: segmentTagsOfZones(alliance, z), cheaper: !whole && count < leastFound });
+      if (sets.has(key)) return;
+      const inside = new Set(z);
+      const allows = (a: string, b: string): boolean => {
+        let zs = nova.zonesOnEdge(alliance, plans.pass, a, b);
+        if (!zs) {
+          const chain = nova.zonesForStops(alliance, plans.pass, [a, b]);
+          zs = chain.missingEdges.length === 0 ? chain.zones : null;
+        }
+        return !!zs && zs.length > 0 && zs.every((x) => inside.has(x));
+      };
+      sets.set(key, { alliance, zones: z, count: whole ? graph.count(z) : count, why: whole ? 'network' : why, tags: segmentTagsOfZones(alliance, z), cheaper: !whole && count < leastFound, allows });
     };
     for (const p of paths) put(p.zones, p.count, 'path');
     for (const m of inNetwork) {
@@ -342,13 +468,31 @@ export function zoneSearches(trips: Leg[][], deps: { nova: NovaData; networks: N
       if (count <= least + extra) put(z, count, 'present');
     }
 
+    // The yearly pass of a set, to tell what a set would save; null when the grid has no price.
+    const priceOf = (zones: number[], count: number): number | null =>
+      net.bySet ? (net.setPass('year', zones, passOf)?.price ?? null) : net.pass('year', count >= allFrom ? 'all' : count, passOf);
+    const dearestPrice = Number.isFinite(dearestFound)
+      ? Math.max(...inNetwork.map((m) => { const z = graph.complete(m.get(alliance)!); return priceOf(z, graph.count(z)) ?? Infinity; }))
+      : Infinity;
+    const minSaving = opts.minSavingChf ?? 0;
+    const startNumbers = startStops.map(number).filter((n) => n > 0);
+    const endNumbers = endStops.map(number).filter((n) => n > 0);
+
     const chosen: ZoneSearch[] = [];
     const within = (inner: number[], outer: number[]) => inner.every((z) => outer.includes(z));
     for (const s of [...sets.values()].sort((a, b) => a.count - b.count || a.zones.length - b.zones.length)) {
       if (inNetwork.every((m) => m.has(alliance) && within(m.get(alliance)!, s.zones))) continue;
       if (s.count >= dearestFound) continue;
+      if (minSaving > 0 && Number.isFinite(dearestPrice)) {
+        const price = priceOf(s.zones, s.count);
+        if (price !== null && price > dearestPrice - minSaving) continue;
+      }
       if (own && !s.zones.some((z) => own[String(z)]?.own === true)) continue;
       if (chosen.some((c) => within(c.zones, s.zones))) continue;
+      // Zones that touch are not yet a trip: a chain of hops has to join the two ends inside the set.
+      // Asked only when the stops within walking reach of both ends are known: without them a set
+      // that starts at another stop nearby would be refused.
+      if (opts.realisableOnly !== false && opts.fromStops && opts.toStops && s.why !== 'present' && !realisable(graph, s.zones, startNumbers, endNumbers, links)) continue;
       chosen.push(s);
       if (chosen.length >= max) break;
     }

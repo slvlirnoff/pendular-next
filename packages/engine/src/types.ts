@@ -158,6 +158,23 @@ export interface RuleSet {
    * made only for a zone path with fewer zones than every connection found from the site.
    */
   zoneSearchesPerSite: number;
+  /**
+   * Stops within this many minutes on foot of home and of work add their fare zones to the ends
+   * of the zone paths (a stop in another zone than those the timetable search uses can make a
+   * cheaper pass possible). 0 = only the stops of the connections found.
+   */
+  zoneSearchWalkMin: number;
+  /** A zone set is searched only when its yearly pass saves at least this on the dearest pass found. CHF. */
+  zoneSearchMinSavingChf: number;
+  /** A connection found inside a zone set may take this many times the fastest one found, plus `zoneSearchMaxExtraMin` minutes. */
+  zoneSearchMaxSlower: number;
+  zoneSearchMaxExtraMin: number;
+  /** Such a connection is kept without further question when it is at most this many minutes slower than the cheapest ticket already found. */
+  zoneSearchFreeExtraMin: number;
+  /** Beyond that, every hour more over a year of commuting has to save this many CHF on that ticket. */
+  zoneSearchMinChfPerHour: number;
+  /** Routes shown per ticket from a car park or bike park. */
+  maxRoutesPerAccessTicket: number;
   /** Size of the arrival slices used by the "only way to arrive at that time" rule, minutes. */
   arrivalSliceMin: number;
   /**
@@ -223,6 +240,9 @@ export interface StopPoint extends LatLon {
   name: string;
   /** Timetable stop id (station level where known). */
   stopId?: string;
+  /** For a stop a vehicle passes between boarding and alighting: when it arrives there and leaves (ISO), where known. */
+  arrival?: string;
+  departure?: string;
 }
 
 export interface Line {
@@ -371,7 +391,20 @@ export interface RoutingProvider {
    * the whole network). Used to choose which stations are worth a full search.
    */
   reachability?(q: { to: LatLon; date: string; time: string; maxMin: number }): Promise<ReachableStop[]>;
+  /**
+   * The stops within `maxMin` minutes on foot of a place by the street network: 'from' the place
+   * to the stop (home), or 'to' the place from the stop (work). Used to find the fare zones a
+   * trip could start or end in besides those of the stops the timetable search chose.
+   */
+  stopsWithinWalk?(q: { at: LatLon; maxMin: number; direction: 'from' | 'to' }): Promise<WalkableStop[]>;
   versions(): Promise<DataVersions>;
+}
+
+export interface WalkableStop extends LatLon {
+  /** Station-level stop id, as on the legs of an itinerary. */
+  stopId: string;
+  name: string;
+  walkMin: number;
 }
 
 export interface ReachableStop extends LatLon {

@@ -10,11 +10,14 @@ import type {
   StreetProfile,
   StreetRoute,
   TimeWindow,
+  WalkableStop,
 } from '../types.js';
 import { localToUtc, minutesBetween, windowToUtc } from '../time.js';
 
 /** Minimal shapes of the MOTIS v2 API responses that the adapter reads. */
 interface MotisPlace {
+  arrival?: string;
+  departure?: string;
   name: string;
   stopId?: string;
   parentId?: string;
@@ -228,7 +231,7 @@ export class MotisRouting implements RoutingProvider {
           }
         : undefined,
       tripId: transit ? l.tripId : undefined,
-      intermediateStops: transit ? l.intermediateStops?.map(toStop) : undefined,
+      intermediateStops: transit ? l.intermediateStops?.map((p) => ({ ...toStop(p), ...(p.arrival ? { arrival: p.arrival } : {}), ...(p.departure ? { departure: p.departure } : {}) })) : undefined,
       geometry,
       ...(mode === 'sharedBike' && l.rental
         ? {
@@ -315,9 +318,11 @@ export class MotisRouting implements RoutingProvider {
 
   async street(q: { from: LatLon; to: LatLon; profile: StreetProfile }): Promise<StreetRoute | null> {
     const mode = q.profile === 'car' ? 'CAR' : q.profile === 'walk' ? 'WALK' : 'BIKE';
+    // A car cannot always leave from or reach the very point (see `drivable`).
+    const [from, to] = q.profile === 'car' ? await Promise.all([this.drivable(q.from, 'leave'), this.drivable(q.to, 'reach')]) : [q.from, q.to];
     const res = await this.get<MotisPlanResponse>('/api/v6/plan', {
-      fromPlace: place(q.from),
-      toPlace: place(q.to),
+      fromPlace: place(from),
+      toPlace: place(to),
       directModes: mode,
       transitModes: '',
       time: this.o.referenceTime,
@@ -345,6 +350,7 @@ export class MotisRouting implements RoutingProvider {
   }): Promise<(StreetRoute | null)[]> {
     if (q.points.length === 0) return [];
     const mode = q.profile === 'car' ? 'CAR' : q.profile === 'walk' ? 'WALK' : 'BIKE';
+    const anchor = q.profile === 'car' ? await this.drivable(q.anchor, q.direction === 'toAnchor' ? 'reach' : 'leave') : q.anchor;
     // E-bikes use the bike network; MOTIS's matrix has no speed setting, so scale afterwards.
     const speedUp = q.profile === 'ebike' ? EBIKE_MATRIX_SPEEDUP : 1;
     const chunks: LatLon[][] = [];
@@ -352,7 +358,7 @@ export class MotisRouting implements RoutingProvider {
     const answers = await Promise.all(
       chunks.map((chunk) =>
         this.get<{ duration?: number; distance?: number }[]>('/api/v1/one-to-many', {
-          one: `${q.anchor.lat};${q.anchor.lon}`,
+          one: `${anchor.lat};${anchor.lon}`,
           many: chunk.map((p) => `${p.lat};${p.lon}`).join(','),
           mode,
           max: Math.round(q.maxMin * 60 * speedUp),
@@ -365,6 +371,88 @@ export class MotisRouting implements RoutingProvider {
     const out = answers.flat().map((d) =>
       d.duration === undefined || d.duration === null ? null : { durationMin: d.duration / 60 / speedUp, distanceM: d.distance ?? 0 },
     );
+    return out;
+  }
+
+  private readonly drivableCache = new Map<string, Promise<LatLon>>();
+
+  /**
+   * The point a car route should start from ('leave') or end at ('reach') for a place.
+   *
+   * Some places are matched to a road that a car cannot leave or cannot reach: a station
+   * forecourt (Aigle), a pedestrian centre with one-way access (Neuchâtel, Place Pury). The route
+   * search then finds nothing, after exploring every road within its time limit (4 s measured,
+   * and five such searches at once for the city car parks), and the commute has no car at all.
+   * One short matrix call tells whether any of eight points 600 m around is reachable within
+   * five minutes. If none is, the nearest of sixteen points 150 m and 300 m around from which
+   * the surroundings are reachable stands in for the place (the walk from there is part of the
+   * time to park). Asked once per place and direction.
+   */
+  private drivable(p: LatLon, direction: 'leave' | 'reach'): Promise<LatLon> {
+    const key = `${direction}|${p.lat.toFixed(5)},${p.lon.toFixed(5)}`;
+    const hit = this.drivableCache.get(key);
+    if (hit) return hit;
+    const ring = (c: LatLon, metres: number, n = 8): LatLon[] =>
+      Array.from({ length: n }, (_, k) => {
+        const a = (2 * Math.PI * k) / n;
+        return { lat: c.lat + (metres * Math.cos(a)) / 111_320, lon: c.lon + (metres * Math.sin(a)) / (111_320 * Math.cos((c.lat * Math.PI) / 180)) };
+      });
+    const connected = async (c: LatLon): Promise<boolean> => {
+      const res = await this.get<{ duration?: number | null }[]>('/api/v1/one-to-many', {
+        one: `${c.lat};${c.lon}`,
+        many: ring(c, DRIVABLE_RING_M).map((x) => `${x.lat};${x.lon}`).join(','),
+        mode: 'CAR',
+        max: DRIVABLE_MAX_S,
+        maxMatchingDistance: 250,
+        arriveBy: direction === 'reach',
+      });
+      return res.some((d) => typeof d.duration === 'number');
+    };
+    const found = (async (): Promise<LatLon> => {
+      try {
+        if (await connected(p)) return p;
+        const near = [...ring(p, 150), ...ring(p, 300)];
+        const ok = await Promise.all(near.map((c) => connected(c).catch(() => false)));
+        return near.find((_, i) => ok[i]) ?? p;
+      } catch {
+        return p;
+      }
+    })();
+    if (this.drivableCache.size > 2000) this.drivableCache.clear();
+    this.drivableCache.set(key, found);
+    return found;
+  }
+
+  /**
+   * The stops a person can walk to from `at` (or from which they can walk to it, 'to') within
+   * `maxMin` minutes by the street network: the stops of the map section around the point, one
+   * position per station, then one matrix call per 120 stations.
+   */
+  async stopsWithinWalk(q: { at: LatLon; maxMin: number; direction: 'from' | 'to' }): Promise<WalkableStop[]> {
+    const metres = q.maxMin * WALK_SECTION_M_PER_MIN;
+    const dLat = metres / 111_320;
+    const dLon = metres / (111_320 * Math.cos((q.at.lat * Math.PI) / 180));
+    const res = await this.get<MotisPlace[]>('/api/v1/map/stops', {
+      min: `${q.at.lat - dLat},${q.at.lon - dLon}`,
+      max: `${q.at.lat + dLat},${q.at.lon + dLon}`,
+    });
+    // One point per station: its platform nearest to the place, as the crow flies.
+    const flat = (p: LatLon) => Math.hypot((p.lat - q.at.lat) * 111_320, (p.lon - q.at.lon) * 111_320 * Math.cos((q.at.lat * Math.PI) / 180));
+    const stations = new Map<string, { stopId: string; name: string; lat: number; lon: number; crow: number }>();
+    for (const p of res) {
+      const stopId = stationId(p);
+      const crow = flat(p);
+      if (!stopId || crow > metres) continue;
+      const prev = stations.get(stopId);
+      if (!prev || crow < prev.crow) stations.set(stopId, { stopId, name: p.name, lat: p.lat, lon: p.lon, crow });
+    }
+    const list = [...stations.values()].sort((a, b) => a.crow - b.crow).slice(0, WALK_MAX_STATIONS);
+    const walks = await this.streetMatrix({ points: list, anchor: q.at, profile: 'walk', direction: q.direction === 'to' ? 'toAnchor' : 'fromAnchor', maxMin: q.maxMin });
+    const out: WalkableStop[] = [];
+    list.forEach((s, i) => {
+      const w = walks[i];
+      if (w && w.durationMin <= q.maxMin) out.push({ stopId: s.stopId, name: s.name, lat: s.lat, lon: s.lon, walkMin: Math.round(w.durationMin * 10) / 10 });
+    });
     return out;
   }
 
@@ -592,6 +680,14 @@ export class MotisRouting implements RoutingProvider {
     return this.o.versions ?? {};
   }
 }
+
+/** Walking pace used to choose the map section searched for stops (the street search gives the real time), metres per minute. */
+const WALK_SECTION_M_PER_MIN = 85;
+/** Most stations asked for their walking time around one place (the nearest first). */
+const WALK_MAX_STATIONS = 240;
+/** `drivable`: a car at a usable point reaches one of eight points this far around within this many seconds. */
+const DRIVABLE_RING_M = 600;
+const DRIVABLE_MAX_S = 300;
 
 /** With a segment filter, the last trip may not leave more than this long before the arrive-by time. */
 const LAST_TRIP_MAX_HOURS = 12;

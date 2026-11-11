@@ -1,9 +1,9 @@
 # Golden commutes report
 
-Generated 2026-11-11T18:22:17.243Z against http://127.0.0.1:8787.
+Generated 2026-11-11T19:08:30.877Z against http://127.0.0.1:8787.
 Timetable GTFS 2027, fetched 2026-11-10, tariffs Mobilis 13.12.2026; GA/Half Fare 13.12.2026; T601/T650 edition 01.06.2026, engine MOTIS 2, reference day 2027-01-19.
 
-Checks: 476 PASS, 0 WARN, 0 FAIL.
+Checks: 470 PASS, 0 WARN, 0 FAIL.
 
 | Commute | Cheapest | Fastest | Greenest | Options | Left out |
 |---|---|---|---|---|---|
@@ -15,7 +15,7 @@ Checks: 476 PASS, 0 WARN, 0 FAIL.
 | chapelle-sur-moudon-lausanne | Chapelle-sur-Moudon, poste → Lausanne, gare, 435 · m2 (1'575 CHF, 57 min) | Lausanne, Vennes → Lausanne, gare, m2 (7'663 CHF, 40 min) | Chapelle-sur-Moudon, poste → Lausanne, gare, 435 · 45 · m2 (1'575 CHF, 57 min), 1'258 kg CO2 | 5 (transit, cityParkRide, car) | 8 |
 | yverdon-lausanne | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (2'475 CHF, 37 min) | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (2'475 CHF, 37 min) | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (2'475 CHF, 37 min), 145 kg CO2 | 2 (transit, car) | 6 |
 | nyon-geneve | Nyon → Genève, IR15/IR57/IR95… (1'710 CHF, 31 min) | Nyon → Genève, IR15/IR57/IR95… (1'710 CHF, 31 min) | Nyon → Genève, IR15/IR57/IR95… (1'710 CHF, 31 min), 80 kg CO2 | 2 (transit, car) | 7 |
-| aigle-lausanne | Aigle, place du Marché → Lausanne, 101 · IR95 (2'475 CHF, 44 min) | Aigle, place du Marché → Lausanne, 101 · IR95 (2'475 CHF, 44 min) | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min), 145 kg CO2 | 3 (transit, car) | 5 |
+| aigle-lausanne | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min) | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min) | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min), 145 kg CO2 | 2 (transit, car) | 5 |
 | chailly-flon | walk (0 CHF, 35 min) | ebike (290 CHF, 8 min) | walk (0 CHF, 35 min), 0 kg CO2 | 7 (walk, bike, ebike, transit, car) | 10 |
 | renens-chuv | bike (122 CHF, 21 min) | ebike (561 CHF, 15 min) | bike (122 CHF, 21 min), 14 kg CO2 | 6 (bike, ebike, transit, car) | 8 |
 | bulle-fribourg | Bulle, gare routière → Fribourg/Freiburg, gare rout., 336 (1'926 CHF, 96 min) | car (13'543 CHF, 38 min) | Bulle → Fribourg, Tilleul/Cathédrale, R/RE3 · 123/182 (2'511 CHF, 56 min), 228 kg CO2 | 5 (transit, car) | 3 |
@@ -33,8 +33,7 @@ Checks: 476 PASS, 0 WARN, 0 FAIL.
 - **chapelle-sur-moudon-lausanne**: cityParkRide "Le Mont-sur-L., Grand-Mont → Lausanne, gare, 60/8 · m2" costs 7'069 vs transit 1'575
 - **chapelle-sur-moudon-lausanne**: cityParkRide "Lausanne, Vennes → Lausanne, gare, m2" costs 7'663 vs transit 1'575
 - **yverdon-lausanne**: transit-0 "Yverdon-les-Bains → Lausanne, IC5/IC51/R1…": 10 zone(s) (zonePassYearly, 2'475 CHF)
-- **aigle-lausanne**: transit-0 "Aigle, place du Marché → Lausanne, 101 · IR95": 10 zone(s) (zonePassYearly, 2'475 CHF)
-- **aigle-lausanne**: transit-1 "Aigle → Lausanne, IR90/IR95/RE33": 10 zone(s) (zonePassYearly, 2'475 CHF)
+- **aigle-lausanne**: transit-0 "Aigle → Lausanne, IR90/IR95/RE33": 10 zone(s) (zonePassYearly, 2'475 CHF)
 - **yverdon-lausanne-youth**: transit-0 "Yverdon-les-Bains → Lausanne, IC5/IC51/R1…": 10 zone(s) (zonePassYearly, 869 CHF)
 - **yverdon-lausanne-senior**: transit-0 "Yverdon-les-Bains → Lausanne, IC5/IC51/R1…": 10 zone(s) (zonePassYearly, 1'116 CHF)
 - **yverdon-lausanne-halffare**: transit-0 "Yverdon-les-Bains → Lausanne, IC5/IC51/R1…": 10 zone(s) (zonePassYearly, 2'475 CHF)
