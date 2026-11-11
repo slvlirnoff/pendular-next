@@ -34,8 +34,9 @@ case "${1:-all}" in
   osm|all)
     # Clipped extracts hold ways whose nodes lie outside the clip; MOTIS refuses those.
     fetch "$OSM_URL" "$RAW/switzerland-raw.osm.pbf"
-    python3 scripts/complete-ways.py "$RAW/switzerland-raw.osm.pbf" "$RAW/switzerland.osm.pbf.part"
-    mv "$RAW/switzerland.osm.pbf.part" "$RAW/switzerland.osm.pbf" ;;&
+    # The temporary name keeps the .osm.pbf ending: the writer picks the format from it.
+    python3 scripts/complete-ways.py "$RAW/switzerland-raw.osm.pbf" "$RAW/switzerland-part.osm.pbf"
+    mv "$RAW/switzerland-part.osm.pbf" "$RAW/switzerland.osm.pbf" ;;&
   parking|all) fetch "$PARKING_URL" "$RAW/bike-and-car-parking.json" ;;&
   motis|all) fetch "$MOTIS_URL" "$RAW/motis.tar.bz2"; tar -xjf "$RAW/motis.tar.bz2" -C motis/bin ;;&
 esac
