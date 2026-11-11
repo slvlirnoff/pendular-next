@@ -80,14 +80,16 @@ export function formatSectionTags(networks: SectionZones[]): string {
  * over the stop's own id.
  *   "Parentch:1:sloid:4121", "ch:1:sloid:4121:0:1", "ch:1:sloid:4121_gen:…" → 8504121 (85 + five digits)
  *   "Parent8002140", "8002140", "8014474_gen:missingSLOID_pf:5"             → 8002140, 8014474
- *   "ch:1:sloid:1100043" (six digits and more: stops abroad)                → null
+ *   "ch:1:sloid:1400679" (six digits and more: stops abroad, taken as is)   → 1400679
+ *   "8774549", "Parent8774549" (plain numbers, taken as they are)           → 8774549
  */
 export function gtfsStationNumber(stopId: string, parentStation?: string): number | null {
   const id = (parentStation || stopId).replace(/^Parent/, '');
   const sloid = /^ch:1:sloid:(\d+)/.exec(id);
   if (sloid) {
     const n = Number(sloid[1]);
-    return n > 0 && n < 100_000 ? 8_500_000 + n : null;
+    if (!(n > 0)) return null;
+    return sloid[1]!.length > 5 ? n : 8_500_000 + n;
   }
   const plain = /^(\d+)/.exec(id);
   return plain && Number(plain[1]) > 0 ? Number(plain[1]) : null;

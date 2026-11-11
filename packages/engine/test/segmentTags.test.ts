@@ -75,7 +75,9 @@ describe('segment tags of a section', () => {
     expect(gtfsStationNumber('ch:1:sloid:120_gen:missingSLOID_pf:A', 'Parentch:1:sloid:120')).toBe(8500120);
     expect(gtfsStationNumber('8002140', 'Parent8002140')).toBe(8002140);
     expect(gtfsStationNumber('8014474_gen:missingSLOID_pf:5')).toBe(8014474);
-    expect(gtfsStationNumber('ch:1:sloid:1100043', 'Parentch:1:sloid:1100043')).toBeNull();
+    expect(gtfsStationNumber('ch:1:sloid:1100043', 'Parentch:1:sloid:1100043')).toBe(1100043);
+    expect(gtfsStationNumber('ch:1:sloid:1400679:0:1')).toBe(1400679);
+    expect(gtfsStationNumber('8774549', 'Parent8774549')).toBe(8774549);
     expect(gtfsStationNumber('x')).toBeNull();
   });
 });

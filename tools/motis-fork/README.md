@@ -10,7 +10,7 @@ Question: can MOTIS answer "what is the last trip home that a given zone pass co
 search be restricted, per request, to route sections whose fare zones are all in the pass?
 
 Answer: yes. The prototype built, runs on the unchanged production data (no re-import) and returns
-the expected trip. 431 added lines in 14 files (nigiri 287 lines / 8 files, MOTIS 144 lines / 6 files).
+the expected trip. 492 added lines in 15 files after the third round (nigiri 341 lines / 9 files, MOTIS 151 lines / 6 files).
 The engine uses it for the last trip home of options with a zone pass (`MOTIS_SEGMENT_FILTER=1`, see the
 main README).
 
@@ -97,9 +97,8 @@ zones of the NOVA edge when there is one, else those along the chain of edges th
 vehicle that skips stops) - what the trip resolver does for a leg, so a pass always allows the trip it was
 priced for. Networks: every alliance with a pass plan, chosen as the trip resolver does (`networkPlans()`;
 joint passes such as Z-Pass are left out; Léman Pass is a network since 2026-11-11 and its sections are
-tagged `leman-pass:<zone>`, but only between stops with a station number: the French bus stops
-("ch:1:sloid:14…", six digits and more) have none in `station_key` / `gtfsStationNumber()`, so a search
-restricted to a Léman Pass cannot use them yet). Counts of 2026-11-11, before Léman Pass was added (now
+tagged `leman-pass:<zone>`; since the third round below the French bus stops and stations have a
+station number too, see "Station numbers"). Counts of 2026-11-11, before Léman Pass was added (now
 48 112 tagged, 1 875 of them with Léman Pass tags):
 
 - 62 864 directed station pairs in the timetable (15.8 million stop times, 976 295 trips);
@@ -152,6 +151,9 @@ nigiri
   algorithm (`search.h` refuses a filter for an algorithm without `set_segment_filter`).
 - `src/routing/raptor/reconstruct.cc`: `find_start_in_prev_round` stops walking back along a trip at a
   forbidden section, next to `violates_section_flags`.
+- `src/routing/raptor/optimize_footpaths.cc` (third round): `filter_allowed_stops()` limits the stops a
+  rebuilt ride may be moved to (shorter walk at either end, better transfer) to those reached without
+  crossing a forbidden section.
 
 MOTIS
 - `include/motis/segment_tags.h`, `src/segment_tags.cc` (new): loads the table once, from the file named by
@@ -252,6 +254,61 @@ Through the API (port 8789 with the filter, 8787 without; arrival 07:30–08:30,
 The two earlier times are corrections: 23:02 was the direct R9 from Renens and 23:57 the train from Fribourg,
 both through zones the pass of that option does not have.
 
+## Third round (2026-11-11): stops abroad, rides moved outside the set
+
+Two defects fixed; rebuild 35 s (5 ninja steps, no header touched), patches regenerated
+(nigiri 341 lines / 9 files, MOTIS 151 lines / 6 files), `segments.csv` regenerated, server restarted.
+
+### Station numbers (one rule in three places)
+
+`station_key()` in MOTIS `src/segment_tags.cc`, `gtfsStationNumber()` in
+`packages/engine/src/fares/segmentTags.ts` (used by `export-segments.ts`) and `stationId()` in
+`packages/engine/src/routing/motis.ts` now agree. The id of the parent stop when there is one, without
+`Parent`:
+
+| id | station number |
+| --- | --- |
+| `ch:1:sloid:<n>[:x:y]`, n of up to 5 digits (Swiss stop) | 85 + n on five digits: `ch:1:sloid:4121` → 8504121 |
+| `ch:1:sloid:<n>[:x:y]`, n of 6 digits and more (stop abroad) | n as it is: `ch:1:sloid:1400679` → 1400679 (Ferney, mairie) |
+| plain number (UIC) | as it is: `8774549`, `Parent8774549` → 8774549 (Annemasse) |
+
+Before, the six-digit and longer sloids had no number in the fork and in the exporter (0 / null), so their
+sections had no tag and were forbidden under a filter. `segments.csv` now: 48 962 rows (850 new, none
+removed), 22 networks; 71 143 directed station pairs in the timetable (62 864 before); server log
+`48962 rows, 703 tags, 1775 tag sets, 541449/661076 route sections tagged`. Léman Pass: 2152 tagged
+sections; zones 10 (1912), 200 (8), 210 (14), 230 (76), 240 (20), 250 (159). The pairs now seen abroad
+that a network knows but cannot resolve raise "not found" (Ostwind 84 → 4291, Léman Pass 39).
+
+Checks (arrive by 08:30 local on 2027-01-19, `toPlace` Genève Cornavin): Annemasse with
+`leman-pass:10,leman-pass:210`: 26 itineraries (RL4 Annemasse – Genève); Annemasse with `10,230`: none;
+Saint-Julien-en-Genevois gare with `10,230`: 43 (bus 80, 272); Ferney, mairie with `10,250`: 22 (bus 60,
+61). Planner, Annemasse → Cornavin: the Léman Pass options (zones 10+210) have `returnTrips.within: "pass"`.
+
+### A ride moved outside the set after the search
+
+Cause: not the search and not `find_start_in_prev_round`, but `optimize_footpaths()`, which runs at the end
+of `reconstruct_journey` on every journey. It moves the boarding stop of the first ride and the alighting
+stop of the last one to any stop of the same vehicle with a shorter walk (`optimize_initial_departure`,
+`optimize_initial_start_footpath`, `optimize_last_arrival`, `optimize_final_egress_footpath`), and the two
+stops of a transfer to a better pair (`optimize_transfers`) - without looking at the filter. Echandens →
+Lausanne-Flon inside Mobilis 11, 12: the search boarded bus 705 at Ecublens VD, Larges Pièces (11 min
+walk); Echandens, Chocolatière, one stop earlier, is 8 min away, so the ride was moved there, over the
+section Chocolatière – Larges Pièces (zones 12, 33). It happens in both search directions and with
+`timetableView=false` (same code).
+
+Fix (`optimize_footpaths.cc`): `filter_allowed_stops()` gives, for a ride, the stretch of stops around the
+range the search used that is reached over allowed sections only; the five optimisations look for stops
+inside that stretch only. Without a filter the stretch is the whole run: nothing changes. (The same
+optimisations also ignore the bike/car/wheelchair section flags upstream; not touched.)
+
+After the fix, raw MOTIS answers, every section of every transit leg looked up in `segments.csv`:
+Echandens (46.536, 6.550) → Flon, `mobilis:11,mobilis:12`: 9 connections, all board at Larges Pièces, 0
+sections outside (before: 9 of 9 boarded at Chocolatière); Corcelles-sur-Chavornay (46.696, 6.6196) → Flon,
+zones 11 12 16 50 51 52: bus 428 from Penthéréaz, Champ-de-Vaud + R20, 0 sections outside; forward
+searches of both: 0 outside. Last trip Lausanne gare → Lucens by 02:00 (7 zones): unchanged, leaves 22:58
+(m2 23:02, bus 362 23:22, R9 00:36). The engine's `insideSet` (compare.ts) no longer has anything to
+correct on these cases; it is kept as a safeguard.
+
 ## Prototype-grade, and what an upstream version needs
 
 - **Untagged sections** (126 792 of 661 076 route sections): outside every zonal network, or between two
@@ -262,8 +319,8 @@ both through zones the pass of that option does not have.
   prices.
 - **One edge per station pair**: rail and bus edges between the same two stations are merged (fewest zones
   kept; no pair differs in the Mobilis pass plan today). Tags could be keyed by mode/operator.
-- **Stops abroad** with a six-digit and longer `sloid` (7443 stops) have no station number in the fork, in the
-  exporter or in the engine: sections to them are untagged.
+- **Stops abroad** have a station number since the third round (7445 stops with a six-digit and longer
+  `sloid`, 3940 with a plain number); their sections are tagged where the fare data has them.
 - **Station ids**: the Swiss `sloid` → station number rule is hard-coded in `src/segment_tags.cc`. Upstream
   would take MOTIS stop ids (`<tag>_<stop_id>`) as they are.
 - **Storage**: a global loaded from an environment variable at server start. Upstream: a config key and a

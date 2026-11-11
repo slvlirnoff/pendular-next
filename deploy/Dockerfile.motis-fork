@@ -12,7 +12,7 @@ FROM ${BASE} AS build
 # dependency file points at the segment-tags branch of github.com/slvlirnoff/nigiri.
 # Pinned by commit: bump MOTIS_REF deliberately when the branch moves.
 ARG MOTIS_REPO=https://github.com/slvlirnoff/motis.git
-ARG MOTIS_REF=7e384d261fb8dd8480ba7b9184e081e61f4c75c9
+ARG MOTIS_REF=b3a7d30897f76efc3b7919a431eadfa3b6e88bdc
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git cmake ninja-build gcc-13 g++-13 \
     && rm -rf /var/lib/apt/lists/*
