@@ -697,7 +697,10 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     // with: a train that calls at a nearer station is not driven after to a further one.
     for (const b of best) {
       for (const it of b.its) {
-        const v = mainVehicle(it);
+        // Only the vehicle boarded AT the site: a train that a nearer site reaches after a
+        // change (a regional train to the junction, then the fast train) is not "boardable
+        // nearer", and driving to the fast train's own station stays worth showing.
+        const v = vehiclesOf(it)[0];
         if (v !== undefined && b.rideMs < (shortestRide.get(v) ?? Infinity)) shortestRide.set(v, b.rideMs);
       }
     }
