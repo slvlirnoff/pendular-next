@@ -215,6 +215,7 @@ export class MotisRouting implements RoutingProvider {
     window: TimeWindow;
     by: 'arrive' | 'depart';
     alternateTies?: boolean;
+    maxWalkToStopMin?: number;
   }): Promise<Itinerary[]> {
     const { start, end } = windowToUtc(q.date, q.window, this.o.timezone);
     const arriveBy = q.by === 'arrive';
@@ -233,6 +234,7 @@ export class MotisRouting implements RoutingProvider {
         directModes: 'WALK',
         detailedTransfers: false,
         ...(q.alternateTies ? { algorithm: TIE_ALGORITHM } : {}),
+        ...(q.maxWalkToStopMin ? { maxPreTransitTime: Math.round(q.maxWalkToStopMin * 60) } : {}),
         ...(cursor ? { pageCursor: cursor } : {}),
       });
       let outside = 0;

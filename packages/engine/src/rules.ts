@@ -29,6 +29,8 @@ export const PENDULAR_RULES: RuleSet = {
   bikeRideMinMin: 4,
   accessMinKmFromHome: 0.8,
   sameVehicleMinSaving: 5,
+  // A commuter walks further to a station than a routing engine assumes by default (15 min).
+  walkToStopMaxMin: 25,
   accessMinKmFromWork: 2,
   walkInsteadOfBikeMaxMin: 15,
   accessCandidates: 4,

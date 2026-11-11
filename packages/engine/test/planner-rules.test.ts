@@ -182,8 +182,15 @@ describe('park and ride access', () => {
       expect(r.options.some((o) => o.kind === 'parkRail')).toBe(false);
       expect(r.leftOut).toContainEqual(expect.objectContaining({ kind: 'parkRail', code: 'noBetterThanTransit' }));
     });
-    it('keeps it when leaving home 10 min later', async () => {
+    /** From home the train is reached through a feeder bus, not on foot. */
+    const feeder = (busDep: string, trainDep: string, arr: string, id: string) =>
+      trip(leg('bus', HOME, STATION, busDep, trainDep, '10', `bus-${id}`, 5), rail(STATION, CITY, trainDep, arr, 'R1', id));
+    it('never drives to a train that one can walk to from home, however much later one leaves', async () => {
       const r = await compare(PR, deps(routing(homeTrain('T1'), siteAt('07:25'))));
+      expect(r.options.some((o) => o.kind === 'parkRail')).toBe(false);
+    });
+    it('keeps it when the train is reached by a feeder bus from home and one leaves 10 min later', async () => {
+      const r = await compare(PR, deps(routing([feeder('07:00', '07:25', '07:50', 'T1')], siteAt('07:25'))));
       const pr = r.options.find((o) => o.kind === 'parkRail')!;
       expect(pr).toBeDefined();
       expect(pr.connections).toEqual([{ departure: '07:10', arrival: '07:50', durationMin: 40, changes: 0 }]);
@@ -194,7 +201,7 @@ describe('park and ride access', () => {
     });
     it('filters departure by departure: only the connection that is not clearly later goes', async () => {
       const both = [...siteAt('07:17'), trip(rail(STATION, CITY, '07:55', '08:20', 'IR 2', 'T2'))];
-      const homeBoth = [...homeTrain('T1'), trip(rail(HOME, CITY, '07:30', '08:20', 'R1', 'T2'))];
+      const homeBoth = [feeder('07:00', '07:17', '07:50', 'T1'), feeder('07:30', '07:55', '08:20', 'T2')];
       const r = await compare(PR, deps(routing(homeBoth, both)));
       const pr = r.options.find((o) => o.kind === 'parkRail')!;
       // T1 from the site leaves home 07:02 (2 min after 07:00): dropped. T2 leaves home 07:40,

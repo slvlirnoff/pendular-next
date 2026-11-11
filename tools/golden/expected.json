@@ -212,7 +212,7 @@
    "tariffKm": 5.3
   },
   "transit": {
-   "count": 2,
+   "count": 3,
    "bestDurationMin": 25,
    "cheapestYearly": 729,
    "cheapestProduct": "zonePassYearly",
