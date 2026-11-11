@@ -62,5 +62,13 @@ mostly fast trains).
   follow that pattern, or be a run-time check?
 - Which algorithms would need to support it for you to merge it (RAPTOR only, as for bikes)?
 
-We are happy to contribute the implementation, and have a small prototype on RAPTOR to measure
-the effect.
+## Prototype
+
+We tried it on a fork of v2.11.4 (RAPTOR only, tag table loaded at server start, run-time check):
+about 270 lines in nigiri and 140 in MOTIS, following the existing section filters. On the case
+above the filtered query returns the wanted 22:58 trip; without the parameter the answer is
+identical to the release binary. The search itself goes from under 1 ms to 1-2 ms; the request
+stays at 33-40 ms, dominated by street routing. One-to-all honours the filter too (3,723
+reachable locations unfiltered, 396 inside the pass).
+
+We are happy to contribute a proper implementation along the lines you prefer.
