@@ -37,6 +37,11 @@ export const PENDULAR_RULES: RuleSet = {
   // a station on another line.
   accessCandidates: 6,
   maxOptionsPerKind: 3,
+  maxRoutesPerTicket: 6,
+  // Measured on Lovatens – EPFL: each restricted search takes about 0.1 s and they run beside
+  // the searches from the car parks. Two zones more is the train against the bus from Lucens.
+  zoneSearches: 4,
+  zoneSearchExtraZones: 2,
   arrivalSliceMin: 30,
   lastTripHomeBy: '02:00',
   carFullCostPerKm: 0.74,

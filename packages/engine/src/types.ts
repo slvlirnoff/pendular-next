@@ -142,8 +142,17 @@ export interface RuleSet {
   walkInsteadOfBikeMaxMin: number;
   /** Access stations tried per access type after the cheap pre-selection. */
   accessCandidates: number;
-  /** Options kept per kind after pruning. */
+  /** Tickets (groups of options with the same `ticketGroup`) kept per kind after pruning. */
   maxOptionsPerKind: number;
+  /** Routes kept per ticket: those that add most departures. */
+  maxRoutesPerTicket: number;
+  /**
+   * Extra timetable searches from home, each restricted to one set of fare zones, to find the
+   * connections of a cheaper pass that faster ones hide (fares/zonePaths.ts). 0 = none.
+   */
+  zoneSearches: number;
+  /** A zone set is searched when it counts at most this many zones more than the cheapest path. */
+  zoneSearchExtraZones: number;
   /** Size of the arrival slices used by the "only way to arrive at that time" rule, minutes. */
   arrivalSliceMin: number;
   /**
@@ -295,6 +304,14 @@ export interface RoutingProvider {
     alternateTies?: boolean;
     /** Longest walk from the origin to the first stop, minutes (the engine's default when omitted). */
     maxWalkToStopMin?: number;
+    /**
+     * Only rides on route sections these tags allow ("<alliance>:<zone>": a set of fare zones).
+     * Honoured only by a provider with `segmentFilter`: never pass it to another one, which
+     * would answer as if it were not there.
+     */
+    allowedSegmentTags?: string[];
+    /** With `allowedSegmentTags`: longest door-to-door time of a connection, minutes. */
+    maxTravelMin?: number;
   }): Promise<Itinerary[]>;
   street(q: { from: LatLon; to: LatLon; profile: StreetProfile }): Promise<StreetRoute | null>;
   /** Many origins to one destination (or one origin to many destinations with `reverse`). */
@@ -402,6 +419,8 @@ export interface PricedProduct {
   alliance?: string;
   /** For zone products: the zone codes the product is valid in (with zones always sold together). */
   zones?: number[];
+  /** For zone products: the price is that of the whole network (the pass is valid in every zone). */
+  allZones?: boolean;
   /** Year of the prices, only when they are not those of the coming timetable year. */
   priceYear?: number;
 }
@@ -447,6 +466,12 @@ export interface CommuteOption {
    * shows them together.
    */
   fareKey?: string;
+  /**
+   * Options with the same value are routes of one ticket bought for one way of travelling: same
+   * kind, same access site, same `fareKey` ("transit||zonePassYearly:…", "parkRail|<site id>|…").
+   * The list shows one card per value.
+   */
+  ticketGroup: string;
   firstArrival?: string;
   lastArrival?: string;
   /** The last trip home: its departure from work and its arrival, "HH:MM". Null when there is none. */
