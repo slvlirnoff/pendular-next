@@ -18,7 +18,8 @@ cost, door-to-door time, changes, frequency and CO₂. Prices are tuned for the 
 
 ## Run locally
 
-Needs Node 22 with pnpm, Python 3 with the `osmium` package (`pip install osmium`), about
+Needs Node 22 with pnpm, the osmium command-line tool (`apt install osmium-tool` or
+`brew install osmium-tool`), Python 3 with the `osmium` package (`pip install osmium`), about
 6 GB of free memory for the MOTIS import and 8 GB of disk. Commute Analytics also needs
 PostgreSQL 16.
 

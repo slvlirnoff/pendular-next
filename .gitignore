@@ -19,3 +19,5 @@ tools/nova-import/cache/
 data/motis-shapes/*
 !data/motis-shapes/RECOMMENDED.md
 data/motis-shapes-*/
+
+.venv/

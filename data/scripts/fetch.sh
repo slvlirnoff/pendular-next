@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Fetches the raw inputs: timetable (GTFS), street network (OSM), parking, MOTIS binary.
-# Needs python3 with the "osmium" package (pip install osmium) for the OSM clean-up.
+# The OSM clean-up needs the osmium command-line tool (apt install osmium-tool, brew install
+# osmium-tool) and python3 with the "osmium" package (pip install osmium).
 # A failed download never replaces a good file: each file is written to .part and moved on success.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -35,7 +36,7 @@ case "${1:-all}" in
     # Clipped extracts hold ways whose nodes lie outside the clip; MOTIS refuses those.
     fetch "$OSM_URL" "$RAW/switzerland-raw.osm.pbf"
     # The temporary name keeps the .osm.pbf ending: the writer picks the format from it.
-    python3 scripts/complete-ways.py "$RAW/switzerland-raw.osm.pbf" "$RAW/switzerland-part.osm.pbf"
+    scripts/complete-ways.sh "$RAW/switzerland-raw.osm.pbf" "$RAW/switzerland-part.osm.pbf"
     mv "$RAW/switzerland-part.osm.pbf" "$RAW/switzerland.osm.pbf" ;;&
   parking|all) fetch "$PARKING_URL" "$RAW/bike-and-car-parking.json" ;;&
   motis|all) fetch "$MOTIS_URL" "$RAW/motis.tar.bz2"; tar -xjf "$RAW/motis.tar.bz2" -C motis/bin ;;&
