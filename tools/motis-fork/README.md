@@ -96,7 +96,11 @@ asks the engine for the zones of each pair (`sectionTags()` in `packages/engine/
 zones of the NOVA edge when there is one, else those along the chain of edges that joins the two stops (a
 vehicle that skips stops) - what the trip resolver does for a leg, so a pass always allows the trip it was
 priced for. Networks: every alliance with a pass plan, chosen as the trip resolver does (`networkPlans()`;
-joint passes such as Léman Pass and Z-Pass are left out). Counts of 2026-11-11:
+joint passes such as Z-Pass are left out; Léman Pass is a network since 2026-11-11 and its sections are
+tagged `leman-pass:<zone>`, but only between stops with a station number: the French bus stops
+("ch:1:sloid:14…", six digits and more) have none in `station_key` / `gtfsStationNumber()`, so a search
+restricted to a Léman Pass cannot use them yet). Counts of 2026-11-11, before Léman Pass was added (now
+48 112 tagged, 1 875 of them with Léman Pass tags):
 
 - 62 864 directed station pairs in the timetable (15.8 million stop times, 976 295 trips);
 - 48 106 tagged: 47 659 have an edge in the fare data in at least one network, 447 only by bridging;

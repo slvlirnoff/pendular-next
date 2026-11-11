@@ -50,7 +50,8 @@ search returned (`trips`: their public transport legs):
 - **Ends**: the zones of the first boarding stops and of the last alighting stops of those
   connections. Stops within walking reach that no returned connection uses are not looked at.
 - **Networks**: every network with a pass plan and a price grid that has one of the first stops and
-  one of the last stops (joint passes such as Léman Pass and Z-Pass are left out, as for pricing).
+  one of the last stops (joint passes such as Z-Pass are left out, as for pricing; Léman Pass is a
+  network, and its zone 10 is added to every set).
   Nothing is Mobilis-specific. A trip not inside one network: nothing is searched.
 - **Candidates**: the zone paths, plus the zone sets of the connections found when within the same
   limit (searching them shows the departures of that ticket which a faster, dearer one hides).

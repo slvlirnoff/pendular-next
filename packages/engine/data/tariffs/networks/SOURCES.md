@@ -10,8 +10,7 @@ typed by hand; the scripts are not kept in the repository, the checks they ran a
 | `frimobil.json` | 2027 | 2026-12-13 | **2027 grid found**, complete. The grid in force until 12.12.2026 is kept under `previous`. |
 | `onde-verte.json` | 2026 | 2026-06-01 (edition of the tariff) | **Current prices.** An increase of 3.9 % on average is announced for 13.12.2026; the new prices were not published. |
 | `unireso.json` | 2026 | 2025-12-14 | **Current prices.** No change for 13.12.2026 was found anywhere; not confirmed by a document dated for 2027. |
-
-Léman Pass has no file (see below).
+| `leman-pass.json` | 2027 | 2026-12-13 | **2027 prices read in the SBB shop** (passes from 04.01.2027) for the zone pass "Multizones"; passes only, per zone set. Route-priced products not modelled (see below). |
 
 ## Additions to the agreed format
 
@@ -95,7 +94,7 @@ Not stored: "Saut de puce" (3 stops, 2.00 / 1.80), day pass from 9 a.m. (8.00 / 
 5.60 / 9.60), Adulte Duo (450 / 800 a year, 65 / 114 a month), Jeune famille (350 / 40),
 transferable passes (900 / 1 530 a year, 100 / 170 a month, 38 / 65 a week), P+R combinations.
 
-## Léman Pass (alliance `leman-pass`) — tariff T651.12: documented only
+## Léman Pass (alliance `leman-pass`) — tariff T651.12: zone passes priced, routes not
 
 Read: https://www.lemanpass.com/tarifs/ (10.11.2026) and T651.11 0.1.3 and 7.
 
@@ -110,9 +109,53 @@ Read: https://www.lemanpass.com/tarifs/ (10.11.2026) and T651.11 0.1.3 and 7.
   holders buy a "billet complémentaire Léman Pass" for one adjoining French zone (CHF 1.60 in 2nd class).
 - Prices depend on the route and the zones (a calculator on lemanpass.com, no published table). In
   NOVA its tarifs (`419_ZONEN_*`) have 19 pay levels by named zone combination, not by number of
-  zones, with price codes that carry no customer category: **no grid, no ladder**.
+  zones, with price codes that carry no customer category: **no ladder from NOVA**. The prices in
+  `leman-pass.json` were read in the SBB shop instead (next paragraph).
 - Chêne-Bourg – Annemasse by train is sold at the Swiss national tariff; Bellegarde – Genève at the
   French TER tariff.
+
+### What is priced (`leman-pass.json`, since 2026-11-11)
+
+Source: 24 lookups in the SBB shop on 11.11.2026 for passes starting 04.01.2027,
+`packages/engine/data/zones/sbb-checks-leman-pass/RESULTS.md` (one text file per screen next to it).
+
+- Product: the zone pass "Léman Pass Multizones", monthly and annual. It exists only when every
+  stop lies in zones 10, 200, 210, 230, 240, 250, and always includes zone 10 (`rules.always`):
+  Annemasse → Gaillard is 10 + 210.
+- The price depends on which zones, so the file lists prices per zone set (`passesBySet`; `like`
+  names the sets that cost the same) and not per zone count. Any network file may use this form;
+  the loader looks a trip's zone set up after adding the `rules.always` zones.
+
+| Zones | Adult 2nd, year / month | Adult 1st | Youth 2nd | Read or derived |
+| --- | --- | --- | --- | --- |
+| 10 + one of 200, 230, 240, 250 | 781.60 / 101.30 | 1 277.90 / 166.60 | 623.60 / 69.90 | read (10 + 230 for 1st class and youth; adult 2nd also for 200, 240, 250) |
+| 10 + 210 | 914.00 / 111.40 | 1 553.80 / 189.40 | 722.00 / 77.20 | read |
+| 10 + 210 + one of 200, 230, 240, 250 | 1 195.60 / 142.70 | 2 032.50 / 242.60 | 944.50 / 98.90 | adult 2nd read; 1st class and youth **derived** from the 10 + 210 ratios (`derived`, shown as estimates) |
+
+- Read cells have provenance `tariff`, derived cells `estimated`.
+- Categories: the youth price runs from the 6th to the 26th birthday; seniors pay the adult price.
+  The engine's age groups are child 6–15, youth 16–24, adult 25–64, senior: child and youth get
+  the youth price, and **a 25-year-old is priced as an adult although the shop still gives the
+  youth price**. Youth in 1st class was not read: the adult 1st class price is used, as an estimate.
+- Which network: Léman Pass sells a trip that uses one of its own zones 200, 210, 230, 240, 250; a
+  trip entirely inside zone 10 stays unireso (CHF 500). See `data/nova/NETWORK-ZONES.md`.
+
+Not modelled:
+
+- Single tickets, day passes and the "billet complémentaire" (not collected): a part-time commuter
+  is only offered the monthly and the annual pass; the products carry a note saying so.
+- A zone set without a price: 10 + two ring zones without 210 (e.g. Saint-Julien → Ferney, 10 + 230
+  + 250; not seen in the shop) and anything with more than three zones. Such a trip is priced by
+  distance with the note "inside Léman Pass: no price for this zone combination".
+- Route-priced "Léman Pass" modular and point-to-point passes for stations beyond the ring: Annecy,
+  Thonon, Évian, Bellegarde, La Roche-sur-Foron, Reignier, Bonneville, Valleiry (prices in
+  RESULTS.md, section D). These stations are not in the NOVA zone plan, so the trips stay on the
+  national distance pricing, without a note. The rail station Saint-Julien-en-Genevois (8774543)
+  is not in the plan either: Saint-Julien is zone-priced from its bus stops ("Saint-Julien, gare").
+- Coppet / Nyon → Genève and Annemasse → Nyon are Swiss products, not Léman Pass (unchanged).
+- No FlexiAbo exists. State of Geneva subsidies are not applied.
+- A traveller who walks across the border to a stop in zone 10 (Gaillard → Thônex, Moillesulaz)
+  is priced unireso, as the trip is then inside zone 10.
 
 ## Sample trips (zones from the NOVA snapshot of 10.11.2026, pass plan, adult 2nd class)
 
@@ -143,4 +186,4 @@ but the pair was not checked on a real timetable.
   links to the networks' own sites for T651.3, T651.4, T651.11 and T651.12; no copy of its own. The
   "Tarifmassnahmen" page names none of the three networks for 13.12.2026.
 - Léman Pass tariff T651.12 itself (lemanpass.com/conditions-generales): page fetched, the tariff PDF
-  not looked for, since no grid can come out of it.
+  not looked for; the zone-pass prices were read in the SBB shop instead.

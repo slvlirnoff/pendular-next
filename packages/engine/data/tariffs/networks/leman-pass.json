@@ -13,6 +13,8 @@
   "The price depends on WHICH zones, not only on how many: zone 210 (Annemasse) costs more than the other ring zones. Prices are therefore listed per zone set in passesBySet.",
   "Read in the shop: adult 2nd class for 10 + one ring zone, 10 + 210, and 10 + 210 + a second ring zone; 1st class and youth for 10 + 210 and 10 + 230. Not seen: 10 + two ring zones without 210 (left out), and 1st class / youth with three zones (derived from the two-zone ratios, marked derived).",
   "Youth price: from the 6th to the 26th birthday. Seniors pay the adult price. Annual is not 9 x monthly. No FlexiAbo.",
+  "Engine age groups: child (6-15) and youth (16-24) get the youth price. A 25-year-old is 'adult' in the engine and is priced as an adult, although the shop still sells the youth price until the 26th birthday.",
+  "Not collected: single tickets, day passes, 1st class for the young (the engine then takes the adult 1st class price, as an estimate). Part-time commuters are only offered the monthly and the yearly pass.",
   "Stations beyond the ring zones (Annecy, Thonon, Évian, Bellegarde, La Roche-sur-Foron, Bonneville, Valleiry) are priced by route, not by zones: see the results file. Not modelled here."
  ],
  "rules": {

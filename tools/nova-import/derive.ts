@@ -808,6 +808,7 @@ export async function deriveNetworkZones(opts: DeriveOptions): Promise<void> {
     `- Alliances without a pass plan in the snapshot (local or foreign tariffs; listed in the file with no zones, not counted as neighbours): ${local.join(', ') || 'none'}.`,
     '- Joint plans inside a zonal network (a combined pass with a neighbour, the plan of a former network) are in the file with their zones but are not the network\'s area.',
     '- Passepartout, TNW, Ostwind, A-Welle and the like are zonal networks, not umbrellas: they have zones and prices of their own.',
+    '- Léman Pass is a zonal network too, not an umbrella: its French ring zones 200, 210, 230, 240 and 250 are its own, and it sells every trip that uses one of them. Its zone 10 lies over unireso\'s zone 10; the tariff gives the trips entirely inside it to unireso (zone-primacy.json, T651.11), so Léman Pass 10 is `own: false` and unireso 10 `own: true` although the stops are the same. Zone 10 is part of every Léman Pass zone pass all the same: the price file adds it (`rules.always` in data/tariffs/networks/leman-pass.json).',
     '',
     '## Zones to check by hand',
     '',
