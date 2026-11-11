@@ -246,7 +246,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   };
   const transitTo = (from: LatLon & { name?: string }, window: TimeWindow = req.arrival, alternateTies = false) =>
     safe(
-      routing.transit({ from, to: req.work, date, window, by: 'arrive', alternateTies }).then((its) => relabel(its, from.name, work.name)),
+      routing.transit({ from, to: req.work, date, window, by: 'arrive', alternateTies, maxWalkToStopMin: from === home ? rules.walkToStopMaxMin : undefined }).then((its) => relabel(its, from.name, work.name)),
       [] as Itinerary[],
     );
   /**
@@ -384,12 +384,23 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       .slice(0, rules.accessCandidates);
 
     const results = await Promise.all(reachable.map((c) => transitTo(c.site)));
-    reachable.forEach((c, i) => {
+    const best = reachable.map((c, i) => {
       const groups = groupItineraries((results[i] ?? []).filter((it) => it.legs.some(isTransit)), fareKey);
-      const g = [...groups].sort((a, b) => a.typicalMin - b.typicalMin)[0];
-      if (!g) return;
       const factor = legMode === 'car' ? peakOf(c.route, c.site) : 1;
-      const rideMs = c.route.durationMin * factor * 60000;
+      return { g: [...groups].sort((a, b) => a.typicalMin - b.typicalMin)[0], factor, rideMs: c.route.durationMin * factor * 60000 };
+    });
+    // The same train or bus can be boarded at several sites along its way: the one with the
+    // shortest drive or ride from home is the one to use.
+    const shortestRide = new Map<string, number>();
+    for (const b of best) {
+      for (const it of b.g?.itineraries ?? []) {
+        const v = mainVehicle(it);
+        if (v !== undefined && b.rideMs < (shortestRide.get(v) ?? Infinity)) shortestRide.set(v, b.rideMs);
+      }
+    }
+    reachable.forEach((c, i) => {
+      const { g, factor, rideMs } = best[i]!;
+      if (!g) return;
       // The search from the site already walks from the car park to the platform: parking and
       // that walk together take the transfer time, or the walk itself when it is longer.
       const leadOf = (it: Itinerary) => {
@@ -397,13 +408,17 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
         const walkMs = isTransit(first) ? 0 : ms(first.arrival) - ms(first.departure);
         return rideMs + Math.max(0, transferMin * 60000 - walkMs);
       };
-      // Each departure on its own. Boarding the very vehicle that public transport from home
-      // reaches anyway is kept only when one leaves home clearly later.
+      // Each departure on its own. A vehicle that one can walk to from home, or board at a
+      // site nearer home, is not chased by car further down its line. One reached from home
+      // only through a feeder bus is worth driving to when one leaves home clearly later.
       const timed = g.itineraries
         .map((it) => ({ it, conn: toConn(it, leadOf(it)) }))
         .filter(({ it, conn }) => {
           const main = mainVehicle(it);
-          const same = fromHome.filter((h) => main !== undefined && h.vehicles?.includes(main));
+          if (main === undefined) return true;
+          if ((shortestRide.get(main) ?? Infinity) < rideMs - 60000) return false;
+          const same = fromHome.filter((h) => h.vehicles?.includes(main));
+          if (same.some((h) => h.vehicles?.[0] === main)) return false;
           return same.every((h) => conn.dep - h.dep >= rules.sameVehicleMinSaving * 60000);
         })
         .sort((a, b) => a.conn.min - b.conn.min);

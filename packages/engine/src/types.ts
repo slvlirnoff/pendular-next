@@ -134,6 +134,8 @@ export interface RuleSet {
    * reaches anyway is worth showing only when one leaves home at least this much later. Minutes.
    */
   sameVehicleMinSaving: number;
+  /** Longest walk from home to a stop that public transport from home may start with. Minutes. */
+  walkToStopMaxMin: number;
   /** A site this close to work is not park and ride: one drives to work. Kilometres. */
   accessMinKmFromWork: number;
   /** When walking takes at most this long, bike and e-bike are not offered. Minutes. */
@@ -263,6 +265,8 @@ export interface RoutingProvider {
      * that feed the same metro, for instance).
      */
     alternateTies?: boolean;
+    /** Longest walk from the origin to the first stop, minutes (the engine's default when omitted). */
+    maxWalkToStopMin?: number;
   }): Promise<Itinerary[]>;
   street(q: { from: LatLon; to: LatLon; profile: StreetProfile }): Promise<StreetRoute | null>;
   /** Many origins to one destination (or one origin to many destinations with `reverse`). */
