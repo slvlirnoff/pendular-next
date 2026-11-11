@@ -1,0 +1,30 @@
+Trip 13: Lausanne -> Bern | Adult from 26, 2nd class, valid from Mo 04.01.2027
+Captured 2026-11-11 from sbb.ch shop page text
+
+YEAR
+  Proposed (pre-selected): Modular Travelcard  CHF 3532.00
+    incl. Lausanne: 11, 12  CHF 3532.00 (pre-selected)
+    incl. Bern: 100, 101  CHF 3565.00
+    via Neuchâtel - Kerzers incl. Lausanne: 11, 12  CHF 3983.00
+    via Neuchâtel - Kerzers incl. Bern: 100, 101  CHF 4016.00
+    incl. Lausanne, Bern: 11, 12, 100, 101  CHF 4090.00
+    via Neuchâtel - Kerzers incl. Lausanne, Bern: 11, 12, 100, 101  CHF 4541.00
+  Point-to-point Travelcard  from CHF 3537.00
+    direct ("Lausanne - Bern")  CHF 3537.00
+    via Neuchâtel - Kerzers  CHF 4068.00
+  "A GA Travelcard may be an alternative for the selected route" (link)
+  Valid Mon 04.01.2027 to Tue 04.01.2028 05:00
+  No price breakdown shown; no tariff km shown.
+
+MONTH
+  Proposed: Modular Travelcard  CHF 394.00
+    incl. Lausanne: 11, 12  CHF 394.00
+    incl. Bern: 100, 101  CHF 397.00
+    via Neuchâtel - Kerzers incl. Lausanne  CHF 444.00
+    via Neuchâtel - Kerzers incl. Bern  CHF 447.00
+    incl. Lausanne, Bern: 11, 12, 100, 101  CHF 456.00
+    via Neuchâtel - Kerzers incl. Lausanne, Bern  CHF 506.00
+  Point-to-point Travelcard  from CHF 393.00
+    direct  CHF 393.00
+    via Neuchâtel - Kerzers  CHF 452.00
+  1-month GA Travelcard  CHF 465.00

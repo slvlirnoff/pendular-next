@@ -142,5 +142,15 @@ export function routePass(
     idx = period === 'year' ? 6 : 7;
   } else if (opts.travelClass === 2) idx = period === 'year' ? 2 : 4;
   else idx = period === 'year' ? 3 : 5;
-  return row[idx] ?? null;
+  // The table is the 2026 one. From 13.12.2026 route passes cost about 2 % more: the monthly
+  // price × 1.02 rounded up to the franc, the annual one nine times that, reproduces the three
+  // prices read in the SBB shop for 04.01.2027 (see data/tariffs/NATIONAL-SOURCES.md).
+  const monthIdx = opts.category === 'junior' ? 7 : opts.travelClass === 2 ? 4 : 5;
+  const month = row[monthIdx];
+  if (month == null) return row[idx] ?? null;
+  const month2027 = Math.ceil(Math.round(month * ROUTE_PASS_RISE_2027 * 100) / 100);
+  return period === 'month' ? month2027 : month2027 * 9;
 }
+
+/** Assumed rise of route-pass prices on 13.12.2026 (two shop quotes, not a published table). */
+export const ROUTE_PASS_RISE_2027 = 1.02;

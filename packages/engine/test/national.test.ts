@@ -82,13 +82,21 @@ describe('T601 distance table (edition 01.06.2026)', () => {
 
 describe('T650 route passes (table 10.12.2023 in edition 01.06.2026)', () => {
   it('spot checks', () => {
-    expect(routePass('year', 1, { travelClass: 2, category: 'adult' })).toBe(621);
-    expect(routePass('month', 1, { travelClass: 1, category: 'adult' })).toBe(114);
-    expect(routePass('month', 35, { travelClass: 2, category: 'adult' })).toBe(241);
-    expect(routePass('year', 100, { travelClass: 1, category: 'adult' })).toBe(5571);
-    expect(routePass('month', 240, { travelClass: 2, category: 'adult' })).toBe(645);
-    expect(routePass('year', 20, { travelClass: 2, category: 'junior' })).toBe(1170);
-    expect(routePass('month', 20, { travelClass: 2, category: 'junior' })).toBe(130);
+    // 2026 table x 1.02, monthly rounded up to the franc, year = 9 x month (prices from 13.12.2026).
+    expect(routePass('year', 1, { travelClass: 2, category: 'adult' })).toBe(639); // 69 -> 71
+    expect(routePass('month', 1, { travelClass: 1, category: 'adult' })).toBe(117); // 114
+    expect(routePass('month', 35, { travelClass: 2, category: 'adult' })).toBe(246); // 241
+    expect(routePass('year', 100, { travelClass: 1, category: 'adult' })).toBe(5688); // 619 -> 632
+    expect(routePass('month', 240, { travelClass: 2, category: 'adult' })).toBe(658); // 645
+    expect(routePass('year', 20, { travelClass: 2, category: 'junior' })).toBe(1197); // 130 -> 133
+    expect(routePass('month', 20, { travelClass: 2, category: 'junior' })).toBe(133);
+    // Read in the SBB shop for 04.01.2027: Lausanne - Bern (105 km), Bulle - Lausanne (58 km).
+    expect(routePass('month', 105, { travelClass: 2, category: 'adult' })).toBe(393);
+    expect(routePass('year', 105, { travelClass: 2, category: 'adult' })).toBe(3537);
+    expect(routePass('month', 58, { travelClass: 2, category: 'adult' })).toBe(304);
+    expect(routePass('year', 58, { travelClass: 2, category: 'adult' })).toBe(2736);
+    // Romont FR - EPFL and Lovatens - Fribourg (47 km): 273 x 1.02 = 278.46, sold at 279.
+    expect(routePass('month', 47, { travelClass: 2, category: 'adult' })).toBe(279);
     expect(routePass('month', 20, { travelClass: 1, category: 'junior' })).toBeNull();
     expect(routePass('month', 241, { travelClass: 2, category: 'adult' })).toBeNull();
   });

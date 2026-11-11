@@ -1,0 +1,22 @@
+Trip 7: Yverdon-les-Bains -> Lausanne | Adult from 26, 2nd class, valid from Mo 04.01.2027
+Captured 2026-11-11 from sbb.ch shop page text
+
+MONTH
+  Mobilis Monthly Season Ticket  CHF 275.00
+  10 Zones (Mobilis) via direct: 11, 12, 15, 40, 41, 42, 43, 44, 45, 53  CHF 275.00
+  All Zones (Mobilis)  CHF 287.00
+  Alternatives:
+    Modular Travelcard  from CHF 414.00
+    Point-to-point Travelcard  CHF 423.00
+    1-month GA Travelcard  CHF 465.00
+
+YEAR
+  Mobilis Annual Season Ticket  CHF 2475.00
+  10 Zones (Mobilis) via direct: 11, 12, 15, 40, 41, 42, 43, 44, 45, 53  CHF 2475.00
+  All Zones (Mobilis)  CHF 2583.00
+  Valid Mon 04.01.2027 to Tue 04.01.2028 05:00
+  Alternatives:
+    Mobilis FlexiAbo 100 Days  from CHF 1375.00
+    Modular Travelcard  from CHF 3716.00
+    Point-to-point Travelcard  CHF 3807.00
+    "A GA Travelcard may be an alternative for the selected route" (link to GA prices)

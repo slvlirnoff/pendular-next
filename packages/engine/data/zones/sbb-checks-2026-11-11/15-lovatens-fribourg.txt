@@ -1,0 +1,31 @@
+Trip 15: Lovatens, village -> Fribourg/Freiburg | Adult from 26, 2nd class, valid from Mo 04.01.2027
+Captured 2026-11-11 from sbb.ch shop page text
+
+YEAR
+  Proposed (pre-selected): Frimobil Annual Season Ticket  CHF 2151.00
+    6 Zones (Frimobil) via Prévonloup, poste - Romont FR: 10, 11, 35, 36, 44, 45  CHF 2151.00
+    All Zones (Frimobil)  CHF 2511.00
+  Frimobil FlexiAbo 100 Days  from CHF 1113.00
+    6 Zones via Prévonloup, poste - Romont FR  CHF 1113.00 ; All Zones CHF 1296.00
+    (valid Mon 04.01.2027 to Mon 03.01.2028 23:59)
+  Modular Travelcard  from CHF 2642.00
+    via Bus PAG - Lucens - Payerne incl. Fribourg: zone 10  CHF 2642.00
+    via Bus PAG - Moudon - Payerne incl. Fribourg: zone 10  CHF 2795.00
+  Point-to-point Travelcard  from CHF 2511.00
+    via Bus PAG - Lucens - Payerne  CHF 2511.00
+    via Bus PAG - Moudon - Payerne  CHF 2691.00
+  Valid Mon 04.01.2027 to Tue 04.01.2028 05:00
+
+MONTH
+  Proposed: Frimobil Monthly Season Ticket  CHF 239.00
+    6 Zones (Frimobil) via Prévonloup, poste - Romont FR: 10, 11, 35, 36, 44, 45  CHF 239.00
+    All Zones (Frimobil)  CHF 279.00
+  Modular Travelcard  from CHF 295.00
+    via Bus PAG - Lucens - Payerne incl. Fribourg: 10  CHF 295.00
+    via Bus PAG - Moudon - Payerne incl. Fribourg: 10  CHF 312.00
+  Point-to-point Travelcard  from CHF 279.00
+    via Bus PAG - Lucens - Payerne  CHF 279.00
+    via Bus PAG - Moudon - Payerne  CHF 299.00
+  1-month GA Travelcard  CHF 465.00
+
+Station id used by the shop: Lovatens, village = 8504694.

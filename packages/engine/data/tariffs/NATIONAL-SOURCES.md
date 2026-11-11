@@ -42,3 +42,19 @@ Independent re-read of both tables, done before looking at the JSON values. Both
 - Source-logic checks re-run on my transcription: bands contiguous from 1 km, prices non-decreasing in every column, T650 year = 9 x month in all 53 rows (adult 2nd, adult 1st, junior), T601 1st/2nd ratio within 1.6-1.75 on all rows.
 - Validity printed: T650 table headed "Gültig ab 10.12.2023" (4.2.1); the T601 table image carries no validity date, only the footer "Gen 5005 rst20230424" (document edition 01.06.2026).
 - Observation: the T601 image table ends at 981-1000 km; the return-trip columns ('<=>') were not transcribed because they are not stored.
+
+## Route passes from 13.12.2026 (assumption, checked on two quotes)
+
+No T650 table valid from 13.12.2026 was found. The SBB shop (lookups of 11.11.2026 for a pass
+starting 04.01.2027, kept in `../zones/sbb-checks-2026-11-11/`) gives, adult 2nd class:
+
+| Route | Tariff km (NOVA) | 2026 table month / year | Shop month / year |
+|---|---|---|---|
+| Lausanne - Bern | 105 | 385 / 3,465 | 393 / 3,537 |
+| Bulle - Lausanne via Palézieux | 58 | 298 / 2,682 | 304 / 2,736 |
+| Romont FR - EPFL, Lovatens - Fribourg | 47 | 273 / 2,457 | 279 / 2,511 |
+
+All equal the 2026 monthly price x 1.02 rounded up to the franc, and year = 9 x month. `routePass()`
+applies that to every band (`ROUTE_PASS_RISE_2027`). Three bands only: other bands, 1st class and
+junior are assumed to follow. Replace by the published table when it exists.
+Reproduce: `pnpm tsx tools/calibrate/route-pass-check.ts`.

@@ -1,0 +1,18 @@
+Trip 1: Romont FR -> Fribourg/Freiburg | Adult from 26, 2nd class, valid from Mo 04.01.2027
+Captured 2026-11-11 from sbb.ch shop page text (browser pane hidden; screenshot pending)
+
+MONTH (URL ...&validFromDate=2027-01-04)
+  Frimobil Monthly Season Ticket  CHF 201.00
+  5 Zones (Frimobil) via direct: 10, 11, 35, 36, 44  CHF 201.00
+  All Zones (Frimobil)  CHF 279.00
+  Valid Mon 04.01.2027 to Thu 04.02.2027 05:00
+  Alternative: 1-month GA Travelcard CHF 465.00
+
+YEAR (...&validityDuration=YEAR)
+  Frimobil Annual Season Ticket  CHF 1809.00
+  5 Zones (Frimobil) via direct: 10, 11, 35, 36, 44  CHF 1809.00
+  All Zones (Frimobil)  CHF 2511.00
+  Valid Mon 04.01.2027 to Tue 04.01.2028 05:00
+  Alternative: Frimobil FlexiAbo 100 Days  from CHF 936.00
+
+For comparison, with today's date (11.11.2026) the shop showed monthly CHF 195 / all zones CHF 270 / 1-month GA CHF 440.

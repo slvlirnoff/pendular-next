@@ -1,0 +1,14 @@
+Trip 9: Zürich HB -> Winterthur | Adult from 26, 2nd class, valid from Mo 04.01.2027
+Captured 2026-11-11 from sbb.ch shop page text
+
+MONTH
+  Proposed (pre-selected): ZVV 9 o'clock Pass Monthly Season Ticket  CHF 145.00  "9 o'clock Pass All Zones (ZVV)"
+  ZVV NetworkPass Monthly Season Ticket  CHF 256.00  "All Zones (ZVV)"
+  1-month GA Travelcard  CHF 465.00
+  (No zone-count product and no zone list shown.)
+
+YEAR
+  Proposed (pre-selected): ZVV 9 o'clock Pass Annual Season Ticket  CHF 1349.00  "9 o'clock Pass All Zones (ZVV)"
+  ZVV NetworkPass Annual Season Ticket  CHF 2363.00
+  Valid Mon 04.01.2027 to Tue 04.01.2028 05:00
+  (No zone-count product, no Modular/Point-to-point alternatives shown.)

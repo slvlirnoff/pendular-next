@@ -53,3 +53,31 @@ Lessons:
 | Trip | SBB offer | SBB price | Pendular |
 | --- | --- | --- | --- |
 | Estavayer-le-Lac → Yverdon-les-Bains | Mobilis, 6 zones via direct (40, 54, 106, 107, 108, 109) | CHF 1827 | 6 zones, CHF 1827 (S30/S31; zones 54 and 109 crossed without a stop) |
+
+## SBB shop checks of 11.11.2026 (passes starting 04.01.2027)
+
+Fifteen lookups made in a browser on the product owner's computer; the full table and the page
+text of each offer are in `sbb-checks-2026-11-11/`. Engine results after the fixes of the same day:
+
+| Trip | Shop | Engine | |
+|---|---|---|---|
+| Romont FR - Fribourg | Frimobil 5 zones, 1,809 | same | ok |
+| Bulle - Fribourg | Frimobil all zones, 2,511 | same | ok |
+| Payerne - Fribourg | Frimobil 5 zones, 1,809 | same | ok |
+| Versoix - Genève | unireso zone 10, 500 | same | ok |
+| Yverdon-les-Bains - Lausanne | Mobilis 10 zones, 2,475 | same (our older table said 9) | ok |
+| Lucens - Moudon | Mobilis 60 + 103, 729, no Frimobil | same | ok |
+| Lovatens - Fribourg | Frimobil 6 zones via Romont, 2,151 | same | ok |
+| Lausanne - Bern | route pass 3,537 | 3,537 | ok since the 2 % rise |
+| Bulle - Lausanne via Palézieux | route pass 2,736 | 2,736 | ok |
+| Lucens - Bern via Payerne - Fribourg / via Palézieux | 3,024 / 3,537 | 3,024 / 3,537 | ok |
+| Romont FR - EPFL | route pass 2,511 | 2,511 | ok |
+| La Chaux-de-Fonds - Neuchâtel | Onde Verte all zones, 1,620 | 1,548 (2026 price) | 2027 grid not published |
+| Fleurier - Neuchâtel | Onde Verte 4 zones, 1,314 | 1,278 (2026 price) | same |
+| Bern - Thun | Libero 8 zones, 2,772 | 2,700 (2026 price from NOVA) | zones ok, 2027 grid missing |
+| Zürich HB - Winterthur | ZVV NetworkPass all zones 2,363 (or 9 o'clock Pass 1,349) | 6 zones, 2,308 (2026, NOVA) | the shop sells no zone-count pass here |
+
+Not reproduced: Lucens - Bern via Murten - Kerzers (2,952, the cheapest in the shop; the planner
+does not propose that route). Modular travelcards (route pass x 0.85 plus a network part:
+Lausanne zones 11 + 12 about 526, Bern 100 + 101 about 559, Bulle zone 30 about 507 a year) are
+dearer than the plain route pass on four of the five trips and are not modelled.

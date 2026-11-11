@@ -1,0 +1,30 @@
+Trip 14: Bulle -> Lausanne | Adult from 26, 2nd class, valid from Mo 04.01.2027
+Captured 2026-11-11 from sbb.ch shop page text
+
+YEAR
+  Proposed (pre-selected): Modular Travelcard  CHF 2833.00
+    via Palézieux incl. Bulle: zone 30  CHF 2833.00 (pre-selected)
+    via Palézieux incl. Lausanne: 11, 12  CHF 2851.00
+    via Romont incl. Bulle: 30  CHF 2955.00
+    via Romont incl. Lausanne: 11, 12  CHF 2973.00
+    via Palézieux incl. Bulle, Lausanne: 11, 12, 30  CHF 3358.00
+    via Romont incl. Bulle, Lausanne: 11, 12, 30  CHF 3480.00
+  Point-to-point Travelcard  from CHF 2736.00
+    via Palézieux  CHF 2736.00 (default)
+    via Romont  CHF 2880.00
+  "A GA Travelcard may be an alternative for the selected route" (link)
+  Valid Mon 04.01.2027 to Tue 04.01.2028 05:00
+  No price breakdown shown.
+
+MONTH
+  Proposed: Modular Travelcard  CHF 316.00
+    via Palézieux incl. Bulle: 30  CHF 316.00
+    via Palézieux incl. Lausanne: 11, 12  CHF 318.00
+    via Romont incl. Bulle: 30  CHF 329.00
+    via Romont incl. Lausanne: 11, 12  CHF 331.00
+    via Palézieux incl. Bulle, Lausanne  CHF 375.00
+    via Romont incl. Bulle, Lausanne  CHF 388.00
+  Point-to-point Travelcard  from CHF 304.00
+    via Palézieux  CHF 304.00
+    via Romont  CHF 320.00
+  1-month GA Travelcard  CHF 465.00

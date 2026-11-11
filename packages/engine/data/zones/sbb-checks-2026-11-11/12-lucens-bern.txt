@@ -1,0 +1,26 @@
+Trip 12: Lucens -> Bern | Adult from 26, 2nd class, valid from Mo 04.01.2027
+Captured 2026-11-11 from sbb.ch shop page text
+
+YEAR
+  Proposed: Modular Travelcard  CHF 3068.00
+    via Murten - Kerzers incl. Bern: zones 100, 101  CHF 3068.00  (pre-selected)
+    via Payerne - Fribourg incl. Bern: zones 100, 101  CHF 3129.00
+    via Palézieux incl. Bern: zones 100, 101  CHF 3565.00
+  Point-to-point Travelcard  from CHF 2952.00
+    via Murten - Kerzers  CHF 2952.00 (default)
+    via Payerne - Fribourg  CHF 3024.00
+    via Palézieux  CHF 3537.00
+  "A GA Travelcard may be an alternative for the selected route" (link)
+  Valid Mon 04.01.2027 to Tue 04.01.2028 05:00
+  No price breakdown shown.
+
+MONTH
+  Proposed: Modular Travelcard  CHF 341.00
+    via Murten - Kerzers incl. Bern: 100, 101  CHF 341.00
+    via Payerne - Fribourg incl. Bern: 100, 101  CHF 348.00
+    via Palézieux incl. Bern: 100, 101  CHF 397.00
+  Point-to-point Travelcard  from CHF 328.00
+    via Murten - Kerzers  CHF 328.00
+    via Payerne - Fribourg  CHF 336.00
+    via Palézieux  CHF 393.00
+  1-month GA Travelcard  CHF 465.00

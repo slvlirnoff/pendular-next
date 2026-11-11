@@ -1,0 +1,25 @@
+Trip 11: Romont FR -> Ecublens VD, EPFL | Adult from 26, 2nd class, valid from Mo 04.01.2027
+Captured 2026-11-11 from sbb.ch shop page text
+
+YEAR
+  Proposed (pre-selected): Modular Travelcard  CHF 2553.00
+    incl. Lausanne: zones 11, 12  CHF 2553.00   (pre-selected variant)
+    via Bus - Palézieux incl. Lausanne: zones 11, 12  CHF 2606.00
+  Alternative: Point-to-point Travelcard  from CHF 2511.00
+    via Lausanne - Renens  CHF 2511.00  (default variant: "Romont FR - Ecublens VD, EPFL, via Lausanne - Renens")
+    via Lausanne - Flon  CHF 2511.00
+    via Bus - Palézieux - Lausanne - Renens  CHF 2574.00
+  Valid Mon 04.01.2027 to Tue 04.01.2028 05:00
+  No price breakdown shown on the offer screen (info popover only describes the product).
+
+MONTH
+  Proposed: Modular Travelcard  CHF 285.00
+    incl. Lausanne: zones 11, 12  CHF 285.00
+    via Bus - Palézieux incl. Lausanne: zones 11, 12  CHF 291.00
+  Point-to-point Travelcard  from CHF 279.00
+    via Lausanne - Renens  CHF 279.00
+    via Lausanne - Flon  CHF 279.00
+    via Bus - Palézieux - Lausanne - Renens  CHF 286.00
+  1-month GA Travelcard  CHF 465.00
+
+Note: "Continue" requires a SwissPass sign-in (and identity check); not pursued.
