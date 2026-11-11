@@ -1,0 +1,211 @@
+{
+  "readOn": "2026-11-11",
+  "feed": {
+    "name": "sharedmobility.ch (Swiss Federal Office of Energy)",
+    "url": "https://gbfs.prod.sharedmobility.ch/v2/gbfs"
+  },
+  "operators": [
+    {
+      "id": "velospot",
+      "name": "PubliBike Velospot",
+      "providers": ["sharedmobility:velospot"],
+      "url": "https://www.publibike.ch/fr/abos",
+      "source": "https://www.publibike.ch/fr/abos",
+      "readOn": "2026-11-11",
+      "priceYear": 2026,
+      "validity": "Prices on the operator's page on the day read; no end date given.",
+      "payPerRide": {
+        "name": "B-Quick National",
+        "bike": { "tiers": [{ "uptoMin": 30, "price": 3 }], "then": { "price": 0.1, "perMin": 1 } },
+        "ebike": { "tiers": [{ "uptoMin": 30, "price": 5 }], "then": { "price": 0.2, "perMin": 1 } }
+      },
+      "memberships": [
+        {
+          "name": "B-Fit Local",
+          "annual": 69,
+          "fleet": "mixed",
+          "areas": [
+            { "name": "Fribourg", "bbox": [46.74, 7.05, 46.86, 7.22] },
+            { "name": "Bern", "bbox": [46.88, 7.33, 47.02, 7.56] },
+            { "name": "Zürich", "bbox": [47.30, 8.42, 47.46, 8.64] },
+            { "name": "Basel", "bbox": [47.49, 7.52, 47.60, 7.70] },
+            { "name": "Biel/Bienne", "bbox": [47.10, 7.19, 47.18, 7.32] },
+            { "name": "Riviera", "bbox": [46.40, 6.80, 46.50, 6.95] },
+            { "name": "Agglo Valais Central", "bbox": [46.19, 7.28, 46.32, 7.60] },
+            { "name": "Ticino", "bbox": [45.82, 8.60, 46.25, 9.10] },
+            { "name": "Aarau", "bbox": [47.36, 8.01, 47.42, 8.10] }
+          ],
+          "bike": { "tiers": [{ "uptoMin": 30, "price": 0 }], "then": { "price": 0.1, "perMin": 1 } },
+          "ebike": { "tiers": [{ "uptoMin": 15, "price": 2 }, { "uptoMin": 30, "price": 3 }], "then": { "price": 0.2, "perMin": 1 } }
+        },
+        {
+          "name": "B-Fit Local",
+          "annual": 69,
+          "fleet": "electric",
+          "areas": [
+            { "name": "Martigny", "bbox": [46.07, 7.03, 46.13, 7.11] },
+            { "name": "Aigle", "bbox": [46.29, 6.93, 46.34, 7.00] }
+          ],
+          "bike": null,
+          "ebike": { "tiers": [{ "uptoMin": 15, "price": 2 }, { "uptoMin": 30, "price": 3 }], "then": { "price": 0.2, "perMin": 1 } }
+        },
+        {
+          "name": "B-Fit Local (E-Bike)",
+          "annual": 199,
+          "fleet": "electric",
+          "areas": [
+            { "name": "Martigny", "bbox": [46.07, 7.03, 46.13, 7.11] },
+            { "name": "Aigle", "bbox": [46.29, 6.93, 46.34, 7.00] }
+          ],
+          "bike": null,
+          "ebike": { "tiers": [{ "uptoMin": 15, "price": 0 }, { "uptoMin": 30, "price": 2 }], "then": { "price": 0.2, "perMin": 1 } }
+        },
+        {
+          "name": "B-Fit Local",
+          "annual": 49,
+          "fleet": "electric",
+          "areas": [{ "name": "La Chaux-de-Fonds – Le Locle", "bbox": [47.03, 6.72, 47.13, 6.87] }],
+          "bike": null,
+          "ebike": { "tiers": [{ "uptoMin": 15, "price": 2 }, { "uptoMin": 30, "price": 3 }], "then": { "price": 0.2, "perMin": 1 } }
+        },
+        {
+          "name": "B-Fit Local (E-Bike)",
+          "annual": 169,
+          "fleet": "electric",
+          "areas": [{ "name": "La Chaux-de-Fonds – Le Locle", "bbox": [47.03, 6.72, 47.13, 6.87] }],
+          "bike": null,
+          "ebike": { "tiers": [{ "uptoMin": 15, "price": 0 }, { "uptoMin": 30, "price": 2 }], "then": { "price": 0.2, "perMin": 1 } }
+        }
+      ]
+    },
+    {
+      "id": "donkey-geneve",
+      "name": "Donkey Republic",
+      "network": "VéloPartage",
+      "providers": ["sharedmobility:donkey_ge"],
+      "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
+      "source": "https://www.geneve.com/fr/attractions/detail/velopartage-les-velos-en-libre-service-officiels-du-canton-de-geneve",
+      "sourceKind": "secondary",
+      "readOn": "2026-11-11",
+      "priceYear": 2026,
+      "validity": "Pay-as-you-go prices as shown by Geneva Tourism (linked price sheet dated March 2026). The operator's own pages show no prices.",
+      "payPerRide": {
+        "name": "Just Ride",
+        "bike": { "tiers": [{ "uptoMin": 30, "price": 2 }, { "uptoMin": 60, "price": 3.5 }], "then": null },
+        "ebike": { "tiers": [{ "uptoMin": 15, "price": 3.1 }, { "uptoMin": 30, "price": 5 }, { "uptoMin": 60, "price": 7.5 }], "then": null }
+      },
+      "memberships": [
+        { "name": "Membership", "annual": null, "fleet": "mixed", "areas": null, "bike": null, "ebike": null }
+      ]
+    },
+    {
+      "id": "donkey-yverdon",
+      "name": "Donkey Republic",
+      "providers": ["sharedmobility:donkey_yverdon-les-bains"],
+      "url": "https://www.donkey.bike/cities/bike-rental-yverdon-les-bains/",
+      "source": "https://www.yverdon-les-bains.ch/fileadmin/user_upload/Comm_presse_Velos_libre-service_lancement_saison_estivale.pdf",
+      "sourceKind": "secondary",
+      "readOn": "2026-11-11",
+      "priceYear": 2020,
+      "validity": "City press release of 8 July 2020; the same price is still quoted by the regional tourist office (undated). Not confirmed by the operator.",
+      "payPerRide": null,
+      "memberships": [
+        {
+          "name": "Abonnement annuel",
+          "annual": 45,
+          "fleet": "mechanical",
+          "areas": null,
+          "bike": { "tiers": [{ "uptoMin": 60, "price": 0 }], "then": null },
+          "ebike": null
+        }
+      ]
+    },
+    {
+      "id": "donkey-neuchatel",
+      "name": "Donkey Republic",
+      "network": "Neuchâtelroule",
+      "providers": ["sharedmobility:donkey_neuchatel"],
+      "url": "https://www.donkey.bike/cities/bike-rental-neuchatel/",
+      "source": "https://www.epfl.ch/campus/mobility/fr/mobilite-et-voyages/mobilite-pendulaire/autres-services-autour-du-velo/donkey-republic-a-neuchatel/",
+      "sourceKind": "secondary",
+      "readOn": "2026-11-11",
+      "priceYear": 2025,
+      "validity": "Regular annual price as quoted on an EPFL staff page (undated, page of 2025): CHF 60 a year, 12 hours per rental. Not confirmed by the operator.",
+      "payPerRide": null,
+      "memberships": [
+        {
+          "name": "Abonnement annuel",
+          "annual": 60,
+          "fleet": "mechanical",
+          "areas": null,
+          "bike": { "tiers": [{ "uptoMin": 720, "price": 0 }], "then": null },
+          "ebike": null
+        }
+      ]
+    },
+    {
+      "id": "donkey-thun",
+      "name": "Donkey Republic",
+      "providers": ["sharedmobility:donkey_thun"],
+      "url": "https://www.donkey.bike/cities/bike-rental-thun/",
+      "source": null,
+      "readOn": "2026-11-11",
+      "priceYear": null,
+      "validity": "No price found.",
+      "payPerRide": null,
+      "memberships": [{ "name": "Membership", "annual": null, "fleet": "mixed", "areas": null, "bike": null, "ebike": null }]
+    },
+    {
+      "id": "donkey-kreuzlingen",
+      "name": "Donkey Republic",
+      "providers": ["sharedmobility:donkey_kreuzlingen"],
+      "url": "https://www.donkey.bike/cities/bike-rental-kreuzlingen/",
+      "source": null,
+      "readOn": "2026-11-11",
+      "priceYear": null,
+      "validity": "No price found.",
+      "payPerRide": null,
+      "memberships": [{ "name": "Membership", "annual": null, "fleet": "mixed", "areas": null, "bike": null, "ebike": null }]
+    },
+    {
+      "id": "nextbike",
+      "name": "nextbike",
+      "providers": ["sharedmobility:nextbike_ch"],
+      "url": "https://www.nextbike.ch/",
+      "source": "https://www.nextbike.ch/",
+      "readOn": "2026-11-11",
+      "priceYear": 2026,
+      "validity": "Basic tariff on the operator's page on the day read. No annual subscription is listed; residents of partner municipalities ride a classic bike free for the first 30 minutes.",
+      "payPerRide": {
+        "name": "Basistarif",
+        "bike": { "tiers": [{ "uptoMin": 30, "price": 2 }], "then": { "price": 1, "perMin": 15 } },
+        "ebike": { "tiers": [{ "uptoMin": 30, "price": 4 }], "then": { "price": 2, "perMin": 15 } }
+      },
+      "memberships": []
+    },
+    {
+      "id": "invia",
+      "name": "invia BikeShare",
+      "providers": ["sharedmobility:nextbike_ms"],
+      "url": "https://www.mooinz.ch/",
+      "source": null,
+      "readOn": "2026-11-11",
+      "priceYear": null,
+      "validity": "Not researched: no price recorded.",
+      "payPerRide": null,
+      "memberships": []
+    },
+    {
+      "id": "epfl",
+      "name": "EPFL",
+      "providers": ["sharedmobility:epfl_lausanne"],
+      "url": null,
+      "source": null,
+      "readOn": "2026-11-11",
+      "priceYear": null,
+      "validity": "Campus bikes; no public price found.",
+      "payPerRide": null,
+      "memberships": []
+    }
+  ]
+}

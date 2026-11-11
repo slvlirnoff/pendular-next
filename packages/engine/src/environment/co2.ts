@@ -34,6 +34,8 @@ function keyFor(mode: LegMode, hint?: { category?: string }): string {
     case 'car': return 'car';
     case 'bike': return 'bike';
     case 'ebike': return 'ebike';
+    // A shared bike is a bike; the e-bike factor is applied leg by leg where the bike is known.
+    case 'sharedBike': return 'bike';
     case 'walk': return 'walk';
   }
 }

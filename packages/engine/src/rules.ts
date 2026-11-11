@@ -48,6 +48,12 @@ export const PENDULAR_RULES: RuleSet = {
   bikeRunningCostPerKm: 0.03,
   ebikeFullCostPerKm: 0.23,
   ebikeRunningCostPerKm: 0.09,
+  // Shared bikes: a station within five minutes on foot, a ride one would do every day.
+  sharedBike: true,
+  sharedBikeStationMaxWalkM: 400,
+  sharedBikeMaxRideMin: 25,
+  sharedBikeLegMaxMin: 15,
+  sharedBikeMinSavingMin: 5,
 };
 
 export function resolveRules(base: RuleSet, overrides?: Partial<RuleSet>): RuleSet {

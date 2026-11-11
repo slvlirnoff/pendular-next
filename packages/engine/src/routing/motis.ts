@@ -21,6 +21,23 @@ interface MotisPlace {
   lat: number;
   lon: number;
 }
+interface MotisRental {
+  providerId: string;
+  systemName?: string;
+  /** Empty for a vehicle that stands anywhere (free-floating). */
+  fromStationName?: string;
+  /** Empty when MOTIS lets the vehicle be left at the door. */
+  toStationName?: string;
+  formFactor?: string;
+  propulsionType?: string;
+}
+interface MotisRentalStation {
+  providerId: string;
+  name: string;
+  lat: number;
+  lon: number;
+  formFactors?: string[];
+}
 interface MotisLeg {
   mode: string;
   from: MotisPlace;
@@ -39,6 +56,7 @@ interface MotisLeg {
   displayName?: string;
   intermediateStops?: MotisPlace[];
   legGeometry?: { points: string; precision: number; length: number };
+  rental?: MotisRental;
 }
 interface MotisItinerary {
   duration: number;
@@ -80,6 +98,7 @@ export interface MotisOptions {
 const MODE_MAP: Record<string, LegMode> = {
   WALK: 'walk',
   BIKE: 'bike',
+  RENTAL: 'sharedBike',
   CAR: 'car',
   CAR_PARKING: 'car',
   TRAM: 'tram',
@@ -177,7 +196,7 @@ export class MotisRouting implements RoutingProvider {
   private toLeg(l: MotisLeg, streetAs?: LegMode): Leg {
     const mapped = mapMode(l.mode);
     const mode = streetAs && (mapped === 'bike' || mapped === 'car' || mapped === 'walk') ? streetAs : mapped;
-    const transit = !['walk', 'bike', 'ebike', 'car'].includes(mode);
+    const transit = !['walk', 'bike', 'ebike', 'sharedBike', 'car'].includes(mode);
     const geometry = l.legGeometry ? decodePolyline(l.legGeometry.points, l.legGeometry.precision) : undefined;
     return {
       mode,
@@ -208,6 +227,17 @@ export class MotisRouting implements RoutingProvider {
       tripId: transit ? l.tripId : undefined,
       intermediateStops: transit ? l.intermediateStops?.map(toStop) : undefined,
       geometry,
+      ...(mode === 'sharedBike' && l.rental
+        ? {
+            sharedBike: {
+              providerId: l.rental.providerId,
+              system: l.rental.systemName ?? '',
+              fromStation: (l.rental.fromStationName ?? '').trim(),
+              toStation: (l.rental.toStationName ?? '').trim(),
+              electric: (l.rental.propulsionType ?? 'HUMAN') !== 'HUMAN',
+            },
+          }
+        : {}),
     };
   }
 
@@ -353,6 +383,176 @@ export class MotisRouting implements RoutingProvider {
     return this.toItinerary(last);
   }
 
+  /** Provider ids of the shared-mobility feed loaded in MOTIS; empty without a feed. Asked once every ten minutes. */
+  private rentalProviders(): Promise<Set<string>> {
+    const now = Date.now();
+    if (!this.providers || now - this.providers.at > PROVIDERS_TTL_MS) {
+      const url = new URL('/api/v1/rentals', this.o.baseUrl);
+      for (const k of ['withStations', 'withVehicles', 'withZones']) url.searchParams.set(k, 'false');
+      const ids = this.f(url)
+        .then(async (res) => {
+          if (!res.ok) return new Set<string>();
+          // Not read as JSON: providers without vehicles come with "Infinity" in their bounding box.
+          return new Set([...(await res.text()).matchAll(/"id":"([^"]+)","name":"[^"]*","groupId"/g)].map((m) => m[1]!));
+        })
+        .catch(() => new Set<string>());
+      this.providers = { at: now, ids };
+    }
+    return this.providers.ids;
+  }
+  private providers?: { at: number; ids: Promise<Set<string>> };
+  private readonly stationCache = new Map<string, Promise<MotisRentalStation[]>>();
+
+  /** Bike stations of one provider around a point. */
+  private stationsNear(p: LatLon, providerId: string, radiusM: number): Promise<MotisRentalStation[]> {
+    const key = `${providerId}|${p.lat.toFixed(4)},${p.lon.toFixed(4)}|${radiusM}`;
+    let hit = this.stationCache.get(key);
+    if (!hit) {
+      const dLat = radiusM / 111_000;
+      const dLon = dLat / Math.cos((p.lat * Math.PI) / 180);
+      hit = this.get<{ stations?: MotisRentalStation[] }>('/api/v1/rentals', {
+        min: `${p.lat - dLat},${p.lon - dLon}`,
+        max: `${p.lat + dLat},${p.lon + dLon}`,
+        providers: providerId,
+        withVehicles: false,
+        withZones: false,
+        withProviders: false,
+      })
+        .then((r) => (r.stations ?? []).filter((s) => s.providerId === providerId && (s.formFactors ?? ['BICYCLE']).includes('BICYCLE')))
+        .catch(() => []);
+      if (this.stationCache.size > 500) this.stationCache.clear();
+      this.stationCache.set(key, hit);
+    }
+    return hit;
+  }
+
+  /**
+   * MOTIS lets some bikes of a station-based network be left at the door (the feed marks part
+   * of each fleet as free to return anywhere). The operators want them back at a station: the
+   * ride then ends at the station nearest to where MOTIS left the bike, and the rest is walked.
+   * The ride keeps its time (the station is at most a few hundred metres away), the walk is
+   * added: at the end of the trip, or before the departure when the bike is the first leg.
+   * Null when no station is within `maxWalkM`.
+   */
+  private async returnAtStation(it: Itinerary, use: 'whole' | 'lastLeg' | 'firstLeg', maxWalkM: number): Promise<Itinerary | null> {
+    const i = it.legs.findIndex((l) => l.mode === 'sharedBike');
+    const ride = it.legs[i];
+    if (!ride?.sharedBike) return null;
+    if (ride.sharedBike.toStation) return it;
+    const drop = ride.to;
+    const stations = await this.stationsNear(drop, ride.sharedBike.providerId, maxWalkM);
+    let best: { s: MotisRentalStation; m: number } | undefined;
+    for (const s of stations) {
+      const m = haversineM([drop.lon, drop.lat], [s.lon, s.lat]) * WALK_DETOUR;
+      if (!best || m < best.m) best = { s, m };
+    }
+    if (!best || best.m > maxWalkM) return null;
+    const walkMin = Math.max(1, Math.round(best.m / WALK_M_PER_MIN));
+    const shift = (iso: string, min: number) => new Date(new Date(iso).getTime() + min * 60000).toISOString();
+    const station: StopPoint = { name: best.s.name.trim(), lat: best.s.lat, lon: best.s.lon };
+    const legs = it.legs.map((l) => ({ ...l }));
+    const r = legs[i]!;
+    r.sharedBike = { ...ride.sharedBike, toStation: station.name };
+    r.to = station;
+    const walk = (departure: string): Leg => ({
+      mode: 'walk',
+      from: station,
+      to: drop,
+      departure,
+      arrival: shift(departure, walkMin),
+      durationMin: walkMin,
+      distanceM: Math.round(best!.m),
+      geometry: [[station.lon, station.lat], [drop.lon, drop.lat]],
+    });
+    if (use === 'firstLeg') {
+      // Leave earlier: the train does not wait.
+      for (let k = 0; k <= i; k++) {
+        legs[k]!.departure = shift(legs[k]!.departure, -walkMin);
+        legs[k]!.arrival = shift(legs[k]!.arrival, -walkMin);
+      }
+      const next = legs[i + 1];
+      if (next && next.mode === 'walk') {
+        next.from = station;
+        next.departure = r.arrival;
+        next.durationMin += walkMin;
+        next.distanceM += Math.round(best.m);
+      } else {
+        legs.splice(i + 1, 0, walk(r.arrival));
+      }
+      return { ...it, legs, departure: shift(it.departure, -walkMin), durationMin: it.durationMin + walkMin };
+    }
+    legs.splice(i + 1, 0, walk(r.arrival));
+    for (let k = i + 2; k < legs.length; k++) {
+      legs[k]!.departure = shift(legs[k]!.departure, walkMin);
+      legs[k]!.arrival = shift(legs[k]!.arrival, walkMin);
+    }
+    return { ...it, legs, arrival: shift(it.arrival, walkMin), durationMin: it.durationMin + walkMin };
+  }
+
+  async sharedBike(q: {
+    from: LatLon;
+    to: LatLon;
+    date: string;
+    window: TimeWindow;
+    use: 'whole' | 'lastLeg' | 'firstLeg';
+    providers: string[];
+    maxStationWalkM: number;
+    maxMin: number;
+  }): Promise<Itinerary[]> {
+    const loaded = await this.rentalProviders();
+    const providers = q.providers.filter((p) => loaded.has(p));
+    if (providers.length === 0) return [];
+    const { start, end } = windowToUtc(q.date, q.window, this.o.timezone);
+    const common = { fromPlace: place(q.from), toPlace: place(q.to), detailedTransfers: false };
+    let raw: MotisItinerary[];
+    if (q.use === 'whole') {
+      // No timetable involved: one search at the start of the window. The time limit leaves
+      // room for the walks at both ends.
+      const res = await this.get<MotisPlanResponse>('/api/v6/plan', {
+        ...common,
+        time: start.toISOString(),
+        directModes: 'WALK,RENTAL',
+        transitModes: '',
+        directRentalFormFactors: 'BICYCLE',
+        directRentalProviders: providers.join(','),
+        maxDirectTime: Math.round((q.maxMin + 10) * 60),
+      });
+      raw = res.direct ?? [];
+    } else {
+      const side = q.use === 'lastLeg' ? 'postTransit' : 'preTransit';
+      const res = await this.get<MotisPlanResponse>('/api/v6/plan', {
+        ...common,
+        time: end.toISOString(),
+        arriveBy: true,
+        searchWindow: Math.round((end.getTime() - start.getTime()) / 1000),
+        directModes: 'WALK',
+        [`${side}Modes`]: 'WALK,RENTAL',
+        [`${side}RentalFormFactors`]: 'BICYCLE',
+        [`${side}RentalProviders`]: providers.join(','),
+        [q.use === 'lastLeg' ? 'maxPostTransitTime' : 'maxPreTransitTime']: Math.round(q.maxMin * 60),
+      });
+      raw = (res.itineraries ?? []).filter((it) => {
+        const t = new Date(it.endTime).getTime();
+        return t >= start.getTime() && t <= end.getTime();
+      });
+    }
+    const isStreet = (l: MotisLeg) => ['WALK', 'BIKE', 'CAR', 'RENTAL'].includes(l.mode);
+    const fits = raw.filter((it) => {
+      const rides = it.legs.filter((l) => l.mode === 'RENTAL');
+      const ride = rides[0];
+      // One ride, on a bicycle taken at a station (a bike standing anywhere may not be there tomorrow).
+      if (rides.length !== 1 || !ride?.rental || !ride.rental.fromStationName?.trim() || (ride.rental.formFactor ?? 'BICYCLE') !== 'BICYCLE') return false;
+      const at = it.legs.indexOf(ride);
+      const firstTransit = it.legs.findIndex((l) => !isStreet(l));
+      if (q.use === 'whole') return firstTransit < 0;
+      if (firstTransit < 0) return false;
+      const lastTransit = it.legs.length - 1 - [...it.legs].reverse().findIndex((l) => !isStreet(l));
+      return q.use === 'lastLeg' ? at > lastTransit : at < firstTransit;
+    });
+    const settled = await Promise.all(fits.map((it) => this.returnAtStation(this.toItinerary(it), q.use, q.maxStationWalkM)));
+    return settled.filter((it): it is Itinerary => it !== null).sort((a, b) => a.arrival.localeCompare(b.arrival));
+  }
+
   async reachability(q: { to: LatLon; date: string; time: string; maxMin: number }): Promise<ReachableStop[]> {
     const res = await this.get<{ all?: { place?: MotisPlace; duration?: number }[] }>('/api/v6/one-to-all', {
       one: place(q.to),
@@ -384,6 +584,12 @@ const NEAR_RESULT_CAP = 200;
  * second look (checked on Lovatens – EPFL: default returns the train, this one the bus).
  */
 const TIE_ALGORITHM = 'RAPTOR';
+
+/** How long the list of shared-mobility providers is kept. */
+const PROVIDERS_TTL_MS = 10 * 60_000;
+/** From a straight line to a walk along streets, and the walking pace, metres per minute. */
+const WALK_DETOUR = 1.3;
+const WALK_M_PER_MIN = 75;
 
 /** Ratio of e-bike to plain bike cruising speed used to scale matrix times. */
 const EBIKE_MATRIX_SPEEDUP = 1.35;

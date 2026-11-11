@@ -162,6 +162,19 @@ export interface RuleSet {
   bikeRunningCostPerKm: number;
   ebikeFullCostPerKm: number;
   ebikeRunningCostPerKm: number;
+  /** Look for a shared-bike suggestion (station-based bike sharing). False switches it off. */
+  sharedBike: boolean;
+  /** Longest walk between a door or a stop and a bike-share station. Metres (400 m = 5 min). */
+  sharedBikeStationMaxWalkM: number;
+  /** Longest ride for the whole trip by shared bike. Minutes. */
+  sharedBikeMaxRideMin: number;
+  /** Longest first or last leg by shared bike, walk to the station included. Minutes. */
+  sharedBikeLegMaxMin: number;
+  /**
+   * A shared bike for the first or last leg is suggested when it saves at least this much on
+   * the fastest public transport option of the list (or when it saves a change). Minutes.
+   */
+  sharedBikeMinSavingMin: number;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -172,6 +185,7 @@ export type LegMode =
   | 'walk'
   | 'bike'
   | 'ebike'
+  | 'sharedBike'
   | 'car'
   | 'rail'
   | 'bus'
@@ -221,6 +235,20 @@ export interface Leg {
   intermediateStops?: StopPoint[];
   /** [lon, lat] pairs. */
   geometry?: [number, number][];
+  /** For a ride on a shared bike (mode 'sharedBike'). */
+  sharedBike?: SharedBikeRide;
+}
+
+export interface SharedBikeRide {
+  /** Provider id of the shared-mobility feed ("sharedmobility:donkey_ge"). */
+  providerId: string;
+  /** Name of the system as the feed gives it ("Donkey Republic Geneva"). */
+  system: string;
+  /** Stations where the bike is taken and returned. */
+  fromStation: string;
+  toStation: string;
+  /** True when the bike found at the station was an e-bike. Availability changes by the hour. */
+  electric: boolean;
 }
 
 export interface Itinerary {
@@ -295,6 +323,25 @@ export interface RoutingProvider {
      */
     allowedSegmentTags?: string[];
   }): Promise<Itinerary | null>;
+  /**
+   * Door-to-door trips that use a shared bicycle taken and returned at stations: the whole
+   * trip, or the last or first leg of a public transport trip. Legs on the bike have the mode
+   * 'sharedBike'. Empty when the routing engine knows no bike-share network.
+   */
+  sharedBike?(q: {
+    from: LatLon;
+    to: LatLon;
+    date: string;
+    /** Arrival window at `to`. */
+    window: TimeWindow;
+    use: 'whole' | 'lastLeg' | 'firstLeg';
+    /** Feed provider ids of the station-based operators to use. */
+    providers: string[];
+    /** Longest walk from the station where the bike is returned, metres. */
+    maxStationWalkM: number;
+    /** Longest ride (whole trip), or longest leg with the walk to the station. Minutes. */
+    maxMin: number;
+  }): Promise<Itinerary[]>;
   /** True when `lastTrip` can restrict the search with `allowedSegmentTags` (the MOTIS fork). */
   readonly segmentFilter?: boolean;
   /**
@@ -485,11 +532,66 @@ export interface FlexibleWork {
   rows: FlexibleWorkRow[];
 }
 
+export type SharedBikeCaveat =
+  /** A bike, or a free place to return it, is not guaranteed at rush hour. */
+  | 'availabilityNotGuaranteed'
+  /** No subscription price could be found: the cost is unknown, or counted ride by ride. */
+  | 'membershipPriceUnknown'
+  /** An e-bike costs more per ride than counted here. */
+  | 'electricSurcharge';
+
+/** One end of the ride: the station and the walk between it and the door or the stop. */
+export interface SharedBikeStation extends LatLon {
+  name: string;
+  walkMin: number;
+}
+
+export interface SharedBikeCost {
+  /** Ticket plus bike sharing, CHF per year; null when the bike-sharing price is unknown. */
+  yearly: number | null;
+  /** Cheapest ticket for the public transport part; absent for the whole trip by bike. */
+  ticket?: PricedProduct;
+  /**
+   * Bike sharing: key "bikeShare.annual" (subscription, plus rides beyond the included
+   * minutes), "bikeShare.perRide" (no subscription price known: every ride paid) or
+   * "bikeShare.unknown" (yearly 0, `unknown` true).
+   */
+  membership: CostComponent & { unknown: boolean; priceYear?: number; perRide?: number; ebikeExtraPerRide?: number };
+}
+
+/**
+ * The one shared-bike idea worth showing next to the options: the whole trip on a shared
+ * bike, or public transport with a shared bike for the last or the first leg.
+ */
+export interface SharedBikeSuggestion {
+  id: string;
+  kind: 'whole' | 'lastLeg' | 'firstLeg';
+  /** Operator name for display ("Donkey Republic") and its id in the price data. */
+  operator: string;
+  operatorId?: string;
+  stations: { from: SharedBikeStation; to: SharedBikeStation };
+  rideMin: number;
+  rideKm: number;
+  /** The bike found at the station was an e-bike (as of today; not guaranteed). */
+  electric: boolean;
+  itinerary: Itinerary;
+  durationMin: number;
+  changes: number;
+  cost: SharedBikeCost;
+  co2KgPerYear: number;
+  hoursPerYear: number;
+  /** The public transport option of the list it is compared with (the fastest one). */
+  against?: { optionId: string; minutesSaved: number; changesSaved: number; chfPerYear: number | null };
+  caveats: SharedBikeCaveat[];
+}
+
 export interface CompareResult {
   options: CommuteOption[];
   leftOut: LeftOut[];
   verdict: Verdict;
   /** Absent when no public transport option is listed. */
   flexibleWork?: FlexibleWork;
+  /** Absent when no shared bike makes the commute better (or no network is near). */
+  sharedBike?: SharedBikeSuggestion;
   stamp: ResultStamp;
 }
