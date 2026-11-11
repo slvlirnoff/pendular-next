@@ -2,8 +2,8 @@
  "network": "Onde Verte",
  "alliance": "onde-verte",
  "origin": "tariff",
- "year": 2026,
- "validFrom": "2026-06-01",
+ "year": 2027,
+ "validFrom": "2026-12-13",
  "source": "https://www.ondeverte.ch/fileadmin/pdf/T651.3_juillet_2026.pdf",
  "currency": "CHF",
  "notes": [
@@ -12,7 +12,9 @@
   "The tariff prints one price for '1 - 2 zones'; it is stored under both '1' and '2'. Passes: '5 zones et plus' is stored as 'all'; tickets and day passes: '6 zones et plus' is stored as 'all', and '5' is a numbered column.",
   "Junior ('Enfant/Jeune') and senior passes exist in 2nd class only and cost the same. The half-fare card gives no reduction on passes (ondeverte.ch, abonnements).",
   "Not in the zone tables (see 'extras'): the urban-zone ticket and day pass for zone 10 (Neuchâtel) or zone 20 (La Chaux-de-Fonds) alone, and the short-trip ticket.",
-  "Transcribed by script from the pdftotext -layout output; checks in SOURCES.md. Cantonal subsidies are listed under 'discounts' and not applied."
+  "Transcribed by script from the pdftotext -layout output; checks in SOURCES.md. Cantonal subsidies are listed under 'discounts' and not applied.",
+  "Passes: adult 2nd class and FlexiAbo read in the SBB shop for 04.01.2027 at every level (1-2, 3, 4, all zones). 1st class = adult x 1.70 and reduced (child, youth, senior) = adult x 0.745, monthly rounded to the franc, annual = 9 x monthly: these reproduce the shop at 3 zones and all zones, the other levels are derived.",
+  "Tickets and day passes are still the 2026 prices (rise of about 3.9 % announced for 13.12.2026, not published)."
  ],
  "passPlan": "onde-verte-abo-abo",
  "ticketPlan": "onde-verte-billett-billett",
@@ -116,108 +118,108 @@
   "month": {
    "adult": {
     "2": {
-     "1": 76,
-     "2": 76,
-     "3": 110,
-     "4": 142,
-     "all": 172
+     "1": 79,
+     "2": 79,
+     "3": 114,
+     "4": 146,
+     "all": 180
     },
     "1": {
-     "1": 130,
-     "2": 130,
-     "3": 187,
-     "4": 242,
-     "all": 293
+     "1": 134,
+     "2": 134,
+     "3": 194,
+     "4": 248,
+     "all": 306
     }
    },
    "junior": {
     "2": {
-     "1": 57,
-     "2": 57,
-     "3": 83,
-     "4": 107,
-     "all": 129
+     "1": 59,
+     "2": 59,
+     "3": 85,
+     "4": 109,
+     "all": 134
     }
    },
    "senior": {
     "2": {
-     "1": 57,
-     "2": 57,
-     "3": 83,
-     "4": 107,
-     "all": 129
+     "1": 59,
+     "2": 59,
+     "3": 85,
+     "4": 109,
+     "all": 134
     }
    }
   },
   "year": {
    "adult": {
     "2": {
-     "1": 684,
-     "2": 684,
-     "3": 990,
-     "4": 1278,
-     "all": 1548
+     "1": 711,
+     "2": 711,
+     "3": 1026,
+     "4": 1314,
+     "all": 1620
     },
     "1": {
-     "1": 1170,
-     "2": 1170,
-     "3": 1683,
-     "4": 2178,
-     "all": 2637
+     "1": 1206,
+     "2": 1206,
+     "3": 1746,
+     "4": 2232,
+     "all": 2754
     }
    },
    "junior": {
     "2": {
-     "1": 513,
-     "2": 513,
-     "3": 747,
-     "4": 963,
-     "all": 1161
+     "1": 531,
+     "2": 531,
+     "3": 765,
+     "4": 981,
+     "all": 1206
     }
    },
    "senior": {
     "2": {
-     "1": 513,
-     "2": 513,
-     "3": 747,
-     "4": 963,
-     "all": 1161
+     "1": 531,
+     "2": 531,
+     "3": 765,
+     "4": 981,
+     "all": 1206
     }
    }
   },
   "flexi": {
    "adult": {
     "2": {
-     "1": 380,
-     "2": 380,
-     "3": 550,
-     "4": 710,
-     "all": 860
+     "1": 395,
+     "2": 395,
+     "3": 570,
+     "4": 730,
+     "all": 900
     },
     "1": {
-     "1": 650,
-     "2": 650,
-     "3": 935,
-     "4": 1210,
-     "all": 1465
+     "1": 670,
+     "2": 670,
+     "3": 970,
+     "4": 1240,
+     "all": 1530
     }
    },
    "junior": {
     "2": {
-     "1": 285,
-     "2": 285,
-     "3": 415,
-     "4": 535,
-     "all": 645
+     "1": 295,
+     "2": 295,
+     "3": 425,
+     "4": 545,
+     "all": 670
     }
    },
    "senior": {
     "2": {
-     "1": 285,
-     "2": 285,
-     "3": 415,
-     "4": 535,
-     "all": 645
+     "1": 295,
+     "2": 295,
+     "3": 425,
+     "4": 545,
+     "all": 670
     }
    }
   }
@@ -304,5 +306,119 @@
    "condition": "resident of the canton of Neuchâtel; adult or senior pass for all zones (annual, monthly or FlexiAbo); since 1 January 2025; obtained through guichetunique.ch. Not a factor: the 4-zone price of the same table replaces the all-zones price.",
    "source": "https://www.ondeverte.ch/abonnements/abonnements-onde-verte"
   }
- ]
+ ],
+ "previous": {
+  "year": 2026,
+  "passes": {
+   "month": {
+    "adult": {
+     "2": {
+      "1": 76,
+      "2": 76,
+      "3": 110,
+      "4": 142,
+      "all": 172
+     },
+     "1": {
+      "1": 130,
+      "2": 130,
+      "3": 187,
+      "4": 242,
+      "all": 293
+     }
+    },
+    "junior": {
+     "2": {
+      "1": 57,
+      "2": 57,
+      "3": 83,
+      "4": 107,
+      "all": 129
+     }
+    },
+    "senior": {
+     "2": {
+      "1": 57,
+      "2": 57,
+      "3": 83,
+      "4": 107,
+      "all": 129
+     }
+    }
+   },
+   "year": {
+    "adult": {
+     "2": {
+      "1": 684,
+      "2": 684,
+      "3": 990,
+      "4": 1278,
+      "all": 1548
+     },
+     "1": {
+      "1": 1170,
+      "2": 1170,
+      "3": 1683,
+      "4": 2178,
+      "all": 2637
+     }
+    },
+    "junior": {
+     "2": {
+      "1": 513,
+      "2": 513,
+      "3": 747,
+      "4": 963,
+      "all": 1161
+     }
+    },
+    "senior": {
+     "2": {
+      "1": 513,
+      "2": 513,
+      "3": 747,
+      "4": 963,
+      "all": 1161
+     }
+    }
+   },
+   "flexi": {
+    "adult": {
+     "2": {
+      "1": 380,
+      "2": 380,
+      "3": 550,
+      "4": 710,
+      "all": 860
+     },
+     "1": {
+      "1": 650,
+      "2": 650,
+      "3": 935,
+      "4": 1210,
+      "all": 1465
+     }
+    },
+    "junior": {
+     "2": {
+      "1": 285,
+      "2": 285,
+      "3": 415,
+      "4": 535,
+      "all": 645
+     }
+    },
+    "senior": {
+     "2": {
+      "1": 285,
+      "2": 285,
+      "3": 415,
+      "4": 535,
+      "all": 645
+     }
+    }
+   }
+  }
+ },
+ "passSource": "SBB shop, passes starting 04.01.2027, read on 11.11.2026 (packages/engine/data/zones/sbb-checks-ladders/RESULTS.md)"
 }

@@ -81,3 +81,25 @@ Not reproduced: Lucens - Bern via Murten - Kerzers (2,952, the cheapest in the s
 does not propose that route). Modular travelcards (route pass x 0.85 plus a network part:
 Lausanne zones 11 + 12 about 526, Bern 100 + 101 about 559, Bulle zone 30 about 507 a year) are
 dearer than the plain route pass on four of the five trips and are not modelled.
+
+## SBB shop price ladders of 11.11.2026 (Onde Verte, Libero, ZVV; passes starting 04.01.2027)
+
+Full results in `sbb-checks-ladders/`. They are the source of the 2027 pass prices in
+`../tariffs/networks/onde-verte.json`, `libero.json` and `zvv.json` (see the notes in each file
+for which cells were read and which are derived). Engine against the shop after loading them:
+
+| Trip | Shop | Engine |
+|---|---|---|
+| La Chaux-de-Fonds - Neuchâtel | Onde Verte all zones, 1,620 | same |
+| Fleurier - Neuchâtel | Onde Verte 4 zones, 1,314 | same |
+| Bern - Thun | Libero 8 zones, 2,772 | same |
+| Aarberg - Bern | Libero 5 zones, 1,854 | same |
+| Solothurn - Bern | Libero 8 zones, 2,772 | same |
+| Zürich HB - Winterthur | ZVV all zones, 2,363 | same |
+| Zürich HB - Uster | ZVV 5 zones, 1,985 | same |
+| Zürich HB - Dietikon | ZVV 3 zones, 1,237 | same |
+| Kerzers - Bern | Libero 6 zones (100, 101, 112, 177, 697, 698), 2,214 | 7 zones, 2,592 |
+
+Kerzers - Bern: the fare data lists zone 699 on the hops Bern Brünnen - Rosshäusern - Gümmenen
+next to 177 and 698; the shop does not count it. Probably two zones that overlap there, of which
+one is enough. Not resolved: the data does not say which zones of a hop are alternatives.

@@ -1,0 +1,22 @@
+Part C, Libero: Burgdorf -> Bern | valid from Mo 04.01.2027 | captured 2026-11-11 (sbb.ch shop, visible text)
+
+Same age-group choices and info text as in C1 ("Reduced for children/juniors from their 6th to their 25th birthday (only 2nd class), seniors (men aged 65+ / women aged 64+, only 2nd class).")
+
+1st class, Adult from 26 ("1x ..., Adults")  [URL ...&qualityOfService=FIRST]
+  YEAR:  Libero Annual Season Ticket  CHF 3060.00 | 5 Zones via direct 100, 101, 114, 150, 151 | All Zones CHF 4833.00
+  MONTH: Libero Monthly Season Ticket CHF 340.00  | All Zones CHF 537.00 | 1-month GA Travelcard CHF 730.00
+
+2nd class, Young person 16-24.99 ("1x ..., Youth 16-24.99")
+  YEAR:  CHF 1395.00 | 5 Zones 100, 101, 114, 150, 151 | All Zones CHF 2196.00
+  MONTH: CHF 155.00  | All Zones CHF 244.00 | 1-month GA Travelcard CHF 310.00
+
+2nd class, Senior 65/64 ("1x ..., for Seniors (woman)")
+  YEAR:  CHF 1395.00 | All Zones CHF 2196.00
+  MONTH: CHF 155.00  | All Zones CHF 244.00 | 1-month GA Travelcard CHF 465.00
+
+2nd class, Kid 6-15.99 ("1x ..., Children 6-15.99")
+  YEAR:  CHF 1395.00 | All Zones CHF 2196.00 | (GA hint shown)
+  MONTH: CHF 155.00  | All Zones CHF 244.00 | 1-month GA Travelcard CHF 310.00
+
+(2nd class adult reference, trip 11: 1854 / 206, all zones 2925 / 325)
+No FlexiAbo offered for Libero in any category.
