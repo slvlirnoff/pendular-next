@@ -90,6 +90,28 @@ then restart MOTIS (no re-import). Without the feed nothing else changes: the bo
 appears. Operators and prices: `packages/engine/data/sharing/bike-share.json`, with the sources
 and what could not be found in `SOURCES.md` next to it.
 
+## The MOTIS fork locally
+
+Two planner features need our MOTIS fork (branch `segment-tags` of `slvlirnoff/motis`): the last
+trip home inside a pass's zones, and the search for cheaper tickets by zone path. The fork is
+published as an image; it reads the same imported data as the release.
+
+```sh
+docker login ghcr.io                       # once: user name + a token that can read packages
+scripts/motis-fork.sh pull
+
+# either run MOTIS from the image …
+MOTIS_IMAGE=ghcr.io/slvlirnoff/pendular-motis:fork-latest scripts/dev.sh
+# … or copy the binary out once, after which plain scripts/dev.sh uses it (Linux, glibc 2.39+)
+scripts/motis-fork.sh binary && scripts/dev.sh
+```
+
+Stop a running MOTIS first (the start script only starts what is not answering): kill the
+`motis server` process, or `scripts/motis-fork.sh stop` for the container. With the fork behind
+it, the start script sets `MOTIS_SEGMENT_FILTER=1` for the API; restart the API too.
+The hop table the fork loads is `tools/motis-fork/segments.csv` (committed; regenerate with
+`pnpm tsx tools/motis-fork/export-segments.ts` after a new timetable or fare import).
+
 ## Data and credits
 
 Timetable and parking: opentransportdata.swiss. Streets and places: © OpenStreetMap contributors.
