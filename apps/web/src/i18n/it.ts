@@ -237,7 +237,6 @@ export const it: Dict = {
   'overview.via': "via {via}",
   'overview.km': "{km} km",
   'overview.also': "Altre opzioni di questo tipo",
-  'overview.none': "Non proposto per questo tragitto",
   'flex.title': "Telelavoro in alcuni giorni?",
   'flex.intro': "{name}: il biglietto più economico secondo il numero di giorni sul posto di lavoro.",
   'flex.days': "1 giorno alla settimana|{n} giorni alla settimana",

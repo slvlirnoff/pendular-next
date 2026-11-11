@@ -236,7 +236,6 @@ export const fr = {
   'overview.via': "via {via}",
   'overview.km': "{km} km",
   'overview.also': "Autres options de ce type",
-  'overview.none': "Pas proposé pour ce trajet",
   'flex.title': "Du télétravail certains jours ?",
   'flex.intro': "{name} : le billet le moins cher selon le nombre de jours sur le lieu de travail.",
   'flex.days': "1 jour par semaine|{n} jours par semaine",

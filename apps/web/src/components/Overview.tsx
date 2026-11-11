@@ -3,7 +3,6 @@ import { useI18n, type Key, type T } from '../i18n/index.js';
 import { chf, duration, num } from '../lib/format.js';
 import { changeStops, optionName } from '../lib/names.js';
 import { carNote } from '../lib/carNote.js';
-import { leftOutReason } from '../lib/leftOut.js';
 import { modeIcon } from '../lib/pictograms.js';
 import { ModeChain } from './ModeChain.js';
 import { PriceYear, productName } from './OptionList.js';
@@ -45,26 +44,8 @@ function ModeCard(props: { category: (typeof CATEGORIES)[number]; result: Compar
     </span>
   );
 
-  if (!best) {
-    const why = result.leftOut.find((l) => category.kinds.includes(l.kind));
-    return (
-      <li className="mode-card card is-empty">
-        <div className="mode-main">
-          <span className="mode-label">
-            {icons(category.icons)}
-            <span className="eyebrow">{label}</span>
-          </span>
-          <span className="mode-none">{t('overview.none')}</span>
-          {why && (
-            <span className="mode-via">
-              {category.kinds.length > 1 && `${t(`kind.${why.kind}` as Key)}, `}
-              {leftOutReason(why, t, lang)}
-            </span>
-          )}
-        </div>
-      </li>
-    );
-  }
+  // A way of commuting this search does not offer has no card; the list below says why.
+  if (!best) return null;
 
   const v = result.verdict;
   const tags = [v.cheapest === best.id && t('verdict.cheapest'), v.fastest === best.id && t('verdict.fastest'), v.greenest === best.id && t('verdict.greenest')].filter(Boolean) as string[];

@@ -248,20 +248,17 @@ details.chart:not([open]) { padding: 12px 0; }
 
 /* --- Overview: one card per way of commuting, then working from home ------------------------- */
 .overview { display: grid; gap: 12px; }
-.mode-cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.mode-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
 .mode-card { display: flex; flex-direction: column; min-width: 0; }
 .mode-card.is-selected { border-color: var(--accent); }
-.mode-card.is-empty { background: transparent; border-style: dashed; border-color: var(--border-strong); }
 .mode-main { flex: 1; width: 100%; background: none; border: 0; text-align: left; padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border-radius: var(--radius-lg); min-width: 0; }
 button.mode-main:hover { background: var(--bg-alt); }
 .mode-label { display: flex; align-items: center; gap: 8px; min-height: 24px; }
 .mode-icons { display: inline-flex; gap: 2px; flex: none; }
-.mode-card.is-empty .mode-icons { opacity: 0.55; }
 .mode-figures { display: grid; gap: 0; }
 .mode-cost { font-size: 15px; font-weight: 600; }
 .mode-via { font-size: 14px; color: var(--text-muted); overflow-wrap: anywhere; }
 .mode-note { font-size: 13px; color: var(--text-subtle); }
-.mode-none { font-weight: 600; color: var(--text-muted); margin-top: 2px; }
 .mode-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; padding-top: 4px; }
 .mode-tag { font-size: 13px; font-weight: 600; padding: 1px 8px; border-radius: var(--radius-full); background: var(--accent-tint); color: var(--accent-dark); white-space: nowrap; }
 .mode-also { border-top: 1px solid var(--border); padding: 4px 0; }
@@ -282,7 +279,6 @@ button.mode-main:hover { background: var(--bg-alt); }
 .flex-rows tr + tr th, .flex-rows tr + tr td { border-top: 1px solid var(--border); }
 
 @media (max-width: 1080px) {
-  .mode-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .flex { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 860px) {
@@ -291,7 +287,6 @@ button.mode-main:hover { background: var(--bg-alt); }
   .mode-figures { grid-column: 2; grid-row: 1 / span 2; justify-items: end; text-align: right; }
   .mode-main .figure { font-size: 20px; }
   .mode-main > .mode-chain, .mode-note, .mode-tags { grid-column: 1 / -1; }
-  .mode-card.is-empty .mode-main { grid-template-columns: minmax(0, 1fr); }
   .mode-also button { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; min-height: 36px; align-items: center; }
   .flex { padding: 14px 16px; }
   .flex-rows tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 8px 0; }
