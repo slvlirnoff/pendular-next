@@ -1,0 +1,401 @@
+diff --git a/include/nigiri/routing/query.h b/include/nigiri/routing/query.h
+index 7e5d0981..0eb3a811 100644
+--- a/include/nigiri/routing/query.h
++++ b/include/nigiri/routing/query.h
+@@ -2,6 +2,7 @@
+ 
+ #include <cinttypes>
+ #include <limits>
++#include <memory>
+ #include <optional>
+ #include <variant>
+ #include <vector>
+@@ -11,6 +12,7 @@
+ #include "nigiri/location_match_mode.h"
+ #include "nigiri/routing/clasz_mask.h"
+ #include "nigiri/routing/limits.h"
++#include "nigiri/routing/segment_filter.h"
+ #include "nigiri/routing/transfer_time_settings.h"
+ #include "nigiri/td_footpath.h"
+ #include "nigiri/types.h"
+@@ -137,6 +139,9 @@ struct query {
+   double fastest_direct_factor_{1.0};
+   bool slow_direct_{false};
+   double fastest_slow_direct_factor_{2.0};
++  // PROTOTYPE: rides may only cross route sections accepted by this filter
++  // (nullptr = no restriction). Only implemented for the CPU RAPTOR.
++  std::shared_ptr<segment_filter const> segment_filter_{};
+ };
+ 
+ }  // namespace nigiri::routing
+diff --git a/include/nigiri/routing/raptor/raptor.h b/include/nigiri/routing/raptor/raptor.h
+index e9ace0c7..79ecb551 100644
+--- a/include/nigiri/routing/raptor/raptor.h
++++ b/include/nigiri/routing/raptor/raptor.h
+@@ -12,6 +12,7 @@
+ #include "nigiri/routing/raptor/raptor_state.h"
+ #include "nigiri/routing/raptor/raptor_stats.h"
+ #include "nigiri/routing/raptor/reconstruct.h"
++#include "nigiri/routing/segment_filter.h"
+ #include "nigiri/routing/transfer_time_settings.h"
+ #include "nigiri/rt/rt_timetable.h"
+ #include "nigiri/special_stations.h"
+@@ -114,6 +115,9 @@ struct raptor {
+ 
+   algo_stats_t get_stats() const { return stats_; }
+ 
++  // PROTOTYPE: run-time section filter (see segment_filter.h).
++  void set_segment_filter(segment_filter const* f) { segment_filter_ = f; }
++
+   void fill_bounds(std::size_t const n_rows) {
+     auto& s = state_;
+     auto const n = static_cast<std::size_t>(s.n_locations_);
+@@ -1122,6 +1126,15 @@ private:
+         apply_filter(route_flag::kReservationNotRequired);
+       }
+ 
++      if (segment_filter_ != nullptr && !is_first) {
++        // section just crossed: [a, a + 1]
++        auto const a = kFwd ? stop_idx - 1U : stop_idx;
++        if (!segment_filter_->allowed(stop{stop_seq[a]}.location_idx(),
++                                      stop{stop_seq[a + 1U]}.location_idx())) {
++          et.fill(false);
++        }
++      }
++
+       if ((kFwd && stop_idx != 0U) || (kBwd && stop_idx != n_stops - 1U)) {
+         // passing a no-stay via stop moves the ride up one via slot
+         if constexpr (Vias != 0U) {
+@@ -1233,6 +1246,12 @@ private:
+         apply_filter(route_flag::kReservationNotRequired);
+       }
+ 
++      if (segment_filter_ != nullptr && !is_first &&
++          !segment_filter_->allowed(
++              r, static_cast<stop_idx_t>(kFwd ? stop_idx - 1U : stop_idx))) {
++        et = {};
++      }
++
+       if constexpr (Vias != 0U) {
+         for (auto e = 0U; e != Vias; ++e) {
+           for (auto o = Vias - e; o != 0U; --o) {
+@@ -1545,6 +1564,7 @@ private:
+   profile_idx_t prf_idx_{0U};
+   clasz_mask_t allowed_claszes_;
+   bool require_bike_transport_;
++  segment_filter const* segment_filter_{nullptr};
+   bool require_car_transport_;
+   bool no_compulsory_reservation_;
+   bool is_wheelchair_;
+diff --git a/include/nigiri/routing/search.h b/include/nigiri/routing/search.h
+index ae0cf9c7..e0aa2773 100644
+--- a/include/nigiri/routing/search.h
++++ b/include/nigiri/routing/search.h
+@@ -6,6 +6,7 @@
+ #include "utl/equal_ranges_linear.h"
+ #include "utl/erase_if.h"
+ #include "utl/timing.h"
++#include "utl/verify.h"
+ 
+ #include "nigiri/for_each_meta.h"
+ #include "nigiri/get_otel_tracer.h"
+@@ -199,6 +200,12 @@ struct search {
+                    algo_state)},
+         timeout_(timeout) {
+     q_.sanitize(tt);
++    if constexpr (requires { algo_.set_segment_filter(nullptr); }) {
++      algo_.set_segment_filter(q_.segment_filter_.get());
++    } else {
++      utl::verify(q_.segment_filter_ == nullptr,
++                  "segment filter not supported by this algorithm");
++    }
+   }
+ 
+   routing_result execute() {
+diff --git a/include/nigiri/routing/segment_filter.h b/include/nigiri/routing/segment_filter.h
+new file mode 100644
+index 00000000..1581279f
+--- /dev/null
++++ b/include/nigiri/routing/segment_filter.h
+@@ -0,0 +1,71 @@
++#pragma once
++
++#include <cinttypes>
++#include <filesystem>
++#include <functional>
++#include <string>
++#include <string_view>
++#include <vector>
++
++#include "nigiri/types.h"
++
++namespace nigiri {
++struct timetable;
++}
++
++namespace nigiri::routing {
++
++// PROTOTYPE ("allowed segments" filter).
++//
++// Static part, built once (server start) from a CSV side file
++//   from_station,to_station,tag|tag|...
++// Every route section (two consecutive stops of a route stop sequence, mapped
++// to station level) gets the index of its tag set. Tag set 0 = "no tags".
++struct segment_tags {
++  using tagset_idx_t = std::uint32_t;
++  using tag_idx_t = std::uint32_t;
++  using station_key_t = std::uint32_t;  // 0 = unknown station
++
++  static constexpr auto kNoTags = tagset_idx_t{0U};
++
++  // station_key: maps a timetable location to the station id used in the file
++  // (0 if the location has none).
++  segment_tags(timetable const&,
++               std::filesystem::path const&,
++               std::function<station_key_t(location_idx_t)> const& station_key);
++
++  tagset_idx_t get(route_idx_t const r, stop_idx_t const section) const {
++    return section_tagset_[route_section_offset_[to_idx(r)] + section];
++  }
++
++  // Slow path (hash lookup): realtime transports + journey reconstruction.
++  tagset_idx_t get(location_idx_t from, location_idx_t to) const;
++
++  std::vector<std::string> tag_names_;
++  hash_map<std::string, tag_idx_t> tag_idx_;
++  std::vector<std::vector<tag_idx_t>> tagsets_;  // [0] = {}
++  hash_map<std::uint64_t, tagset_idx_t> pair_tagset_;
++  std::vector<station_key_t> location_station_;
++  std::vector<std::uint32_t> route_section_offset_;
++  std::vector<tagset_idx_t> section_tagset_;
++  std::uint64_t n_tagged_sections_{0U};
++};
++
++// Per request part: which tag sets are fully contained in the allowed tags.
++struct segment_filter {
++  segment_filter(segment_tags const&,
++                 std::vector<std::string_view> const& allowed_tags);
++
++  bool allowed(route_idx_t const r, stop_idx_t const section) const {
++    return allowed_tagset_[tags_.get(r, section)] != 0U;
++  }
++
++  bool allowed(location_idx_t const from, location_idx_t const to) const {
++    return allowed_tagset_[tags_.get(from, to)] != 0U;
++  }
++
++  segment_tags const& tags_;
++  std::vector<std::uint8_t> allowed_tagset_;  // [0] = 0: untagged = forbidden
++};
++
++}  // namespace nigiri::routing
+diff --git a/src/routing/one_to_all.cc b/src/routing/one_to_all.cc
+index f150d66a..52df5c72 100644
+--- a/src/routing/one_to_all.cc
++++ b/src/routing/one_to_all.cc
+@@ -86,6 +86,7 @@ raptor_state one_to_all(timetable const& tt,
+       q.no_compulsory_reservation_,
+       q.transfer_time_settings_,
+       q.prf_idx_};
++  r.set_segment_filter(q.segment_filter_.get());
+ 
+   run_raptor(std::move(r), tt, start_time, q);
+ 
+diff --git a/src/routing/raptor/pong.cc b/src/routing/raptor/pong.cc
+index 914c6a2d..2a03a3fe 100644
+--- a/src/routing/raptor/pong.cc
++++ b/src/routing/raptor/pong.cc
+@@ -154,6 +154,9 @@ routing_result pong(timetable const& tt,
+                           q.no_compulsory_reservation_,
+                           q.transfer_time_settings_,
+                           q.prf_idx_};
++  if constexpr (requires { ping.set_segment_filter(nullptr); }) {
++    ping.set_segment_filter(q.segment_filter_.get());
++  }
+ 
+   // ====
+   // PONG
+@@ -208,6 +211,9 @@ routing_result pong(timetable const& tt,
+                           q.no_compulsory_reservation_,
+                           q.transfer_time_settings_,
+                           q.prf_idx_};
++  if constexpr (requires { pong.set_segment_filter(nullptr); }) {
++    pong.set_segment_filter(q.segment_filter_.get());
++  }
+ 
+   q.flip_dir();
+ 
+diff --git a/src/routing/raptor/reconstruct.cc b/src/routing/raptor/reconstruct.cc
+index 6adcad9c..903a7ca8 100644
+--- a/src/routing/raptor/reconstruct.cc
++++ b/src/routing/raptor/reconstruct.cc
+@@ -249,6 +249,18 @@ void reconstruct_journey_with_vias(timetable const& tt,
+           break;
+         }
+ 
++        // PROTOTYPE: section between this stop and the one visited before
++        // (towards the finish stop) must be accepted by the segment filter.
++        if (q.segment_filter_ != nullptr) {
++          auto const next = fr[static_cast<stop_idx_t>(kFwd ? stop_idx + 1U
++                                                            : stop_idx - 1U)];
++          auto const from = kFwd ? l : next.get_location_idx();
++          auto const to = kFwd ? next.get_location_idx() : l;
++          if (!q.segment_filter_->allowed(from, to)) {
++            break;
++          }
++        }
++
+         if ((kFwd && !stp.in_allowed(is_wheelchair)) ||
+             (!kFwd && !stp.out_allowed(is_wheelchair))) {
+           ride_through(l);
+diff --git a/src/routing/segment_filter.cc b/src/routing/segment_filter.cc
+new file mode 100644
+index 00000000..384bdcca
+--- /dev/null
++++ b/src/routing/segment_filter.cc
+@@ -0,0 +1,145 @@
++#include "nigiri/routing/segment_filter.h"
++
++#include <algorithm>
++#include <charconv>
++#include <fstream>
++#include <map>
++
++#include "utl/verify.h"
++
++#include "nigiri/logging.h"
++#include "nigiri/timetable.h"
++
++namespace nigiri::routing {
++
++namespace {
++
++std::uint64_t pair_key(segment_tags::station_key_t const a,
++                       segment_tags::station_key_t const b) {
++  return (std::uint64_t{a} << 32U) | std::uint64_t{b};
++}
++
++std::vector<std::string_view> split(std::string_view s, char const sep) {
++  auto parts = std::vector<std::string_view>{};
++  while (true) {
++    auto const pos = s.find(sep);
++    parts.push_back(s.substr(0, pos));
++    if (pos == std::string_view::npos) {
++      break;
++    }
++    s.remove_prefix(pos + 1U);
++  }
++  return parts;
++}
++
++segment_tags::station_key_t parse_key(std::string_view const s) {
++  auto v = segment_tags::station_key_t{0U};
++  std::from_chars(s.data(), s.data() + s.size(), v);
++  return v;
++}
++
++}  // namespace
++
++segment_tags::segment_tags(
++    timetable const& tt,
++    std::filesystem::path const& path,
++    std::function<station_key_t(location_idx_t)> const& station_key) {
++  auto in = std::ifstream{path};
++  utl::verify(in.good(), "segment tags: cannot read {}", path.string());
++
++  tagsets_.emplace_back();  // kNoTags
++  auto tagset_idx = std::map<std::vector<tag_idx_t>, tagset_idx_t>{};
++  tagset_idx.emplace(std::vector<tag_idx_t>{}, kNoTags);
++
++  auto line = std::string{};
++  auto n_rows = 0U;
++  while (std::getline(in, line)) {
++    if (!line.empty() && line.back() == '\r') {
++      line.pop_back();
++    }
++    auto const cols = split(line, ',');
++    if (cols.size() != 3U || cols[0].empty() || cols[0][0] < '0' ||
++        cols[0][0] > '9') {
++      continue;  // header, empty or malformed line
++    }
++    auto set = std::vector<tag_idx_t>{};
++    for (auto const tag : split(cols[2], '|')) {
++      if (tag.empty()) {
++        continue;
++      }
++      auto const [it, is_new] = tag_idx_.emplace(
++          std::string{tag}, static_cast<tag_idx_t>(tag_names_.size()));
++      if (is_new) {
++        tag_names_.emplace_back(tag);
++      }
++      set.push_back(it->second);
++    }
++    std::sort(begin(set), end(set));
++    set.erase(std::unique(begin(set), end(set)), end(set));
++    auto const [it, is_new] =
++        tagset_idx.emplace(set, static_cast<tagset_idx_t>(tagsets_.size()));
++    if (is_new) {
++      tagsets_.emplace_back(std::move(set));
++    }
++    pair_tagset_[pair_key(parse_key(cols[0]),
++                          parse_key(cols[1]))] = it->second;
++    ++n_rows;
++  }
++
++  location_station_.resize(tt.n_locations());
++  for (auto l = location_idx_t{0U}; l != tt.n_locations(); ++l) {
++    location_station_[to_idx(l)] = station_key(l);
++  }
++
++  route_section_offset_.reserve(tt.n_routes() + 1U);
++  for (auto r = route_idx_t{0U}; r != tt.n_routes(); ++r) {
++    route_section_offset_.push_back(
++        static_cast<std::uint32_t>(section_tagset_.size()));
++    auto const seq = tt.route_location_seq_[r];
++    for (auto i = 1U; i < seq.size(); ++i) {
++      auto const ts = get(stop{seq[i - 1U]}.location_idx(),
++                          stop{seq[i]}.location_idx());
++      n_tagged_sections_ += ts != kNoTags ? 1U : 0U;
++      section_tagset_.push_back(ts);
++    }
++  }
++  route_section_offset_.push_back(
++      static_cast<std::uint32_t>(section_tagset_.size()));
++
++  log(log_lvl::info, "nigiri.segment_tags",
++      "{}: {} rows, {} tags, {} tag sets, {}/{} route sections tagged",
++      path.string(), n_rows, tag_names_.size(), tagsets_.size(),
++      n_tagged_sections_, section_tagset_.size());
++}
++
++segment_tags::tagset_idx_t segment_tags::get(location_idx_t const from,
++                                             location_idx_t const to) const {
++  auto const a = location_station_[to_idx(from)];
++  auto const b = location_station_[to_idx(to)];
++  if (a == 0U || b == 0U) {
++    return kNoTags;
++  }
++  auto const it = pair_tagset_.find(pair_key(a, b));
++  return it == end(pair_tagset_) ? kNoTags : it->second;
++}
++
++segment_filter::segment_filter(
++    segment_tags const& tags, std::vector<std::string_view> const& allowed_tags)
++    : tags_{tags}, allowed_tagset_(tags.tagsets_.size(), 0U) {
++  auto allowed = std::vector<std::uint8_t>(tags.tag_names_.size(), 0U);
++  for (auto const t : allowed_tags) {
++    if (auto const it = tags.tag_idx_.find(std::string{t});
++        it != end(tags.tag_idx_)) {
++      allowed[it->second] = 1U;
++    }
++  }
++  for (auto i = 1U; i != tags.tagsets_.size(); ++i) {
++    allowed_tagset_[i] =
++        std::all_of(begin(tags.tagsets_[i]), end(tags.tagsets_[i]),
++                    [&](segment_tags::tag_idx_t const t) { return allowed[t] != 0U; })
++            ? 1U
++            : 0U;
++  }
++}
++
++}  // namespace nigiri::routing

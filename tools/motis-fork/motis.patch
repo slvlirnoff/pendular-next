@@ -1,0 +1,237 @@
+diff --git a/include/motis/segment_tags.h b/include/motis/segment_tags.h
+new file mode 100644
+index 0000000..07da1d6
+--- /dev/null
++++ b/include/motis/segment_tags.h
+@@ -0,0 +1,25 @@
++#pragma once
++
++#include <memory>
++#include <optional>
++#include <string>
++#include <vector>
++
++#include "nigiri/routing/segment_filter.h"
++
++namespace nigiri {
++struct timetable;
++}
++
++namespace motis {
++
++// PROTOTYPE: process-wide segment tags, loaded once from the CSV file named by
++// the environment variable MOTIS_SEGMENT_TAGS (see data::load_tt).
++void load_segment_tags(nigiri::timetable const&);
++
++// Per-request filter for the `allowedSegmentTags` parameter.
++// nullptr if the parameter is not given; throws if no tags file is loaded.
++std::shared_ptr<nigiri::routing::segment_filter const> make_segment_filter(
++    std::optional<std::vector<std::string>> const& allowed_tags);
++
++}  // namespace motis
+diff --git a/openapi.yaml b/openapi.yaml
+index 11c039d..c087946 100644
+--- a/openapi.yaml
++++ b/openapi.yaml
+@@ -798,6 +798,22 @@ paths:
+             default: 900
+             minimum: 0
+ 
++        - name: allowedSegmentTags
++          in: query
++          required: false
++          description: |
++            Optional. PROTOTYPE (fork only).
++
++            If given, transit rides may only cross route sections (two consecutive stops)
++            whose segment tags are ALL in this list. Sections without tags are not allowed.
++            Requires the server to be started with `MOTIS_SEGMENT_TAGS=<csv file>`.
++            Forces the RAPTOR algorithm. Example: `mobilis:11,mobilis:12`.
++          schema:
++            type: array
++            items:
++              type: string
++          explode: false
++
+         - name: requireBikeTransport
+           in: query
+           required: false
+@@ -2116,6 +2132,22 @@ paths:
+               $ref: '#/components/schemas/Mode'
+           explode: false
+ 
++        - name: allowedSegmentTags
++          in: query
++          required: false
++          description: |
++            Optional. PROTOTYPE (fork only).
++
++            If given, transit rides may only cross route sections (two consecutive stops)
++            whose segment tags are ALL in this list. Sections without tags are not allowed.
++            Requires the server to be started with `MOTIS_SEGMENT_TAGS=<csv file>`.
++            Forces the RAPTOR algorithm. Example: `mobilis:11,mobilis:12`.
++          schema:
++            type: array
++            items:
++              type: string
++          explode: false
++
+         - name: requireBikeTransport
+           in: query
+           required: false
+diff --git a/src/data.cc b/src/data.cc
+index f76a8b5..a356bb7 100644
+--- a/src/data.cc
++++ b/src/data.cc
+@@ -1,4 +1,5 @@
+ #include "motis/data.h"
++#include "motis/segment_tags.h"
+ 
+ #include <filesystem>
+ #include <future>
+@@ -345,6 +346,7 @@ void data::load_tt(fs::path const& p) {
+   tags_ = tag_lookup::read(path_ / "tags.bin");
+   tt_ = n::timetable::read(path_ / p);
+   tt_->resolve();
++  load_segment_tags(*tt_);
+   location_rtree_ = std::make_unique<point_rtree<n::location_idx_t>>(
+       create_location_rtree(*tt_));
+   init_rtt();
+diff --git a/src/endpoints/one_to_all.cc b/src/endpoints/one_to_all.cc
+index ef34a40..0e53530 100644
+--- a/src/endpoints/one_to_all.cc
++++ b/src/endpoints/one_to_all.cc
+@@ -1,4 +1,5 @@
+ #include "motis/endpoints/one_to_all.h"
++#include "motis/segment_tags.h"
+ 
+ #include <algorithm>
+ #include <chrono>
+@@ -131,6 +132,7 @@ api::Reachable one_to_all::operator()(boost::urls::url_view const& url) const {
+               .min_transfer_time_ = n::duration_t{query.minTransferTime_},
+               .additional_time_ = n::duration_t{query.additionalTransferTime_},
+               .factor_ = static_cast<float>(query.transferTimeFactor_)},
++      .segment_filter_ = make_segment_filter(query.allowedSegmentTags_),
+   };
+ 
+   if (tt_.locations_.footpaths_out_.at(q.prf_idx_).empty()) {
+diff --git a/src/endpoints/routing.cc b/src/endpoints/routing.cc
+index d932f4f..2acce96 100644
+--- a/src/endpoints/routing.cc
++++ b/src/endpoints/routing.cc
+@@ -1,4 +1,5 @@
+ #include "motis/endpoints/routing.h"
++#include "motis/segment_tags.h"
+ 
+ #include <algorithm>
+ #include <cmath>
+@@ -1143,7 +1144,8 @@ api::plan_response routing::route(api::plan_params const& query,
+                                : std::optional{fastest_direct},
+         .fastest_direct_factor_ = query.fastestDirectFactor_,
+         .slow_direct_ = query.slowDirect_,
+-        .fastest_slow_direct_factor_ = query.fastestSlowDirectFactor_};
++        .fastest_slow_direct_factor_ = query.fastestSlowDirectFactor_,
++        .segment_filter_ = make_segment_filter(query.allowedSegmentTags_)};
+     remove_slower_than_fastest_direct(q);
+     UTL_STOP_TIMING(query_preparation);
+ 
+@@ -1203,7 +1205,8 @@ api::plan_response routing::route(api::plan_params const& query,
+       }
+ #endif
+ 
+-      if (algorithm == api::algorithmEnum::PONG && pong_applicable) {
++      if (algorithm == api::algorithmEnum::PONG && pong_applicable &&
++          q.segment_filter_ == nullptr) {
+         try {
+           auto raptor_state = n::routing::raptor_state{};
+           r = n::routing::pong_search(
+@@ -1224,7 +1227,8 @@ api::plan_response routing::route(api::plan_params const& query,
+                  !q.td_start_.empty() || !q.td_dest_.empty() ||
+                  !q.transfer_time_settings_.default_ || !q.via_stops_.empty() ||
+                  q.require_bike_transport_ || q.require_car_transport_ ||
+-                 q.no_compulsory_reservation_) {
++                 q.no_compulsory_reservation_ ||
++                 q.segment_filter_ != nullptr) {
+         auto raptor_state = n::routing::raptor_state{};
+         r = n::routing::raptor_search(
+             *tt_, rtt, search_state, raptor_state, q,
+diff --git a/src/segment_tags.cc b/src/segment_tags.cc
+new file mode 100644
+index 0000000..2eed5f9
+--- /dev/null
++++ b/src/segment_tags.cc
+@@ -0,0 +1,74 @@
++#include "motis/segment_tags.h"
++
++#include <cstdlib>
++#include <charconv>
++#include <string_view>
++
++#include "utl/verify.h"
++
++#include "nigiri/timetable.h"
++
++namespace n = nigiri;
++
++namespace motis {
++
++namespace {
++
++std::unique_ptr<n::routing::segment_tags> g_segment_tags;
++
++// Station number of a location: the id of its parent (or its own),
++//   "Parentch:1:sloid:4121", "ch:1:sloid:4121:0:1" -> 8504121 (85 + sloid, 5 digits)
++//   "Parent8002140", "8002140:0:1"                  -> 8002140
++// 0 if the id has no such number. (Swiss GTFS shortcut - a real version
++// would take the ids of the file as-is: <tag>_<stop_id>.)
++n::routing::segment_tags::station_key_t station_key(n::timetable const& tt,
++                                                    n::location_idx_t l) {
++  if (auto const p = tt.locations_.parents_[l];
++      p != n::location_idx_t::invalid()) {
++    l = p;
++  }
++  auto id = tt.locations_.ids_[l].view();
++  if (id.starts_with("Parent")) {
++    id.remove_prefix(6U);
++  }
++  constexpr auto kSloid = std::string_view{"ch:1:sloid:"};
++  auto const is_sloid = id.starts_with(kSloid);
++  if (is_sloid) {
++    id.remove_prefix(kSloid.size());
++  }
++  auto v = std::uint32_t{0U};
++  auto const [ptr, ec] = std::from_chars(id.data(), id.data() + id.size(), v);
++  if (ec != std::errc{} || ptr == id.data()) {
++    return 0U;
++  }
++  return is_sloid ? (v < 100'000U ? 8'500'000U + v : 0U) : v;
++}
++
++}  // namespace
++
++void load_segment_tags(n::timetable const& tt) {
++  auto const path = std::getenv("MOTIS_SEGMENT_TAGS");
++  if (path == nullptr || *path == '\0') {
++    return;
++  }
++  g_segment_tags = std::make_unique<n::routing::segment_tags>(
++      tt, path, [&](n::location_idx_t const l) { return station_key(tt, l); });
++}
++
++std::shared_ptr<n::routing::segment_filter const> make_segment_filter(
++    std::optional<std::vector<std::string>> const& allowed_tags) {
++  if (!allowed_tags.has_value()) {
++    return nullptr;
++  }
++  utl::verify(g_segment_tags != nullptr,
++              "allowedSegmentTags: no segment tags loaded "
++              "(start the server with MOTIS_SEGMENT_TAGS=<file>)");
++  auto tags = std::vector<std::string_view>{};
++  for (auto const& t : *allowed_tags) {
++    tags.emplace_back(t);
++  }
++  return std::make_shared<n::routing::segment_filter const>(*g_segment_tags,
++                                                            tags);
++}
++
++}  // namespace motis
