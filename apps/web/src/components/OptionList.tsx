@@ -25,7 +25,7 @@ function componentLabel(c: CostComponent, t: ReturnType<typeof useI18n>['t'], la
 }
 
 /** The all-zones pass of a network other than Mobilis is named after that network. */
-function productName(p: PricedProduct, t: ReturnType<typeof useI18n>['t']): string {
+export function productName(p: PricedProduct, t: ReturnType<typeof useI18n>['t']): string {
   if (p.kind === 'zonePassAllYearly' && p.network && p.components[0]?.key.startsWith('network.')) return t('network.year.all', { network: p.network });
   return t(`product.${p.kind}`);
 }
@@ -40,7 +40,7 @@ function ticketDetail(p: PricedProduct, t: ReturnType<typeof useI18n>['t'], lang
 }
 
 /** Prices of another year than the coming timetable year: said next to the product, in few words. */
-function PriceYear({ product }: { product: PricedProduct }) {
+export function PriceYear({ product }: { product: PricedProduct }) {
   const { t } = useI18n();
   return product.priceYear ? <small className="price-year"> · {t('network.priceYear', { year: product.priceYear })}</small> : null;
 }

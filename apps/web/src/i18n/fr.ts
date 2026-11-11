@@ -227,6 +227,22 @@ export const fr = {
   'm.cost.car.time': "Temps en voiture = temps de roulage × facteur de trafic de pointe + temps pour se garer. Le facteur de trafic de pointe est une hypothèse, pas une mesure : de 1,1 en rase campagne à 3 dans les rues d’un centre-ville, selon le nombre d’habitants et d’emplois le long du trajet. Le temps pour se garer dépend du nombre d’habitants et d’emplois dans un rayon de 1 km autour du lieu de travail : 15 min en centre-ville, 10 min au centre d’une localité, 5 min ailleurs.",
   'm.options.i4': "Un P+Rail dont le prix du parking n’est pas connu n’est pas proposé.",
   'm.options.i5': "Les options sont comparées départ par départ. Une option figure dans la liste si au moins un de ses départs n’est pas égalé par une option au moins aussi bon marché, avec autant de changements ou moins, qui ne part pas plus tôt et n’arrive pas plus tard.",
+  'overview.title': "Vos options en un coup d’œil",
+  'cat.transit': "Transports publics",
+  'cat.car': "Voiture",
+  'cat.active': "À pied ou à vélo",
+  'cat.parkRail': "P+Rail",
+  'cat.bikeRide': "Vélo + train",
+  'overview.via': "via {via}",
+  'overview.km': "{km} km",
+  'overview.also': "Autres options de ce type",
+  'flex.title': "Du télétravail certains jours ?",
+  'flex.intro': "{name} : le billet le moins cher selon le nombre de jours sur le lieu de travail.",
+  'flex.days': "1 jour par semaine|{n} jours par semaine",
+  'flex.daysRange': "{from} à {to} jours par semaine",
+  'flex.yours': "votre recherche",
+  'allzones.title': "Tout le réseau pour {chf} de plus par an",
+  'allzones.text': "L’abonnement annuel pour toutes les zones {network} coûte {month} de plus par mois que celui de ce trajet ({own} par an), et couvre aussi tous les autres trajets dans le réseau.",
 } as const;
 
 export type Key = keyof typeof fr;

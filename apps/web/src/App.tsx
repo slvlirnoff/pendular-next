@@ -4,7 +4,7 @@ import { I18n, LANGS, langFromPath, translator, type Lang } from './i18n/index.j
 import { compareCommute } from './lib/api.js';
 import { fromQuery, toQuery, toRequest, type SearchState } from './lib/state.js';
 import { SearchForm } from './components/SearchForm.js';
-import { Verdict } from './components/Verdict.js';
+import { Overview } from './components/Overview.js';
 import { TradeoffChart } from './components/TradeoffChart.js';
 import { OptionList, type SortKey } from './components/OptionList.js';
 import { LeftOutList } from './components/LeftOutList.js';
@@ -183,7 +183,7 @@ export function App() {
 
         {status !== 'error' && result && searched?.home && searched.work && result.options.length > 0 && (
           <div className={status === 'loading' ? 'results is-stale' : 'results'} aria-busy={status === 'loading'}>
-            <Verdict result={result} onSelect={setSelected} />
+            <Overview result={result} daysSearched={searched.weekdays.length} selected={selected} onSelect={setSelected} />
             <TradeoffChart options={result.options} selected={selected} onSelect={setSelected} />
             <div className="tabs" role="group" aria-label={t('view.label')}>
               <button type="button" aria-pressed={tab === 'list'} onClick={() => setTab('list')}>
