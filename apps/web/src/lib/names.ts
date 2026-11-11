@@ -1,4 +1,4 @@
-import { TRANSIT_MODES, type CommuteOption, type OptionKind } from '@pendular/engine/types';
+import { TRANSIT_MODES, type CommuteOption, type Leg, type OptionKind } from '@pendular/engine/types';
 import type { T } from '../i18n/index.js';
 
 /** A short human name: "P+Rail Moudon", "Public transport: Lucens → Lausanne, IR 15". */
@@ -36,7 +36,12 @@ export const KIND_SHAPE: Record<OptionKind, 'circle' | 'square' | 'diamond' | 't
 /** Where the traveller changes vehicle, at most two names, without the stop detail ("Lucens, gare" → "Lucens"). */
 export function changeStops(o: CommuteOption): string[] {
   // The typical connection only (`itinerary`), by mode like the engine's route title, not by line name.
-  const legs = o.itinerary.legs.filter((l) => TRANSIT_MODES.includes(l.mode));
+  return changeStopsOf(o.itinerary.legs);
+}
+
+/** The same for the legs of one trip. */
+export function changeStopsOf(all: Leg[]): string[] {
+  const legs = all.filter((l) => TRANSIT_MODES.includes(l.mode));
   const names = legs.slice(0, -1).map((l) => l.to.name.split(',')[0]!.trim());
   return [...new Set(names)].slice(0, 2);
 }

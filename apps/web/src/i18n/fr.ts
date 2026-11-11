@@ -284,6 +284,7 @@ export const fr = {
   'group.depTitle': "Départs",
   'group.depSummary': "{count} départs entre {first} et {last}, toutes les {n} min",
   'group.routesTitle': "Les {n} itinéraires",
+  'group.tripAt': "départ {time}",
   'group.routeShown': "affiché",
 } as const;
 

@@ -498,7 +498,14 @@ export interface CommuteOption {
   /** Distinct departures arriving in the window (transit part); undefined for street-only options. */
   departuresInWindow?: number;
   /** Every connection in the window, door to door: when to leave home, when one arrives ("HH:MM"). */
-  connections?: { departure: string; arrival: string; durationMin: number; changes: number }[];
+  connections?: {
+    departure: string;
+    arrival: string;
+    durationMin: number;
+    changes: number;
+    /** The trip of this departure. Its drawn path is given only when it differs from `itinerary`'s. */
+    legs?: Leg[];
+  }[];
   /**
    * Options with the same key need the same ticket (same zones, same route pass): the list
    * shows them together.

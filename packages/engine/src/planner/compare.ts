@@ -195,6 +195,18 @@ function streetLeg(mode: LegMode, from: LatLon & { name: string }, to: LatLon & 
 }
 
 /** The vehicles of a connection: timetable run where known, else line and arrival at its last stop. */
+/** Where a trip boards and alights, vehicle by vehicle: two trips with the same answer follow the same path. */
+const pathOf = (it: Itinerary) => it.legs.filter((l) => l.line).map((l) => `${l.from.stopId ?? l.from.name}>${l.to.stopId ?? l.to.name}`).join('|');
+
+/**
+ * The legs of one departure for the list: times, lines and stops. The drawn path is kept only
+ * when the trip goes another way than the typical one of its route (whose path is already sent).
+ */
+function connectionLegs(it: Itinerary, typical: Itinerary): Leg[] {
+  const samePath = pathOf(it) === pathOf(typical);
+  return it.legs.map(({ geometry, intermediateStops, ...l }) => (samePath ? l : { ...l, ...(geometry ? { geometry } : {}), ...(intermediateStops ? { intermediateStops } : {}) }));
+}
+
 const vehiclesOf = (it: Itinerary) =>
   it.legs.filter(isTransit).map((l) => l.tripId ?? `${l.line?.name}|${l.arrival}|${l.to.stopId ?? l.to.name}`);
 /** The vehicle one spends the longest in. */
@@ -624,6 +636,7 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
     min: Math.round((ms(it.arrival) - ms(it.departure) + leadMs) / 60000),
     changes: it.changes,
     vehicles: vehiclesOf(it),
+    it,
   });
   // The searches inside zone sets start now and run beside those from the car parks (step 3),
   // which wait for them only to know every connection from home.
@@ -733,15 +746,14 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
         shown++;
         const typical = timed[Math.floor((timed.length - 1) / 2)]!;
         const total = typical.conn.min;
-        const boardAt = new Date(ms(typical.it.departure) - Math.max(0, leadOf(typical.it) - rideMs));
-        const accessLeg = streetLeg(legMode, home, { ...c.site, name: c.site.name }, { ...c.route, durationMin: c.route.durationMin * factor }, boardAt, 0);
-        const itinerary: Itinerary = {
-          departure: accessLeg.departure,
-          arrival: typical.it.arrival,
-          durationMin: total,
-          changes: typical.it.changes,
-          legs: [accessLeg, ...typical.it.legs],
+        // Door to door: the drive or ride to the site, then the connection from there.
+        const doorToDoor = (x: (typeof timed)[number]): Itinerary => {
+          const boardAt = new Date(ms(x.it.departure) - Math.max(0, leadOf(x.it) - rideMs));
+          const accessLeg = streetLeg(legMode, home, { ...c.site, name: c.site.name }, { ...c.route, durationMin: c.route.durationMin * factor }, boardAt, 0);
+          return { departure: accessLeg.departure, arrival: x.it.arrival, durationMin: x.conn.min, changes: x.it.changes, legs: [accessLeg, ...x.it.legs] };
         };
+        for (const x of timed) x.conn.it = doorToDoor(x);
+        const itinerary = typical.conn.it!;
         const kept: RouteGroup = { ...g, itineraries: timed.map((x) => x.it), departures: timed.length, arrivals: timed.map((x) => x.it.arrival).sort() };
         kept.firstArrival = kept.arrivals[0]!;
         kept.lastArrival = kept.arrivals[kept.arrivals.length - 1]!;
@@ -840,7 +852,13 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       hoursPerYear: Math.round((d.durationMin * trips) / 60),
       access: d.access ? { id: d.access.id, name: d.access.name, kind: d.access.kind, lat: d.access.lat, lon: d.access.lon } : undefined,
       connections: d.conns
-        ? [...d.conns].sort((a, b) => a.dep - b.dep).map((c) => ({ departure: localHHMM(new Date(c.dep).toISOString(), tz), arrival: localHHMM(new Date(c.arr).toISOString(), tz), durationMin: c.min, changes: c.changes }))
+        ? [...d.conns].sort((a, b) => a.dep - b.dep).map((c) => ({
+            departure: localHHMM(new Date(c.dep).toISOString(), tz),
+            arrival: localHHMM(new Date(c.arr).toISOString(), tz),
+            durationMin: c.min,
+            changes: c.changes,
+            ...(c.it ? { legs: connectionLegs(c.it, d.itinerary) } : {}),
+          }))
         : undefined,
       fareKey: d.fareKey,
       ticketGroup: `${d.kind}|${d.access?.id ?? ''}|${d.fareKey ?? ''}`,

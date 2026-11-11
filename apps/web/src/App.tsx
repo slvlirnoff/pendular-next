@@ -7,7 +7,7 @@ import { fromQuery, toQuery, toRequest, type SearchState } from './lib/state.js'
 import { SearchForm } from './components/SearchForm.js';
 import { Overview } from './components/Overview.js';
 import { TradeoffChart } from './components/TradeoffChart.js';
-import { OptionList, type SortKey } from './components/OptionList.js';
+import { OptionList, type SortKey, type PickedTrip } from './components/OptionList.js';
 import { LeftOutList } from './components/LeftOutList.js';
 import { MapPanel } from './components/MapPanel.js';
 import { MethodPage } from './components/MethodPage.js';
@@ -32,6 +32,8 @@ export function App() {
   const [searched, setSearched] = useState<SearchState | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [selected, setSelected] = useState<string | null>(null);
+  // A departure chosen in a card: its trip replaces the typical one of its route, in the card and on the map.
+  const [picked, setPicked] = useState<PickedTrip | null>(null);
   const [sort, setSort] = useState<SortKey>('cost');
   const [page, setPage] = useState<Page>(() => pageFromPath(location.pathname));
   const [tab, setTab] = useState<'list' | 'map'>('list');
@@ -208,7 +210,7 @@ export function App() {
             </div>
             <div className={`split show-${tab}`}>
               <div className="split-list">
-                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} car={stamp?.car} />
+                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} car={stamp?.car} picked={picked} onPick={setPicked} />
                 <LeftOutList items={result.leftOut} />
               </div>
               <div className="split-map">
@@ -216,7 +218,10 @@ export function App() {
                 <MapPanel
                   home={searched.home}
                   work={searched.work}
-                  options={selected === result.sharedBike?.id && result.sharedBike ? [...result.options, result.sharedBike] : result.options}
+                  options={(selected === result.sharedBike?.id && result.sharedBike ? [...result.options, result.sharedBike] : result.options).map((o) =>
+                    // The chosen departure is drawn when it goes another way than the route's typical trip.
+                    picked && o.id === picked.id && picked.legs.some((l) => l.geometry) ? { id: o.id, itinerary: { ...o.itinerary, legs: picked.legs } } : o,
+                  )}
                   selected={selected}
                 />
               </div>

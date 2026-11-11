@@ -2,7 +2,7 @@ import { useId, useState } from 'react';
 import type { CarAssumptions, CommuteOption, CostComponent, Leg, PricedProduct } from '@pendular/engine/types';
 import { useI18n, type Key } from '../i18n/index.js';
 import { chf, chf2, duration, durationRange, hhmm, num } from '../lib/format.js';
-import { changeStops, optionName } from '../lib/names.js';
+import { changeStops, changeStopsOf, optionName } from '../lib/names.js';
 import { departuresSummary, medianGap } from '../lib/schedule.js';
 import { groupBest, groupDepartures, groupRoute, isEarlyReturn, lastReturn, ticketGroups, type TicketGroup } from '../lib/groups.js';
 import { carNote } from '../lib/carNote.js';
@@ -178,32 +178,57 @@ function routeVia(o: CommuteOption, t: ReturnType<typeof useI18n>['t']): string 
   return via.length ? t('overview.via', { via: via.join(', ') }) : t('opt.direct');
 }
 
-/** The lines of a route, without the walks: for a row of the timetable. */
-const lineLegs = (o: CommuteOption) => {
-  const legs = o.itinerary.legs.filter((l) => l.mode !== 'walk');
-  return legs.length ? legs : o.itinerary.legs;
+/** The vehicles of a trip, and the car or bike that leads to them; walks are left out. */
+const lineLegs = (all: Leg[]) => {
+  const legs = all.filter((l) => l.mode !== 'walk');
+  return legs.length ? legs : all;
 };
 
 /** Up to this many departures are listed at once; more wait behind their summary. */
 const DEPARTURES_OPEN = 6;
 
-/** When to leave home, all routes of the ticket together. */
-function Departures({ group, shown }: { group: TicketGroup; shown: CommuteOption }) {
+/** A departure chosen in a card: which route it belongs to and the trip itself. */
+export interface PickedTrip {
+  id: string;
+  departure: string;
+  legs: Leg[];
+}
+
+/**
+ * When to leave home, all routes of the ticket together. Every row says the same things: the
+ * times, the lines, where one changes, how long it takes. Choosing a row shows that trip below.
+ */
+function Departures(props: { group: TicketGroup; shown: CommuteOption; picked: PickedTrip | null; onPick: (p: PickedTrip) => void }) {
   const { t } = useI18n();
+  const { group, shown, picked } = props;
   const rows = groupDepartures(group);
   if (rows.length === 0) return null;
-  const several = group.routes.length > 1;
+  // Without a choice, the trip shown below is the typical one of the route on screen.
+  const current = picked ? { id: picked.id, departure: picked.departure } : { id: shown.id, departure: hhmm(shown.itinerary.departure) };
   const list = (
-    <ul className={several ? 'departures has-lines' : 'departures'}>
-      {rows.map((c) => (
-        <li key={`${c.route.id}-${c.departure}`} className={several && c.route === shown ? 'is-shown' : undefined}>
-          <span className="dep-times">
-            {c.departure} → {c.arrival}
-          </span>
-          {several && <ModeChain legs={lineLegs(c.route)} />}
-          <span className="dep-duration">{duration(c.durationMin)}</span>
-        </li>
-      ))}
+    <ul className="departures">
+      {rows.map((c) => {
+        const legs = c.legs ?? c.route.itinerary.legs;
+        const via = changeStopsOf(legs);
+        const on = c.route.id === current.id && c.departure === current.departure;
+        return (
+          <li key={`${c.route.id}-${c.departure}-${c.arrival}`}>
+            <button type="button" aria-pressed={on} onClick={() => props.onPick({ id: c.route.id, departure: c.departure, legs })}>
+              <span className="dep-times">
+                <strong>{c.departure}</strong> → {c.arrival}
+              </span>
+              <span className="dep-route">
+                <ModeChain legs={lineLegs(legs)} />
+                {via.length > 0 && <span className="dep-via">{t('overview.via', { via: via.join(', ') })}</span>}
+              </span>
+              <span className="dep-duration">
+                {duration(c.durationMin)}
+                <span className="dep-changes"> · {c.changes === 0 ? t('opt.direct') : t('opt.changes', { n: c.changes })}</span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
   if (rows.length <= DEPARTURES_OPEN) {
@@ -240,7 +265,7 @@ function Routes(props: { group: TicketGroup; shown: CommuteOption; onSelect: (id
             <li key={o.id}>
               <button type="button" aria-pressed={o === shown} onClick={() => props.onSelect(o.id)}>
                 <span className="route-top">
-                  <ModeChain legs={lineLegs(o)} />
+                  <ModeChain legs={lineLegs(o.itinerary.legs)} />
                   {o === shown && <span className="mode-tag">{t('group.routeShown')}</span>}
                 </span>
                 <span className="route-facts">
@@ -261,7 +286,7 @@ function Routes(props: { group: TicketGroup; shown: CommuteOption; onSelect: (id
 }
 
 /** One card per ticket: what it costs and what it allows; the routes inside. */
-function GroupCard(props: { group: TicketGroup; selected: string | null; onSelect: (id: string | null) => void; hasCar: boolean }) {
+function GroupCard(props: { group: TicketGroup; selected: string | null; onSelect: (id: string | null) => void; hasCar: boolean; picked: PickedTrip | null; onPick: (p: PickedTrip | null) => void }) {
   const { t, lang } = useI18n();
   const { group } = props;
   const open = group.routes.some((o) => o.id === props.selected);
@@ -286,6 +311,12 @@ function GroupCard(props: { group: TicketGroup; selected: string | null; onSelec
   // Which search gave the last trip home: any line the pass covers, or the route of the morning trip.
   const within = back?.within === 'pass' ? t('opt.lastHomePass') : back?.within === 'route' ? t('opt.lastHomeRoute') : null;
   const saved = shown.co2SavedKgPerYear;
+  // A departure chosen in this card, as long as its route is the one on screen.
+  const picked = props.picked && props.picked.id === shown.id && shown.connections?.some((c) => c.departure === props.picked!.departure) ? props.picked : null;
+  const pick = (p: PickedTrip) => {
+    props.onPick(p);
+    if (p.id !== shown.id) props.onSelect(p.id);
+  };
   return (
     <li className={`option card${open ? ' is-selected' : ''}`}>
       <h3>
@@ -329,11 +360,11 @@ function GroupCard(props: { group: TicketGroup; selected: string | null; onSelec
       {open && (
         <div className="option-detail" id={detailId}>
           {!back && group.routes.some((o) => o.returnTrips === null) && <p className="detail-facts warn">{t('opt.noReturn')}</p>}
-          <Departures group={group} shown={shown} />
+          <Departures group={group} shown={shown} picked={picked} onPick={pick} />
           {n > 1 && <Routes group={group} shown={shown} onSelect={props.onSelect} />}
           <Products products={shown.cost.products} />
           <Extras o={shown} />
-          <Timeline legs={shown.itinerary.legs} note={n > 1 ? routeVia(shown, t) : undefined} />
+          <Timeline legs={picked?.legs ?? shown.itinerary.legs} note={t('group.tripAt', { time: picked?.departure ?? hhmm(shown.itinerary.departure) })} />
           <p className="detail-facts">
             {t('opt.hours', { h: num(shown.hoursPerYear, lang) })}
             {saved !== undefined && saved > 0 && props.hasCar && <> · <span className="good">{t('opt.saved', { kg: num(saved, lang) })}</span></>}
@@ -398,7 +429,7 @@ function OptionRow(props: { o: CommuteOption; selected: boolean; onSelect: () =>
 
 export type SortKey = 'cost' | 'time' | 'co2';
 
-export function OptionList(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string | null) => void; sort: SortKey; onSort: (s: SortKey) => void; car?: CarAssumptions }) {
+export function OptionList(props: { options: CommuteOption[]; selected: string | null; onSelect: (id: string | null) => void; sort: SortKey; onSort: (s: SortKey) => void; car?: CarAssumptions; picked: PickedTrip | null; onPick: (p: PickedTrip | null) => void }) {
   const { t } = useI18n();
   const f = { cost: (o: CommuteOption) => o.cost.yearly, time: (o: CommuteOption) => o.durationMin, co2: (o: CommuteOption) => o.co2KgPerYear }[props.sort];
   // One card per ticket; a card sorts by its best route.
@@ -425,7 +456,7 @@ export function OptionList(props: { options: CommuteOption[]; selected: string |
         {shown.map((g) => {
           const o = g.routes[0]!;
           return g.ticketed ? (
-            <GroupCard key={g.key} group={g} hasCar={hasCar} selected={props.selected} onSelect={props.onSelect} />
+            <GroupCard key={g.key} group={g} hasCar={hasCar} selected={props.selected} onSelect={props.onSelect} picked={props.picked} onPick={props.onPick} />
           ) : (
             <OptionRow key={g.key} o={o} hasCar={hasCar} car={props.car} selected={o.id === props.selected} onSelect={() => props.onSelect(o.id === props.selected ? null : o.id)} />
           );

@@ -340,14 +340,18 @@ button.mode-main:hover { background: var(--bg-alt); }
 .detail-fold > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); min-height: 24px; }
 .detail-fold > summary:hover { color: var(--accent-dark); }
 .detail-fold[open] > summary { margin-bottom: 8px; }
-.departures { display: grid; gap: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+.departures { display: grid; gap: 0; font-size: 14px; font-variant-numeric: tabular-nums; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
 .options .departures, .options .routes { gap: 0; }
-.departures li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 16px; align-items: center; padding: 6px 0; }
 .departures li + li { border-top: 1px solid var(--border); }
-.departures:not(.has-lines) li { grid-template-columns: minmax(0, 1fr) auto; }
+.departures button { width: 100%; min-height: 44px; background: none; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; padding: 8px 14px; display: grid; grid-template-columns: 108px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; border-radius: var(--radius-md); }
+.departures button:hover { background: var(--bg-alt); }
+.departures button[aria-pressed='true'] { background: var(--accent-tint); }
+.departures button:focus-visible { outline-offset: -3px; }
 .dep-times { white-space: nowrap; }
-.departures li.is-shown .dep-times { font-weight: 600; }
-.dep-duration { color: var(--text-muted); white-space: nowrap; text-align: right; }
+.dep-route { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; min-width: 0; }
+.dep-via { font-size: 13px; color: var(--text-muted); }
+.dep-duration { white-space: nowrap; text-align: right; }
+.dep-changes { color: var(--text-muted); }
 .routes { display: grid; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
 .routes li + li { border-top: 1px solid var(--border); }
 .routes button { width: 100%; background: none; border: 0; text-align: left; padding: 10px 14px; display: grid; gap: 6px; border-radius: var(--radius-md); }
@@ -362,7 +366,7 @@ button.mode-main:hover { background: var(--bg-alt); }
   /* On a phone the name takes the full width; the price follows on its own line. */
   .option-main, .option-figures { grid-column: 1 / -1; }
   .option-figures { justify-items: start; }
-  .departures.has-lines li { grid-template-columns: minmax(0, 1fr) auto; }
-  .departures.has-lines .mode-chain { grid-column: 1 / -1; grid-row: 2; }
+  .departures button { grid-template-columns: minmax(0, 1fr) auto; }
+  .departures .dep-route { grid-column: 1 / -1; grid-row: 2; }
 }
 .route-top .mode-tag { flex: none; }

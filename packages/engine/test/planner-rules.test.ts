@@ -193,7 +193,9 @@ describe('park and ride access', () => {
       const r = await compare(PR, deps(routing([feeder('07:00', '07:25', '07:50', 'T1')], siteAt('07:25'))));
       const pr = r.options.find((o) => o.kind === 'parkRail')!;
       expect(pr).toBeDefined();
-      expect(pr.connections).toEqual([{ departure: '07:10', arrival: '07:50', durationMin: 40, changes: 0 }]);
+      expect(pr.connections).toMatchObject([{ departure: '07:10', arrival: '07:50', durationMin: 40, changes: 0 }]);
+      // Each departure carries its own trip, door to door: the drive, then the train.
+      expect(pr.connections![0]!.legs!.map((l) => l.mode)).toEqual(['car', 'rail']);
     });
     it('does not apply to a different train', async () => {
       const r = await compare(PR, deps(routing(homeTrain('H'), [trip(rail(STATION, CITY, '07:17', '07:40', 'IR 1', 'S'))])));
@@ -206,7 +208,7 @@ describe('park and ride access', () => {
       const pr = r.options.find((o) => o.kind === 'parkRail')!;
       // T1 from the site leaves home 07:02 (2 min after 07:00): dropped. T2 leaves home 07:40,
       // 10 min after the 07:30 train from home: kept.
-      expect(pr.connections).toEqual([{ departure: '07:40', arrival: '08:20', durationMin: 40, changes: 0 }]);
+      expect(pr.connections).toMatchObject([{ departure: '07:40', arrival: '08:20', durationMin: 40, changes: 0 }]);
     });
   });
 });

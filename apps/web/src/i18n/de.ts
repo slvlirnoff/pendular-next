@@ -284,5 +284,6 @@ export const de: Dict = {
   'group.depTitle': "Abfahrten",
   'group.depSummary': "{count} Abfahrten zwischen {first} und {last}, alle {n} Min.",
   'group.routesTitle': "Die {n} Routen",
+  'group.tripAt': "Abfahrt {time}",
   'group.routeShown': "angezeigt",
 };

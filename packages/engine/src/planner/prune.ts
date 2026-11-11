@@ -1,4 +1,4 @@
-import type { CommuteOption, LeftOut, OptionKind, RuleSet } from '../types.js';
+import type { CommuteOption, Itinerary, LeftOut, OptionKind, RuleSet } from '../types.js';
 
 /** One way of making the trip at one time: leave home, arrive (epoch ms), minutes door to door. */
 export interface Conn {
@@ -8,6 +8,8 @@ export interface Conn {
   changes: number;
   /** The vehicles used (timetable runs), to recognise the same train reached another way. */
   vehicles?: string[];
+  /** The trip itself, door to door, to show each departure with its own lines and stops. */
+  it?: Itinerary;
 }
 
 export type WithConns = CommuteOption & { _conns?: Conn[] };
