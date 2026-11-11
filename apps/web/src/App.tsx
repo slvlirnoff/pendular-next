@@ -183,7 +183,17 @@ export function App() {
 
         {status !== 'error' && result && searched?.home && searched.work && result.options.length > 0 && (
           <div className={status === 'loading' ? 'results is-stale' : 'results'} aria-busy={status === 'loading'}>
-            <Overview result={result} daysSearched={searched.weekdays.length} selected={selected} onSelect={setSelected} />
+            <Overview
+              result={result}
+              daysSearched={searched.weekdays.length}
+              selected={selected}
+              onSelect={setSelected}
+              onShowOnMap={(id) => {
+                setSelected(id);
+                setTab('map');
+                requestAnimationFrame(() => document.querySelector('.split-map')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+              }}
+            />
             <TradeoffChart options={result.options} selected={selected} onSelect={setSelected} />
             <div className="tabs" role="group" aria-label={t('view.label')}>
               <button type="button" aria-pressed={tab === 'list'} onClick={() => setTab('list')}>
@@ -199,7 +209,13 @@ export function App() {
                 <LeftOutList items={result.leftOut} />
               </div>
               <div className="split-map">
-                <MapPanel home={searched.home} work={searched.work} options={result.options} selected={selected} />
+                {/* The shared-bike suggestion is drawn only while it is the selection. */}
+                <MapPanel
+                  home={searched.home}
+                  work={searched.work}
+                  options={selected === result.sharedBike?.id && result.sharedBike ? [...result.options, result.sharedBike] : result.options}
+                  selected={selected}
+                />
               </div>
             </div>
             {stamp && (

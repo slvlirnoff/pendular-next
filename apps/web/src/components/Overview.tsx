@@ -1,6 +1,6 @@
-import type { CommuteOption, CompareResult, FlexibleWork, FlexibleWorkRow, OptionKind } from '@pendular/engine/types';
+import type { CommuteOption, CompareResult, FlexibleWork, FlexibleWorkRow, Leg, OptionKind, SharedBikeSuggestion } from '@pendular/engine/types';
 import { useI18n, type Key, type T } from '../i18n/index.js';
-import { chf, duration, num } from '../lib/format.js';
+import { chf, chf2, duration, num } from '../lib/format.js';
 import { changeStops, optionName } from '../lib/names.js';
 import { carNote } from '../lib/carNote.js';
 import { modeIcon } from '../lib/pictograms.js';
@@ -176,11 +176,99 @@ function AllZonesCard({ option }: { option: CommuteOption }) {
   );
 }
 
-export function Overview(props: { result: CompareResult; daysSearched: number; selected: string | null; onSelect: (id: string) => void }) {
+const PUBLIC_TRANSPORT = new Set(['rail', 'bus', 'tram', 'metro', 'boat', 'funicular', 'cableway']);
+const VEHICLES = new Set(['rail', 'bus', 'tram', 'metro', 'boat']);
+
+/**
+ * One box for the one shared-bike idea worth a look: what it saves, how it goes, what it costs
+ * next to the public transport option it is compared with, and what cannot be promised.
+ */
+function SharedBikeCard(props: { bike: SharedBikeSuggestion; against?: CommuteOption; selected: boolean; onShowOnMap: () => void }) {
+  const { t, lang } = useI18n();
+  const { bike: b, against } = props;
+  const saved = b.against?.minutesSaved ?? 0;
+  const title =
+    saved > 0
+      ? t(`sbike.title.${b.kind}`, { min: duration(saved) })
+      : b.kind !== 'whole' && (b.against?.changesSaved ?? 0) > 0
+        ? t('sbike.title.change')
+        : t('sbike.title.plain', { min: duration(b.durationMin) });
+
+  // How it goes, in one sentence.
+  const transit = b.itinerary.legs.filter((l: Leg) => PUBLIC_TRANSPORT.has(l.mode));
+  const vehicle = t(`sbike.vehicle.${transit.length === 1 && VEHICLES.has(transit[0]!.mode) ? (transit[0]!.mode as 'rail' | 'bus' | 'tram' | 'metro' | 'boat') : 'other'}`);
+  const walk = (min: number, key: 'sbike.walk' | 'sbike.walkWork' | 'sbike.walkHome') => (min > 0 ? t(key, { min: duration(min) }) : '');
+  const ride = duration(b.rideMin);
+  const { from, to } = b.stations;
+  const how =
+    b.kind === 'lastLeg'
+      ? t('sbike.how.lastLeg', { vehicle, stop: transit[transit.length - 1]?.to.name ?? '', operator: b.operator, station: from.name, walk: walk(from.walkMin, 'sbike.walk'), ride })
+      : b.kind === 'firstLeg'
+        ? t('sbike.how.firstLeg', { operator: b.operator, station: from.name, walk: walk(from.walkMin, 'sbike.walkHome'), ride, stop: transit[0]?.from.name ?? '' })
+        : t('sbike.how.whole', { operator: b.operator, from: from.name, walk: walk(from.walkMin, 'sbike.walkHome'), to: to.name, walkTo: walk(to.walkMin, 'sbike.walkWork'), ride, km: num(b.rideKm, lang, 1) });
+  const total = against && saved > 0 ? t('sbike.totalVs', { min: duration(b.durationMin), other: duration(against.durationMin) }) : saved > 0 || b.kind !== 'whole' ? t('sbike.total', { min: duration(b.durationMin) }) : '';
+
+  // What it costs: against the public transport option where there is one.
+  const m = b.cost.membership;
+  const delta = b.against?.chfPerYear;
+  const price = m.unknown
+    ? t('sbike.cost.unknown')
+    : delta === undefined || delta === null
+      ? t('sbike.cost.total', { chf: chf(b.cost.yearly ?? 0, lang) })
+      : delta > 0
+        ? t('sbike.cost.more', { chf: chf(delta, lang) })
+        : delta < 0
+          ? t('sbike.cost.less', { chf: chf(-delta, lang) })
+          : t('sbike.cost.same');
+  const perRide = chf2(m.perRide ?? 0, lang);
+  const detail = m.unknown
+    ? b.cost.ticket
+      ? t('sbike.cost.ticket', { chf: chf(b.cost.ticket.yearly, lang) })
+      : ''
+    : m.key === 'bikeShare.annual'
+      ? t('sbike.cost.annual', { operator: b.operator, chf: chf(m.yearly, lang) })
+      : b.caveats.includes('membershipPriceUnknown')
+        ? t('sbike.cost.perRideUnknown', { price: perRide, operator: b.operator })
+        : t('sbike.cost.perRide', { price: perRide });
+  return (
+    <section className={`sbike card${props.selected ? ' is-selected' : ''}`} aria-labelledby="sbike-h">
+      <img src="/icons/sbb/bicycle-medium.svg" alt="" width={36} height={36} />
+      <div className="sbike-text">
+        <p className="eyebrow">{t('sbike.eyebrow')}</p>
+        <h2 id="sbike-h">{title}</h2>
+        <p>
+          {how} {total}
+        </p>
+        <ModeChain legs={b.itinerary.legs} />
+      </div>
+      <p className="sbike-price">
+        <strong>{price}</strong>
+        {detail && (
+          <span>
+            {detail}
+            {m.priceYear && !m.unknown ? <small className="price-year"> · {t('network.priceYear', { year: m.priceYear })}</small> : null}
+          </span>
+        )}
+      </p>
+      <p className="sbike-foot">
+        <span>
+          {t('sbike.caveat.availability')}
+          {m.ebikeExtraPerRide ? ` ${t('sbike.caveat.electric', { price: chf2(m.ebikeExtraPerRide, lang) })}` : ''}
+        </span>
+        <button type="button" className="link-button" aria-pressed={props.selected} onClick={props.onShowOnMap}>
+          {t('sbike.map')}
+        </button>
+      </p>
+    </section>
+  );
+}
+
+export function Overview(props: { result: CompareResult; daysSearched: number; selected: string | null; onSelect: (id: string) => void; onShowOnMap?: (id: string) => void }) {
   const { t } = useI18n();
   const { result } = props;
   const flex = result.flexibleWork;
   const flexOption = flex && result.options.find((o) => o.id === flex.optionId);
+  const bike = result.sharedBike;
   // Up to three cards leave room for the working-from-home box on the same line.
   const cards = CATEGORIES.filter((c) => result.options.some((o) => c.kinds.includes(o.kind))).length;
   const inline = !!flexOption && cards <= 3;
@@ -192,6 +280,14 @@ export function Overview(props: { result: CompareResult; daysSearched: number; s
           <ModeCard key={c.id} category={c} result={result} selected={props.selected} onSelect={props.onSelect} />
         ))}
       </ul>
+      {bike && (
+        <SharedBikeCard
+          bike={bike}
+          against={result.options.find((o) => o.id === bike.against?.optionId)}
+          selected={props.selected === bike.id}
+          onShowOnMap={() => (props.onShowOnMap ?? props.onSelect)(bike.id)}
+        />
+      )}
       {flex && flexOption && <FlexibleWorkCard flex={flex} option={flexOption} daysSearched={props.daysSearched} />}
       {flexOption && <AllZonesCard option={flexOption} />}
     </section>

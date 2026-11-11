@@ -74,8 +74,25 @@ MOTIS_SEGMENT_TAGS=$PWD/tools/motis-fork/segments.csv <motis-build>/motis server
 Each option then says which search gave its last trip home (`returnTrips.within`: `pass`, `route`
 or `any`). Deployment: `deploy/README.md`.
 
+### Shared bikes
+
+The overview shows one box when a shared bike makes the commute better: the whole trip, or the
+last or first leg of a public transport trip (the rule: `packages/engine/src/planner/sharedBike.ts`;
+its thresholds are the `sharedBike…` rules, and `sharedBike: false` switches it off). It needs
+the national shared-mobility feed (GBFS) in the MOTIS configuration, see `data/motis/GBFS.md`.
+The feed asks for a contact e-mail address, which is not in the repository:
+
+```sh
+SHAREDMOBILITY_CONTACT=<your address> bash data/scripts/enable-gbfs.sh   # adds the block to data/motis/data/config.yml
+```
+
+then restart MOTIS (no re-import). Without the feed nothing else changes: the box simply never
+appears. Operators and prices: `packages/engine/data/sharing/bike-share.json`, with the sources
+and what could not be found in `SOURCES.md` next to it.
+
 ## Data and credits
 
 Timetable and parking: opentransportdata.swiss. Streets and places: © OpenStreetMap contributors.
 Routing: MOTIS. Tariffs: Mobilis, Alliance SwissPass. Emission factors: mobitool.
+Shared-bike stations: sharedmobility.ch, Swiss Federal Office of Energy.
 Pictograms: SBB. Car costs: TCS.

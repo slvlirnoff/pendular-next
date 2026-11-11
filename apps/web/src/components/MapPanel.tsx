@@ -4,7 +4,10 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { CommuteOption, Leg, Place } from '@pendular/engine/types';
 import { useI18n } from '../i18n/index.js';
 
-const STREET = new Set(['walk', 'bike', 'ebike', 'car']);
+const STREET = new Set(['walk', 'bike', 'ebike', 'sharedBike', 'car']);
+
+/** What the map draws of an option; the shared-bike suggestion has the same shape. */
+export type MapTrip = Pick<CommuteOption, 'id' | 'itinerary'>;
 
 function legCoords(l: Leg): [number, number][] {
   const viaStops = (l.intermediateStops?.length ?? 0) + 2;
@@ -13,7 +16,7 @@ function legCoords(l: Leg): [number, number][] {
   return [l.from, ...(l.intermediateStops ?? []), l.to].map((s) => [s.lon, s.lat] as [number, number]);
 }
 
-function features(options: CommuteOption[], selected: string | null) {
+function features(options: MapTrip[], selected: string | null) {
   const lines = options.flatMap((o) =>
     o.itinerary.legs.map((l) => ({
       type: 'Feature' as const,
@@ -25,7 +28,7 @@ function features(options: CommuteOption[], selected: string | null) {
   return { type: 'FeatureCollection' as const, features: lines.sort((a, b) => Number(a.properties.selected) - Number(b.properties.selected)) };
 }
 
-function stops(o: CommuteOption | undefined) {
+function stops(o: MapTrip | undefined) {
   const pts = (o?.itinerary.legs ?? []).filter((l) => !STREET.has(l.mode)).flatMap((l) => [l.from, l.to]);
   return {
     type: 'FeatureCollection' as const,
@@ -33,7 +36,7 @@ function stops(o: CommuteOption | undefined) {
   };
 }
 
-export function MapPanel(props: { home: Place; work: Place; options: CommuteOption[]; selected: string | null }) {
+export function MapPanel(props: { home: Place; work: Place; options: MapTrip[]; selected: string | null }) {
   const { t } = useI18n();
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);

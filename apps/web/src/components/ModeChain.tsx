@@ -2,13 +2,13 @@ import type { Leg } from '@pendular/engine/types';
 import { linePictogram, modeIcon } from '../lib/pictograms.js';
 import { useI18n } from '../i18n/index.js';
 
-const STREET = new Set(['walk', 'bike', 'ebike', 'car']);
+const STREET = new Set(['walk', 'bike', 'ebike', 'sharedBike', 'car']);
 
 /** One leg as an SBB pictogram: the line badge where SBB has one, else a text badge in the same shape. */
 export function LegBadge({ leg }: { leg: Leg }) {
   const { t } = useI18n();
   if (STREET.has(leg.mode)) {
-    const label = t(`mode.${leg.mode as 'walk' | 'bike' | 'ebike' | 'car'}`);
+    const label = t(`mode.${leg.mode as 'walk' | 'bike' | 'ebike' | 'sharedBike' | 'car'}`);
     return <img className="mode-icon" src={`/icons/sbb/${modeIcon(leg.mode)}.svg`} alt={label} title={label} width={24} height={24} />;
   }
   const name = leg.line?.name ?? '';

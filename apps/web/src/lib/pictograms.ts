@@ -34,7 +34,7 @@ export function linePictogram(line: { name: string; category?: string }): string
   return null;
 }
 
-export type ModeLike = 'walk' | 'bike' | 'ebike' | 'car' | 'rail' | 'bus' | 'tram' | 'metro' | 'boat' | 'funicular' | 'cableway' | (string & {});
+export type ModeLike = 'walk' | 'bike' | 'ebike' | 'sharedBike' | 'car' | 'rail' | 'bus' | 'tram' | 'metro' | 'boat' | 'funicular' | 'cableway' | (string & {});
 
 /**
  * Icon file name for a leg mode (-small variant; swap the suffix for -medium).
@@ -49,6 +49,7 @@ export function modeIcon(mode: ModeLike): string {
     case 'walk': return pick('walk-small');
     case 'bike': return pick('bicycle-small');
     case 'ebike': return pick('bike-profile-power-plug-small');
+    case 'sharedBike': return pick('bicycle-small');
     case 'car': return pick('car-small');
     case 'bus': return pick('bus-small');
     case 'tram': return pick('tram-small');

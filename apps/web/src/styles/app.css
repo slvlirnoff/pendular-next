@@ -285,10 +285,21 @@ button.mode-main:hover { background: var(--bg-alt); }
 .allzones .allzones-price { display: grid; justify-items: end; text-align: right; margin: 0 0 0 20px; }
 .allzones-price strong { color: var(--text); font-size: 15px; white-space: nowrap; }
 
+/* The shared-bike suggestion: icon, text, price; the remark and the map link underneath. */
+.sbike { padding: 16px 20px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 16px; align-items: start; border-left: 3px solid var(--accent); }
+.sbike.is-selected { border-color: var(--accent); }
+.sbike-text { display: grid; gap: 4px; }
+.sbike-text p:not(.eyebrow) { font-size: 14px; color: var(--text-muted); max-width: 75ch; }
+.sbike-text .mode-chain { margin-top: 4px; }
+.sbike-price { display: grid; gap: 2px; justify-items: end; text-align: right; margin-left: 20px; max-width: 30ch; font-size: 13px; color: var(--text-muted); }
+.sbike-price strong { color: var(--text); font-size: 17px; white-space: nowrap; }
+.sbike-foot { grid-column: 2 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 16px; font-size: 13px; color: var(--text-subtle); border-top: 1px solid var(--border); padding-top: 6px; }
+.sbike-foot .link-button { padding: 2px 0; font-size: 13px; }
+
 /* Few cards: the cards and the working-from-home box share one line. */
 @media (min-width: 1081px) {
   .overview.is-inline { grid-template-columns: minmax(0, 1fr); display: flex; flex-wrap: wrap; align-items: stretch; }
-  .overview.is-inline > h2, .overview.is-inline .allzones { flex: 0 0 100%; }
+  .overview.is-inline > h2, .overview.is-inline .allzones, .overview.is-inline .sbike { flex: 0 0 100%; }
   .overview.is-inline .mode-cards { flex: var(--cards) 1 0; grid-template-columns: repeat(var(--cards), minmax(0, 1fr)); }
   .overview.is-inline .flex { flex: 2 1 0; min-width: 0; grid-template-columns: minmax(0, 1fr); align-content: start; padding: 14px 16px; }
   .overview.is-inline .flex-rows tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 6px 0; }
@@ -308,6 +319,11 @@ button.mode-main:hover { background: var(--bg-alt); }
   .mode-main > .mode-chain, .mode-note, .mode-tags { grid-column: 1 / -1; }
   .mode-also button { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; min-height: 36px; align-items: center; }
   .flex { padding: 14px 16px; }
+  .sbike { padding: 14px 16px; grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; }
+  .sbike > img { width: 24px; height: 24px; }
+  .sbike-price { grid-column: 1 / -1; margin: 0; max-width: none; justify-items: start; text-align: left; border-top: 1px solid var(--border); padding-top: 8px; }
+  .sbike-foot { grid-column: 1 / -1; }
+  .sbike-foot .link-button { min-height: 36px; }
   .allzones { padding: 14px 16px; grid-template-columns: auto minmax(0, 1fr); }
   .allzones .allzones-price { grid-column: 1 / -1; margin: 0; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; text-align: left; border-top: 1px solid var(--border); padding-top: 8px; }
   .flex-rows tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 12px; padding: 8px 0; }

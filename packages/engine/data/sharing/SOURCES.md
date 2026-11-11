@@ -55,7 +55,8 @@ the planner uses the pay-as-you-go price, since the page names no subscription t
 
 - **Donkey Republic's own prices.** donkey.bike (city pages and /pricing) shows no amounts:
   "prices vary depending on the city", to be seen in the app. No annual price for Geneva could
-  be confirmed anywhere, so Geneva is priced per ride.
+  be confirmed anywhere, so Geneva is priced per ride. Genèveroule, which maintains the bikes, says the
+  same: "All rates are directly in the app" (https://www.geneveroule.ch/en/velopartage/).
 - **Geneva, offer for public transport pass holders.** tpg sells Donkey Republic subscriptions
   of 3 or 6 months at a reduced price to holders of an annual unireso pass (terms of July 2024:
   https://tpg.ch/sites/default/files/2024-07/CGVU-Offre-Velopartage-tpg-07.2024.pdf, product
