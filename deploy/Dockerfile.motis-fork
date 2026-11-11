@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1
-# MOTIS built from source with our patches (tools/motis-fork): the per-request filter on allowed
-# route segments. Same version as the release binary of Dockerfile.motis, so both read the same
+# MOTIS built from our fork: the per-request filter on allowed route segments. Same version as the release binary of Dockerfile.motis, so both read the same
 # imported data. Building takes about 25 minutes on 4 cores; the image is built by the workflow
 # .github/workflows/motis-fork-image.yml and pulled everywhere else.
 #
@@ -9,21 +8,23 @@
 ARG BASE=ubuntu:24.04
 
 FROM ${BASE} AS build
-ARG MOTIS_VERSION=v2.11.4
+# The fork: github.com/slvlirnoff/motis, branch segment-tags (v2.11.4 plus the filter). Its
+# dependency file points at the segment-tags branch of github.com/slvlirnoff/nigiri.
+# Pinned by commit: bump MOTIS_REF deliberately when the branch moves.
+ARG MOTIS_REPO=https://github.com/slvlirnoff/motis.git
+ARG MOTIS_REF=7e384d261fb8dd8480ba7b9184e081e61f4c75c9
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git cmake ninja-build gcc-13 g++-13 \
     && rm -rf /var/lib/apt/lists/*
 # MOTIS's dependency tool clones over ssh by default.
 RUN git config --global url."https://github.com/".insteadOf "git@github.com:" \
-    && git clone --depth 1 --branch "${MOTIS_VERSION}" https://github.com/motis-project/motis.git /src/motis
+    && git init -q /src/motis && git -C /src/motis fetch -q --depth 1 "${MOTIS_REPO}" "${MOTIS_REF}" \
+    && git -C /src/motis checkout -q FETCH_HEAD
 WORKDIR /build
-# Configure first: this fetches the pinned dependencies (nigiri among them) into /src/motis/deps.
+# Configuring fetches the pinned dependencies; then build the server only.
 RUN CC=gcc-13 CXX=g++-13 cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DNO_BUILDCACHE=ON \
-      -DCMAKE_JOB_POOLS=link=1 -DCMAKE_JOB_POOL_LINK=link /src/motis
-COPY tools/motis-fork/nigiri.patch tools/motis-fork/motis.patch /patches/
-RUN git -C /src/motis/deps/nigiri apply /patches/nigiri.patch \
-    && git -C /src/motis apply /patches/motis.patch
-RUN cmake . && ninja motis && ./motis --version
+      -DCMAKE_JOB_POOLS=link=1 -DCMAKE_JOB_POOL_LINK=link /src/motis \
+    && ninja motis && ./motis --version
 
 FROM ${BASE} AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \

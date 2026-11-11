@@ -1,5 +1,5 @@
-# Builds MOTIS with our patches and publishes the image to the GitHub container registry of
-# this repository's owner. Runs when the patches or the Dockerfile change, or by hand.
+# Builds MOTIS from our fork and publishes the image to the GitHub container registry of
+# this repository's owner. Runs when the Dockerfile changes (it pins the fork's commit), or by hand.
 name: MOTIS fork image
 
 on:
@@ -7,7 +7,6 @@ on:
   push:
     paths:
       - deploy/Dockerfile.motis-fork
-      - tools/motis-fork/*.patch
       - .github/workflows/motis-fork-image.yml
 
 permissions:
@@ -24,14 +23,13 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - name: Tag from the MOTIS version and the patches
+      - name: Tag from the fork's commit
         id: tag
         run: |
-          version="$(grep -m1 '^ARG MOTIS_VERSION=' deploy/Dockerfile.motis-fork | cut -d= -f2)"
-          patches="$(cat tools/motis-fork/*.patch | sha256sum | cut -c1-8)"
+          ref="$(grep -m1 '^ARG MOTIS_REF=' deploy/Dockerfile.motis-fork | cut -d= -f2 | cut -c1-8)"
           owner="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
           echo "image=ghcr.io/${owner}/pendular-motis" >> "$GITHUB_OUTPUT"
-          echo "tag=${version}-seg-${patches}" >> "$GITHUB_OUTPUT"
+          echo "tag=v2.11.4-seg-${ref}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
