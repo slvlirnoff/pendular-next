@@ -35,7 +35,6 @@ function ModeCard(props: { category: (typeof CATEGORIES)[number]; result: Compar
   // Cheapest of the card's kinds; the faster one when two cost the same.
   const mine = result.options.filter((o) => category.kinds.includes(o.kind)).sort((a, b) => a.cost.yearly - b.cost.yearly || a.durationMin - b.durationMin);
   const best = mine[0];
-  const label = t(`cat.${category.id}`);
   const icons = (names: string[]) => (
     <span className="mode-icons" aria-hidden="true">
       {names.map((n) => (
@@ -46,6 +45,8 @@ function ModeCard(props: { category: (typeof CATEGORIES)[number]; result: Compar
 
   // A way of commuting this search does not offer has no card; the list below says why.
   if (!best) return null;
+  // A city park and ride is not a P+Rail: the card takes the name of what it shows.
+  const label = best.kind === 'cityParkRide' ? t('kind.cityParkRide') : t(`cat.${category.id}`);
 
   const v = result.verdict;
   const tags = [v.cheapest === best.id && t('verdict.cheapest'), v.fastest === best.id && t('verdict.fastest'), v.greenest === best.id && t('verdict.greenest')].filter(Boolean) as string[];
