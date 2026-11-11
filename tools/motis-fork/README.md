@@ -4,7 +4,7 @@
 > branch `segment-tags` in both (from the commits of MOTIS v2.11.4). The patch files here are the
 > same change, kept for reference; `deploy/Dockerfile.motis-fork` builds from the fork.
 
-#: per-request "allowed segments" filter
+## Per-request "allowed segments" filter
 
 Question: can MOTIS answer "what is the last trip home that a given zone pass covers?" – i.e. can the
 search be restricted, per request, to route sections whose fare zones are all in the pass?
