@@ -1,0 +1,14 @@
+Trip 8: Valleiry (8774541) -> Genève (8501008) | Adult from 26, 2nd class, no discount card | valid from Mo 04.01.2027 | captured 2026-11-11 (sbb.ch shop, visible text)
+No Multizones (zone) offer shown. Header reads "Your offers." with four route products.
+
+YEAR (in the order shown; first one pre-selected)
+Annual travelcard  Modular Travelcard  CHF 1377.70        1x Léman Pass Annual Season Ticket, Adults         via Annemasse - Genève-Eaux-Vives
+Annual travelcard  Modular Travelcard  CHF 1778.50        1x Léman Pass Annual Season Ticket, Adults         via Bellegarde
+Annual travelcard  Point-to-point Travelcard  CHF 1278.50 1x Léman Pass TER Annual Season Ticket (only route section), Adults   Valleiry - Genève, via Bellegarde
+Annual travelcard  Point-to-point Travelcard  CHF 1984.70 1x Léman Pass Annual Season Ticket (only route section), Adults       Valleiry - Genève, via Annemasse - Eaux-Vives
+
+MONTH
+Modular Travelcard  CHF 155.60          via Annemasse - Genève-Eaux-Vives
+Modular Travelcard  CHF 191.70          via Bellegarde
+Point-to-point Travelcard  CHF 121.70   Léman Pass TER Monthly Season Ticket (only route section), Valleiry - Genève, via Bellegarde
+Point-to-point Travelcard  CHF 213.20   Léman Pass Monthly Season Ticket (only route section), Valleiry - Genève, via Annemasse - Eaux-Vives

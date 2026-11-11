@@ -1,0 +1,15 @@
+Part F, trip 3 again: Saint-Julien-en-Genevois (8774543) -> Genève (8501008) | valid from Mo 04.01.2027 | captured 2026-11-11 (sbb.ch shop, visible text)
+Same method and age-group choices as F1. Prices: Multizones | Modular (via Annemasse - Genève-Eaux-Vives) | Point-to-point (only route section)
+
+1st class, Adult from 26 ("Adults")
+  YEAR:  1277.90 | 2241.10 | 3215.40          MONTH: 166.60 | 254.80 | 346.10
+2nd class, Young person 16-24.99 -> "Youth 6-25.99"
+  YEAR:  623.60 | 1116.00 | 1501.00           MONTH: 69.90 | 116.70 | 162.50
+2nd class, Senior 65/64 -> "Adults"
+  YEAR:  781.60 | 1377.70 | 1984.70           MONTH: 101.30 | 155.60 | 213.20
+2nd class, Kid 6-15.99 -> "Youth 6-25.99"
+  YEAR:  623.60 | 1116.00 | 1501.00           MONTH: 69.90 | 116.70 | 162.50
+2nd class, Adult 25-25.99 (extra check) -> "Youth 6-25.99"
+  YEAR:  623.60 | 1116.00 | 1501.00           MONTH: 69.90 | 116.70 | 162.50
+(2nd class adult reference, trip 3: 781.60 | 1377.70 | 1984.70 / 101.30 | 155.60 | 213.20)
+No FlexiAbo was offered on any Léman Pass screen in this check.

@@ -1,0 +1,16 @@
+Trip 14: Annemasse (8774549) -> Gaillard, Libération (1400015) | Adult from 26, 2nd class, no discount card | valid from Mo 04.01.2027 | captured 2026-11-11 (sbb.ch shop, visible text)
+One product, with a zone-variant choice inside the panel (first variant pre-selected).
+
+YEAR  Léman Pass Annual Season Ticket Multizones
+  Zones 10 210 (Léman Pass) via Chêne-Bourg, Place Favre   [10, 210]        CHF 914.00   (pre-selected)
+  Zones 10 210 230 (Léman Pass) via direct                 [10, 210, 230]   CHF 1195.60
+  Zones 10 210 250 (Léman Pass) via direct                 [10, 210, 250]   CHF 1195.60
+  Zones 10 200 210 (Léman Pass) via direct                 [10, 200, 210]   CHF 1195.60
+  Zones 10 210 240 (Léman Pass) via direct                 [10, 210, 240]   CHF 1195.60
+MONTH Léman Pass Monthly Season Ticket Multizones
+  Zones 10 210 via Chêne-Bourg, Place Favre   CHF 111.40   (pre-selected)
+  Zones 10 210 230 via direct                  CHF 142.70
+  Zones 10 200 210 via direct                  CHF 142.70
+  Zones 10 210 250 via direct                  CHF 142.70
+  Zones 10 210 240 via direct                  CHF 142.70
+No pass for zone 210 alone is offered; the smallest variant includes zone 10.

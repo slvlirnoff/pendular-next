@@ -1,0 +1,23 @@
+Station ids as shown by the sbb.ch shop's own From search (value attribute of the suggestion), captured 2026-11-11
+Genève 8501008
+Annemasse 8774549  (also: Annemasse, gare 1401854; Annemasse, Libération 1401685)
+Gaillard, Libération 1400015
+Thônex, Moillesulaz 8593118  (Swiss side; not used)
+Saint-Julien-en-Genevois 8774543  (Saint-Julien, gare 1401852)
+Viry, église 1401843
+Veigy, douane (F) 1401326   (Veigy-Foncenex, P. Verte Z 200 1401618)
+Ferney, mairie 1400679
+Pougny-Chancy 8774538  (Pougny, gare (F) 1401775)
+Valleiry 8774541
+Genève-Aéroport 8501026
+Lancy-Bachet 8517142
+Meyrin, CERN 8587918
+Thonon-les-Bains 8774564
+Evian-les-Bains 8774567
+Annecy 8774600
+Bellegarde-sur-Valserine 8774500
+La Roche-sur-Foron 8774630
+Reignier 8774651
+Bonneville 8774633
+Coppet 8501023
+Nyon 8501030

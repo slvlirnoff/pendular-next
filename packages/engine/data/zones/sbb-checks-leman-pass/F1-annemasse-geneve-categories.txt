@@ -1,0 +1,15 @@
+Part F, trip 1 again: Annemasse (8774549) -> Genève (8501008) | valid from Mo 04.01.2027 | captured 2026-11-11 (sbb.ch shop, visible text)
+Age group chosen in the shop's "Age group" select; offers refreshed by toggling Month/Year; the "1x ..." line was checked each time.
+Shop age-group choices: Kid 6-15.99 | Young person 16-24.99 | Adult 25-25.99 | Adult from 26 | Senior 65/64
+Info text on the Léman Pass panel: "Reduced for children/juniors from their 6th to their 26th birthday." (no senior reduction mentioned)
+
+1st class, Adult from 26 ("1x ..., Adults")  [URL ...&qualityOfService=FIRST]
+  YEAR:  Léman Pass Annual Season Ticket Multizones  CHF 1553.80   Zones 10 210 via direct
+  MONTH: Léman Pass Monthly Season Ticket Multizones CHF 189.40    | 1-month GA Travelcard CHF 730.00
+2nd class, Young person 16-24.99  -> ticket line "1x Léman Pass ... Multizones, Youth 6-25.99"
+  YEAR:  CHF 722.00     MONTH: CHF 77.20   | 1-month GA Travelcard, Youth CHF 310.00
+2nd class, Senior 65/64 (select value SENIOR, checked twice) -> ticket line "..., Adults"
+  YEAR:  CHF 914.00     MONTH: CHF 111.40  | 1-month GA Travelcard, Adults CHF 465.00
+2nd class, Kid 6-15.99 -> ticket line "..., Youth 6-25.99"
+  YEAR:  CHF 722.00     MONTH: CHF 77.20   | 1-month GA Travelcard, Child CHF 310.00
+(2nd class adult reference, trip 1: 914.00 / 111.40)

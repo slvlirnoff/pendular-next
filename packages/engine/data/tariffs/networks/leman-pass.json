@@ -1,0 +1,37 @@
+{
+ "network": "Léman Pass",
+ "alliance": "leman-pass",
+ "origin": "tariff",
+ "year": 2027,
+ "validFrom": "2026-12-13",
+ "source": "SBB shop, passes starting 04.01.2027, read on 11.11.2026 (packages/engine/data/zones/sbb-checks-leman-pass/RESULTS.md)",
+ "currency": "CHF",
+ "passPlan": "leman-pass-abo-amp-billett",
+ "ticketPlan": "leman-pass-abo-amp-billett",
+ "notes": [
+  "Léman Pass 'Multizones': sold only when every stop lies in zones 10, 200, 210, 230, 240, 250. Every pass includes zone 10 (Geneva); there is no pass for a French zone alone.",
+  "The price depends on WHICH zones, not only on how many: zone 210 (Annemasse) costs more than the other ring zones. Prices are therefore listed per zone set in passesBySet.",
+  "Read in the shop: adult 2nd class for 10 + one ring zone, 10 + 210, and 10 + 210 + a second ring zone; 1st class and youth for 10 + 210 and 10 + 230. Not seen: 10 + two ring zones without 210 (left out), and 1st class / youth with three zones (derived from the two-zone ratios, marked derived).",
+  "Youth price: from the 6th to the 26th birthday. Seniors pay the adult price. Annual is not 9 x monthly. No FlexiAbo.",
+  "Stations beyond the ring zones (Annecy, Thonon, Évian, Bellegarde, La Roche-sur-Foron, Bonneville, Valleiry) are priced by route, not by zones: see the results file. Not modelled here."
+ ],
+ "rules": {
+  "together": [],
+  "always": [10],
+  "minZones": { "pass": 2, "ticket": 1 },
+  "countBy": "zones",
+  "text": ["Zone 10 is part of every Léman Pass zone pass."]
+ },
+ "ages": { "junior": "6-25.99", "senior": "none: adult price" },
+ "passesBySet": [
+  { "zones": [10, 200], "like": [[10, 230], [10, 240], [10, 250]],
+   "year": { "adult": { "2": 781.6, "1": 1277.9 }, "junior": { "2": 623.6 }, "senior": { "2": 781.6 } },
+   "month": { "adult": { "2": 101.3, "1": 166.6 }, "junior": { "2": 69.9 }, "senior": { "2": 101.3 } } },
+  { "zones": [10, 210],
+   "year": { "adult": { "2": 914, "1": 1553.8 }, "junior": { "2": 722 }, "senior": { "2": 914 } },
+   "month": { "adult": { "2": 111.4, "1": 189.4 }, "junior": { "2": 77.2 }, "senior": { "2": 111.4 } } },
+  { "zones": [10, 200, 210], "like": [[10, 210, 230], [10, 210, 240], [10, 210, 250]], "derived": ["adult.1", "junior.2"],
+   "year": { "adult": { "2": 1195.6, "1": 2032.5 }, "junior": { "2": 944.5 }, "senior": { "2": 1195.6 } },
+   "month": { "adult": { "2": 142.7, "1": 242.6 }, "junior": { "2": 98.9 }, "senior": { "2": 142.7 } } }
+ ]
+}
