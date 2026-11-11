@@ -400,3 +400,43 @@ describe('groupItineraries by ticket and route', () => {
     expect(g[0]!.title).not.toContain('IC 5');
   });
 });
+
+// ---- last trip home ------------------------------------------------------------------------
+
+describe('last trip home follows the route of the morning trip', () => {
+  const H = { ...HOME, stopId: '8500001' };
+  const X = { ...STATION, stopId: '8500002' };
+  const C = { ...CITY, stopId: '8500003' };
+  // Bus from home to the station, then the train: the train is the main vehicle.
+  const morning = [trip(leg('bus', H, X, '07:00', '07:10', '10', 'b1', 5), rail(X, C, '07:15', '07:50', 'R1', 'T1'))];
+  const evening = (dep: string, arr: string) => trip(rail(C, X, dep, arr, 'R1', 'E'));
+
+  it('asks for the last connection through the two ends of the main vehicle, in reverse', async () => {
+    const asked: (string[] | undefined)[] = [];
+    const r = await compare(
+      { ...REQUEST, kinds: ['transit'] },
+      deps({
+        ...routing(morning, []),
+        async lastTrip(q) {
+          asked.push(q.via);
+          return q.via?.length ? evening('19:10', '19:45') : evening('23:50', '00:25');
+        },
+      }),
+    );
+    expect(asked).toContainEqual(['8500003', '8500002']);
+    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '19:10', lastArrival: '19:45' });
+  });
+
+  it('falls back to the last connection by any route when none runs that way', async () => {
+    const r = await compare(
+      { ...REQUEST, kinds: ['transit'] },
+      deps({
+        ...routing(morning, []),
+        async lastTrip(q) {
+          return q.via?.length ? null : evening('22:00', '22:35');
+        },
+      }),
+    );
+    expect(r.options.find((o) => o.kind === 'transit')!.returnTrips).toEqual({ last: '22:00', lastArrival: '22:35' });
+  });
+});

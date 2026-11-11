@@ -312,14 +312,13 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
   const [hh] = rules.lastTripHomeBy.split(':').map(Number) as [number];
   const lastBy = { date: hh < 12 ? nextDay(date) : date, time: rules.lastTripHomeBy };
   const returnCache = new Map<string, Promise<Itinerary | null>>();
-  const returnTo = (target: LatLon) => {
-    const key = `${target.lat},${target.lon}`;
+  const returnTo = (target: LatLon, via: string[] = []) => {
+    const key = `${target.lat},${target.lon}|${via.join('>')}`;
     if (!returnCache.has(key)) {
-      returnCache.set(key, routing.lastTrip ? safe(routing.lastTrip({ from: req.work, to: target, ...lastBy }), null) : Promise.resolve(null));
+      returnCache.set(key, routing.lastTrip ? safe(routing.lastTrip({ from: req.work, to: target, ...lastBy, via }), null) : Promise.resolve(null));
     }
     return returnCache.get(key)!;
   };
-  if (want('transit')) void returnTo(req.home);
   const anyAccess = prCand.length + brCand.length + cityCand.length > 0;
   const [direct, car, bike, ebike, walk, prDrive, cityDrive, brRide, reach] = await Promise.all([
     want('transit') || prCand.length || brCand.length ? transitFromHome() : Promise.resolve([] as Itinerary[]),
@@ -634,7 +633,14 @@ export async function compare(req: CommuteRequest, deps: EngineDeps): Promise<Co
       // A "trip home" that waits for the first bus of the next morning is not a trip home:
       // keep only connections of a duration comparable with the morning trip.
       const longest = o.durationMin * 2 + 30;
-      const back = await returnTo(target);
+      // The way back has to be the way there: the last connection that runs through the two
+      // ends of the main vehicle of the morning trip, in reverse (a later one by another line
+      // would need another ticket, or would end at another car park). Only when the timetable
+      // has no such connection at all is the last one by any route taken.
+      const legs = o.itinerary.legs.filter(isTransit);
+      const main = legs.length ? legs.reduce((a, b) => (b.durationMin > a.durationMin ? b : a)) : undefined;
+      const via = main?.to.stopId && main.from.stopId ? [main.to.stopId, main.from.stopId] : [];
+      const back = (via.length ? await returnTo(target, via) : null) ?? (await returnTo(target));
       o.returnTrips =
         back && back.durationMin <= longest
           ? { last: localHHMM(back.departure, tz), lastArrival: localHHMM(back.arrival, tz) }

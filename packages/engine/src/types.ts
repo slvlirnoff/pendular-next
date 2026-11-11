@@ -282,7 +282,14 @@ export interface RoutingProvider {
    * The latest door-to-door connection arriving by `time` ("YYYY-MM-DD", "HH:MM"): one search,
    * where a whole evening of departures would be many times the work.
    */
-  lastTrip?(q: { from: LatLon; to: LatLon; date: string; time: string }): Promise<Itinerary | null>;
+  lastTrip?(q: {
+    from: LatLon;
+    to: LatLon;
+    date: string;
+    time: string;
+    /** Stops (timetable ids) the connection has to pass, in order: at most two. */
+    via?: string[];
+  }): Promise<Itinerary | null>;
   /**
    * Public transport time from every stop to `to`, arriving by `time` on `date` (one call for
    * the whole network). Used to choose which stations are worth a full search.

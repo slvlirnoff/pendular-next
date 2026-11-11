@@ -126,6 +126,12 @@ const place = (p: LatLon) => `${p.lat.toFixed(6)},${p.lon.toFixed(6)}`;
  * MOTIS ids look like "ch_Parentch:1:sloid:4121" or "ch_ch:1:sloid:4121:1:2"; the number after
  * "sloid" is the stop number without the country prefix 85.
  */
+/** The station-level MOTIS id of a Swiss stop number ("8504121" → "ch_Parentch:1:sloid:4121"); null for others. */
+export function motisStationId(stopNumber: string): string | null {
+  const m = /^85(\d{5})$/.exec(stopNumber);
+  return m ? `ch_Parentch:1:sloid:${Number(m[1])}` : null;
+}
+
 export function stationId(p: { stopId?: string; parentId?: string }): string | undefined {
   const raw = p.parentId ?? p.stopId;
   if (!raw) return undefined;
@@ -311,7 +317,8 @@ export class MotisRouting implements RoutingProvider {
     return out;
   }
 
-  async lastTrip(q: { from: LatLon; to: LatLon; date: string; time: string }): Promise<Itinerary | null> {
+  async lastTrip(q: { from: LatLon; to: LatLon; date: string; time: string; via?: string[] }): Promise<Itinerary | null> {
+    const via = (q.via ?? []).map(motisStationId).filter((x): x is string => x !== null).slice(0, 2);
     // Not a timetable view: "arrive by T" alone returns the connections that leave last.
     const res = await this.get<MotisPlanResponse>('/api/v6/plan', {
       fromPlace: place(q.from),
@@ -321,6 +328,7 @@ export class MotisRouting implements RoutingProvider {
       timetableView: false,
       directModes: 'WALK',
       detailedTransfers: false,
+      ...(via.length ? { via: via.join(','), viaMinimumStay: via.map(() => 0).join(',') } : {}),
     });
     const its = (res.itineraries ?? []).filter((it) => it.legs.some((l) => !['WALK', 'BIKE', 'CAR'].includes(l.mode)));
     if (its.length === 0) return null;
