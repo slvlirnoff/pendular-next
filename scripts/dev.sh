@@ -22,11 +22,15 @@ fi
 
 # --- MOTIS --------------------------------------------------------------------------------------
 if ! up http://127.0.0.1:8080/api/v1/health; then
-  (cd data/motis && nohup ./bin/motis server -d data > "$LOG/motis.log" 2>&1 </dev/null &)
+  # Our fork of MOTIS (segment filter: last trip home within a pass, cheaper zone paths) is used
+  # when its binary is there; it reads the same data and behaves like the release otherwise.
+  if [ -x data/motis/bin/motis-fork ]; then MOTIS_BIN=./bin/motis-fork; else MOTIS_BIN=./bin/motis; fi
+  (cd data/motis && MOTIS_SEGMENT_TAGS="$PWD/../../tools/motis-fork/segments.csv" nohup "$MOTIS_BIN" server -d data > "$LOG/motis.log" 2>&1 </dev/null &)
   for _ in $(seq 1 40); do up http://127.0.0.1:8080/api/v1/health && break; sleep 2; done
 fi
 
 # --- API, analytics, site -----------------------------------------------------------------------
+[ -x data/motis/bin/motis-fork ] && export MOTIS_SEGMENT_FILTER=1
 up http://127.0.0.1:8787/api/health || (cd apps/api && nohup pnpm start > "$LOG/api.log" 2>&1 </dev/null &)
 if [ -d apps/analytics ]; then
   up http://127.0.0.1:8788/api/health || (cd apps/analytics && DATABASE_URL="postgres://pendular@127.0.0.1:$PGPORT/pendular" nohup pnpm start > "$LOG/analytics.log" 2>&1 </dev/null &)
