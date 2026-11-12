@@ -3,6 +3,7 @@ import { localToUtc, type LatLon, type MotisRouting } from '@pendular/engine';
 import type { BrandHit, PlaceSummary, SearchResponse, SearchResult, Suggestion, Target } from '../src/api.js';
 import { FOOD_BY_KEY, FOOD_ORDER, matchFoods } from '../src/foods.js';
 import { searchKey } from '../src/text.js';
+import type { CarRouter } from './car.js';
 import { distanceM, transitToPlaces, usefulTransit, type StopReach } from './estimate.js';
 import { openState } from './open.js';
 import { localNow, routingDate, TIMEZONE, type TimetableRange } from './timetable.js';
@@ -10,6 +11,8 @@ import { localNow, routingDate, TIMEZONE, type TimetableRange } from './timetabl
 export interface SearchDeps {
   db: pg.Pool;
   routing: MotisRouting;
+  /** Car times and routes: Valhalla when configured, else MOTIS (server/car.ts). */
+  car: CarRouter;
   motisUrl: string;
   fetch: typeof fetch;
   timetable: TimetableRange;
@@ -161,7 +164,7 @@ export function maxMinutes(nearestM: number, farthestM: number): { walk: number;
   const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(x)));
   return {
     walk: 60,
-    car: clamp((farthestM / 1000) * 1.3 + 15, 60, 180),
+    car: clamp((farthestM / 1000) * 1.3 + 15, 30, 180),
     transit: clamp((nearestM / 1000) * 2.5 + 40, 90, 180),
   };
 }
@@ -195,26 +198,38 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
   if (rows.length === 0) return { target, label, results: [], typicalTimetable: day.typical };
 
   const points = rows.map((r) => ({ lat: r.lat, lon: r.lon }));
+  const ids = rows.map((r) => r.id);
   const dists = rows.map((r) => r.dist);
   const max = maxMinutes(Math.min(...dists), Math.max(...dists));
-  const matrix = (profile: 'walk' | 'car') => {
-    // Walking only to places within reach (an hour is about 5 km).
-    const idx = points.map((p, i) => i).filter((i) => profile === 'car' || dists[i]! < 7_000);
-    return deps.routing
-      .streetMatrix({ points: idx.map((i) => points[i]!), anchor: from, profile, direction: 'fromAnchor', maxMin: max[profile] })
-      .then((res) => {
-        const out: (number | null)[] = points.map(() => null);
-        idx.forEach((i, k) => (out[i] = res[k] ? res[k]!.durationMin : null));
-        return out;
-      })
-      .catch((e: unknown) => {
-        console.error(`${profile} matrix`, e);
-        return points.map(() => null);
+  const origin = `${from.lat.toFixed(4)},${from.lon.toFixed(4)}`;
+  /** Minutes to each place, from the cache (a search after another reuses the places they share) or computed. */
+  const timed = async (profile: 'walk' | 'car', only: (i: number) => boolean, compute: (pts: LatLon[]) => Promise<(number | null)[]>) => {
+    const out: (number | null)[] = points.map(() => null);
+    const missing: number[] = [];
+    points.forEach((_, i) => {
+      if (!only(i)) return;
+      const hit = streetCache.get(`${profile}|${origin}|${ids[i]}`);
+      if (hit !== undefined) out[i] = hit;
+      else missing.push(i);
+    });
+    if (missing.length === 0) return out;
+    try {
+      const res = await compute(missing.map((i) => points[i]!));
+      missing.forEach((i, k) => {
+        out[i] = res[k] ?? null;
+        streetCache.set(`${profile}|${origin}|${ids[i]}`, out[i]!);
       });
+    } catch (e) {
+      console.error(`${profile} matrix`, e);
+    }
+    return out;
   };
   const [walk, car, stops] = await Promise.all([
-    matrix('walk'),
-    matrix('car'),
+    // Walking only to places within reach (an hour is about 5 km).
+    timed('walk', (i) => dists[i]! < 7_000, (pts) =>
+      deps.routing.streetMatrix({ points: pts, anchor: from, profile: 'walk', direction: 'fromAnchor', maxMin: max.walk }).then((r) => r.map((x) => (x ? x.durationMin : null))),
+    ),
+    timed('car', () => true, (pts) => deps.car.matrix(from, pts, max.car)),
     reachableStops(deps, from, day.date, local.time, max.transit).catch((e: unknown) => {
       console.error('one-to-all', e);
       return [] as StopReach[];
@@ -250,12 +265,53 @@ export function bestMinutes(r: Pick<SearchResult, 'walkMin' | 'carMin' | 'transi
   return t.length ? Math.min(...t) : Infinity;
 }
 
+/** A small cache with a time to live: entries older than `ttlMs` are gone, the oldest go first beyond `size`. */
+export class Ttl<V> {
+  private m = new Map<string, { v: V; at: number }>();
+  constructor(
+    private readonly ttlMs: number,
+    private readonly size: number,
+  ) {}
+  get(k: string): V | undefined {
+    const e = this.m.get(k);
+    if (!e) return undefined;
+    if (Date.now() - e.at > this.ttlMs) {
+      this.m.delete(k);
+      return undefined;
+    }
+    return e.v;
+  }
+  set(k: string, v: V) {
+    this.m.delete(k);
+    this.m.set(k, { v, at: Date.now() });
+    if (this.m.size > this.size) this.m.delete(this.m.keys().next().value!);
+  }
+}
+
+/** Street times from a place (rounded to about 10 m) to a place: they do not change within the hour. */
+const streetCache = new Ttl<number | null>(60 * 60_000, 50_000);
+/** Stops reached by public transport from a place, leaving at a given minute: shared by the searches of that minute. */
+const stopsCache = new Ttl<Promise<StopReach[]>>(90_000, 200);
+
 /**
  * Every stop reached by public transport leaving now from the place (MOTIS one-to-all), with
  * the minutes it takes, waiting included. Stops reached on foot only are left out: walking
- * is counted by the street search.
+ * is counted by the street search. A search for pizza then one for burgers from the same place
+ * in the same minute share one answer, as long as it looks far enough.
  */
-async function reachableStops(deps: SearchDeps, from: LatLon, date: string, time: string, maxMin: number): Promise<StopReach[]> {
+function reachableStops(deps: SearchDeps, from: LatLon, date: string, time: string, maxMin: number): Promise<StopReach[]> {
+  const key = `${from.lat.toFixed(4)},${from.lon.toFixed(4)}|${date}|${time}`;
+  for (const m of [maxMin, 180]) {
+    const hit = stopsCache.get(`${key}|${m}`);
+    if (hit) return hit;
+  }
+  const p = fetchStops(deps, from, date, time, maxMin);
+  stopsCache.set(`${key}|${maxMin}`, p);
+  p.catch(() => stopsCache.set(`${key}|${maxMin}`, Promise.resolve([])));
+  return p;
+}
+
+async function fetchStops(deps: SearchDeps, from: LatLon, date: string, time: string, maxMin: number): Promise<StopReach[]> {
   const url = new URL('/api/v6/one-to-all', deps.motisUrl);
   url.searchParams.set('one', `${from.lat.toFixed(6)},${from.lon.toFixed(6)}`);
   url.searchParams.set('time', localToUtc(date, time, TIMEZONE).toISOString());

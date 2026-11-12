@@ -111,8 +111,7 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
   const windowEnd = `${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`;
 
   const street = (profile: 'walk' | 'car'): Promise<StreetOption | null> =>
-    deps.routing
-      .street({ from, to, profile })
+    (profile === 'car' ? deps.car.route(from, to) : deps.routing.street({ from, to, profile }))
       .then((r) => (r && r.geometry && r.geometry.length > 1 ? { durationMin: Math.max(1, Math.round(r.durationMin)), distanceM: Math.round(r.distanceM), geometry: r.geometry } : null))
       .catch((e: unknown) => {
         console.error(`${profile} route`, e);

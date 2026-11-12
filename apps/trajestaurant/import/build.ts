@@ -145,6 +145,8 @@ export function atpPlace(f: Feature): Place | null {
 export interface OvertureRow {
   id: string;
   name: string | null;
+  /** First level of Overture's taxonomy: food_and_drink, shopping, lifestyle_services… */
+  section?: string | null;
   category: string | null;
   basic_category: string | null;
   alternates: string[] | null;
@@ -180,6 +182,49 @@ export function overtureKind(category: string, basic: string): { kindKey: string
   return null;
 }
 
+/** Overture shop categories → OSM key and value, where the name differs. */
+const OVERTURE_SHOPS: Record<string, [string, string]> = {
+  clothing_store: ['shop', 'clothes'], womens_clothing_store: ['shop', 'clothes'], mens_clothing_store: ['shop', 'clothes'],
+  childrens_clothing_store: ['shop', 'clothes'], fashion_boutique: ['shop', 'clothes'], lingerie_store: ['shop', 'clothes'],
+  sportswear_store: ['shop', 'clothes'], fashion_and_apparel_store: ['shop', 'clothes'],
+  grocery_store: ['shop', 'supermarket'], supermarket: ['shop', 'supermarket'], discount_store: ['shop', 'variety_store'],
+  warehouse_club_store: ['shop', 'wholesale'], convenience_store: ['shop', 'convenience'], kiosk: ['shop', 'kiosk'],
+  auto_dealer: ['shop', 'car'], used_auto_dealer: ['shop', 'car'], vehicle_dealer: ['shop', 'car'], truck_dealer: ['shop', 'truck'],
+  motorcycle_dealer: ['shop', 'motorcycle'], auto_parts_store: ['shop', 'car_parts'], tire_shop: ['shop', 'tyres'],
+  building_supply_store: ['shop', 'doityourself'], home_improvement_store: ['shop', 'doityourself'], paint_store: ['shop', 'paint'],
+  hardware_store: ['shop', 'hardware'], tile_store: ['shop', 'tiles'], flooring_store: ['shop', 'flooring'],
+  electrical_supply_store: ['shop', 'electrical'], furniture_store: ['shop', 'furniture'], mattress_store: ['shop', 'bed'],
+  jewelry_store: ['shop', 'jewelry'], watch_store: ['shop', 'watches'], electronics_store: ['shop', 'electronics'],
+  computer_store: ['shop', 'computer'], mobile_phone_store: ['shop', 'mobile_phone'], appliance_store: ['shop', 'appliance'],
+  camera_and_photography_store: ['shop', 'photo'], pharmacy: ['amenity', 'pharmacy'], drugstore: ['shop', 'chemist'],
+  sporting_goods_store: ['shop', 'sports'], outdoor_gear_store: ['shop', 'outdoor'], bike_store: ['shop', 'bicycle'],
+  flowers_and_gifts_store: ['shop', 'florist'], florist: ['shop', 'florist'], gift_shop: ['shop', 'gift'], shoe_store: ['shop', 'shoes'],
+  cosmetics_and_fragrance_store: ['shop', 'cosmetics'], beauty_supply_store: ['shop', 'cosmetics'], perfume_store: ['shop', 'perfumery'],
+  liquor_store: ['shop', 'alcohol'], beer_wine_spirits_store: ['shop', 'wine'], wine_store: ['shop', 'wine'],
+  home_goods_store: ['shop', 'houseware'], kitchen_supply_store: ['shop', 'houseware'], lighting_store: ['shop', 'lighting'],
+  home_decor_store: ['shop', 'interior_decoration'], craft_store: ['shop', 'craft'], arts_crafts_and_hobby_store: ['shop', 'craft'],
+  hobby_shop: ['shop', 'hobby'], toy_store: ['shop', 'toys'], video_game_store: ['shop', 'video_games'], eyewear_store: ['shop', 'optician'],
+  optician: ['shop', 'optician'], butcher_shop: ['shop', 'butcher'], cheese_shop: ['shop', 'cheese'], pet_store: ['shop', 'pet'],
+  bookstore: ['shop', 'books'], newspaper_and_magazines_store: ['shop', 'newsagent'], second_hand_store: ['shop', 'second_hand'],
+  thrift_store: ['shop', 'second_hand'], antique_store: ['shop', 'antiques'], musical_instrument_store: ['shop', 'musical_instrument'],
+  music_store: ['shop', 'music'], nursery_and_gardening_store: ['shop', 'garden_centre'], garden_center: ['shop', 'garden_centre'],
+  hearing_aid_store: ['shop', 'hearing_aids'], vitamin_and_supplement_store: ['shop', 'nutrition_supplements'],
+  shopping_mall: ['shop', 'mall'], department_store: ['shop', 'department_store'], superstore: ['shop', 'department_store'],
+  market: ['amenity', 'marketplace'], farmers_market: ['amenity', 'marketplace'], stationery_store: ['shop', 'stationery'],
+  office_supply_store: ['shop', 'stationery'], tobacco_shop: ['shop', 'tobacco'], frame_store: ['shop', 'frame'],
+  fabric_store: ['shop', 'fabric'], bridal_shop: ['shop', 'wedding'], baby_gear_and_furniture_store: ['shop', 'baby_goods'],
+  hair_salon: ['shop', 'hairdresser'], barber: ['shop', 'hairdresser'], beauty_salon: ['shop', 'beauty'], nail_salon: ['shop', 'beauty'],
+  gym: ['leisure', 'fitness_centre'], fitness_center: ['leisure', 'fitness_centre'], fitness_studio: ['leisure', 'fitness_centre'],
+};
+
+/** OSM key and value for an Overture place that is not to eat: a known category, else shop=<category without "_store">. */
+export function overtureShopKind(category: string, section: string): { kindKey: string; kind: string } | null {
+  const known = OVERTURE_SHOPS[category];
+  if (known) return { kindKey: known[0], kind: known[1] };
+  if (section !== 'shopping' || !category || category === 'shopping') return section === 'shopping' ? { kindKey: 'shop', kind: 'yes' } : null;
+  return { kindKey: 'shop', kind: category.replace(/_(store|shop|dealer)$/, '') };
+}
+
 /** OSM-style cuisine values for Overture categories ("pizza_restaurant" → "pizza"). */
 export function overtureCuisines(categories: (string | null | undefined)[]): string[] {
   const out = new Set<string>();
@@ -194,7 +239,8 @@ export function overtureCuisines(categories: (string | null | undefined)[]): str
 export function overturePlace(r: OvertureRow): Place | null {
   const name = clean(r.name);
   if (!name || !Number.isFinite(r.lat) || !Number.isFinite(r.lon)) return null;
-  const k = overtureKind(r.category ?? '', r.basic_category ?? '');
+  const food = (r.section ?? 'food_and_drink') === 'food_and_drink';
+  const k = food ? overtureKind(r.category ?? '', r.basic_category ?? '') : overtureShopKind(r.category ?? '', r.section ?? '');
   if (!k) return null;
   const tags: Tags = {
     name,
@@ -314,6 +360,15 @@ export function matchOverture(grid: Grid, o: Place): Place | null {
   return null;
 }
 
+/** Overture shop → a shop (or other place not to eat) already known with a similar name nearby, if any. */
+export function matchOvertureShop(grid: Grid, o: Place): Place | null {
+  for (const { p } of grid.near(o.lat, o.lon, 120)) {
+    if (p === o || isFoodish(p)) continue;
+    if (sameName(p.name, o.name)) return p;
+  }
+  return null;
+}
+
 /**
  * Whether an Overture place nobody else has is kept: confident enough, or less so with a phone or
  * a website (a business that answers), or both (Grill House in Lucens: 0.3, with both).
@@ -427,7 +482,9 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
   const grid = new Grid();
   const places: Place[] = [];
   const towns: Built['towns'] = [];
-  const counts: Record<string, number> = { osm: 0, atpMatched: 0, atpAdded: 0, overtureMatched: 0, overtureAdded: 0, overtureDropped: 0, nsiBrands: 0 };
+  const counts: Record<string, number> = {
+    osm: 0, atpMatched: 0, atpAdded: 0, overtureMatched: 0, overtureAdded: 0, overtureDropped: 0, overtureShopsMatched: 0, overtureShopsAdded: 0, nsiBrands: 0,
+  };
 
   for await (const line of lines(osmFile)) {
     const f = JSON.parse(line) as Feature;
@@ -475,7 +532,8 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
     const own = new Grid();
     const unique: Place[] = [];
     for (const o of rows) {
-      const twin = own.near(o.lat, o.lon, 100).find(({ p }) => sameName(p.name, o.name));
+      // A restaurant and a shop of one name at one address are two places (Migros, Migros Restaurant).
+      const twin = own.near(o.lat, o.lon, 100).find(({ p }) => isFoodish(p) === isFoodish(o) && sameName(p.name, o.name));
       if (twin) {
         for (const f of o.extraFoods) twin.p.extraFoods.add(f);
         continue;
@@ -484,6 +542,19 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
       unique.push(o);
     }
     for (const o of unique) {
+      if (!isFoodish(o)) {
+        // Shops come with a confidence of 0.8 or more (import/overture.py).
+        const m = matchOvertureShop(grid, o);
+        if (m) {
+          absorb(m, o);
+          counts.overtureShopsMatched!++;
+        } else {
+          places.push(o);
+          grid.add(o);
+          counts.overtureShopsAdded!++;
+        }
+        continue;
+      }
       const m = matchOverture(grid, o);
       if (m) {
         absorb(m, o);

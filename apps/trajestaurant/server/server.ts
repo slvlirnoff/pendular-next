@@ -7,6 +7,7 @@ import { MotisRouting, type LatLon } from '@pendular/engine';
 import { httpGet } from '../../api/src/httpGet.js';
 import type { PlaceHit, Target } from '../src/api.js';
 import { FOODS, FOOD_BY_KEY } from '../src/foods.js';
+import { motisCar, valhallaCar, withFallback } from './car.js';
 import { createPool } from './db.js';
 import { routesTo } from './routes.js';
 import { popularBrands, searchPlaces, suggest, type SearchDeps } from './search.js';
@@ -18,19 +19,23 @@ const motisUrl = process.env.MOTIS_URL ?? 'http://127.0.0.1:8080';
 const port = Number(process.env.PORT ?? 8789);
 const timetable = readTimetableRange(process.env.MOTIS_CONFIG ?? resolve(ROOT, 'data/motis/config.yml'));
 
-const deps: SearchDeps = {
-  db: createPool(),
-  motisUrl,
-  fetch: httpGet,
-  timetable,
-  routing: new MotisRouting({
+const routing = new MotisRouting({
     baseUrl: motisUrl,
     fetch: httpGet,
     timezone: TIMEZONE,
     // Street searches need an instant inside the timetable: midday of the reference week.
     referenceTime: `${referenceMonday(timetable)}T11:00:00Z`,
     maxPages: 1,
-  }),
+});
+// VALHALLA_URL (e.g. http://127.0.0.1:8002): car times and routes from Valhalla, MOTIS as the fallback.
+const valhallaUrl = process.env.VALHALLA_URL;
+const deps: SearchDeps = {
+  db: createPool(),
+  motisUrl,
+  fetch: httpGet,
+  timetable,
+  routing,
+  car: valhallaUrl ? withFallback(valhallaCar(valhallaUrl, httpGet), motisCar(routing)) : motisCar(routing),
 };
 
 const app = new Hono();
@@ -145,4 +150,14 @@ app.use('/*', serveStatic({ root: './web/dist' }));
 app.get('*', serveStatic({ root: './web/dist', path: 'index.html' }));
 
 process.on('unhandledRejection', (e) => console.error('unhandled rejection', e));
-serve({ fetch: app.fetch, port }, (info) => console.log(`trajestaurant api on :${info.port}, motis ${motisUrl}`));
+serve({ fetch: app.fetch, port }, (info) => {
+  console.log(`trajestaurant api on :${info.port}, motis ${motisUrl}, car times from ${deps.car.name}`);
+  // The routing engines read their data from disk on first use: the first search would wait for
+  // it (12 s measured for MOTIS). One search in the background warms them up.
+  setTimeout(() => {
+    const started = Date.now();
+    searchPlaces(deps, { type: 'food', key: 'restaurant' }, { lat: 46.948, lon: 7.4474 })
+      .then(() => console.log(`warmed up in ${Date.now() - started} ms`))
+      .catch((e: unknown) => console.error('warm-up', e));
+  }, 500);
+});

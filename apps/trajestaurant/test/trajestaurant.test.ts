@@ -6,7 +6,8 @@ import { referenceMonday, routingDate } from '../server/timetable.js';
 import { atpPlace, brandFromName, centre, keepOverture, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, sameName, type Brands } from '../import/build.js';
 import { kindInfo, mainKind } from '../src/kinds.js';
 import { searchKey } from '../src/text.js';
-import { maxMinutes } from '../server/search.js';
+import { maxMinutes, Ttl } from '../server/search.js';
+import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
 
 describe('food types', () => {
   it('reads the OSM cuisine, several values included', () => {
@@ -203,8 +204,36 @@ describe('brands', () => {
   });
 
   it('looks far enough for a far branch, no further', () => {
-    expect(maxMinutes(400, 9_000)).toEqual({ walk: 60, car: 60, transit: 90 });
+    expect(maxMinutes(400, 9_000)).toEqual({ walk: 60, car: 30, transit: 90 });
     // The nearest IKEA from Lucens: 43 km.
     expect(maxMinutes(43_000, 120_000)).toEqual({ walk: 60, car: 171, transit: 148 });
+  });
+});
+
+describe('car times', () => {
+  const fakeFetch = (body: unknown, ok = true) =>
+    (async () => ({ ok, status: ok ? 200 : 500, json: async () => body, text: async () => JSON.stringify(body) })) as unknown as typeof fetch;
+
+  it('reads a Valhalla matrix in minutes, null for places out of reach', async () => {
+    const car = valhallaCar('http://valhalla', fakeFetch({ sources_to_targets: [[{ time: 600 }, { time: null }]] }));
+    expect(await car.matrix({ lat: 46.7, lon: 6.8 }, [{ lat: 46.8, lon: 6.9 }, { lat: 47, lon: 7 }], 60)).toEqual([10, null]);
+  });
+
+  it('falls back on MOTIS when Valhalla fails', async () => {
+    const broken = valhallaCar('http://valhalla', fakeFetch({ error: 'down' }, false));
+    const backup: CarRouter = { name: 'motis', matrix: async (_f, pts) => pts.map(() => 7), route: async () => null };
+    const car = withFallback(broken, backup);
+    expect(await car.matrix({ lat: 46.7, lon: 6.8 }, [{ lat: 46.8, lon: 6.9 }], 60)).toEqual([7]);
+  });
+
+  it('forgets cached values after their time', () => {
+    const c = new Ttl<number>(1000, 2);
+    c.set('a', 1);
+    expect(c.get('a')).toBe(1);
+    c.set('b', 2);
+    c.set('c', 3);
+    // Beyond its size the oldest goes.
+    expect(c.get('a')).toBeUndefined();
+    expect(c.get('c')).toBe(3);
   });
 });

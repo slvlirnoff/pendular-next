@@ -17,10 +17,11 @@ search bar suggests food types, chains ("Migros · 747 in Switzerland"), all pla
 | `src/foods.ts` | The 32 food types (emoji, label, synonyms) and how a place gets them: cuisine, brand, name |
 | `src/kinds.ts` | Which kinds of places are kept (shops, pharmacies, fuel, fitness…), with emoji and French label |
 | `src/api.ts` | What the API answers (shared by server and site) |
-| `import/fetch.sh` | Downloads the other sources: Name Suggestion Index, All The Places (Swiss places of every chain), Overture (food and drink) |
+| `import/fetch.sh` | Downloads the other sources: Name Suggestion Index, All The Places (Swiss places of every chain), Overture (food and drink; shops, hairdressers and gyms it is sure of) |
 | `import/osm.sh` | Extracts the places from the Swiss OSM extract, then runs `build.ts` |
 | `import/build.ts` | Merges the four sources and loads them into PostgreSQL (places, food types, chains, towns) |
-| `server/` | Hono API on port 8789; also serves the built site |
+| `server/` | Hono API on port 8789; also serves the built site. `car.ts`: car times and routes from Valhalla or MOTIS |
+| `scripts/valhalla.sh` | Builds the Valhalla road tiles and runs Valhalla with Docker (optional, faster car times) |
 | `web/` | The site (Vite, React, MapLibre) |
 | `SOURCES.md` | Other data sources studied (Overture, Foursquare, All The Places, open government data…), in French |
 
@@ -36,13 +37,15 @@ data/scripts/fetch.sh                                   # once: OSM, timetable, 
 scripts/dev.sh                                          # PostgreSQL on 5433 and MOTIS on 8080 (and Pendular)
 bash apps/trajestaurant/import/fetch.sh                 # NSI, Overture (10 s), All The Places (2 min)
 pnpm --filter @pendular/trajestaurant import:osm        # creates the database "trajestaurant" (about 1 minute)
-pnpm --filter @pendular/trajestaurant dev:server        # API on http://127.0.0.1:8789
+bash apps/trajestaurant/scripts/valhalla.sh build && bash apps/trajestaurant/scripts/valhalla.sh start   # optional
+VALHALLA_URL=http://127.0.0.1:8002 pnpm --filter @pendular/trajestaurant dev:server   # API on http://127.0.0.1:8789
 pnpm --filter @pendular/trajestaurant dev:web           # site on http://127.0.0.1:5174
 ```
 
 Production: `pnpm --filter @pendular/trajestaurant build`, then `pnpm --filter @pendular/trajestaurant start`
 serves the site and the API on port 8789. Settings: `DATABASE_URL` (default
-`postgres://pendular@127.0.0.1:5433/trajestaurant`), `MOTIS_URL`, `PORT`.
+`postgres://pendular@127.0.0.1:5433/trajestaurant`), `MOTIS_URL`, `VALHALLA_URL` (none: car times
+from MOTIS), `PORT`.
 
 A link can open a search directly: `/?ici=46.7085,6.8405,Lucens&food=burger`, `&brand=ikea` (a
 chain by its name in lower case) or `&name=mix image`, and `&r=<id>` for a place.
@@ -52,12 +55,22 @@ chain by its name in lower case) or `&name=mix image`, and `&r=<id>` for a place
 - **Candidates**: the 40 nearest places of the food type within 40 km (PostGIS); for a chain or a
   name, the 24 nearest within 250 km (the nearest IKEA from Lucens is 43 km away), places of one
   chain within 150 m counted once (a store and its café).
-- **On foot and by car**: two MOTIS matrix calls for the whole list (on foot up to an hour; by car
-  long enough for the farthest place, up to three hours).
+- **On foot**: one MOTIS matrix call for the places within 7 km (up to an hour).
+- **By car**: one Valhalla matrix call (`VALHALLA_URL`), else MOTIS (long enough for the farthest
+  place, up to three hours). Both agree within a minute (median difference 0.1 min on 40 pizzerias).
 - **Public transport**: one MOTIS one-to-all call from the searcher (leaving now, waiting
   included, up to 90 minutes) gives the time to every stop; each restaurant takes the best stop
   within 700 m plus the walk. Shown only when it beats walking.
-- **A place**: the real routes (MOTIS plan): walk, car, and the next departures within two hours.
+- **A place**: the real routes: walk and the next departures within two hours (MOTIS), car
+  (Valhalla, else MOTIS).
+- **Caches**: street times from a place are kept for an hour (a search for pizza, then for Italian
+  food, computes only the places that are new), and the stops reached by public transport from a
+  place for the minute. At start, one search in the background loads the routing engines' data.
+
+Measured from Lucens, warm (MOTIS for car / Valhalla for car): pizza 0.4 / 0.3 s, Migros 0.55 / 0.35 s,
+IKEA 2.95 / 0.25 s, the way to a place 1.0 / 0.2 s; first search after start 12 s / 0.4 s. MOTIS
+explores every road up to the time limit, Valhalla uses its road hierarchy: the difference grows
+with the distance.
 
 The imported timetable is the 2027 one (from 13.12.2026). On a day it does not cover, searches use
 the same weekday and time of the week of 18.01.2027, and the site says it is a typical timetable.
@@ -71,10 +84,10 @@ opening_hours library in Swiss time.
 | --- | --- | --- |
 | OpenStreetMap | 126 600 places: places to eat, shops, pharmacies, fuel, banks, fitness, hotels…; towns | ODbL |
 | All The Places | 14 200 branches of 207 chains from their own store finders, 10 600 with opening hours: 6 300 complete OSM places (their hours replace OSM's), 7 300 are added | CC0 |
-| Overture Maps places | 49 000 places to eat: 19 000 add food types to known places, 22 400 are added (confidence ≥ 0.6, or lower with a phone or website); the others are left out | CDLA-Permissive-2.0 (some Apache-2.0, CC0) |
+| Overture Maps places | 49 000 places to eat: 19 000 add food types to known places, 22 400 are added (confidence ≥ 0.6, or lower with a phone or website). 59 000 shops, hairdressers, beauty salons and gyms with a confidence of 0.8 or more: 21 800 complete known places, 33 300 are added | CDLA-Permissive-2.0 (some Apache-2.0, CC0) |
 | Name Suggestion Index | The chains present in Switzerland: brand of places tagged with a name only ("Migros Lucens"), cuisine of chains, proper names | BSD-3-Clause |
 
-In all about 156 000 places, of which 1 456 chains with at least two places. Lucens, almost empty
+In all about 189 500 places, of which 1 712 chains with at least two places. Lucens, almost empty
 in OSM (three places within 3 km), now has Sherlock, Vesuvio, Grill House and the Café du Poids,
 from Overture. Other sources studied: `SOURCES.md` (in French).
 
