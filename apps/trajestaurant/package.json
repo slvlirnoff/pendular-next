@@ -1,0 +1,31 @@
+{
+  "name": "@pendular/trajestaurant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "import:osm": "bash import/osm.sh",
+    "dev:server": "tsx watch server/server.ts",
+    "dev:web": "vite",
+    "start": "tsx server/server.ts",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p web/tsconfig.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@pendular/engine": "workspace:*",
+    "hono": "^4.6.14",
+    "maplibre-gl": "^4.7.1",
+    "opening_hours": "^3.8.0",
+    "pg": "^8.13.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  }
+}

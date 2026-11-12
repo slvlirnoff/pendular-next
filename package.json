@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.28.0",
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc -b packages/engine apps/api && pnpm --filter @pendular/web typecheck",
+    "typecheck": "tsc -b packages/engine apps/api && pnpm --filter @pendular/web typecheck && pnpm --filter @pendular/trajestaurant typecheck",
     "dev:api": "pnpm --filter @pendular/api dev",
     "dev:web": "pnpm --filter @pendular/web dev",
     "build": "pnpm -r build"
