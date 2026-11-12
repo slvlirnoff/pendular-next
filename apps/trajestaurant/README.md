@@ -129,5 +129,12 @@ In all about 242 600 places, of which 1 856 chains with at least two places. Luc
 in OSM (three places within 3 km), now has Sherlock, Vesuvio, Grill House and the Café du Poids,
 from Overture. Other sources studied: `SOURCES.md` (in French).
 
+**The place card** shows a picture of the place when OSM has one (image or wikimedia_commons tag:
+1 500 places), its logo or its brand's (Wikimedia Commons, from NSI's Wikidata facts: 27 600
+places), one-tap actions (call, site, e-mail, Instagram, Facebook, share), and the opening hours
+read by the `opening_hours` library and laid out by day for the coming week ("lun.–ven.
+08:00–12:00, 13:30–18:30", today in bold, a night that goes past midnight on its evening's line,
+"sur rendez-vous" for the usual comments); hours it cannot read are shown as written.
+
 Credits: © OpenStreetMap contributors, Overture Maps Foundation, All The Places, name-suggestion-index;
 routing MOTIS with the timetable of opentransportdata.swiss.

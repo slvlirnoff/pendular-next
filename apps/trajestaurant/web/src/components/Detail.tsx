@@ -1,10 +1,101 @@
-import { forwardRef } from 'react';
-import type { DetailMode, PlaceSummary, RoutesResponse, Target, TransitOption } from '../../../src/api';
+import { forwardRef, useState } from 'react';
+import type { DetailMode, PlaceDetail, PlaceSummary, RoutesResponse, Target, TransitOption, WeekHours } from '../../../src/api';
 import { FOOD_BY_KEY } from '../../../src/foods';
 import { clock, distance, kindLabel, legEmoji, MODE, minutes, openLabel, placeEmoji } from '../lib';
 
 const YES = new Set(['yes', 'only', 'designated']);
 const SOURCE_NAMES: Record<string, string> = { osm: 'OpenStreetMap', atp: 'All The Places', overture: 'Overture Maps', gbfs: 'sharedmobility.ch' };
+
+/** A picture from elsewhere (Wikimedia Commons, a shop's site): gone without a trace when it does not load. */
+function Picture(props: { src: string; className: string; alt?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return <img className={props.className} src={props.src} alt={props.alt ?? ''} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+}
+
+const DAY_FMT = new Intl.DateTimeFormat('fr-CH', { weekday: 'short', timeZone: 'UTC' });
+/** Short day name, 1 Monday … 7 Sunday (1 January 2024 was a Monday). */
+const dayName = (weekday: number) => DAY_FMT.format(new Date(Date.UTC(2024, 0, weekday)));
+
+/** One day's opening times as text: "08:00–12:00, 13:30–18:30", "24 h/24", "Fermé". */
+function dayText(d: WeekHours['days'][number]): string {
+  if (d.intervals.length === 0) return 'Fermé';
+  if (d.intervals.length === 1 && d.intervals[0]!.from === '00:00' && d.intervals[0]!.to === '24:00') return '24 h/24';
+  const times = d.intervals.map((i) => `${i.from}–${i.to}${i.unknown ? ' ?' : ''}`).join(', ');
+  const comments = [...new Set(d.intervals.map((i) => i.comment).filter(Boolean))];
+  return comments.length ? `${times} (${comments.join(', ')})` : times;
+}
+
+/** The week, Monday first, days with the same hours on one line ("lun.–ven."), today's line marked. */
+function Hours(props: { hours: WeekHours }) {
+  const today = props.hours.days[0]!.weekday;
+  const byDay = [...props.hours.days].sort((a, b) => a.weekday - b.weekday);
+  const rows: { from: number; to: number; text: string }[] = [];
+  for (const d of byDay) {
+    const text = dayText(d);
+    const last = rows[rows.length - 1];
+    if (last && last.text === text && last.to === d.weekday - 1) last.to = d.weekday;
+    else rows.push({ from: d.weekday, to: d.weekday, text });
+  }
+  const everyDay = rows.length === 1;
+  return (
+    <>
+      <table className="hours-table">
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.from} className={`${today >= row.from && today <= row.to ? 'is-today' : ''}${row.text === 'Fermé' ? ' is-closed' : ''}`}>
+              <th scope="row">{everyDay ? 'Tous les jours' : row.from === row.to ? dayName(row.from) : `${dayName(row.from)}–${dayName(row.to)}`}</th>
+              <td>{row.text}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {!props.hours.stable ? <p className="hours-note">Horaires des 7 prochains jours (jours fériés compris).</p> : null}
+    </>
+  );
+}
+
+const webUrl = (v: string) => (/^https?:/i.test(v) ? v : `https://${v}`);
+const socialUrl = (site: 'instagram' | 'facebook', v: string) => (/^https?:/i.test(v) ? v : `https://www.${site}.com/${v.replace(/^@/, '')}`);
+
+/** Calling, writing, the site, social pages, sharing: one tap each. */
+function Actions(props: { place: PlaceDetail }) {
+  const p = props.place;
+  const [copied, setCopied] = useState(false);
+  const share = async () => {
+    const data = { title: p.name, url: window.location.href };
+    try {
+      if (navigator.share) await navigator.share(data);
+      else {
+        await navigator.clipboard.writeText(data.url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      }
+    } catch {
+      // Cancelled.
+    }
+  };
+  const links: { key: string; href: string; icon: string; label: string; external?: boolean }[] = [];
+  if (p.phone) links.push({ key: 'tel', href: `tel:${p.phone.replace(/[^+\d]/g, '')}`, icon: '📞', label: 'Appeler' });
+  if (p.website) links.push({ key: 'web', href: webUrl(p.website), icon: '🌐', label: 'Site web', external: true });
+  if (p.extra?.email) links.push({ key: 'mail', href: `mailto:${p.extra.email}`, icon: '✉️', label: 'E-mail' });
+  if (p.extra?.instagram) links.push({ key: 'ig', href: socialUrl('instagram', p.extra.instagram), icon: '📸', label: 'Instagram', external: true });
+  if (p.extra?.facebook) links.push({ key: 'fb', href: socialUrl('facebook', p.extra.facebook), icon: '👍', label: 'Facebook', external: true });
+  return (
+    <div className="actions">
+      {links.map((l) => (
+        <a key={l.key} className="action" href={l.href} {...(l.external ? { target: '_blank', rel: 'noreferrer' } : {})}>
+          <span aria-hidden="true">{l.icon}</span>
+          {l.label}
+        </a>
+      ))}
+      <button type="button" className="action" onClick={share}>
+        <span aria-hidden="true">↗</span>
+        {copied ? 'Lien copié' : 'Partager'}
+      </button>
+    </div>
+  );
+}
 
 /** Car sharing: walk to the station, drive (traffic and parking in), and the car goes back to its station. */
 function Sharing(props: { option: NonNullable<RoutesResponse['sharing']> }) {
@@ -96,7 +187,8 @@ export const Detail = forwardRef<
 
   return (
     <section ref={ref} className="panel panel-detail" aria-label={r.name}>
-      <div className="card detail">
+      <div className={`card detail${detail?.extra?.image ? ' has-hero' : ''}`}>
+        {detail?.extra?.image ? <Picture className="hero" src={detail.extra.image} /> : null}
         <div className="detail-head">
           <button type="button" className="back" onClick={props.onBack} aria-label="Retour à la liste">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -104,7 +196,8 @@ export const Detail = forwardRef<
             </svg>
           </button>
           <span className="emoji-dot emoji-big" aria-hidden="true">
-            {placeEmoji(r, props.target)}
+            {detail?.extra?.logo ? <Picture className="logo" src={detail.extra.logo} /> : null}
+            <span className="emoji-fallback">{placeEmoji(r, props.target)}</span>
           </span>
           <div className="detail-title">
             <h2>{r.name}</h2>
@@ -126,6 +219,8 @@ export const Detail = forwardRef<
             ))}
           </div>
         ) : null}
+
+        {detail ? <Actions place={detail} /> : null}
 
         <div className={`modes${modes.length === 4 ? ' modes-4' : ''}`} role="tablist" aria-label="Comment y aller">
           {modes.map((m) => (
@@ -180,38 +275,53 @@ export const Detail = forwardRef<
           )}
         </div>
 
-        <dl className="facts">
-          {detail?.address ? (
-            <>
-              <dt>Adresse</dt>
-              <dd>{detail.address}</dd>
-            </>
-          ) : null}
-          {detail?.openingHours ? (
-            <>
-              <dt>Horaires</dt>
-              <dd className="hours">{detail.openingHours.replace(/;\s*/g, '\n')}</dd>
-            </>
-          ) : null}
-          {detail?.phone ? (
-            <>
-              <dt>Téléphone</dt>
-              <dd>
-                <a href={`tel:${detail.phone.replace(/[^+\d]/g, '')}`}>{detail.phone}</a>
-              </dd>
-            </>
-          ) : null}
-          {detail?.website ? (
-            <>
-              <dt>Site web</dt>
-              <dd>
-                <a href={/^https?:/.test(detail.website) ? detail.website : `https://${detail.website}`} target="_blank" rel="noreferrer">
-                  {detail.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
-                </a>
-              </dd>
-            </>
-          ) : null}
-        </dl>
+        {detail && (detail.address || detail.openingHours || detail.extra?.speciality || detail.extra?.description) ? (
+          <div className="info">
+            {detail.address ? (
+              <div className="info-row">
+                <span className="info-icon" aria-hidden="true">
+                  📍
+                </span>
+                <div>
+                  <span className="info-label">Adresse</span>
+                  <p>{detail.address}</p>
+                </div>
+              </div>
+            ) : null}
+            {detail.openingHours ? (
+              <div className="info-row">
+                <span className="info-icon" aria-hidden="true">
+                  🕐
+                </span>
+                <div>
+                  <span className="info-label">Horaires</span>
+                  {detail.hours ? <Hours hours={detail.hours} /> : <p className="hours-raw">{detail.openingHours.replace(/;\s*/g, '\n')}</p>}
+                </div>
+              </div>
+            ) : null}
+            {detail.extra?.speciality ? (
+              <div className="info-row">
+                <span className="info-icon" aria-hidden="true">
+                  🩺
+                </span>
+                <div>
+                  <span className="info-label">Spécialité</span>
+                  <p>{detail.extra.speciality.replace(/_/g, ' ').replace(/;/g, ', ')}</p>
+                </div>
+              </div>
+            ) : null}
+            {detail.extra?.description ? (
+              <div className="info-row">
+                <span className="info-icon" aria-hidden="true">
+                  ℹ️
+                </span>
+                <div>
+                  <p>{detail.extra.description}</p>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         {extras.length ? (
           <div className="tags">
             {extras.map((x) => (

@@ -3,7 +3,7 @@ import { classify, FOODS, matchFoods } from '../src/foods.js';
 import { fold } from '../src/text.js';
 import { transitToPlaces, usefulTransit } from '../server/estimate.js';
 import { referenceMonday, routingDate } from '../server/timetable.js';
-import { atpPlace, bankAtm, brandFromName, carSharingPlace, centre, Grid, keepOverture, kindFromName, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, overtureTrust, sameName, type Brands, type OvertureRow, type Place } from '../import/build.js';
+import { atpPlace, bankAtm, extraOf, pictureUrl, brandFromName, carSharingPlace, centre, Grid, keepOverture, kindFromName, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, overtureTrust, sameName, type Brands, type OvertureRow, type Place } from '../import/build.js';
 import { KIND_SEARCHES, kindGroup, kindInfo, mainKind, matchKinds } from '../src/kinds.js';
 import { searchKey } from '../src/text.js';
 import { maxMinutes, onePlace, Ttl } from '../server/search.js';
@@ -12,6 +12,7 @@ import type { SearchResult } from '../src/api.js';
 import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
 import { clockOf, createTraffic, rushShare } from '../server/traffic.js';
 import { createCarSharing } from '../server/sharing.js';
+import { weekHours } from '../server/open.js';
 import { loadDensity } from '@pendular/engine';
 
 describe('food types', () => {
@@ -467,5 +468,41 @@ describe("Overture's categories of shops and services", () => {
     expect(sameName('Migros Lucens', 'Migros', towns)).toBe(true);
     expect(sameName('Dr. med. Anna Muster', 'Dr. med. Peter Keller')).toBe(false);
     expect(sameName('Dr méd. Anna Muster', 'Dr. med. Anna Muster')).toBe(true);
+  });
+});
+
+describe('the place card', () => {
+  // A Thursday afternoon in Lucens (the server runs in Swiss time: server/tz.ts).
+  const now = new Date('2026-11-12T15:00:00+01:00');
+  const line = (v: string) =>
+    weekHours(v, 46.7, 6.8, now)!.days.map((d) => `${d.weekday}:${d.intervals.map((i) => `${i.from}-${i.to}${i.comment ? ` (${i.comment})` : ''}`).join(',') || '-'}`).join(' ');
+
+  it('lays the opening hours out by day, today first', () => {
+    expect(line('Mo-Fr 08:00-12:00,13:30-18:30; Sa 08:00-16:00')).toBe('4:08:00-12:00,13:30-18:30 5:08:00-12:00,13:30-18:30 6:08:00-16:00 7:- 1:08:00-12:00,13:30-18:30 2:08:00-12:00,13:30-18:30 3:08:00-12:00,13:30-18:30');
+    expect(line('24/7')).toBe('4:00:00-24:00 5:00:00-24:00 6:00:00-24:00 7:00:00-24:00 1:00:00-24:00 2:00:00-24:00 3:00:00-24:00');
+  });
+
+  it('keeps a night on the line of the evening it begins', () => {
+    expect(line('Tu-Sa 18:00-02:00')).toBe('4:18:00-02:00 5:18:00-02:00 6:18:00-02:00 7:- 1:- 2:18:00-02:00 3:18:00-02:00');
+  });
+
+  it('says the usual comments in French and leaves unreadable hours alone', () => {
+    expect(line('Mo 09:00-12:00 "by appointment"')).toContain('1:09:00-12:00 (sur rendez-vous)');
+    expect(weekHours('selon la saison', 46.7, 6.8, now)).toBeNull();
+  });
+
+  it('turns picture tags into thumbnails', () => {
+    expect(pictureUrl('File:Lucens château.jpg', 640)).toBe('https://commons.wikimedia.org/wiki/Special:FilePath/Lucens_ch%C3%A2teau.jpg?width=640');
+    expect(pictureUrl('https://commons.wikimedia.org/wiki/File:Lucens_ch%C3%A2teau.jpg', 128)).toBe('https://commons.wikimedia.org/wiki/Special:FilePath/Lucens_ch%C3%A2teau.jpg?width=128');
+    expect(pictureUrl('https://example.com/shop.jpg', 640)).toBe('https://example.com/shop.jpg');
+    expect(pictureUrl('https://www.mapillary.com/app/?pKey=1', 640)).toBeNull();
+    expect(pictureUrl('Category:Lucens', 640)).toBeNull();
+  });
+
+  it("shows a brand's logo when the place has none", () => {
+    const logos = new Map([['Q680990', 'https://commons.wikimedia.org/wiki/Special:FilePath/Landi.svg?width=128']]);
+    expect(extraOf({ 'brand:wikidata': 'Q680990', email: 'info@example.ch' }, logos)).toEqual({ logo: logos.get('Q680990'), email: 'info@example.ch' });
+    expect(extraOf({ logo: 'File:Own.png', 'brand:wikidata': 'Q680990' }, logos)?.logo).toContain('Own.png');
+    expect(extraOf({})).toBeNull();
   });
 });

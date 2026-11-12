@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Trajestaurant: downloads the sources besides OpenStreetMap into data/build/trajestaurant/src.
-#   - Name Suggestion Index (brands: proper names, Wikidata ids, cuisine of the chains)
+#   - Name Suggestion Index (brands: proper names, Wikidata ids, cuisine of the chains, logos)
 #   - All The Places: every spider with places in Switzerland, its Swiss places only
 #   - Overture Maps places: food and drink in Switzerland (needs python3 with duckdb)
 #   - car-sharing stations from the national shared-mobility feed (needs SHAREDMOBILITY_CONTACT,
@@ -18,6 +18,9 @@ NSI_VERSION="${NSI_VERSION:-8.0.20261101}"
 nsi() {
   curl -fsSL --retry 4 -A "$UA" "https://cdn.jsdelivr.net/npm/name-suggestion-index@$NSI_VERSION/dist/json/nsi.min.json" -o "$out/nsi.json.part"
   mv "$out/nsi.json.part" "$out/nsi.json"
+  # The brands' Wikidata facts: their logos (Wikimedia Commons) for the place card.
+  curl -fsSL --retry 4 -A "$UA" "https://cdn.jsdelivr.net/npm/name-suggestion-index@$NSI_VERSION/dist/wikidata/wikidata.min.json" -o "$out/nsi-wikidata.json.part"
+  mv "$out/nsi-wikidata.json.part" "$out/nsi-wikidata.json"
   echo "nsi $NSI_VERSION"
 }
 

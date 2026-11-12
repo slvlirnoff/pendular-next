@@ -869,15 +869,56 @@ export function brandsOf(places: Place[], nsi: Brands | null): BrandRow[] {
   return out.sort((a, b) => b.count - a.count);
 }
 
-/** What the place card shows besides the address: pictures, e-mail, social pages, speciality. */
-const EXTRA_TAGS: Record<string, string> = {
-  image: 'image', logo: 'logo', wikidata: 'wikidata', wikimedia_commons: 'commons', email: 'email',
-  instagram: 'instagram', facebook: 'facebook', 'healthcare:speciality': 'speciality', description: 'description',
-};
-export function extraOf(t: Tags): Record<string, string> | null {
+/**
+ * A picture's address for the card: a Wikimedia Commons file (an OSM wikimedia_commons tag
+ * "File:…", a commons page or link) as a thumbnail of that width, or a direct link to an image
+ * file. Null for anything else (a web page, a Mapillary viewer, a Commons category).
+ */
+export function pictureUrl(value: string | undefined, width: number): string | null {
+  if (!value) return null;
+  const v = value.trim();
+  const file =
+    /^File:(.+)$/i.exec(v)?.[1] ??
+    /commons\.wikimedia\.org\/wiki\/(?:File:|Special:FilePath\/)(.+?)(?:[?#].*)?$/i.exec(v)?.[1] ??
+    /commons\.wikimedia\.org\/w\/index\.php\?title=Special(?::|%3A)Redirect(?:\/|%2F)file(?:\/|%2F)([^&]+)/i.exec(v)?.[1];
+  if (file) {
+    let name = file;
+    try {
+      name = decodeURIComponent(file);
+    } catch {
+      // Already plain.
+    }
+    return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(name.replace(/ /g, '_'))}?width=${width}`;
+  }
+  if (/^https:\/\/\S+\.(jpe?g|png|webp|gif)(\?\S*)?$/i.test(v)) return v;
+  return null;
+}
+
+/**
+ * What the place card shows besides the address: a picture of the place, its logo (its own, else
+ * its brand's from Wikidata), e-mail, social pages, speciality, description.
+ */
+export function extraOf(t: Tags, brandLogos?: Map<string, string>): Record<string, string> | null {
   const out: Record<string, string> = {};
-  for (const [tag, key] of Object.entries(EXTRA_TAGS)) if (t[tag]) out[key] = t[tag]!;
+  const image = pictureUrl(t.image, 640) ?? pictureUrl(t.wikimedia_commons, 640);
+  const logo = pictureUrl(t.logo, 128) ?? (t['brand:wikidata'] ? brandLogos?.get(t['brand:wikidata']) : undefined);
+  if (image) out.image = image;
+  if (logo) out.logo = logo;
+  const kept: [string, string][] = [['wikidata', 'wikidata'], ['email', 'email'], ['instagram', 'instagram'], ['facebook', 'facebook'], ['healthcare:speciality', 'speciality'], ['description', 'description']];
+  for (const [tag, key] of kept) if (t[tag]) out[key] = t[tag]!;
   return Object.keys(out).length ? out : null;
+}
+
+/** The brands' logos (Wikidata id → thumbnail) from NSI's Wikidata facts (import/fetch.sh nsi). */
+export function loadBrandLogos(file: string): Map<string, string> {
+  const out = new Map<string, string>();
+  if (!existsSync(file)) return out;
+  const data = JSON.parse(readFileSync(file, 'utf8')) as { wikidata?: Record<string, { logos?: { wikidata?: string } }> };
+  for (const [qid, facts] of Object.entries(data.wikidata ?? {})) {
+    const url = pictureUrl(facts.logos?.wikidata, 128);
+    if (url) out.set(qid, url);
+  }
+  return out;
 }
 
 export function foodsOf(p: Place): string[] {
@@ -901,6 +942,7 @@ async function main() {
   await ensureDatabase(url);
 
   const { places, towns, counts, nsi } = await build(osmFile, srcDir);
+  const brandLogos = loadBrandLogos(resolve(srcDir, 'nsi-wikidata.json'));
   const brands = brandsOf(places, nsi);
   console.log('read', JSON.stringify(counts), `→ ${places.length} places`);
 
@@ -951,7 +993,7 @@ async function main() {
           wheelchair: t.wheelchair ?? null,
           vegetarian: t['diet:vegetarian'] ?? null,
           vegan: t['diet:vegan'] ?? null,
-          extra: extraOf(t),
+          extra: extraOf(t, brandLogos),
           foods: foodsOf(p),
         };
       });

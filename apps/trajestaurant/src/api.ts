@@ -78,8 +78,41 @@ export interface Suggestion {
   places: PlaceSummary[];
 }
 
+/** One day of a place's week: its opening times, local ("08:00"–"12:00", "18:00"–"02:00"). */
+export interface DayHours {
+  /** 1 Monday … 7 Sunday. */
+  weekday: number;
+  /** YYYY-MM-DD. */
+  date: string;
+  intervals: { from: string; to: string; unknown?: boolean; comment?: string }[];
+}
+
+/** The opening hours of the coming seven days, today first; stable: every week is the same. */
+export interface WeekHours {
+  days: DayHours[];
+  stable: boolean;
+}
+
+/** What the card shows besides the address (all optional). */
+export interface PlaceExtra {
+  /** A picture of the place (Wikimedia Commons thumbnail or a direct image link). */
+  image?: string;
+  /** Its logo, else its brand's (Wikimedia Commons thumbnail). */
+  logo?: string;
+  email?: string;
+  instagram?: string;
+  facebook?: string;
+  /** Medical speciality (OSM healthcare:speciality). */
+  speciality?: string;
+  description?: string;
+  wikidata?: string;
+}
+
 export interface PlaceDetail extends PlaceSummary {
   address: string | null;
+  /** The opening hours read and laid out by day; null when they could not be read (openingHours as written). */
+  hours: WeekHours | null;
+  extra: PlaceExtra | null;
   cuisine: string | null;
   brand: string | null;
   openingHours: string | null;

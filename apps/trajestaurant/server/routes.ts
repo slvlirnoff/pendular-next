@@ -1,8 +1,8 @@
 import type { Itinerary, LatLon } from '@pendular/engine';
-import type { PlaceDetail, RouteLeg, RoutesResponse, SharingOption, StreetOption, TransitOption } from '../src/api.js';
+import type { PlaceDetail, PlaceExtra, RouteLeg, RoutesResponse, SharingOption, StreetOption, TransitOption } from '../src/api.js';
 import type { Traffic } from './traffic.js';
 import { distanceM } from './estimate.js';
-import { openState } from './open.js';
+import { openState, weekHours } from './open.js';
 import { sortFoods, type SearchDeps } from './search.js';
 import { localNow, routingDate } from './timetable.js';
 import { clockOf, createTraffic } from './traffic.js';
@@ -38,6 +38,7 @@ interface DetailRow {
   wheelchair: string | null;
   vegetarian: string | null;
   vegan: string | null;
+  extra: PlaceExtra | null;
   foods: string[];
 }
 
@@ -67,6 +68,8 @@ export async function placeDetail(deps: SearchDeps, id: number, from: LatLon | n
     distanceM: from ? Math.round(distanceM(from, r)) : 0,
     open: openState(r.opening_hours, r.lat, r.lon, now),
     address: line1 ? [line1, line2].filter(Boolean).join(', ') : null,
+    hours: weekHours(r.opening_hours, r.lat, r.lon, now),
+    extra: r.extra,
     cuisine: r.cuisine,
     brand: r.brand,
     openingHours: r.opening_hours,
