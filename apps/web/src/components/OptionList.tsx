@@ -280,7 +280,8 @@ function GroupCard(props: { group: TicketGroup; selected: string | null; onSelec
         <button type="button" className="option-head" aria-expanded={open} aria-controls={open ? detailId : undefined} onClick={() => props.onSelect(open ? null : shown.id)}>
           <span className="option-main">
             <span className="option-title">{title}</span>
-            {n === 1 && <ModeChain legs={shown.itinerary.legs} />}
+            {/* With several routes on the ticket, the lines of the one the card opens with. */}
+            <ModeChain legs={shown.itinerary.legs} />
           </span>
           <span className="option-figures">
             <span className="option-cost">
