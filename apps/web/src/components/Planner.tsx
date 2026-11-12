@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Itinerary, Leg, Place } from '@pendular/engine/types';
 import { TRANSIT_MODES } from '@pendular/engine/types';
 import { useI18n } from '../i18n/index.js';
 import { fetchConnections, type ConnectionsQuery } from '../lib/api.js';
 import { chf, duration, hhmm } from '../lib/format.js';
 import { changeStopsOf, optionName } from '../lib/names.js';
+import { afterPaint, reveal } from '../lib/motion.js';
 import type { TicketGroup } from '../lib/groups.js';
 import { ModeChain } from './ModeChain.js';
 import { MapPanel } from './MapPanel.js';
@@ -92,6 +93,12 @@ export function Planner(props: { group: TicketGroup; home: Place; work: Place; a
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dir, from, group.key]);
 
+  const list = useRef<HTMLOListElement>(null);
+  // Opening a connection closes the one above it: the row chosen stays in view.
+  const choose = (i: number | null) => {
+    setChosen(i);
+    if (i !== null) afterPaint(() => reveal(list.current?.children[i]));
+  };
   const move = (by: number) => setStart((s) => ({ ...s, [dir]: Math.min(DAY - SPAN + 120, Math.max(0, s[dir] + by)) }));
   const shown = chosen !== null ? found.its[chosen] : undefined;
   const trips = useMemo(() => (shown ? [{ id: 'chosen', itinerary: shown }] : []), [shown]);
@@ -144,14 +151,14 @@ export function Planner(props: { group: TicketGroup; home: Place; work: Place; a
             {found.status === 'done' && found.its.length === 0 && <p className="hint">{t('planner.none')}</p>}
           </div>
           {found.status !== 'error' && found.its.length > 0 && (
-            <ol className={found.status === 'loading' ? 'connections is-stale' : 'connections'}>
+            <ol ref={list} className={found.status === 'loading' ? 'connections is-stale' : 'connections'}>
               {found.its.map((it, i) => {
                 const via = changeStopsOf(it.legs);
                 const lines = it.legs.filter((l) => l.mode !== 'walk');
                 const on = i === chosen;
                 return (
                   <li key={`${it.departure}-${it.arrival}-${i}`} className={on ? 'is-on' : undefined}>
-                    <button type="button" aria-expanded={on} onClick={() => setChosen(on ? null : i)}>
+                    <button type="button" aria-expanded={on} onClick={() => choose(on ? null : i)}>
                       <span className="conn-times">
                         <strong>{hhmm(it.departure)}</strong> → {hhmm(it.arrival)}
                       </span>

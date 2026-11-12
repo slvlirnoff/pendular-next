@@ -410,3 +410,17 @@ main.is-wide { max-width: 1680px; }
 }
 .secondary { min-height: 44px; padding: 0 20px; background: var(--surface); color: var(--accent); border: 1px solid var(--accent); border-radius: var(--radius-md); font-weight: 600; }
 .secondary:hover { background: var(--accent-tint); }
+
+/* --- Motion: short, and only to show where things come from ---------------------------------- */
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes unfold { from { opacity: 0; transform: translateY(-4px); } }
+/* A new answer, a new view. */
+.results, .planner { animation: rise 0.24s ease-out both; }
+.results, .connections { transition: opacity 0.18s ease-out; }
+/* What a click opens: the detail of a card, the trip of a connection, the hidden cards. */
+.option-detail, .connections li > .detail-block, .detail-fold[open] > :not(summary), .ticket-others[open] > :not(summary) { animation: unfold 0.18s ease-out both; }
+/* What a click chooses. */
+.option.card { transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out; }
+.mode-main, .option-head, .departures button, .connections > li > button, .segmented button, .secondary, .primary, .tabs button { transition: background-color 0.12s ease-out, color 0.12s ease-out, border-color 0.12s ease-out; }
+/* The comparison and the timetable of a ticket cross-fade. */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.2s; }

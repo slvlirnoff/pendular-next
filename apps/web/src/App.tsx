@@ -3,6 +3,7 @@ import type { CompareResult } from '@pendular/engine/types';
 import { I18n, LANGS, langFromPath, translator, type Lang } from './i18n/index.js';
 import { compareCommute } from './lib/api.js';
 import { ticketGroups, type TicketGroup } from './lib/groups.js';
+import { afterPaint, changeView, reveal } from './lib/motion.js';
 import { Planner } from './components/Planner.js';
 import { fromQuery, toQuery, toRequest, type SearchState } from './lib/state.js';
 import { SearchForm } from './components/SearchForm.js';
@@ -44,6 +45,8 @@ export function App() {
   const abort = useRef<AbortController | null>(null);
   const lastQuery = useRef('');
   const firstPage = useRef(true);
+  // Where the comparison was scrolled to when a timetable was opened: it comes back there.
+  const leftAt = useRef(0);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -94,7 +97,12 @@ export function App() {
       setLang(langFromPath(location.pathname));
       setPage(p);
       // The timetable of a ticket is one step of history: going back returns to the comparison.
-      if (location.hash !== '#connections') setExplored(null);
+      if (location.hash !== '#connections') {
+        changeView(
+          () => setExplored(null),
+          () => scrollTo({ top: leftAt.current }),
+        );
+      }
       if (p !== 'search') return;
       const s = fromQuery(location.search);
       setState(s);
@@ -123,11 +131,24 @@ export function App() {
     go(to);
   };
 
+  // A choice made by hand (overview, chart, list) brings its card into view; the one the
+  // search opens by itself does not move the page.
+  const choose = (id: string | null) => {
+    setSelected(id);
+    if (!id) return;
+    setTab('list');
+    afterPaint(() => reveal(document.querySelector('.option.card.is-selected')));
+  };
   const openPlanner = (g: TicketGroup) => {
-    setExplored(g);
+    leftAt.current = scrollY;
     history.pushState(null, '', `${location.pathname}${location.search}#connections`);
-    scrollTo({ top: 0 });
-    requestAnimationFrame(() => document.getElementById('planner-h')?.focus());
+    changeView(
+      () => setExplored(g),
+      () => {
+        scrollTo({ top: 0 });
+        document.getElementById('planner-h')?.focus({ preventScroll: true });
+      },
+    );
   };
   const planning = page === 'search' && !!explored && !!searched?.home && !!searched.work;
   const stamp = result?.stamp;
@@ -207,14 +228,14 @@ export function App() {
               result={result}
               daysSearched={searched.weekdays.length}
               selected={selected}
-              onSelect={setSelected}
+              onSelect={choose}
               onShowOnMap={(id) => {
                 setSelected(id);
                 setTab('map');
                 requestAnimationFrame(() => document.querySelector('.split-map')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
               }}
             />
-            <TradeoffChart options={result.options} selected={selected} onSelect={setSelected} />
+            <TradeoffChart options={result.options} selected={selected} onSelect={choose} />
             <div className="tabs" role="group" aria-label={t('view.label')}>
               <button type="button" aria-pressed={tab === 'list'} onClick={() => setTab('list')}>
                 {t('list.tab')}
@@ -225,7 +246,7 @@ export function App() {
             </div>
             <div className={`split show-${tab}`}>
               <div className="split-list">
-                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} car={stamp?.car} picked={picked} onPick={setPicked} onExplore={openPlanner} />
+                <OptionList options={result.options} selected={selected} onSelect={choose} sort={sort} onSort={setSort} car={stamp?.car} picked={picked} onPick={setPicked} onExplore={openPlanner} />
                 <LeftOutList items={result.leftOut} />
               </div>
               <div className="split-map">
