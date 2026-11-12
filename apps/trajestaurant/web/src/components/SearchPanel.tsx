@@ -423,6 +423,7 @@ function Results(props: {
           {props.search.response?.typicalTimetable ? (
             <p className="results-note">🚆 Horaire type : même jour et même heure dans l'horaire 2027.</p>
           ) : null}
+          {props.list.some((r) => r.carMin !== null) ? <p className="results-note">🚗 Voiture : trafic de l’heure et temps pour se garer compris.</p> : null}
         </div>
       )}
     </div>

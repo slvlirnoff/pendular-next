@@ -4,6 +4,7 @@ import { distanceM } from './estimate.js';
 import { openState } from './open.js';
 import { sortFoods, type SearchDeps } from './search.js';
 import { localNow, routingDate } from './timetable.js';
+import { clockOf, createTraffic } from './traffic.js';
 
 /** Walking is not offered beyond this straight-line distance, metres (about an hour and a half). */
 const MAX_WALK_M = 7_000;
@@ -110,9 +111,18 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
   const end = new Date(Date.UTC(2000, 0, 1, +local.time.slice(0, 2), +local.time.slice(3, 5) + TRANSIT_WINDOW_MIN));
   const windowEnd = `${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`;
 
+  const clock = clockOf(local.date, local.time);
+  const traffic = createTraffic(deps.density, clock.weekday, clock.minutes);
   const street = (profile: 'walk' | 'car'): Promise<StreetOption | null> =>
     (profile === 'car' ? deps.car.route(from, to) : deps.routing.street({ from, to, profile }))
-      .then((r) => (r && r.geometry && r.geometry.length > 1 ? { durationMin: Math.max(1, Math.round(r.durationMin)), distanceM: Math.round(r.distanceM), geometry: r.geometry } : null))
+      .then((r) => {
+        if (!r || !r.geometry || r.geometry.length < 2) return null;
+        const base = { distanceM: Math.round(r.distanceM), geometry: r.geometry };
+        if (profile === 'walk') return { ...base, durationMin: Math.max(1, Math.round(r.durationMin)) };
+        // By car: the traffic of this hour along the route, and parking at the place.
+        const parts = traffic.car(r.durationMin, r.geometry, to);
+        return { ...base, durationMin: parts.totalMin, car: parts };
+      })
       .catch((e: unknown) => {
         console.error(`${profile} route`, e);
         return null;

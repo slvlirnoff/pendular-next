@@ -113,7 +113,14 @@ export const Detail = forwardRef<
             )
           ) : props.routes?.car ? (
             <p className="way-street">
-              🚗 {minutes(props.routes.car.durationMin)} en voiture · {distance(props.routes.car.distanceM)} <small>(sans les bouchons ni le parking)</small>
+              🚗 {minutes(props.routes.car.durationMin)} en voiture · {distance(props.routes.car.distanceM)}
+              {props.routes.car.car ? (
+                <small className="way-detail">
+                  {minutes(props.routes.car.car.drivingMin)} de route
+                  {props.routes.car.car.factor > 1.04 ? ` avec le trafic de cette heure (×${props.routes.car.car.factor.toLocaleString('fr-CH')})` : ''} +{' '}
+                  {props.routes.car.car.parkingMin} min pour se garer et marcher jusqu’à la porte
+                </small>
+              ) : null}
             </p>
           ) : (
             <p className="way-street">Pas de route trouvée en voiture.</p>

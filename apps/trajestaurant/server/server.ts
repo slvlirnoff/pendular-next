@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
-import { MotisRouting, type LatLon } from '@pendular/engine';
+import { loadDensity, MotisRouting, type LatLon } from '@pendular/engine';
 import { httpGet } from '../../api/src/httpGet.js';
 import type { PlaceHit, Target } from '../src/api.js';
 import { FOODS, FOOD_BY_KEY } from '../src/foods.js';
@@ -32,6 +32,7 @@ const routing = new MotisRouting({
 const valhallaUrl = process.env.VALHALLA_URL;
 const deps: SearchDeps = {
   db: createPool(),
+  density: loadDensity(),
   motisUrl,
   fetch: httpGet,
   timetable,

@@ -96,22 +96,18 @@ export function timeOf(r: SearchResult, mode: Mode): number | null {
   return mode === 'walk' ? r.walkMin : mode === 'car' ? r.carMin : r.transitMin;
 }
 
-/** A walk this short is the way to go: the car would still need parking (minutes). */
+/** A walk this short is the way to go, whatever the car says (minutes). */
 export const SHORT_WALK_MIN = 12;
-/** Parking and walking to the door, which car times leave out, when car and other ways are compared (minutes). */
-export const CAR_PARKING_MIN = 5;
 
-/**
- * The way shown first for a place: walking when it is short, else the quickest of walking, public
- * transport and the car, the car counted with its parking.
- */
+/** The way shown first for a place: walking when it is short, else the quickest of walking, public transport and the car. */
 export function bestMode(r: Pick<SearchResult, 'walkMin' | 'carMin' | 'transitMin'>): Mode | null {
   if (r.walkMin !== null && r.walkMin <= SHORT_WALK_MIN && (r.transitMin === null || r.walkMin <= r.transitMin)) return 'walk';
   const ways = (
     [
       ['walk', r.walkMin],
       ['transit', r.transitMin],
-      ['car', r.carMin === null ? null : r.carMin + CAR_PARKING_MIN],
+      // Car times are door to door: the traffic of the hour and parking are in (server/traffic.ts).
+      ['car', r.carMin],
     ] as [Mode, number | null][]
   ).filter((x): x is [Mode, number] => x[1] !== null);
   return ways.sort((a, b) => a[1] - b[1])[0]?.[0] ?? null;
@@ -137,13 +133,13 @@ export function leadMode(r: SearchResult, sort: Sort): Mode | null {
   return timeOf(r, sort) !== null ? sort : null;
 }
 
-/** Sorted by the way shown first (car with its parking), by the way without a car, or by one way of going. */
+/** Sorted by the way shown first, by the way without a car, or by one way of going. */
 export function sortResults(list: SearchResult[], sort: Sort): SearchResult[] {
   const key = (r: SearchResult) => {
     const m = leadMode(r, sort);
     const t = m ? timeOf(r, m) : null;
     if (t === null) return Infinity;
-    return sort === 'best' && m === 'car' ? t + CAR_PARKING_MIN : t;
+    return t;
   };
   return [...list].sort((a, b) => key(a) - key(b) || a.distanceM - b.distanceM);
 }

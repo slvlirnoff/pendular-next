@@ -32,6 +32,7 @@ export interface PlaceSummary {
 
 export interface SearchResult extends PlaceSummary {
   walkMin: number | null;
+  /** Door to door: traffic of the hour and parking included. */
   carMin: number | null;
   /** Leaving now with public transport, waiting included; null when walking is as fast or nothing goes. */
   transitMin: number | null;
@@ -107,9 +108,24 @@ export interface RouteLeg {
 }
 
 export interface StreetOption {
+  /** Door to door; by car, traffic and parking included (see `car`). */
   durationMin: number;
   distanceM: number;
   geometry: [number, number][];
+  /** By car: how the time is made up. */
+  car?: CarParts;
+}
+
+/** A car time as Pendular counts it: driving slowed by the traffic of the hour, then parking. */
+export interface CarParts {
+  /** On empty roads, as the street network gives it. */
+  freeMin: number;
+  /** Slow-down of the traffic at this hour along the way (1 = none). */
+  factor: number;
+  drivingMin: number;
+  /** Finding a space and walking to the door, by how dense the destination is. */
+  parkingMin: number;
+  totalMin: number;
 }
 
 export interface TransitOption {

@@ -62,13 +62,21 @@ A link can open a search directly: `/?ici=46.7085,6.8405,Lucens&food=burger`, `&
 - **On foot**: one MOTIS matrix call for the places within 7 km (up to an hour).
 - **By car**: one Valhalla matrix call (`VALHALLA_URL`), else MOTIS (long enough for the farthest
   place, up to three hours). Both agree within a minute (median difference 0.1 min on 40 pizzerias).
+  Both give times on empty roads: as in Pendular, each time is slowed by the rush-hour factor of
+  the surroundings of the way (×1.1 in open country to ×3 in a city centre, residents and jobs
+  within 1 km; along the straight line for the list, along the route for a place) and the time to
+  park and walk to the door is added (5, 10 or 15 minutes by the density at the place). Pendular's
+  factors are for the morning commute: `server/traffic.ts` applies all of the slow-down at the
+  peaks of a working day (07:00–08:45, 16:30–18:45), 60–70 % during the day, 50 % on Saturday, 25 %
+  on Sunday, 10–20 % at night (assumptions). Lucens → Manor Lausanne on a Thursday at 15:20: 26 min
+  on empty roads, 35 min with the traffic (×1.34), 50 min with parking.
 - **Public transport**: one MOTIS one-to-all call from the searcher (leaving now, waiting
   included, up to 90 minutes) gives the time to every stop; each restaurant takes the best stop
   within 700 m plus the walk. Shown only when it beats walking.
 - **A place**: the real routes: walk and the next departures within two hours (MOTIS), car
   (Valhalla, else MOTIS).
-- **Order** ("le plus rapide"): each place shows its quickest way, walking when it takes 12 minutes
-  or less; when ranking, the car counts 5 more minutes for parking and walking to the door. The 🚆
+- **Order** ("le plus rapide"): each place shows its quickest way door to door, walking when it
+  takes 12 minutes or less. The 🚆
   order is "without a car": public transport, or walking when it is as quick (the post office next
   door comes first); the 🚶 order walks where one can and takes public transport beyond.
 - **Caches**: street times from a place are kept for an hour (a search for pizza, then for Italian

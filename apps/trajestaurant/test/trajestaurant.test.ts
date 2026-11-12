@@ -10,6 +10,8 @@ import { maxMinutes, onePlace, Ttl } from '../server/search.js';
 import { bestMode, leadMode, sortResults } from '../web/src/lib.js';
 import type { SearchResult } from '../src/api.js';
 import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
+import { clockOf, createTraffic, rushShare } from '../server/traffic.js';
+import { loadDensity } from '@pendular/engine';
 
 describe('food types', () => {
   it('reads the OSM cuisine, several values included', () => {
@@ -295,9 +297,39 @@ describe('sorting', () => {
     expect(leadMode(list[0]!, 'walk')).toBe('transit');
   });
 
-  it('shows a short walk first, and counts parking for the car', () => {
-    const list = [r('Midi 480 m', 9, null, 1, 480), r('Bea 70 m', 2, null, 1, 70), r('Imaginatifs 830 m', 16, null, 2, 830), r('Moudon', null, 40, 5, 5500)];
+  it('shows a short walk first; car times already hold parking', () => {
+    // Car times as the server gives them: a minute or two of driving and 5 minutes to park.
+    const list = [r('Midi 480 m', 9, null, 6, 480), r('Bea 70 m', 2, null, 6, 70), r('Imaginatifs 830 m', 16, null, 7, 830), r('Moudon', null, 40, 11, 5500)];
     expect(sortResults(list, 'best').map((x) => x.name)).toEqual(['Bea 70 m', 'Imaginatifs 830 m', 'Midi 480 m', 'Moudon']);
     expect(bestMode(list[0]!)).toBe('walk');
+  });
+});
+
+describe('car times with traffic and parking', () => {
+  it('applies all of the rush-hour slow-down at the peaks, less at other times', () => {
+    // Thursday 12 November 2026.
+    expect(clockOf('2026-11-12', '17:30')).toEqual({ weekday: 4, minutes: 1050 });
+    expect(rushShare(4, 7 * 60 + 30)).toBe(1);
+    expect(rushShare(4, 17 * 60 + 30)).toBe(1);
+    expect(rushShare(4, 14 * 60)).toBe(0.6);
+    expect(rushShare(4, 23 * 60)).toBe(0.2);
+    expect(rushShare(6, 14 * 60)).toBe(0.5);
+    expect(rushShare(0, 14 * 60)).toBe(0.25);
+  });
+
+  it('slows a city drive more than a country one, and parks longer in a city centre', () => {
+    const density = loadDensity();
+    const peak = createTraffic(density, 4, 8 * 60);
+    const night = createTraffic(density, 4, 2 * 60);
+    // Lausanne, Flon → Ouchy: city centre all the way.
+    const city = peak.car(10, [[6.6295, 46.5206], [6.627, 46.507]], { lat: 46.507, lon: 6.627 });
+    // Lucens → Moudon: open country.
+    const country = peak.car(10, [[6.8405, 46.7085], [6.797, 46.668]], { lat: 46.668, lon: 6.797 });
+    expect(city.factor).toBeGreaterThan(country.factor);
+    expect(city.parkingMin).toBeGreaterThan(country.parkingMin);
+    expect(city.totalMin).toBe(city.drivingMin + city.parkingMin);
+    const cityNight = night.car(10, [[6.6295, 46.5206], [6.627, 46.507]], { lat: 46.507, lon: 6.627 });
+    expect(cityNight.factor).toBeLessThan(city.factor);
+    expect(cityNight.factor).toBeGreaterThan(1);
   });
 });

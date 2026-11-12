@@ -1,5 +1,5 @@
 import type pg from 'pg';
-import { localToUtc, type LatLon, type MotisRouting } from '@pendular/engine';
+import { localToUtc, type DensityIndex, type LatLon, type MotisRouting } from '@pendular/engine';
 import type { BrandHit, MapPlaces, PlaceSummary, SearchResponse, SearchResult, Suggestion, Target } from '../src/api.js';
 import { FOOD_BY_KEY, FOOD_ORDER, matchFoods } from '../src/foods.js';
 import { KIND_SEARCH_BY_KEY, matchKinds } from '../src/kinds.js';
@@ -8,9 +8,12 @@ import type { CarRouter } from './car.js';
 import { distanceM, transitToPlaces, usefulTransit, type StopReach } from './estimate.js';
 import { openState } from './open.js';
 import { localNow, routingDate, TIMEZONE, type TimetableRange } from './timetable.js';
+import { clockOf, createTraffic } from './traffic.js';
 
 export interface SearchDeps {
   db: pg.Pool;
+  /** Residents and jobs around each point: traffic and parking for car times (Pendular's). */
+  density: DensityIndex;
   routing: MotisRouting;
   /** Car times and routes: Valhalla when configured, else MOTIS (server/car.ts). */
   car: CarRouter;
@@ -287,13 +290,17 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
     }),
   ]);
   const transit = transitToPlaces(stops, points);
+  // The matrix gives times on empty roads: the traffic of this hour (along the straight line, as
+  // Pendular does without the route's shape) and parking at the place make them door to door.
+  const clock = clockOf(local.date, local.time);
+  const traffic = createTraffic(deps.density, clock.weekday, clock.minutes);
 
   const results: SearchResult[] = rows.map((r, i) => {
     const walkMin = walk[i] !== null && walk[i] !== undefined ? Math.round(walk[i]!) : null;
     return {
       ...toSummary(r, now),
       walkMin,
-      carMin: car[i] !== null && car[i] !== undefined ? Math.max(1, Math.round(car[i]!)) : null,
+      carMin: car[i] !== null && car[i] !== undefined ? traffic.car(car[i]!, [[from.lon, from.lat], [r.lon, r.lat]], r).totalMin : null,
       transitMin: usefulTransit(transit[i] ?? null, walkMin),
     };
   });
