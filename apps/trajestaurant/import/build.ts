@@ -5,9 +5,13 @@
  *  2. All The Places (import/fetch.sh atp): the branches of chains, from their own store finders,
  *     with opening hours. A branch OSM already has (same brand within 200 m) gives it its hours,
  *     phone and website; one OSM lacks is added.
- *  3. Overture Maps (import/fetch.sh overture): places to eat. One OSM or All The Places already has
- *     (a similar name within 120 m) adds its food types; one they lack is added when Overture is
- *     confident enough. Overture's own duplicates (same name within 100 m) are merged first.
+ *  3. Overture Maps (import/fetch.sh overture): places to eat, shops and services. One OSM or All
+ *     The Places already has (a similar name within 120 m) adds what it knows; one they lack is
+ *     added when Overture is confident enough. Overture's own duplicates (same name within 100 m)
+ *     are merged first. Its categories of shops and services come from several datasets, some of
+ *     which classify poorly (garages as "home goods stores"): a name that says what a place is
+ *     wins over the category, and a place nobody else has is kept only when its dataset and
+ *     category mostly agree with OSM on the places both know (overtureTrust).
  *  4. Name Suggestion Index (import/fetch.sh nsi): the brands present in Switzerland. It names the
  *     brand of a place tagged with the name only ("Migros Lucens" → Migros), gives chains their
  *     cuisine (McDonald's → burger) and brands their proper names.
@@ -21,8 +25,8 @@ import { createReadStream, existsSync, readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { dirname, resolve } from 'node:path';
 import { classify } from '../src/foods.js';
-import { FOOD_KINDS, kindInfo, mainKind } from '../src/kinds.js';
-import { fold, sameName, searchKey } from '../src/text.js';
+import { FOOD_KINDS, KIND_KEYS, KIND_SEARCHES, kindGroup, kindInfo, mainKind } from '../src/kinds.js';
+import { fold, nameTokens, sameName, searchKey } from '../src/text.js';
 import { distanceM } from '../server/estimate.js';
 import { createPool, DEFAULT_DATABASE_URL, ensureDatabase, SCHEMA } from '../server/db.js';
 
@@ -46,6 +50,8 @@ export interface Place {
   matchedAtp?: boolean;
   /** No name in the source: named after its operator or its kind ("La Poste", "Pharmacie"). */
   unnamed?: boolean;
+  /** Overture's dataset and category; byName: the kind comes from the name, not the category. */
+  overture?: { dataset: string; category: string; byName?: boolean };
 }
 
 interface Feature {
@@ -103,7 +109,8 @@ const KEPT_TAGS = [
   'name', 'brand', 'brand:wikidata', 'cuisine', 'opening_hours', 'phone', 'website',
   'addr:street', 'addr:housenumber', 'addr:postcode', 'addr:city', 'addr:place',
   'takeaway', 'delivery', 'outdoor_seating', 'wheelchair', 'diet:vegetarian', 'diet:vegan',
-  'amenity', 'shop', 'leisure', 'tourism', 'office',
+  'email', 'image', 'logo', 'wikidata', 'wikimedia_commons', 'healthcare:speciality', 'description',
+  ...KIND_KEYS,
 ];
 
 function pickTags(p: Record<string, string>): Tags {
@@ -114,6 +121,11 @@ function pickTags(p: Record<string, string>): Tags {
   }
   t.phone ??= clean(p['contact:phone']);
   t.website ??= clean(p['contact:website']) ?? clean(p.url);
+  t.email ??= clean(p['contact:email']);
+  const instagram = clean(p['contact:instagram']);
+  const facebook = clean(p['contact:facebook']);
+  if (instagram) t.instagram = instagram;
+  if (facebook) t.facebook = facebook;
   return t;
 }
 
@@ -166,6 +178,14 @@ export function osmPlace(f: Feature): Place | null {
   };
 }
 
+/** The cash machine of an OSM bank tagged atm=yes, as a place of its own (named after the bank). */
+export function bankAtm(bank: Place, p: Record<string, string>): Place | null {
+  if (bank.kindKey !== 'amenity' || bank.kind !== 'bank' || p.atm !== 'yes') return null;
+  const tags: Tags = { ...bank.tags, amenity: 'atm' };
+  delete tags.opening_hours;
+  return { ...bank, kind: 'atm', sourceId: `${bank.sourceId}#atm`, sources: new Set(bank.sources), tags, extraFoods: new Set() };
+}
+
 /** A place from an All The Places feature (OSM-style tags; the street and number come as one). */
 export function atpPlace(f: Feature): Place | null {
   const p = f.properties;
@@ -197,6 +217,8 @@ export interface OvertureRow {
   street: string | null;
   postcode: string | null;
   locality: string | null;
+  /** Where Overture has the place from: meta, Microsoft, BrightQuery, AllThePlaces… */
+  dataset?: string | null;
   lat: number;
   lon: number;
 }
@@ -274,47 +296,70 @@ export function overtureKind(category: string, basic: string): { kindKey: string
   return null;
 }
 
-/** Overture shop categories → OSM key and value, where the name differs. */
-const OVERTURE_SHOPS: Record<string, [string, string]> = {
-  clothing_store: ['shop', 'clothes'], womens_clothing_store: ['shop', 'clothes'], mens_clothing_store: ['shop', 'clothes'],
-  childrens_clothing_store: ['shop', 'clothes'], fashion_boutique: ['shop', 'clothes'], lingerie_store: ['shop', 'clothes'],
-  sportswear_store: ['shop', 'clothes'], fashion_and_apparel_store: ['shop', 'clothes'],
-  grocery_store: ['shop', 'supermarket'], supermarket: ['shop', 'supermarket'], discount_store: ['shop', 'variety_store'],
-  warehouse_club_store: ['shop', 'wholesale'], convenience_store: ['shop', 'convenience'], kiosk: ['shop', 'kiosk'],
-  auto_dealer: ['shop', 'car'], used_auto_dealer: ['shop', 'car'], vehicle_dealer: ['shop', 'car'], truck_dealer: ['shop', 'truck'],
-  motorcycle_dealer: ['shop', 'motorcycle'], auto_parts_store: ['shop', 'car_parts'], tire_shop: ['shop', 'tyres'],
-  building_supply_store: ['shop', 'doityourself'], home_improvement_store: ['shop', 'doityourself'], paint_store: ['shop', 'paint'],
-  hardware_store: ['shop', 'hardware'], tile_store: ['shop', 'tiles'], flooring_store: ['shop', 'flooring'],
-  electrical_supply_store: ['shop', 'electrical'], furniture_store: ['shop', 'furniture'], mattress_store: ['shop', 'bed'],
-  jewelry_store: ['shop', 'jewelry'], watch_store: ['shop', 'watches'], electronics_store: ['shop', 'electronics'],
-  computer_store: ['shop', 'computer'], mobile_phone_store: ['shop', 'mobile_phone'], appliance_store: ['shop', 'appliance'],
-  camera_and_photography_store: ['shop', 'photo'], pharmacy: ['amenity', 'pharmacy'], drugstore: ['shop', 'chemist'],
-  sporting_goods_store: ['shop', 'sports'], outdoor_gear_store: ['shop', 'outdoor'], bike_store: ['shop', 'bicycle'],
-  flowers_and_gifts_store: ['shop', 'florist'], florist: ['shop', 'florist'], gift_shop: ['shop', 'gift'], shoe_store: ['shop', 'shoes'],
-  cosmetics_and_fragrance_store: ['shop', 'cosmetics'], beauty_supply_store: ['shop', 'cosmetics'], perfume_store: ['shop', 'perfumery'],
-  liquor_store: ['shop', 'alcohol'], beer_wine_spirits_store: ['shop', 'wine'], wine_store: ['shop', 'wine'],
-  home_goods_store: ['shop', 'houseware'], kitchen_supply_store: ['shop', 'houseware'], lighting_store: ['shop', 'lighting'],
-  home_decor_store: ['shop', 'interior_decoration'], craft_store: ['shop', 'craft'], arts_crafts_and_hobby_store: ['shop', 'craft'],
-  hobby_shop: ['shop', 'hobby'], toy_store: ['shop', 'toys'], video_game_store: ['shop', 'video_games'], eyewear_store: ['shop', 'optician'],
-  optician: ['shop', 'optician'], butcher_shop: ['shop', 'butcher'], cheese_shop: ['shop', 'cheese'], pet_store: ['shop', 'pet'],
-  bookstore: ['shop', 'books'], newspaper_and_magazines_store: ['shop', 'newsagent'], second_hand_store: ['shop', 'second_hand'],
-  thrift_store: ['shop', 'second_hand'], antique_store: ['shop', 'antiques'], musical_instrument_store: ['shop', 'musical_instrument'],
-  music_store: ['shop', 'music'], nursery_and_gardening_store: ['shop', 'garden_centre'], garden_center: ['shop', 'garden_centre'],
-  hearing_aid_store: ['shop', 'hearing_aids'], vitamin_and_supplement_store: ['shop', 'nutrition_supplements'],
-  shopping_mall: ['shop', 'mall'], department_store: ['shop', 'department_store'], superstore: ['shop', 'department_store'],
-  market: ['amenity', 'marketplace'], farmers_market: ['amenity', 'marketplace'], stationery_store: ['shop', 'stationery'],
-  office_supply_store: ['shop', 'stationery'], tobacco_shop: ['shop', 'tobacco'], frame_store: ['shop', 'frame'],
-  fabric_store: ['shop', 'fabric'], bridal_shop: ['shop', 'wedding'], baby_gear_and_furniture_store: ['shop', 'baby_goods'],
-  hair_salon: ['shop', 'hairdresser'], barber: ['shop', 'hairdresser'], beauty_salon: ['shop', 'beauty'], nail_salon: ['shop', 'beauty'],
-  gym: ['leisure', 'fitness_centre'], fitness_center: ['leisure', 'fitness_centre'], fitness_studio: ['leisure', 'fitness_centre'],
-};
+/**
+ * Overture categories of shops and services → OSM key and value (shared with import/overture.py,
+ * which fetches them).
+ */
+export const OVERTURE_CATEGORIES: Record<string, [string, string]> = JSON.parse(
+  readFileSync(new URL('./overture-categories.json', import.meta.url), 'utf8'),
+).categories;
 
-/** OSM key and value for an Overture place that is not to eat: a known category, else shop=<category without "_store">. */
+/** OSM key and value for an Overture place that is not to eat: a known category, else shop=<category without "_store">, else null. */
 export function overtureShopKind(category: string, section: string): { kindKey: string; kind: string } | null {
-  const known = OVERTURE_SHOPS[category];
+  const known = OVERTURE_CATEGORIES[category];
   if (known) return { kindKey: known[0], kind: known[1] };
   if (section !== 'shopping' || !category || category === 'shopping') return section === 'shopping' ? { kindKey: 'shop', kind: 'yes' } : null;
   return { kindKey: 'shop', kind: category.replace(/_(store|shop|dealer)$/, '') };
+}
+
+const CAR_KINDS = new Set(['car', 'car_repair', 'car_parts', 'tyres', 'motorcycle', 'truck', 'truck_repair', 'fuel', 'car_rental', 'car_wash', 'vehicle_inspection', 'driving_school']);
+
+/**
+ * What a name says a place is, against its category: Overture's datasets call garages "home goods
+ * stores", employment agencies "kitchen supply stores". Each rule: words of the name (folded), the
+ * kind they mean (null: not a place Trajestaurant shows, as a taxi company or an architect), and
+ * the kinds for which the category stands (an appliance shop named "Elektro …" stays one).
+ */
+const NAME_RULES: { re: RegExp; kind: [string, string] | null; keep?: (kind: string) => boolean }[] = [
+  { re: /\b(auto ecole|autoecole|fahrschule|scuola guida)\b/, kind: ['amenity', 'driving_school'] },
+  { re: /\b(police|gendarmerie|polizei|polizeiposten|polizia)\b/, kind: ['amenity', 'police'] },
+  { re: /\b(restaurant|ristorante|pizzeria|gasthof|gasthaus|hotel|trattoria)\b/, kind: null },
+  {
+    re: /\b(taxi|taxis|transport|transports|transporte|umzug|umzuge|zugeln|demenagement|demenagements|logistik|logistics|spedition|architekt\w*|architecte\w*|architettura|ingenieur\w*|engineering|consulting|informatik|software|schule|ecole|scuola|verein|association|stiftung|fondation|kirche|eglise)\b/,
+    kind: null,
+  },
+  { re: /\b(arztpraxis|zahnarzt\w*|physiotherap\w*|clinique|klinik|cabinet medical|cabinet dentaire)\b/, kind: null },
+  { re: /\b(adecco|manpower|randstad|interim|placement|temporaire|stellenvermittlung|personalvermittlung|personalberatung|personaldienst\w*|rav|orp|job|jobs)\b/, kind: ['office', 'employment_agency'] },
+  { re: /\b(pneu|pneus|pneuhaus|reifen)\b/, kind: ['shop', 'tyres'], keep: (k) => CAR_KINDS.has(k) },
+  { re: /\b(garage|garages|autogarage|carrosserie|carrozzeria|autocenter|auto|autos|automobile|automobiles)\b/, kind: ['shop', 'car_repair'], keep: (k) => CAR_KINDS.has(k) },
+  { re: /\b(elektro|electricite|electricien|elettricita|elektriker|elektroinstallation\w*)\b/, kind: ['craft', 'electrician'], keep: (k) => ['electronics', 'appliance', 'electrical', 'lighting', 'computer'].includes(k) },
+  { re: /\b(sanitar|sanitaire|sanitari|heizung|heizungen|chauffage|chauffages|spenglerei|ferblanterie|haustechnik)\b/, kind: ['craft', 'plumber'], keep: (k) => ['hvac', 'plumber', 'roofer', 'tinsmith', 'kitchen', 'bathroom_furnishing'].includes(k) },
+  { re: /\b(maler|malerei|malergeschaft|gipser|gipserei|platrerie|gypserie|peinture)\b/, kind: ['craft', 'painter'], keep: (k) => k === 'paint' || k === 'plasterer' },
+  { re: /\b(schreinerei|schreiner|menuiserie|menuisier|zimmerei|charpente|charpentier|ebenisterie|holzbau)\b/, kind: ['craft', 'carpenter'], keep: (k) => ['furniture', 'kitchen', 'joiner', 'cabinet_maker', 'window_construction'].includes(k) },
+  { re: /\b(bau|bauunternehmung|bauunternehmen|maconnerie|costruzioni)\b/, kind: ['craft', 'builder'], keep: (k) => ['doityourself', 'hardware', 'tiler', 'plasterer', 'stonemason', 'roofer', 'floorer'].includes(k) },
+  { re: /\b(treuhand|fiduciaire|fiduciaria)\b/, kind: ['office', 'accountant'], keep: (k) => k === 'tax_advisor' },
+  { re: /\b(immobilien|immobilier|immobiliere|immobiliare|regie)\b/, kind: ['office', 'estate_agent'] },
+  { re: /\b(versicherung\w*|assurance|assurances|assicurazion\w*)\b/, kind: ['office', 'insurance'] },
+];
+
+/**
+ * The kind an Overture place's name says it is, when it is not its category's: a kind, 'drop'
+ * (not a place Trajestaurant shows), or null (the category stands). Health places (doctors…) are
+ * left to their category.
+ */
+export function kindFromName(name: string, k: { kindKey: string; kind: string }): { kindKey: string; kind: string } | 'drop' | null {
+  const words = ` ${searchKey(name)} `;
+  // A practice listed as a hospital ("Cabinet médical de pédiatrie").
+  if (k.kindKey === 'amenity' && k.kind === 'hospital' && /\b(cabinet|praxis|arztpraxis|dr|dre|studio)\b/.test(words)) return { kindKey: 'amenity', kind: 'doctors' };
+  if (k.kindKey === 'healthcare' || (k.kindKey === 'amenity' && ['doctors', 'dentist', 'clinic', 'hospital', 'veterinary', 'pharmacy'].includes(k.kind))) return null;
+  for (const rule of NAME_RULES) {
+    if (!rule.re.test(words)) continue;
+    if (!rule.kind) return 'drop';
+    if (rule.kind[0] === k.kindKey && rule.kind[1] === k.kind) return null;
+    if (rule.keep?.(k.kind)) return null;
+    return { kindKey: rule.kind[0], kind: rule.kind[1] };
+  }
+  return null;
 }
 
 /** OSM-style cuisine values for Overture categories ("pizza_restaurant" → "pizza"). */
@@ -332,8 +377,17 @@ export function overturePlace(r: OvertureRow): Place | null {
   const name = clean(r.name);
   if (!name || !Number.isFinite(r.lat) || !Number.isFinite(r.lon)) return null;
   const food = (r.section ?? 'food_and_drink') === 'food_and_drink';
-  const k = food ? overtureKind(r.category ?? '', r.basic_category ?? '') : overtureShopKind(r.category ?? '', r.section ?? '');
+  let k = food ? overtureKind(r.category ?? '', r.basic_category ?? '') : overtureShopKind(r.category ?? '', r.section ?? '');
   if (!k) return null;
+  let byName = false;
+  if (!food) {
+    const said = kindFromName(name, k);
+    if (said === 'drop') return null;
+    if (said) {
+      k = said;
+      byName = true;
+    }
+  }
   const tags: Tags = {
     name,
     [k.kindKey]: k.kind,
@@ -347,7 +401,11 @@ export function overturePlace(r: OvertureRow): Place | null {
   };
   const cuisine = overtureCuisines([r.category, ...(r.alternates ?? [])]).join(';');
   const foods = FOOD_KINDS.has(k.kind) && k.kindKey === 'amenity' ? classify({ amenity: k.kind, name, cuisine }) : [];
-  return { source: 'overture', sourceId: r.id, sources: new Set(['overture']), name, ...k, lat: r.lat, lon: r.lon, tags, extraFoods: new Set(foods), confidence: r.confidence ?? 0 };
+  return {
+    source: 'overture', sourceId: r.id, sources: new Set(['overture']), name, ...k, lat: r.lat, lon: r.lon, tags,
+    extraFoods: new Set(foods), confidence: r.confidence ?? 0,
+    overture: { dataset: r.dataset ?? '?', category: r.category ?? '', ...(byName ? { byName } : {}) },
+  };
 }
 
 async function* lines(file: string): AsyncGenerator<string> {
@@ -363,7 +421,7 @@ async function* lines(file: string): AsyncGenerator<string> {
 // ---------------------------------------------------------------------------------------------
 
 /** Places in cells of about 330 m: a search within 300 m looks at nine cells. */
-class Grid {
+export class Grid {
   private cells = new Map<string, Place[]>();
   private static key(lat: number, lon: number, di = 0, dj = 0) {
     return `${Math.floor(lat / 0.003) + di}:${Math.floor(lon / 0.0045) + dj}`;
@@ -398,12 +456,23 @@ function absorb(into: Place, from: Place, prefer: string[] = []) {
     into.unnamed = false;
   }
   for (const [k, v] of Object.entries(from.tags)) {
-    if (!v || ['amenity', 'shop', 'leisure', 'tourism', 'office', 'name'].includes(k)) continue;
+    if (!v || k === 'name' || KIND_KEYS.includes(k)) continue;
     if (!into.tags[k] || prefer.includes(k)) into.tags[k] = v;
   }
   for (const f of from.extraFoods) into.extraFoods.add(f);
   into.sources.add(from.source);
 }
+
+/**
+ * Words of the names of towns and villages (folded): they say where a place is, not which one it
+ * is. Filled from OSM's towns before the other sources are matched.
+ */
+export const townWords = new Set<string>();
+export function setTownWords(names: string[]) {
+  townWords.clear();
+  for (const n of names) for (const w of nameTokens(n)) if (w.length >= 3) townWords.add(w);
+}
+const same = (a: string, b: string) => sameName(a, b, townWords);
 
 const isFood = (p: Place) => p.kindKey === 'amenity' && (FOOD_KINDS.has(p.kind) || p.kind === 'bar' || p.kind === 'pub');
 /** Places an Overture place to eat may be the same as: places to eat, bakeries and the like. */
@@ -431,7 +500,7 @@ export function matchAtp(grid: Grid, a: Place): Place | null {
 export function matchOverture(grid: Grid, o: Place): Place | null {
   for (const { p } of grid.near(o.lat, o.lon, 120)) {
     if (p === o || !isFoodish(p)) continue;
-    if (sameName(p.name, o.name)) return p;
+    if (same(p.name, o.name)) return p;
   }
   return null;
 }
@@ -439,15 +508,80 @@ export function matchOverture(grid: Grid, o: Place): Place | null {
 /** Overture shop → a shop (or other place not to eat) already known with a similar name nearby, if any. */
 export function matchOvertureShop(grid: Grid, o: Place): Place | null {
   for (const { p, d } of grid.near(o.lat, o.lon, 120)) {
-    // A shop is matched with a shop, a pharmacy with a pharmacy: not with the car-sharing
-    // station or the bank next door that shares a word of its name ("… Bahnhof").
-    if (p === o || isFoodish(p) || p.kindKey !== o.kindKey) continue;
-    if (sameName(p.name, o.name)) return p;
+    // A shop is matched with a shop, a doctor with a doctor: not with the car-sharing station, the
+    // bank or the pharmacy next door that shares a word of its name ("… Bahnhof", "… Muster").
+    if (p === o || isFoodish(p) || p.kind === 'car_sharing' || !alike(p, o)) continue;
+    if (same(p.name, o.name)) return p;
     // OSM knows a pharmacy here but not its name: Overture's pharmacy within 60 m is that one.
     if (p.unnamed && d <= 60 && p.kindKey === o.kindKey && p.kind === o.kind) return p;
   }
   return null;
 }
+
+/** Two kinds one place may be listed under: two shops, or two kinds of one search (a garage that sells cars). */
+const alike = (a: Place, b: Place) => (a.kindKey === 'shop' && b.kindKey === 'shop') || kindGroup(a.kindKey, a.kind) === kindGroup(b.kindKey, b.kind);
+
+/**
+ * How far Overture's shops and services can be trusted, per dataset and category: of its places
+ * that OSM or All The Places know under a similar name within 120 m, the share they list as the
+ * same sort of place (the same search: a garage that sells cars is still a garage). Measured on
+ * the 2026-10 release: Microsoft's "home_goods_store" agreed for 1 % (garages, taxi companies),
+ * meta's "furniture_store" for 70 %, Microsoft's "hair_salon" for 88 %. Categories with fewer than
+ * 8 such places are judged by their dataset as a whole.
+ */
+export function overtureTrust(known: Grid, candidates: Place[]): (o: Place) => boolean {
+  const tally = new Map<string, { matched: number; agree: number }>();
+  const bump = (key: string, agree: boolean) => {
+    const t = tally.get(key) ?? { matched: 0, agree: 0 };
+    t.matched++;
+    if (agree) t.agree++;
+    tally.set(key, t);
+  };
+  for (const o of candidates) {
+    if (!o.overture || o.overture.byName || isFoodish(o)) continue;
+    const p = known.near(o.lat, o.lon, 120).find(({ p }) => p.source !== 'overture' && !isFoodish(p) && p.kind !== 'car_sharing' && same(p.name, o.name))?.p;
+    if (!p) continue;
+    const agree = kindGroup(p.kindKey, p.kind) === kindGroup(o.kindKey, o.kind);
+    bump(`${o.overture.dataset}|${o.overture.category}`, agree);
+    bump(o.overture.dataset, agree);
+  }
+  const rate = (key: string) => {
+    const t = tally.get(key);
+    return t && t.matched >= MIN_MEASURED ? t.agree / t.matched : null;
+  };
+  return (o) => {
+    if (!o.overture || o.overture.byName) return true;
+    const category = rate(`${o.overture.dataset}|${o.overture.category}`);
+    if (category !== null) return category >= (HEALTH.has(kindGroup(o.kindKey, o.kind)) ? HEALTH_TRUST : CATEGORY_TRUST);
+    return (rate(o.overture.dataset) ?? 0) >= DATASET_TRUST;
+  };
+}
+
+/** The agreement measured per dataset and category, for the import's report. */
+export function trustReport(known: Grid, candidates: Place[]): Map<string, { matched: number; agree: number }> {
+  const tally = new Map<string, { matched: number; agree: number }>();
+  for (const o of candidates) {
+    if (!o.overture || o.overture.byName || isFoodish(o)) continue;
+    const p = known.near(o.lat, o.lon, 120).find(({ p }) => p.source !== 'overture' && !isFoodish(p) && p.kind !== 'car_sharing' && same(p.name, o.name))?.p;
+    if (!p) continue;
+    const key = `${o.overture.dataset}|${o.overture.category}`;
+    const t = tally.get(key) ?? { matched: 0, agree: 0 };
+    t.matched++;
+    if (kindGroup(p.kindKey, p.kind) === kindGroup(o.kindKey, o.kind)) t.agree++;
+    tally.set(key, t);
+  }
+  return tally;
+}
+const MIN_MEASURED = 8;
+const CATEGORY_TRUST = 0.65;
+const DATASET_TRUST = 0.6;
+/**
+ * Health categories are specific (a "podiatry" is not a garage) and OSM tags them unevenly
+ * (podiatrists as beauty salons, physiotherapists inside a medical centre's doctors): their
+ * agreement understates them, so a lower bar only drops the categories that are plainly off.
+ */
+const HEALTH_TRUST = 0.3;
+const HEALTH = new Set(KIND_SEARCHES.filter((k) => k.group === 'health').map((k) => k.key));
 
 /**
  * Whether an Overture place nobody else has is kept: confident enough, or less so with a phone or
@@ -563,8 +697,8 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
   const places: Place[] = [];
   const towns: Built['towns'] = [];
   const counts: Record<string, number> = {
-    carSharing: 0,
-    osm: 0, atpMatched: 0, atpAdded: 0, overtureMatched: 0, overtureAdded: 0, overtureDropped: 0, overtureShopsMatched: 0, overtureShopsAdded: 0, nsiBrands: 0,
+    carSharing: 0, bankAtms: 0,
+    osm: 0, atpMatched: 0, atpAdded: 0, overtureMatched: 0, overtureAdded: 0, overtureDropped: 0, overtureShopsMatched: 0, overtureShopsAdded: 0, overtureShopsUntrusted: 0, nsiBrands: 0,
   };
 
   // Car-sharing stations from the national feed replace OSM's (it knows every station of each provider).
@@ -583,7 +717,16 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
     places.push(place);
     grid.add(place);
     counts.osm!++;
+    // A bank with a cash machine (atm=yes) is also where to find a Bancomat.
+    const atm = bankAtm(place, p);
+    if (atm) {
+      places.push(atm);
+      grid.add(atm);
+      counts.bankAtms!++;
+    }
   }
+
+  setTownWords(towns.map((t) => t.name));
 
   if (haveSharing) {
     for await (const line of lines(sharingFile)) {
@@ -627,7 +770,7 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
     const unique: Place[] = [];
     for (const o of rows) {
       // A restaurant and a shop of one name at one address are two places (Migros, Migros Restaurant).
-      const twin = own.near(o.lat, o.lon, 100).find(({ p }) => isFoodish(p) === isFoodish(o) && sameName(p.name, o.name));
+      const twin = own.near(o.lat, o.lon, 100).find(({ p }) => isFoodish(p) === isFoodish(o) && (isFoodish(o) || alike(p, o)) && same(p.name, o.name));
       if (twin) {
         for (const f of o.extraFoods) twin.p.extraFoods.add(f);
         continue;
@@ -635,17 +778,20 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
       own.add(o);
       unique.push(o);
     }
+    const trusted = overtureTrust(grid, unique);
     for (const o of unique) {
       if (!isFoodish(o)) {
-        // Shops come with a confidence of 0.8 or more (import/overture.py).
+        // Shops and services come with a confidence of 0.8 or more (import/overture.py).
         const m = matchOvertureShop(grid, o);
         if (m) {
           absorb(m, o);
           counts.overtureShopsMatched!++;
-        } else {
+        } else if (trusted(o)) {
           places.push(o);
           grid.add(o);
           counts.overtureShopsAdded!++;
+        } else {
+          counts.overtureShopsUntrusted!++;
         }
         continue;
       }
@@ -667,7 +813,8 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
   const brands = existsSync(nsiFile) ? loadNsi(nsiFile) : null;
   if (brands) {
     for (const p of places) {
-      if (!p.tags['brand:wikidata']) {
+      // A place named after its kind ("Station-service") has no name to tell its brand.
+      if (!p.tags['brand:wikidata'] && !(p.unnamed && p.name === kindInfo(p.kindKey, p.kind).label)) {
         const wd = brandFromName(brands, p);
         if (wd) {
           p.tags['brand:wikidata'] = wd;
@@ -720,6 +867,17 @@ export function brandsOf(places: Place[], nsi: Brands | null): BrandRow[] {
     out.push({ key, name, name_folded: searchKey(name), aliases: [...g.aliases].filter((a) => a.length >= 2).slice(0, 20), kind_key: kindKey, kind, count: g.count });
   }
   return out.sort((a, b) => b.count - a.count);
+}
+
+/** What the place card shows besides the address: pictures, e-mail, social pages, speciality. */
+const EXTRA_TAGS: Record<string, string> = {
+  image: 'image', logo: 'logo', wikidata: 'wikidata', wikimedia_commons: 'commons', email: 'email',
+  instagram: 'instagram', facebook: 'facebook', 'healthcare:speciality': 'speciality', description: 'description',
+};
+export function extraOf(t: Tags): Record<string, string> | null {
+  const out: Record<string, string> = {};
+  for (const [tag, key] of Object.entries(EXTRA_TAGS)) if (t[tag]) out[key] = t[tag]!;
+  return Object.keys(out).length ? out : null;
 }
 
 export function foodsOf(p: Place): string[] {
@@ -793,6 +951,7 @@ async function main() {
           wheelchair: t.wheelchair ?? null,
           vegetarian: t['diet:vegetarian'] ?? null,
           vegan: t['diet:vegan'] ?? null,
+          extra: extraOf(t),
           foods: foodsOf(p),
         };
       });
@@ -802,14 +961,14 @@ async function main() {
              source text, source_id text, sources text[], name text, name_folded text, kind_key text, kind text,
              cuisine text, brand text, brand_key text, lat float8, lon float8, street text, housenumber text,
              postcode text, town text, opening_hours text, phone text, website text, takeaway text, delivery text,
-             outdoor_seating text, wheelchair text, vegetarian text, vegan text, foods text[])
+             outdoor_seating text, wheelchair text, vegetarian text, vegan text, extra jsonb, foods text[])
          ), upserted as (
            insert into place (source, source_id, sources, name, name_folded, kind_key, kind, cuisine, brand, brand_key, geom,
              street, housenumber, postcode, town, opening_hours, phone, website, takeaway, delivery, outdoor_seating,
-             wheelchair, vegetarian, vegan, imported_at)
+             wheelchair, vegetarian, vegan, extra, imported_at)
            select source, source_id, sources, name, name_folded, kind_key, kind, cuisine, brand, brand_key,
              st_setsrid(st_makepoint(lon, lat), 4326)::geography, street, housenumber, postcode, town, opening_hours,
-             phone, website, takeaway, delivery, outdoor_seating, wheelchair, vegetarian, vegan, now()
+             phone, website, takeaway, delivery, outdoor_seating, wheelchair, vegetarian, vegan, extra, now()
            from input
            on conflict (source, source_id) do update set
              sources = excluded.sources, name = excluded.name, name_folded = excluded.name_folded,
@@ -819,7 +978,7 @@ async function main() {
              opening_hours = excluded.opening_hours, phone = excluded.phone, website = excluded.website,
              takeaway = excluded.takeaway, delivery = excluded.delivery, outdoor_seating = excluded.outdoor_seating,
              wheelchair = excluded.wheelchair, vegetarian = excluded.vegetarian, vegan = excluded.vegan,
-             imported_at = excluded.imported_at
+             extra = excluded.extra, imported_at = excluded.imported_at
            returning id, source, source_id
          )
          insert into place_food (place_id, food)

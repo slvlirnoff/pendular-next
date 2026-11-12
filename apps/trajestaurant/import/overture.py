@@ -1,5 +1,6 @@
 """Overture Maps places in Switzerland, as JSON lines: food and drink (any confidence: the import
-decides), and shops, hairdressers, beauty salons and gyms that Overture is confident about (0.8).
+decides), and the shops and services Overture is confident about (0.8): every shop, and the other
+categories of overture-categories.json (doctors, vets, garages, trades…).
 
 Needs python3 with duckdb (pip install duckdb); reads the latest release straight from the public
 S3 bucket (only the row groups inside the Swiss bounding box are fetched, about 10 seconds).
@@ -7,12 +8,17 @@ S3 bucket (only the row groups inside the Swiss bounding box are fetched, about 
     python3 overture.py <out.jsonl>
 """
 import json
+import os
 import sys
 import urllib.request
 
 import duckdb
 
 out = sys.argv[1]
+here = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(here, 'overture-categories.json')) as f:
+    categories = sorted(json.load(f)['categories'])
+listed = ', '.join("'" + c.replace("'", "''") + "'" for c in categories)
 release = json.load(urllib.request.urlopen('https://stac.overturemaps.org/catalog.json', timeout=60))['latest']
 
 con = duckdb.connect()
@@ -31,8 +37,7 @@ rows = con.sql(f"""
     AND addresses[1].country = 'CH'
     AND coalesce(operating_status, 'open') <> 'permanently_closed'
     AND (taxonomy.hierarchy[1] = 'food_and_drink'
-         OR (confidence >= 0.8 AND (taxonomy.hierarchy[1] = 'shopping'
-             OR taxonomy.primary IN ('hair_salon', 'barber', 'beauty_salon', 'nail_salon', 'gym', 'fitness_center', 'fitness_studio'))))
+         OR (confidence >= 0.8 AND (taxonomy.hierarchy[1] = 'shopping' OR taxonomy.primary IN ({listed}))))
 """)
 cols = rows.columns
 with open(out, 'w') as h:

@@ -3,8 +3,8 @@ import { classify, FOODS, matchFoods } from '../src/foods.js';
 import { fold } from '../src/text.js';
 import { transitToPlaces, usefulTransit } from '../server/estimate.js';
 import { referenceMonday, routingDate } from '../server/timetable.js';
-import { atpPlace, brandFromName, carSharingPlace, centre, keepOverture, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, sameName, type Brands } from '../import/build.js';
-import { KIND_SEARCHES, kindInfo, mainKind, matchKinds } from '../src/kinds.js';
+import { atpPlace, bankAtm, brandFromName, carSharingPlace, centre, Grid, keepOverture, kindFromName, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, overtureTrust, sameName, type Brands, type OvertureRow, type Place } from '../import/build.js';
+import { KIND_SEARCHES, kindGroup, kindInfo, mainKind, matchKinds } from '../src/kinds.js';
 import { searchKey } from '../src/text.js';
 import { maxMinutes, onePlace, Ttl } from '../server/search.js';
 import { bestMode, leadMode, sortResults } from '../web/src/lib.js';
@@ -269,7 +269,7 @@ describe('kinds of shops and places', () => {
       for (const s of k.synonyms) expect(fold(s)).toBe(s);
       for (const kv of k.kinds) {
         const [key, value] = kv.split('=') as [string, string];
-        expect(mainKind({ [key]: value }), kv).not.toBeNull();
+        expect(mainKind({ [key]: value, ...(kv === 'amenity=recycling' ? { recycling_type: 'centre' } : {}) }), kv).not.toBeNull();
       }
     }
   });
@@ -357,5 +357,115 @@ describe('car sharing', () => {
     })) as unknown as typeof fetch;
     expect(await createCarSharing('someone@example.org', feed).cars('carvelo2go:1')).toBe(2);
     expect(await createCarSharing(undefined, feed).cars('carvelo2go:1')).toBeNull();
+  });
+});
+
+describe('services', () => {
+  it('reads the kinds tagged in more than one way as the one searched', () => {
+    expect(mainKind({ healthcare: 'doctor' })).toEqual({ kindKey: 'amenity', kind: 'doctors' });
+    expect(mainKind({ amenity: 'doctors', healthcare: 'doctor' })).toEqual({ kindKey: 'amenity', kind: 'doctors' });
+    expect(mainKind({ office: 'physician' })).toEqual({ kindKey: 'amenity', kind: 'doctors' });
+    expect(mainKind({ healthcare: 'physiotherapist' })).toEqual({ kindKey: 'healthcare', kind: 'physiotherapist' });
+    expect(mainKind({ craft: 'shoemaker' })).toEqual({ kindKey: 'craft', kind: 'shoemaker' });
+    // A shop that is also a craft is the shop.
+    expect(mainKind({ shop: 'bakery', craft: 'bakery' })).toEqual({ kindKey: 'shop', kind: 'bakery' });
+    expect(mainKind({ office: 'company' })).toBeNull();
+  });
+
+  it('keeps recycling centres, not the street containers', () => {
+    expect(mainKind({ amenity: 'recycling', recycling_type: 'centre' })).toEqual({ kindKey: 'amenity', kind: 'recycling' });
+    expect(mainKind({ amenity: 'recycling', recycling_type: 'container' })).toBeNull();
+  });
+
+  it('finds them by what one types', () => {
+    expect(matchKinds('vétérinaire')[0]).toBe('veterinaire');
+    expect(matchKinds('Tierarzt')[0]).toBe('veterinaire');
+    expect(matchKinds('urgences')[0]).toBe('hopital');
+    expect(matchKinds('ostéopathe')[0]).toBe('medecines-douces');
+    expect(matchKinds('bancomat')[0]).toBe('bancomat');
+    expect(matchKinds('déchetterie')[0]).toBe('dechetterie');
+    expect(matchKinds('plombier')[0]).toBe('sanitaire');
+    expect(matchKinds('cordonnier')[0]).toBe('cordonnier');
+    expect(KIND_SEARCHES.find((k) => k.key === 'medecin')?.group).toBe('health');
+    expect(KIND_SEARCHES.find((k) => k.key === 'commune')?.group).toBe('service');
+  });
+
+  it('groups kinds by their search', () => {
+    expect(kindGroup('shop', 'lighting')).toBe('meubles');
+    expect(kindGroup('shop', 'car')).toBe('garage');
+    expect(kindGroup('shop', 'car_repair')).toBe('garage');
+    expect(kindGroup('shop', 'yes')).toBe('shop=yes');
+  });
+
+  it("lists a bank's cash machine as a Bancomat", () => {
+    const bank = osmPlace({ id: 'n7', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'bank', name: 'BCV', atm: 'yes', opening_hours: 'Mo-Fr 08:30-12:00' } })!;
+    const atm = bankAtm(bank, { amenity: 'bank', atm: 'yes' })!;
+    expect(atm).toMatchObject({ kindKey: 'amenity', kind: 'atm', name: 'BCV', sourceId: 'n7#atm' });
+    expect(atm.tags.opening_hours).toBeUndefined();
+    expect(bankAtm(bank, { amenity: 'bank' })).toBeNull();
+  });
+});
+
+describe("Overture's categories of shops and services", () => {
+  const row = (name: string, category: string, section = 'shopping', dataset = 'Microsoft'): OvertureRow => ({
+    id: `${name}-${category}`, name, section, category, basic_category: null, alternates: null, confidence: 0.95, brand: null, brand_wikidata: null,
+    website: null, phone: null, street: null, postcode: null, locality: null, dataset, lat: 46.7, lon: 6.8,
+  });
+
+  it('takes the kind from the name when it says otherwise', () => {
+    const home = { kindKey: 'shop', kind: 'houseware' };
+    expect(kindFromName('Garage Du Gros-de-vaud', home)).toEqual({ kindKey: 'shop', kind: 'car_repair' });
+    expect(kindFromName('Pneus échappements T. Maillard Sàrl', home)).toEqual({ kindKey: 'shop', kind: 'tyres' });
+    expect(kindFromName('Adecco Payerne', home)).toEqual({ kindKey: 'office', kind: 'employment_agency' });
+    expect(kindFromName('Taxi Gare Sàrl', home)).toBe('drop');
+    expect(kindFromName('Migros-Restaurant', { kindKey: 'shop', kind: 'supermarket' })).toBe('drop');
+    expect(kindFromName('Police cantonale vaudoise Gendarmerie', { kindKey: 'office', kind: 'government' })).toEqual({ kindKey: 'amenity', kind: 'police' });
+    expect(kindFromName('Cabinet Médical de Pédiatrie', { kindKey: 'amenity', kind: 'hospital' })).toEqual({ kindKey: 'amenity', kind: 'doctors' });
+  });
+
+  it('keeps the category when it agrees with the name', () => {
+    expect(kindFromName('Garage Volta', { kindKey: 'shop', kind: 'car' })).toBeNull();
+    expect(kindFromName('Elektro Ackermann GmbH', { kindKey: 'shop', kind: 'appliance' })).toBeNull();
+    expect(kindFromName('Coop Bau+Hobby', { kindKey: 'shop', kind: 'doityourself' })).toBeNull();
+    expect(kindFromName('Physiothérapie du Lac', { kindKey: 'healthcare', kind: 'physiotherapist' })).toBeNull();
+    expect(overturePlace(row('Garage Du Gros-de-vaud', 'home_goods_store'))).toMatchObject({ kind: 'car_repair', overture: { byName: true } });
+    expect(overturePlace(row('Taxi Gare Sàrl', 'home_goods_store'))).toBeNull();
+  });
+
+  it('maps service categories to OSM kinds', () => {
+    expect(overturePlace(row('Cabinet vétérinaire Argos', 'veterinarian', 'lifestyle_services'))).toMatchObject({ kindKey: 'amenity', kind: 'veterinary' });
+    expect(overturePlace(row('Physio Romont', 'physical_therapy', 'health_care'))).toMatchObject({ kindKey: 'healthcare', kind: 'physiotherapist' });
+    expect(overturePlace(row('Notariat Muster', 'notary_public', 'services_and_business'))).toMatchObject({ kindKey: 'office', kind: 'notary' });
+    expect(overturePlace(row('Some Consultants', 'b2b_service', 'services_and_business'))).toBeNull();
+  });
+
+  it('keeps a place nobody else has when its dataset and category agree with OSM', () => {
+    const grid = new Grid();
+    const candidates: Place[] = [];
+    // Ten places both know: Microsoft's "home goods stores" are garages in OSM, its florists florists.
+    for (let i = 0; i < 10; i++) {
+      const lat = 46.5 + i * 0.01;
+      grid.add(osmPlace({ id: `n${i}`, geometry: { type: 'Point', coordinates: [6.6, lat] }, properties: { shop: 'car_repair', name: `Muster${i} AG` } })!);
+      grid.add(osmPlace({ id: `n${i + 100}`, geometry: { type: 'Point', coordinates: [6.7, lat] }, properties: { shop: 'florist', name: `Blumen Rosa${i}` } })!);
+      candidates.push({ ...overturePlace(row(`Muster${i} AG`, 'home_goods_store'))!, lat, lon: 6.6 });
+      candidates.push({ ...overturePlace(row(`Blumen Rosa${i}`, 'florist'))!, lat, lon: 6.7 });
+    }
+    const trusted = overtureTrust(grid, candidates);
+    expect(trusted(overturePlace(row('Tagmann Nadège', 'home_goods_store'))!)).toBe(false);
+    expect(trusted(overturePlace(row('Fleurs Jean-Jacques', 'florist'))!)).toBe(true);
+    // The name says it: kept whatever the category.
+    expect(trusted(overturePlace(row('Garage Rouge', 'home_goods_store'))!)).toBe(true);
+    // A category too small to measure: its dataset as a whole (here half right, half wrong: not kept).
+    expect(trusted(overturePlace(row('Luminaires Lux', 'lighting_store'))!)).toBe(false);
+    expect(trusted(overturePlace(row('Luminaires Lux', 'lighting_store', 'shopping', 'meta'))!)).toBe(false);
+  });
+
+  it('does not take a town for a name', () => {
+    const towns = new Set(['langenthal', 'lucens']);
+    expect(sameName('Physio Langenthal', 'Zum Turm Thai Time Langenthal', towns)).toBe(false);
+    expect(sameName('Pharmacie de Lucens', 'Pharmacie Lucens', towns)).toBe(true);
+    expect(sameName('Migros Lucens', 'Migros', towns)).toBe(true);
+    expect(sameName('Dr. med. Anna Muster', 'Dr. med. Peter Keller')).toBe(false);
+    expect(sameName('Dr méd. Anna Muster', 'Dr. med. Anna Muster')).toBe(true);
   });
 });

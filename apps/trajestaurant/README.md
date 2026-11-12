@@ -1,7 +1,7 @@
 # Trajestaurant
 
-Find where to eat nearby (pizza, burger, sushi…), the nearest shop or place of a kind (pharmacy,
-hairdresser, fuel, post office, cinema…), the nearest branch of a chain (Migros, IKEA, Manor,
+Find where to eat nearby (pizza, burger, sushi…), the nearest shop, service or place of a kind
+(pharmacy, hairdresser, doctor, vet, Bancomat, déchetterie, cobbler, fuel, cinema…), the nearest branch of a chain (Migros, IKEA, Manor,
 Dosenbach…) or a place by its name, and how to get there: on foot, by public transport or by car. Built on the Pendular infrastructure: the same MOTIS (streets and Swiss
 timetable), the same PostgreSQL, the same map style. French interface, phone first.
 
@@ -9,7 +9,7 @@ Three screens: a welcome screen (sign-in comes later), a full map with a search 
 of places with their travel times, and a place with its routes and what is known about it. The
 search bar suggests food types, kinds of shops and places, chains ("Migros · 747 in Switzerland"),
 all places of a name ("all « mix image »") and single places, nearest first. Shortcuts under it:
-food types, kinds of shops, well-known chains. When nothing is searched, the map shows the places
+food types, shops, health, services, well-known chains. When nothing is searched, the map shows the places
 around from zoom 14 on (`/api/map/places`, at most 600, places to eat and chains first; the map
 leaves out icons that would overlap; a click opens the place).
 
@@ -18,9 +18,10 @@ leaves out icons that would overlap; a click opens the place).
 | Path | What |
 | --- | --- |
 | `src/foods.ts` | The 32 food types (emoji, label, synonyms) and how a place gets them: cuisine, brand, name |
-| `src/kinds.ts` | Which kinds of places are kept (shops, pharmacies, fuel, fitness…), with emoji and French label; the 50 kinds one can search for (each one or more OSM kinds, synonyms in four languages) |
+| `src/kinds.ts` | Which kinds of places are kept (shops, health, services, trades, fitness…), with emoji and French label; the 91 kinds one can search for, in three rows (shops, health, services; each one or more OSM kinds, synonyms in four languages) |
 | `src/api.ts` | What the API answers (shared by server and site) |
-| `import/fetch.sh` | Downloads the other sources: Name Suggestion Index, All The Places (Swiss places of every chain), Overture (food and drink; shops, hairdressers and gyms it is sure of) |
+| `import/fetch.sh` | Downloads the other sources: Name Suggestion Index, All The Places (Swiss places of every chain), Overture (food and drink; shops and services it is sure of), car sharing |
+| `import/overture-categories.json` | Overture's categories of shops and services and the OSM kind each is (read by the download and the import) |
 | `import/osm.sh` | Extracts the places from the Swiss OSM extract, then runs `build.ts` |
 | `import/build.ts` | Merges the four sources and loads them into PostgreSQL (places, food types, chains, towns) |
 | `server/` | Hono API on port 8789; also serves the built site. `car.ts`: car times and routes from Valhalla or MOTIS |
@@ -108,12 +109,23 @@ opening_hours library in Swiss time.
 
 | Source | What it gives | Licence |
 | --- | --- | --- |
-| OpenStreetMap | 132 700 places: places to eat, shops, pharmacies, fuel, banks, fitness, hotels…; towns. A place without a name is named after its operator (the Lucens post office: operator:fr=La Poste) or, for kinds one looks for, after its kind ("Pharmacie"), until another source gives its name | ODbL |
+| OpenStreetMap | 159 400 places: places to eat, shops, pharmacies, fuel, banks and their cash machines, health (doctors, dentists, vets, hospitals, physiotherapists…), public services (commune, police, déchetteries), offices one visits (lawyers, notaries, fiduciaries…), trades (cobblers, electricians, joiners…), fitness, hotels…; towns. A place without a name is named after its operator (the Lucens post office: operator:fr=La Poste) or, for kinds one looks for, after its kind ("Pharmacie"), until another source gives its name | ODbL |
 | All The Places | 14 200 branches of 207 chains from their own store finders, 10 600 with opening hours: 6 300 complete OSM places (their hours replace OSM's), 7 300 are added | CC0 |
-| Overture Maps places | 49 000 places to eat: 19 000 add food types to known places, 22 400 are added (confidence ≥ 0.6, or lower with a phone or website). 59 000 shops, hairdressers, beauty salons and gyms with a confidence of 0.8 or more: 21 800 complete known places, 33 300 are added | CDLA-Permissive-2.0 (some Apache-2.0, CC0) |
+| Overture Maps places | 49 000 places to eat: 19 000 add food types to known places, 23 400 are added (confidence ≥ 0.6, or lower with a phone or website). 106 000 shops and services with a confidence of 0.8 or more: 26 400 complete known places, 48 800 are added, 30 700 are left out (below) | CDLA-Permissive-2.0 (some Apache-2.0, CC0) |
 | Name Suggestion Index | The chains present in Switzerland: brand of places tagged with a name only ("Migros Lucens"), cuisine of chains, proper names | BSD-3-Clause |
 
-In all about 196 000 places, of which 1 715 chains with at least two places. Lucens, almost empty
+Overture's shops and services come from several datasets (meta, Microsoft, BrightQuery, Uberall…)
+whose categories are not equally right: Microsoft calls garages, taxi companies and Adecco "home
+goods" or "kitchen supply" stores. Two checks: a name that says what a place is wins over its
+category ("Garage …", "Carrosserie …", "Pneus …" are garages; "Adecco …" an employment agency; a
+taxi or removal company, an architect, a restaurant among shops is left out); and a place no other
+source has is added only when its dataset and category mostly agree with OSM on the places both know
+(a similar name within 120 m, the town's name not counting): 65 % of them listed as the same sort of
+place (30 % for health categories, which OSM tags unevenly), or, for categories with fewer than 8
+such places, 60 % for the dataset as a whole. Microsoft's "home_goods_store" agreed for 15 %, meta's
+"furniture_store" for 85 %, Microsoft's "veterinarian" for 92 %.
+
+In all about 242 600 places, of which 1 856 chains with at least two places. Lucens, almost empty
 in OSM (three places within 3 km), now has Sherlock, Vesuvio, Grill House and the Café du Poids,
 from Overture. Other sources studied: `SOURCES.md` (in French).
 

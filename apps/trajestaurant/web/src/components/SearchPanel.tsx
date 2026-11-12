@@ -97,6 +97,13 @@ const SORT_HINT: Record<'walk' | 'transit' | 'car', string> = {
   transit: 'Sans voiture : transports publics ou à pied',
   car: 'En voiture',
 };
+/** The shortcut rows of kinds of places, by their group (src/kinds.ts). */
+const KIND_ROWS = [
+  { id: 'shop', title: 'Commerces' },
+  { id: 'health', title: 'Santé' },
+  { id: 'service', title: 'Services' },
+];
+
 /** Searches for one sort of place (a food, a kind): rows show the town rather than the kind. */
 const byType = (s: Searched) => s.target.type === 'food' || s.target.type === 'kind';
 
@@ -128,7 +135,11 @@ export const SearchPanel = forwardRef<
   const folded = wide ? FOLDED.wide : FOLDED.narrow;
   const rows: { id: string; title: string; items: ChipItem[] }[] = [
     { id: 'food', title: 'Manger', items: FOODS.map((f) => ({ key: f.key, emoji: f.emoji, label: f.label, pick: () => props.onSearch(foodSearch(f.key)) })) },
-    { id: 'kind', title: 'Commerces', items: KIND_SEARCHES.map((k) => ({ key: k.key, emoji: k.emoji, label: k.label, pick: () => props.onSearch(kindSearch(k.key)) })) },
+    ...KIND_ROWS.map((row) => ({
+      id: row.id,
+      title: row.title,
+      items: KIND_SEARCHES.filter((k) => (k.group ?? 'shop') === row.id).map((k) => ({ key: k.key, emoji: k.emoji, label: k.label, pick: () => props.onSearch(kindSearch(k.key)) })),
+    })),
     { id: 'brand', title: 'Enseignes', items: popular.map((b) => ({ key: b.key, emoji: kindInfo(b.kindKey, b.kind).emoji, label: b.name, pick: () => props.onSearch(brandSearch(b)) })) },
   ];
 

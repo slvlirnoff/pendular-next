@@ -46,9 +46,12 @@ create table if not exists place (
   wheelchair text,
   vegetarian text,
   vegan text,
+  -- What the card shows besides: image, logo, wikidata, commons, email, instagram, facebook, speciality.
+  extra jsonb,
   imported_at timestamptz not null default now(),
   unique (source, source_id)
 );
+alter table place add column if not exists extra jsonb;
 create index if not exists place_geom on place using gist (geom);
 create index if not exists place_name on place using gin (name_folded gin_trgm_ops);
 create index if not exists place_brand on place (brand_key);

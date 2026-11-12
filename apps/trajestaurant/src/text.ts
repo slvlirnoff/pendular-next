@@ -29,10 +29,20 @@ const GENERIC = new Set(
     'garage autogarage carrosserie auto pneus fleurs fleuriste blumen optique opticien optik bijouterie horlogerie kiosque kiosk',
     'boutique shop store magasin laden atelier studio center centre cabinet agence epicerie fitness sport sports mode',
     'cave vins vin wein librairie papeterie animalerie quincaillerie electricite sanitaire',
+    // Practices and trades ("Dr. med. Anna Muster" is not "Dr. med. Peter Keller" next door).
+    'dr dre med prof pd fmh docteur doctor medecin medecins praxis arztpraxis gemeinschaftspraxis gruppenpraxis zahnarztpraxis',
+    'medical medicale medicaux dentaire dental zahnarzt physio physiotherapie physiotherapy therapie therapy ergotherapie',
+    'osteopathie clinique klinik sante gesundheit zentrum tierarzt tierarztpraxis veterinaire',
+    'elektro elektriker sanitar heizung chauffage maler malerei peinture gipserei schreinerei menuiserie zimmerei charpente',
+    'holzbau bau bauunternehmung construction constructions treuhand fiduciaire immobilien immobilier regie',
+    'versicherung versicherungen assurance assurances notariat anwalt anwaltskanzlei kanzlei avocat avocats etude',
+    'transport transports service services partner co cie fils sohn sohne',
     // Where a place is, shared by its neighbours ("Café de la Gare", "k kiosk Bahnhof").
     'gare bahnhof stazione station buffet',
     // Words that join names.
     'la le les l du de des d the and et und zum zur chez au aux sa ag gmbh sarl s a',
+    'di del della dei da il lo e am im an der die das den dem bei beim von vom en y',
+    'podologie podologia pedicure fusspflege massage massagen massages studio institut',
   ].join(' ').split(' '),
 );
 
@@ -44,13 +54,25 @@ export function nameTokens(name: string): string[] {
 }
 
 /** Whether two names are those of one place: shared distinctive words, or one name inside the other. */
-export function sameName(a: string, b: string): boolean {
+export function sameName(a: string, b: string, placeWords?: ReadonlySet<string>): boolean {
   const fa = fold(a).replace(/[^a-z0-9]+/g, ' ').trim();
   const fb = fold(b).replace(/[^a-z0-9]+/g, ' ').trim();
   if (fa === fb) return true;
   const ta = new Set(nameTokens(a));
   const tb = new Set(nameTokens(b));
+  if (placeWords?.size) {
+    // The town is not who a place is: "Physio Langenthal" is not "Thai Time Langenthal". Names
+    // that are only a kind and a town ("Pharmacie de Lucens", "Pharmacie Lucens") still compare.
+    const oa = [...ta].filter((t) => !placeWords.has(t));
+    const ob = [...tb].filter((t) => !placeWords.has(t));
+    if (oa.length && ob.length) return overlap(new Set(oa), new Set(ob));
+    if (oa.length || ob.length) return false;
+  }
   if (ta.size === 0 || tb.size === 0) return false;
+  return overlap(ta, tb);
+}
+
+function overlap(ta: Set<string>, tb: Set<string>): boolean {
   let shared = 0;
   for (const t of ta) if (tb.has(t)) shared++;
   return shared / Math.min(ta.size, tb.size) >= 0.5;

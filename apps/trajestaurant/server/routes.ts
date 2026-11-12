@@ -78,7 +78,7 @@ export async function placeDetail(deps: SearchDeps, id: number, from: LatLon | n
     wheelchair: r.wheelchair,
     vegetarian: r.vegetarian,
     vegan: r.vegan,
-    osmUrl: osmType ? `https://www.openstreetmap.org/${osmType}/${r.source_id.slice(1)}` : null,
+    osmUrl: osmType ? `https://www.openstreetmap.org/${osmType}/${r.source_id.slice(1).replace(/#.*$/, "")}` : null,
     sources: r.sources,
   };
 }
