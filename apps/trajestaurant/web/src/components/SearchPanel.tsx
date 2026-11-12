@@ -152,6 +152,23 @@ export const SearchPanel = forwardRef<
   const input = useRef<HTMLInputElement>(null);
   const [popular, setPopular] = useState<BrandHit[]>([]);
   const [openRow, setOpenRow] = useState<string | null>(null);
+  // An unfolded row of shortcuts is a step in the history: the back button folds it.
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => setOpenRow((e.state as { chips?: string } | null)?.chips ?? null);
+    addEventListener('popstate', onPop);
+    return () => removeEventListener('popstate', onPop);
+  }, []);
+  const toggleRow = (rowId: string) => {
+    const state = history.state as { chips?: string } | null;
+    if (openRow === rowId) {
+      if (state?.chips === rowId) history.back();
+      else setOpenRow(null);
+      return;
+    }
+    if (state?.chips) history.replaceState({ ...state, chips: rowId }, '');
+    else history.pushState({ chips: rowId }, '', location.href);
+    setOpenRow(rowId);
+  };
   const wide = useWide();
   const folded = wide ? FOLDED.wide : FOLDED.narrow;
   const rows: { id: string; title: string; items: ChipItem[] }[] = [
@@ -399,7 +416,7 @@ export const SearchPanel = forwardRef<
           {rows
             .filter((r) => r.items.length > 0 && (!openRow || openRow === r.id))
             .map((r) => (
-              <ChipRow key={r.id} {...r} folded={folded} open={openRow === r.id} onToggle={() => setOpenRow((o) => (o === r.id ? null : r.id))} />
+              <ChipRow key={r.id} {...r} folded={folded} open={openRow === r.id} onToggle={() => toggleRow(r.id)} />
             ))}
         </div>
       )}

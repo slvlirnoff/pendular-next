@@ -60,7 +60,12 @@ function readUrl(): { here: Here | null; searched: Searched | null; place: numbe
   return { here, searched, place: Number.isInteger(r) && r > 0 ? r : null, address: readAddress(p.get('adr'), p.get('stop')) };
 }
 
-function writeUrl(s: { here: Here | null; searched: Searched | null; place: number | null; address?: PlaceHit | null }, push: boolean) {
+/**
+ * The address bar for a state. push: a new step in the history (a search, a place, an address:
+ * the back button returns from it), with what the step is in its history state; otherwise the
+ * current step is updated, keeping its history state.
+ */
+function writeUrl(s: { here: Here | null; searched: Searched | null; place: number | null; address?: PlaceHit | null }, push: boolean, step?: object) {
   const p = new URLSearchParams();
   if (s.here) p.set('ici', `${s.here.lat.toFixed(5)},${s.here.lon.toFixed(5)},${s.here.label}`);
   if (s.searched) p.set(s.searched.target.type, s.searched.target.key);
@@ -73,8 +78,8 @@ function writeUrl(s: { here: Here | null; searched: Searched | null; place: numb
   if (LANG !== 'fr') p.set('lang', LANG);
   const url = `${location.pathname}${p.size ? `?${p.toString()}` : ''}`;
   if (url === `${location.pathname}${location.search}`) return;
-  if (push) history.pushState(null, '', url);
-  else history.replaceState(null, '', url);
+  if (push) history.pushState(step ?? null, '', url);
+  else history.replaceState(history.state, '', url);
 }
 
 /** A ref for a panel and its height, kept up to date from the moment the panel appears. */
@@ -257,6 +262,19 @@ export function App() {
     return () => ctl.abort();
   }, [selectedId, here, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * A search from the bar or a shortcut: a step in the history, so that the back button returns
+   * to the map; closing it (×) is going back when it was opened here.
+   */
+  const searchFor = (searched: Searched | null) => {
+    if (!searched && (history.state as { step?: string } | null)?.step === 'search') {
+      history.back();
+      return;
+    }
+    setSearch({ searched, response: null, loading: searched !== null && here !== null, error: null });
+    if (searched) writeUrl({ here, searched, place: null }, true, { step: 'search' });
+  };
+
   const pick = (r: PlaceSummary) => {
     setAddress(null);
     setSelected(r);
@@ -335,7 +353,7 @@ export function App() {
           ref={searchRef}
           here={here}
           search={search}
-          onSearch={(searched) => setSearch({ searched, response: null, loading: searched !== null && here !== null, error: null })}
+          onSearch={searchFor}
           onPick={pick}
           onHover={setHovered}
           onChangePlace={() => setPicker(true)}
