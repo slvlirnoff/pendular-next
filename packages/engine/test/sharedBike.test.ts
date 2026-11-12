@@ -268,9 +268,9 @@ describe('bike-share prices', () => {
     expect(martigny.ebikeExtraPerRide).toBeUndefined();
     // Outside the areas with a subscription: the national pay-as-you-go price.
     expect(bikeShareCostPerYear(velospot, { at: { lat: 47.0, lon: 9.0 }, rideMin: 8, rides: 100 })).toMatchObject({ yearly: 300, basis: 'perRide' });
-    // Geneva: no subscription price found, CHF 2 a ride.
+    // Geneva: the yearly subscription for classic bikes, two hours a day included; an e-bike is paid by the ride.
     const geneva = ops.find((o) => o.providers.includes('sharedmobility:donkey_ge'))!;
-    expect(bikeShareCostPerYear(geneva, { at: { lat: 46.2, lon: 6.14 }, rideMin: 12, rides: 460 })).toMatchObject({ yearly: 920, basis: 'perRide', subscriptionUnknown: true, ebikeExtraPerRide: 1.1 });
+    expect(bikeShareCostPerYear(geneva, { at: { lat: 46.2, lon: 6.14 }, rideMin: 12, rides: 460 })).toMatchObject({ yearly: 153, basis: 'annual', perRide: 0, subscriptionUnknown: false, ebikeExtraPerRide: 3.1 });
     // Nothing known: no price.
     const thun = ops.find((o) => o.providers.includes('sharedmobility:donkey_thun'))!;
     expect(bikeShareCostPerYear(thun, { at: { lat: 46.75, lon: 7.63 }, rideMin: 12, rides: 460 })).toMatchObject({ yearly: null, basis: 'unknown', subscriptionUnknown: true });

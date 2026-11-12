@@ -41,7 +41,7 @@ Birrer, LIEmobil. The planner only asks MOTIS for the providers listed in `bike-
 |---|---|---|---|---|
 | PubliBike Velospot | "B-Fit Local" CHF 69 a year in Aarau, Agglo Valais Central, Basel, Bern, Biel/Bienne, Fribourg, Riviera, Ticino, Zürich | Bike: first 30 min of each ride free, then CHF 0.10/min. E-bike: CHF 2 for the first 15 min, CHF 1 for the next 15, then CHF 0.20/min | "B-Quick National": bike CHF 3 for 30 min then CHF 0.10/min; e-bike CHF 5 for 30 min then CHF 0.20/min | https://www.publibike.ch/fr/abos (operator, read 11.11.2026) |
 | PubliBike Velospot, e-bike only networks | Martigny, Aigle: CHF 69 (e-bike rides paid as above) or "E-Bike" CHF 199 (first 15 min free, next 15 CHF 2). La Chaux-de-Fonds – Le Locle: CHF 49 or CHF 169 | as stated | as above | same page |
-| Donkey Republic, Geneva (VéloPartage) | **not found** (`null`) | | Bike: 15 or 30 min CHF 2, 1 h CHF 3.50. E-bike: 15 min CHF 3.10, 30 min CHF 5, 1 h CHF 7.50 | https://www.geneve.com/fr/attractions/detail/velopartage-les-velos-en-libre-service-officiels-du-canton-de-geneve (Geneva Tourism; its linked price sheet is dated March 2026) |
+| Donkey Republic, Geneva (VéloPartage) | CHF 153 a year (classic bikes; CHF 15 a month). With e-bikes CHF 357 a year; 12 h a day CHF 224 and CHF 612 | 2 hours a day | Bike: 15 or 30 min CHF 2, 1 h CHF 3.50, 2 h CHF 5.30, 4 h CHF 7.90. E-bike: 15 min CHF 3.10, 30 min CHF 5, 1 h CHF 7.50, 2 h CHF 12 | Donkey Republic's Geneva price page and tpg.ch/en/tpg-bike-offer, read on the user's screenshots of 12.11.2026: `tpg-bike-offer-2026-11-12.md` (tpg.ch refuses automated access) |
 | Donkey Republic, Yverdon-les-Bains | CHF 45 a year | one hour free per rental | not found | City press release of 8.7.2020: https://www.yverdon-les-bains.ch/fileadmin/user_upload/Comm_presse_Velos_libre-service_lancement_saison_estivale.pdf. Old: shown with its year |
 | Donkey Republic, Neuchâtel | CHF 60 a year | 12 hours per rental | not found | EPFL staff page (regular price next to the EPFL price of CHF 48): https://www.epfl.ch/campus/mobility/fr/mobilite-et-voyages/mobilite-pendulaire/autres-services-autour-du-velo/donkey-republic-a-neuchatel/ |
 | Donkey Republic, Thun and Kreuzlingen | not found | | not found | |
@@ -53,11 +53,10 @@ the planner uses the pay-as-you-go price, since the page names no subscription t
 
 ## Not found, or not readable
 
-- **Donkey Republic's own prices.** donkey.bike (city pages and /pricing) shows no amounts:
-  "prices vary depending on the city", to be seen in the app. No annual price for Geneva could
-  be confirmed anywhere, so Geneva is priced per ride. Genèveroule, which maintains the bikes, says the
-  same: "All rates are directly in the app" (https://www.geneveroule.ch/en/velopartage/).
-- **Geneva, offer for public transport pass holders.** tpg sells Donkey Republic subscriptions
+- **Donkey Republic's own prices outside Geneva.** donkey.bike (city pages and /pricing) shows
+  no amounts: "prices vary depending on the city", to be seen in the app. Geneva's were read on
+  screenshots of its price page (see the table).
+- **Geneva, offer for public transport pass holders: not counted.** On 12.11.2026 tpg.ch showed: Basic (classic bike, 2 h a day) CHF 38 for 3 months instead of 45, CHF 63 for 6 months instead of 90; Standard (plus 10 × 30 min of e-bike a month) CHF 89 instead of 105, CHF 147 instead of 210. Only for an annual pass bought from tpg, "for one-time use only". Earlier note: tpg sells Donkey Republic subscriptions
   of 3 or 6 months at a reduced price to holders of an annual unireso pass (terms of July 2024:
   https://tpg.ch/sites/default/files/2024-07/CGVU-Offre-Velopartage-tpg-07.2024.pdf, product
   sheet https://tpg.ch/sites/default/files/2024-09/tpgcommunes-Fiche-Produit-velopartage.pdf).

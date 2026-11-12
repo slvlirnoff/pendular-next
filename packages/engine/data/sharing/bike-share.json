@@ -84,18 +84,32 @@
       "network": "VéloPartage",
       "providers": ["sharedmobility:donkey_ge"],
       "url": "https://www.donkey.bike/cities/bike-rental-geneva/",
-      "source": "https://www.geneve.com/fr/attractions/detail/velopartage-les-velos-en-libre-service-officiels-du-canton-de-geneve",
-      "sourceKind": "secondary",
-      "readOn": "2026-11-11",
+      "source": "Donkey Republic's Geneva price page, read on screenshots of 12 November 2026 (tpg-bike-offer-2026-11-12.md)",
+      "readOn": "2026-11-12",
       "priceYear": 2026,
-      "validity": "Pay-as-you-go prices as shown by Geneva Tourism (linked price sheet dated March 2026). The operator's own pages show no prices.",
+      "validity": "Prices shown on the day read; the page gives no year and no end date. tpg sells the same subscriptions for 3 or 6 months at a reduced price to holders of an annual pass bought from tpg (once per customer): not counted here.",
       "payPerRide": {
         "name": "Just Ride",
-        "bike": { "tiers": [{ "uptoMin": 30, "price": 2 }, { "uptoMin": 60, "price": 3.5 }], "then": null },
-        "ebike": { "tiers": [{ "uptoMin": 15, "price": 3.1 }, { "uptoMin": 30, "price": 5 }, { "uptoMin": 60, "price": 7.5 }], "then": null }
+        "bike": { "tiers": [{ "uptoMin": 30, "price": 2 }, { "uptoMin": 60, "price": 3.5 }, { "uptoMin": 120, "price": 5.3 }, { "uptoMin": 240, "price": 7.9 }], "then": null },
+        "ebike": { "tiers": [{ "uptoMin": 15, "price": 3.1 }, { "uptoMin": 30, "price": 5 }, { "uptoMin": 60, "price": 7.5 }, { "uptoMin": 120, "price": 12 }, { "uptoMin": 240, "price": 18 }], "then": null }
       },
       "memberships": [
-        { "name": "Membership", "annual": null, "fleet": "mixed", "areas": null, "bike": null, "ebike": null }
+        {
+          "name": "Abonnement 2h, vélo traditionnel",
+          "annual": 153,
+          "fleet": "mixed",
+          "areas": null,
+          "bike": { "tiers": [{ "uptoMin": 120, "price": 0 }], "then": null },
+          "ebike": { "tiers": [{ "uptoMin": 15, "price": 3.1 }, { "uptoMin": 30, "price": 5 }, { "uptoMin": 60, "price": 7.5 }], "then": null }
+        },
+        {
+          "name": "Abonnement 2h, vélo traditionnel et vélo électrique",
+          "annual": 357,
+          "fleet": "mixed",
+          "areas": null,
+          "bike": { "tiers": [{ "uptoMin": 120, "price": 0 }], "then": null },
+          "ebike": null
+        }
       ]
     },
     {
