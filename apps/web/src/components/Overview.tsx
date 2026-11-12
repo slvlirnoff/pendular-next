@@ -25,6 +25,9 @@ function viaLabel(o: CommuteOption, t: T, lang: string): string {
     const via = changeStops(o);
     return via.length ? t('overview.via', { via: via.join(', ') }) : t('opt.direct');
   }
+  // A car park is named as one: "P+R Lucens". A city park and ride already carries it ("P+R Vennes").
+  if (o.kind === 'parkRail' && o.access) return `P+R ${o.access.name}`;
+  if (o.kind === 'cityParkRide' && o.access) return o.access.name;
   if (o.access) return t('overview.via', { via: o.access.name });
   const dist = t('overview.km', { km: num(km(o), lang, km(o) < 10 ? 1 : 0) });
   return o.kind === 'car' ? dist : `${t(`kind.${o.kind}` as Key)}, ${dist}`;
