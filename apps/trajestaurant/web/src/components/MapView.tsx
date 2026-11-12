@@ -108,6 +108,8 @@ export function MapView(props: {
   here: Here | null;
   /** Nothing is searched nor chosen: show the places around (from PLACES_MIN_ZOOM on). */
   showPlaces: boolean;
+  /** The chosen place is an address: the map shows it close up, with the places around it, not the whole way there. */
+  around?: boolean;
   /** What was searched for: the food searched for gives the pictogram. */
   target: Target | null;
   results: PlaceSummary[];
@@ -185,7 +187,15 @@ export function MapView(props: {
         m.addSource('routes', { type: 'geojson', data: routeFeatures(null, 0, 'walk') });
         const sel: maplibregl.ExpressionSpecification = ['==', ['get', 'selected'], true];
         const color: maplibregl.ExpressionSpecification = ['match', ['get', 'mode'], 'walk', COLORS.walk, 'bike', COLORS.bike, 'car', COLORS.car, 'sharing', COLORS.sharing, COLORS.transit];
-        m.addLayer({ id: 'routes-other', type: 'line', source: 'routes', filter: ['!', sel], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 3, 'line-opacity': 0.35 } });
+        m.addLayer({ id: 'routes-other', type: 'line', source: 'routes', filter: ['!', sel], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 3, 'line-opacity': 0.22 } });
+        // A faint way is chosen by a click on it (a wider invisible line makes it easy to hit).
+        m.addLayer({ id: 'routes-other-hit', type: 'line', source: 'routes', filter: ['!', sel], paint: { 'line-color': '#000000', 'line-width': 16, 'line-opacity': 0 } });
+        m.on('click', 'routes-other-hit', (e) => {
+          const mode = e.features?.[0]?.properties?.mode as DetailMode | undefined;
+          if (mode) onMode.current(mode);
+        });
+        m.on('mouseenter', 'routes-other-hit', () => (m.getCanvas().style.cursor = 'pointer'));
+        m.on('mouseleave', 'routes-other-hit', () => (m.getCanvas().style.cursor = ''));
         m.addLayer({ id: 'routes-casing', type: 'line', source: 'routes', filter: sel, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 9 } });
         m.addLayer({ id: 'routes-solid', type: 'line', source: 'routes', filter: ['all', sel, ['!', ['get', 'dashed']]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 5 } });
         m.addLayer({ id: 'routes-dashed', type: 'line', source: 'routes', filter: ['all', sel, ['get', 'dashed']], layout: { 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 4.5, 'line-dasharray': [0.6, 1.4] } });
@@ -274,6 +284,8 @@ export function MapView(props: {
         b.addEventListener('click', (e) => {
           e.stopPropagation();
           const target = (props.selected ? [props.selected] : props.results).find((p) => p.id === r.id) ?? r;
+          // An address's pin: its card is already open.
+          if (target.kindKey === 'address') return;
           onPick.current(target);
         });
         const tip = document.createElement('span');
@@ -302,7 +314,8 @@ export function MapView(props: {
       for (const l of labels.current) l.remove();
       labels.current = [];
       if (!props.selected) return;
-      const lines = routeLines(props.routes, props.departure);
+      // Only the chosen way's time: the others are drawn faint, a click on one chooses it.
+      const lines = routeLines(props.routes, props.departure).filter((l) => l.mode === props.mode);
       const shares: Record<DetailMode, number> = { walk: 0.45, bike: 0.35, transit: 0.6, car: 0.75, sharing: 0.3 };
       for (const line of lines) {
         const at = pointAlong(line.coords, shares[line.mode]);
@@ -330,7 +343,11 @@ export function MapView(props: {
       if (!m || cancelled) return;
       const pts: [number, number][] = [];
       if (props.here) pts.push([props.here.lon, props.here.lat]);
-      if (props.selected) {
+      if (props.selected && props.around) {
+        // An address: close up on it, the places around visible (from PLACES_MIN_ZOOM on).
+        pts.length = 0;
+        pts.push([props.selected.lon, props.selected.lat]);
+      } else if (props.selected) {
         pts.push([props.selected.lon, props.selected.lat]);
         const line = routeLines(props.routes, props.departure).find((l) => l.mode === props.mode);
         if (line) pts.push(...line.coords);
@@ -351,7 +368,7 @@ export function MapView(props: {
       const padding = { top, bottom, left, right };
       if (pts.length === 0) return;
       if (pts.length === 1) {
-        m.easeTo({ center: pts[0], zoom: PLACES_MIN_ZOOM + 0.5, padding, duration: reduce ? 0 : 500 });
+        m.easeTo({ center: pts[0], zoom: props.around ? 16.5 : PLACES_MIN_ZOOM + 0.5, padding, duration: reduce ? 0 : 500 });
         return;
       }
       const lons = pts.map((p) => p[0]);
@@ -367,7 +384,7 @@ export function MapView(props: {
     return () => {
       cancelled = true;
     };
-  }, [props.here, props.results, props.selected, props.routes, props.mode, props.departure, pad.top, pad.bottom, pad.left, pad.right]);
+  }, [props.here, props.results, props.selected, props.around, props.routes, props.mode, props.departure, pad.top, pad.bottom, pad.left, pad.right]);
 
   // Shown or hidden with the search: asked for the current view when they come back.
   useEffect(() => {

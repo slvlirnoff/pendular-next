@@ -21,7 +21,10 @@ export const api = {
   search: (t: Target, here: Here, signal?: AbortSignal) => get<SearchResponse>(`/api/search?${t.type}=${encodeURIComponent(t.key)}${at(here)}`, signal),
   place: (id: number, here: Here, signal?: AbortSignal) => get<RoutesResponse>(`/api/places/${id}?x=1${at(here)}`, signal),
   where: (lat: number, lon: number) => get<{ town: string | null }>(`/api/where?lat=${lat}&lon=${lon}`),
-  geocode: (q: string, signal?: AbortSignal) => get<PlaceHit[]>(`/api/geocode?q=${encodeURIComponent(q)}`, signal),
+  geocode: (q: string, signal?: AbortSignal, near?: Here | null) => get<PlaceHit[]>(`/api/geocode?q=${encodeURIComponent(q)}${at(near ?? null)}`, signal),
+  /** The way to an address the geocoder found. */
+  route: (to: PlaceHit, here: Here, signal?: AbortSignal) =>
+    get<RoutesResponse>(`/api/route?toLat=${to.lat}&toLon=${to.lon}&label=${encodeURIComponent(to.label)}${at(here)}`, signal),
   popularBrands: () => get<BrandHit[]>('/api/brands/popular'),
 };
 

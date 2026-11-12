@@ -342,7 +342,7 @@ export const Detail = forwardRef<
             ))}
           </div>
         ) : null}
-        {detail ? (
+        {detail && detail.kindKey !== 'address' ? (
           <p className="source">
             Source : {detail.sources.map((x) => SOURCE_NAMES[x] ?? x).join(', ')}.
             {detail.osmUrl ? (

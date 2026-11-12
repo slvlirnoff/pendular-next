@@ -210,4 +210,6 @@ export interface PlaceHit {
   label: string;
   lat: number;
   lon: number;
+  /** What the geocoder found: a street address, a public transport stop, a named place. */
+  type?: 'address' | 'stop' | 'place';
 }

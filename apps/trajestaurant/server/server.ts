@@ -11,7 +11,7 @@ import { KIND_SEARCH_BY_KEY } from '../src/kinds.js';
 import { motisCar, valhallaCar, withFallback } from './car.js';
 import { createCarSharing } from './sharing.js';
 import { createPool } from './db.js';
-import { routesTo } from './routes.js';
+import { addressPlace, routesTo, routesToPlace } from './routes.js';
 import { placesIn, popularBrands, searchPlaces, suggest, type SearchDeps } from './search.js';
 import { searchKey } from '../src/text.js';
 import { readTimetableRange, referenceMonday, TIMEZONE } from './timetable.js';
@@ -122,6 +122,20 @@ app.get('/api/places/:id', async (c) => {
   }
 });
 
+/** The way to an address the geocoder found (the address card): ?lat&lon (from), toLat, toLon, label. */
+app.get('/api/route', async (c) => {
+  const from = position(c.req.query('lat'), c.req.query('lon'));
+  const to = position(c.req.query('toLat'), c.req.query('toLon'));
+  if (!from || !to) return c.json({ error: 'positions needed (lat, lon, toLat, toLon)' }, 400);
+  const label = (c.req.query('label') ?? '').slice(0, 200) || 'Adresse';
+  try {
+    return c.json(await routesToPlace(deps, addressPlace(label, to, from), from));
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: 'route failed' }, 500);
+  }
+});
+
 /** Where the searcher is: the nearest town or village. */
 app.get('/api/where', async (c) => {
   const p = position(c.req.query('lat'), c.req.query('lon'));
@@ -140,6 +154,12 @@ app.get('/api/geocode', async (c) => {
   const url = new URL('/api/v1/geocode', motisUrl);
   url.searchParams.set('text', q);
   url.searchParams.set('language', 'fr');
+  // Near the searcher first ("chemin du…" in Lucens before Geneva's).
+  const near = position(c.req.query('lat'), c.req.query('lon'));
+  if (near) {
+    url.searchParams.set('place', `${near.lat},${near.lon}`);
+    url.searchParams.set('placeBias', '5');
+  }
   const res = await httpGet(url).catch(() => null);
   if (!res?.ok) return c.json({ error: 'geocoder unavailable' }, 502);
   const matches = (await res.json()) as {
@@ -150,12 +170,18 @@ app.get('/api/geocode', async (c) => {
     street?: string;
     houseNumber?: string;
     zip?: string;
-    areas?: { name: string; default?: boolean }[];
+    areas?: { name: string; default?: boolean; adminLevel?: number }[];
   }[];
   const hits: PlaceHit[] = matches.slice(0, 6).map((m) => {
-    const town = m.areas?.find((a) => a.default)?.name ?? m.areas?.[0]?.name;
+    // The commune (admin level 8) rather than a quarter ("Centre Ville").
+    const town = m.areas?.find((a) => a.adminLevel === 8)?.name ?? m.areas?.find((a) => a.default)?.name ?? m.areas?.[0]?.name;
     const name = m.type === 'ADDRESS' ? [m.street ?? m.name, m.houseNumber].filter(Boolean).join(' ') : m.name;
-    return { label: [name, m.type !== 'STOP' && town && town !== name ? town : null].filter(Boolean).join(', '), lat: m.lat, lon: m.lon };
+    return {
+      label: [name, m.type !== 'STOP' && town && town !== name ? town : null].filter(Boolean).join(', '),
+      lat: m.lat,
+      lon: m.lon,
+      type: m.type === 'ADDRESS' ? 'address' : m.type === 'STOP' ? 'stop' : 'place',
+    };
   });
   return c.json(hits);
 });

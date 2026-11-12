@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { DetailMode, PlaceSummary, RoutesResponse, SearchResult } from '../../src/api';
+import type { DetailMode, PlaceHit, PlaceSummary, RoutesResponse, SearchResult } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
 import { Detail } from './components/Detail';
 import { MapView, type Padding } from './components/MapView';
 import { PlacePicker } from './components/PlacePicker';
 import { SearchPanel, type SearchState } from './components/SearchPanel';
 import { Welcome } from './components/Welcome';
-import { api, bestMode, brandSearch, foodSearch, kindSearch, nameSearch, type Here, type Searched, type Sort } from './lib';
+import { api, bestMode, brandSearch, distanceTo, foodSearch, kindSearch, nameSearch, type Here, type Searched, type Sort } from './lib';
 import { KIND_SEARCH_BY_KEY } from '../../src/kinds';
 
 const HERE_KEY = 'trajestaurant.here';
@@ -20,8 +20,23 @@ function storedHere(): Here | null {
   }
 }
 
-/** What the address bar holds: ?ici=lat,lon,label, then food=pizza, kind=pharmacie, brand=migros or name=mix image, and r=123 (a place). */
-function readUrl(): { here: Here | null; searched: Searched | null; place: number | null } {
+/** An address from the geocoder as the URL holds it: adr=lat,lon,label. */
+function readAddress(v: string | null): PlaceHit | null {
+  const [lat, lon, ...label] = (v ?? '').split(',');
+  return lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon) ? { lat: +lat, lon: +lon, label: label.join(',') || 'Adresse', type: 'address' } : null;
+}
+
+/** An address shown as a place: its card and its pin (id 0: not a place of the database). */
+function addressSummary(a: PlaceHit, here: Here | null): PlaceSummary {
+  const [name, ...rest] = a.label.split(', ');
+  return {
+    id: 0, name: name || a.label, kindKey: 'address', kind: 'address', brand: null, town: rest.join(', ') || null, lat: a.lat, lon: a.lon, foods: [],
+    distanceM: here ? Math.round(distanceTo(here, a)) : 0, open: null,
+  };
+}
+
+/** What the address bar holds: ?ici=lat,lon,label, then food=pizza, kind=pharmacie, brand=migros or name=mix image, and r=123 (a place) or adr=lat,lon,label (an address). */
+function readUrl(): { here: Here | null; searched: Searched | null; place: number | null; address: PlaceHit | null } {
   const p = new URLSearchParams(location.search);
   const [lat, lon, ...label] = (p.get('ici') ?? '').split(',');
   const here = lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon) ? { lat: +lat, lon: +lon, label: label.join(',') || 'Ma position' } : null;
@@ -40,14 +55,15 @@ function readUrl(): { here: Here | null; searched: Searched | null; place: numbe
           ? nameSearch(name)
           : null;
   const r = Number(p.get('r'));
-  return { here, searched, place: Number.isInteger(r) && r > 0 ? r : null };
+  return { here, searched, place: Number.isInteger(r) && r > 0 ? r : null, address: readAddress(p.get('adr')) };
 }
 
-function writeUrl(s: { here: Here | null; searched: Searched | null; place: number | null }, push: boolean) {
+function writeUrl(s: { here: Here | null; searched: Searched | null; place: number | null; address?: PlaceHit | null }, push: boolean) {
   const p = new URLSearchParams();
   if (s.here) p.set('ici', `${s.here.lat.toFixed(5)},${s.here.lon.toFixed(5)},${s.here.label}`);
   if (s.searched) p.set(s.searched.target.type, s.searched.target.key);
   if (s.place) p.set('r', String(s.place));
+  else if (s.address) p.set('adr', `${s.address.lat.toFixed(6)},${s.address.lon.toFixed(6)},${s.address.label}`);
   const url = `${location.pathname}${p.size ? `?${p.toString()}` : ''}`;
   if (url === `${location.pathname}${location.search}`) return;
   if (push) history.pushState(null, '', url);
@@ -85,7 +101,7 @@ function useWide(): boolean {
 
 export function App() {
   const initial = useRef(readUrl());
-  const [started, setStarted] = useState(initial.current.here !== null || initial.current.searched !== null || initial.current.place !== null);
+  const [started, setStarted] = useState(initial.current.here !== null || initial.current.searched !== null || initial.current.place !== null || initial.current.address !== null);
   const [here, setHere] = useState<Here | null>(initial.current.here ?? storedHere());
   const [picker, setPicker] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -95,6 +111,8 @@ export function App() {
   const [hovered, setHovered] = useState<number | null>(null);
   const [selected, setSelected] = useState<PlaceSummary | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(initial.current.place);
+  /** An address from the geocoder, shown with its card instead of a place. */
+  const [address, setAddress] = useState<PlaceHit | null>(initial.current.place ? null : initial.current.address);
   const [routes, setRoutes] = useState<RoutesResponse | null>(null);
   const [routesState, setRoutesState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [mode, setMode] = useState<DetailMode>('walk');
@@ -150,13 +168,14 @@ export function App() {
 
   // The address bar follows the state; the back button closes a restaurant.
   useEffect(() => {
-    if (started) writeUrl({ here, searched: search.searched, place: selectedId }, false);
-  }, [started, here, search.searched, selectedId]);
+    if (started) writeUrl({ here, searched: search.searched, place: selectedId, address }, false);
+  }, [started, here, search.searched, selectedId, address]);
   useEffect(() => {
     const onPop = () => {
       const u = readUrl();
       setSelectedId(u.place);
       if (!u.place) setSelected(null);
+      setAddress(u.place ? null : u.address);
       const same = (a: Searched | null, b: Searched | null) => a?.target.type === b?.target.type && a?.target.key === b?.target.key;
       setSearch((s) => (same(s.searched, u.searched) ? s : { searched: u.searched, response: null, loading: false, error: null }));
     };
@@ -179,8 +198,30 @@ export function App() {
     return () => ctl.abort();
   }, [search.searched, here]);
 
+  // The way to an address.
+  useEffect(() => {
+    if (!address || !here) return;
+    const ctl = new AbortController();
+    setRoutesState('loading');
+    setRoutes(null);
+    setDeparture(0);
+    api
+      .route(address, here, ctl.signal)
+      .then((r) => {
+        setRoutes(r);
+        setRoutesState('idle');
+        const times = { walkMin: r.walk?.durationMin ?? null, transitMin: r.transit[0]?.durationMin ?? null, carMin: r.car?.durationMin ?? null };
+        setMode(bestMode(times) ?? 'car');
+      })
+      .catch((e: Error) => {
+        if (e.name !== 'AbortError') setRoutesState('error');
+      });
+    return () => ctl.abort();
+  }, [address, here]);
+
   // The way to the chosen restaurant.
   useEffect(() => {
+    if (address) return;
     if (!selectedId || !here) {
       setRoutes(null);
       setRoutesState('idle');
@@ -207,19 +248,30 @@ export function App() {
         if (e.name !== 'AbortError') setRoutesState('error');
       });
     return () => ctl.abort();
-  }, [selectedId, here]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedId, here, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pick = (r: PlaceSummary) => {
+    setAddress(null);
     setSelected(r);
     setSelectedId(r.id);
     setHovered(null);
     writeUrl({ here, searched: search.searched, place: r.id }, true);
   };
+  /** An address from the search bar: the map goes there (with the places around), its card shows the way from here. */
+  const goTo = (a: PlaceHit) => {
+    setSelected(null);
+    setSelectedId(null);
+    setAddress(a);
+    setSearch({ searched: null, response: null, loading: false, error: null });
+    writeUrl({ here, searched: null, place: null, address: a }, true);
+  };
   const back = () => {
-    if (history.length > 1 && new URLSearchParams(location.search).get('r')) history.back();
+    const u = new URLSearchParams(location.search);
+    if (history.length > 1 && (u.get('r') || u.get('adr'))) history.back();
     else {
       setSelected(null);
       setSelectedId(null);
+      setAddress(null);
     }
   };
 
@@ -230,8 +282,8 @@ export function App() {
 
   if (!started) return <Welcome onStart={start} locating={locating} />;
 
-  const showDetail = selectedId !== null;
-  const summary = selected ?? routes?.place ?? null;
+  const showDetail = selectedId !== null || address !== null;
+  const summary = address ? addressSummary(address, here) : (selected ?? routes?.place ?? null);
   const padding: Padding = wide
     ? { top: 0, bottom: 0, left: 440, right: 0 }
     : showDetail
@@ -242,7 +294,8 @@ export function App() {
     <div className={`app${showDetail ? ' has-detail' : ''}`}>
       <MapView
         here={here}
-        showPlaces={!search.searched && !showDetail}
+        showPlaces={!search.searched && (!showDetail || address !== null)}
+        around={address !== null}
         target={search.searched?.target ?? null}
         results={showDetail ? [] : visible}
         hovered={hovered}
@@ -277,6 +330,7 @@ export function App() {
           onPick={pick}
           onHover={setHovered}
           onChangePlace={() => setPicker(true)}
+          onAddress={goTo}
           onVisible={setVisible}
           onSort={(s) => {
             sortRef.current = s;

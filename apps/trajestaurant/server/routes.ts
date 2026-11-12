@@ -103,10 +103,24 @@ function toLegs(it: Itinerary): RouteLeg[] {
 
 const STREET = new Set(['walk', 'bike', 'ebike', 'car', 'sharedBike']);
 
-/** The way there from a place: on foot, by car and the next public transport departures. */
+/** The way there from a place: on foot, by bike, by car and the next public transport departures. */
 export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now = new Date()): Promise<RoutesResponse | null> {
   const place = await placeDetail(deps, id, from, now);
-  if (!place) return null;
+  return place ? routesToPlace(deps, place, from, now) : null;
+}
+
+/** An address found by the geocoder, as a place to go to (kind "address": no hours, no sources). */
+export function addressPlace(label: string, to: LatLon, from: LatLon): PlaceDetail {
+  const [name, ...rest] = label.split(', ');
+  return {
+    id: 0, name: name || label, kindKey: 'address', kind: 'address', brand: null, town: rest.join(', ') || null, lat: to.lat, lon: to.lon,
+    foods: [], distanceM: Math.round(distanceM(from, to)), open: null, address: label, hours: null, extra: null, cuisine: null,
+    openingHours: null, phone: null, website: null, takeaway: null, delivery: null, outdoorSeating: null, wheelchair: null,
+    vegetarian: null, vegan: null, osmUrl: null, sources: [],
+  };
+}
+
+export async function routesToPlace(deps: SearchDeps, place: PlaceDetail, from: LatLon, now = new Date()): Promise<RoutesResponse> {
   const to = { lat: place.lat, lon: place.lon };
   const local = localNow(now);
   const day = routingDate(local.date, deps.timetable);

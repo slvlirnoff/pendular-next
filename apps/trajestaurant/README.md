@@ -133,6 +133,14 @@ In all about 242 600 places, of which 1 856 chains with at least two places. Luc
 in OSM (three places within 3 km), now has Sherlock, Vesuvio, Grill House and the Café du Poids,
 from Overture. Other sources studied: `SOURCES.md` (in French).
 
+**Addresses**: when the text is not a food type or a kind of place, the search bar also offers the
+addresses, stops and named places of MOTIS's geocoder, near the searcher first. Picking one shows
+it close up with the places around it, and a card with the way there from the searcher
+(`/api/route`, `&adr=lat,lon,label` in the link).
+
+**On the map**, only the chosen way carries its time; the others are drawn faint, and a click on
+one chooses it.
+
 **The place card** shows a picture of the place when OSM has one (image or wikimedia_commons tag:
 1 500 places), its logo or its brand's (Wikimedia Commons, from NSI's Wikidata facts: 27 600
 places), one-tap actions (call, site, e-mail, Instagram, Facebook, share), and the opening hours

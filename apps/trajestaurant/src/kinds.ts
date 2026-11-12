@@ -10,6 +10,8 @@ export interface KindInfo {
 }
 
 const KINDS: Record<string, KindInfo> = {
+  // An address the geocoder found (the address card), not a place of the database.
+  'address=address': { emoji: '📍', label: 'Adresse' },
   'amenity=restaurant': { emoji: '🍽️', label: 'Restaurant' },
   'amenity=fast_food': { emoji: '🍟', label: 'Fast-food' },
   'amenity=cafe': { emoji: '☕', label: 'Café' },

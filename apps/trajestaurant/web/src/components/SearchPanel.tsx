@@ -1,11 +1,12 @@
 import { forwardRef, useEffect, useId, useRef, useState } from 'react';
-import type { BrandHit, PlaceSummary, SearchResponse, SearchResult, Suggestion } from '../../../src/api';
+import type { BrandHit, PlaceHit, PlaceSummary, SearchResponse, SearchResult, Suggestion } from '../../../src/api';
 import { FOODS, FOOD_BY_KEY } from '../../../src/foods';
 import { KIND_SEARCHES, KIND_SEARCH_BY_KEY, kindInfo } from '../../../src/kinds';
 import {
   api,
   brandSearch,
   distance,
+  distanceTo,
   foodSearch,
   kindLabel,
   kindSearch,
@@ -87,6 +88,7 @@ export interface SearchState {
 type Option =
   | { type: 'food'; key: string }
   | { type: 'kind'; key: string }
+  | { type: 'address'; hit: PlaceHit }
   | { type: 'brand'; b: BrandHit }
   | { type: 'named'; key: string; count: number }
   | { type: 'place'; r: PlaceSummary };
@@ -117,6 +119,8 @@ export const SearchPanel = forwardRef<
     onPick: (r: PlaceSummary) => void;
     onHover: (id: number | null) => void;
     onChangePlace: () => void;
+    /** An address from the geocoder: the map goes there, with its card and the way from here. */
+    onAddress: (hit: PlaceHit) => void;
     onVisible: (list: SearchResult[]) => void;
     /** The list's order changed: a place opened next shows that way first (🚲 → the bike). */
     onSort?: (s: Sort) => void;
@@ -128,6 +132,7 @@ export const SearchPanel = forwardRef<
   const [text, setText] = useState(shownText);
   const [focused, setFocused] = useState(false);
   const [hits, setHits] = useState<Suggestion | null>(null);
+  const [addresses, setAddresses] = useState<PlaceHit[]>([]);
   const [active, setActive] = useState(0);
   const [sort, setSort] = useState<Sort>('best');
   const [shown, setShown] = useState(PAGE);
@@ -164,6 +169,13 @@ export const SearchPanel = forwardRef<
           setActive(0);
         })
         .catch(() => undefined);
+      // Addresses, stops and named places from the routing engine's geocoder, nearest first.
+      if (text.trim().length >= 3) {
+        api
+          .geocode(text, ctl.signal, props.here)
+          .then((a) => setAddresses(Array.isArray(a) ? a : []))
+          .catch(() => undefined);
+      } else setAddresses([]);
     }, 120);
     return () => {
       clearTimeout(t);
@@ -181,6 +193,10 @@ export const SearchPanel = forwardRef<
           ...(hits.named ? [{ type: 'named' as const, ...hits.named }] : []),
           // Chains first; a few single places after them.
           ...hits.places.slice(0, hits.brands.length ? 3 : 6).map((r): Option => ({ type: 'place', r })),
+          // Addresses when the text is not a food or a kind of place: all of them when nothing else matched.
+          ...(hits.foods.length || hits.kinds.length
+            ? []
+            : addresses.slice(0, hits.brands.length || hits.places.length || hits.named ? 3 : 6).map((hit): Option => ({ type: 'address', hit }))),
         ]
       : [];
 
@@ -189,6 +205,7 @@ export const SearchPanel = forwardRef<
     else if (o.type === 'kind') props.onSearch(kindSearch(o.key));
     else if (o.type === 'brand') props.onSearch(brandSearch(o.b));
     else if (o.type === 'named') props.onSearch(nameSearch(o.key));
+    else if (o.type === 'address') props.onAddress(o.hit);
     else props.onPick(o.r);
     setFocused(false);
     input.current?.blur();
@@ -268,7 +285,7 @@ export const SearchPanel = forwardRef<
         <ul className="card suggestions" id={`${id}-list`} role="listbox" aria-label="Suggestions">
           {options.map((o, i) => (
             <li
-              key={o.type === 'food' ? `f-${o.key}` : o.type === 'kind' ? `k-${o.key}` : o.type === 'brand' ? `b-${o.b.key}` : o.type === 'named' ? 'n' : `p-${o.r.id}`}
+              key={o.type === 'food' ? `f-${o.key}` : o.type === 'kind' ? `k-${o.key}` : o.type === 'brand' ? `b-${o.b.key}` : o.type === 'named' ? 'n' : o.type === 'address' ? `a-${o.hit.lat},${o.hit.lon}` : `p-${o.r.id}`}
               id={`${id}-o${i}`}
               role="option"
               aria-selected={i === active}
@@ -286,7 +303,11 @@ export const SearchPanel = forwardRef<
                     ? kindInfo(o.b.kindKey, o.b.kind).emoji
                     : o.type === 'named'
                       ? '🔎'
-                      : placeEmoji(o.r, null)}
+                      : o.type === 'address'
+                        ? o.hit.type === 'stop'
+                          ? '🚏'
+                          : '📍'
+                        : placeEmoji(o.r, null)}
               </span>
               <span className="suggestion-text">
                 {o.type === 'food' ? (
@@ -310,6 +331,14 @@ export const SearchPanel = forwardRef<
                   <>
                     <strong>Tous les « {o.key} »</strong>
                     <small>{count(o.count)} lieux portent ce nom</small>
+                  </>
+                ) : o.type === 'address' ? (
+                  <>
+                    <strong>{o.hit.label}</strong>
+                    <small>
+                      {o.hit.type === 'stop' ? 'Arrêt' : o.hit.type === 'place' ? 'Lieu' : 'Adresse'}
+                      {props.here ? ` · ${distance(distanceTo(props.here, o.hit))}` : ''}
+                    </small>
                   </>
                 ) : (
                   <>
