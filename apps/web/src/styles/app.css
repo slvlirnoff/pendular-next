@@ -370,3 +370,43 @@ button.mode-main:hover { background: var(--bg-alt); }
   .departures .dep-route { grid-column: 1 / -1; grid-row: 2; }
 }
 .route-top .mode-tag { flex: none; }
+
+/* --- The timetable of one ticket: connections on the left, a large map on the right ----------- */
+main.is-wide { max-width: 1680px; }
+.explore { justify-self: start; }
+.planner { display: grid; gap: 16px; padding: 16px 0 24px; }
+.planner-head { display: grid; gap: 8px; }
+.planner-head .link-button { justify-self: start; }
+.planner-ticket { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.planner-ticket h2 { font-size: 20px; font-weight: 700; }
+.planner-ticket-name { font-weight: 400; color: var(--text-muted); }
+.planner-ticket p { font-size: 14px; color: var(--text-muted); }
+.planner-price { font-size: 20px; font-weight: 700; color: var(--text) !important; white-space: nowrap; }
+.planner-price small { font-size: 13px; font-weight: 400; color: var(--text-muted); }
+.planner-body { display: grid; grid-template-columns: minmax(340px, 440px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.planner-list { display: grid; gap: 12px; min-width: 0; }
+.planner-list .segmented { justify-self: start; }
+.planner-period { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.planner-period .link-button:disabled { color: var(--text-muted); text-decoration: none; cursor: default; }
+.planner-within { font-size: 13px; color: var(--text-muted); }
+.planner-map { position: sticky; top: 16px; }
+.planner-map .map { height: calc(100vh - 216px); min-height: 420px; }
+.connections { display: grid; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); font-variant-numeric: tabular-nums; }
+.connections.is-stale { opacity: 0.5; }
+.connections > li + li { border-top: 1px solid var(--border); }
+.connections > li.is-on { background: var(--bg-alt); }
+.connections > li > button { width: 100%; min-height: 44px; background: none; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; padding: 10px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; }
+.connections > li > button:hover { background: var(--bg-alt); }
+.connections > li.is-on > button { background: var(--accent-tint); }
+.connections > li > button:focus-visible { outline-offset: -3px; }
+.conn-times { font-size: 16px; white-space: nowrap; }
+.conn-facts { font-size: 14px; color: var(--text-muted); white-space: nowrap; text-align: right; }
+.conn-route { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+.connections .detail-block { padding: 12px 14px 4px; }
+@media (max-width: 860px) {
+  .planner-body { grid-template-columns: minmax(0, 1fr); }
+  .planner-map { position: static; order: -1; }
+  .planner-map .map { height: 38vh; min-height: 240px; }
+}
+.secondary { min-height: 44px; padding: 0 20px; background: var(--surface); color: var(--accent); border: 1px solid var(--accent); border-radius: var(--radius-md); font-weight: 600; }
+.secondary:hover { background: var(--accent-tint); }

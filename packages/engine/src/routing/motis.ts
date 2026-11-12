@@ -267,7 +267,9 @@ export class MotisRouting implements RoutingProvider {
     maxWalkToStopMin?: number;
     allowedSegmentTags?: string[];
     maxTravelMin?: number;
+    via?: string[];
   }): Promise<Itinerary[]> {
+    const via = (q.via ?? []).map(motisStationId).filter((x): x is string => x !== null).slice(0, 2);
     // A search restricted to fare zones: only the fork knows the parameter. Without it the
     // answer would be the unrestricted one under a false name, so there is none.
     if (q.allowedSegmentTags?.length && !this.segmentFilter) return [];
@@ -295,6 +297,7 @@ export class MotisRouting implements RoutingProvider {
         // One is asked for, which still returns every connection of the window, and none that
         // takes longer than the limit (minutes).
         ...(tags ? { allowedSegmentTags: tags.join(','), numItineraries: 1, maxTravelTime: Math.round(q.maxTravelMin ?? RESTRICTED_MAX_HOURS * 60) } : {}),
+        ...(via.length ? { via: via.join(','), viaMinimumStay: via.map(() => 0).join(',') } : {}),
         ...(cursor ? { pageCursor: cursor } : {}),
       });
       let outside = 0;

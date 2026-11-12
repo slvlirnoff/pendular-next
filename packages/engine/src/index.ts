@@ -2,6 +2,7 @@ export * from './types.js';
 export * from './rules.js';
 export * from './time.js';
 export { compare, parkingPerYear, type EngineDeps, type FareContext, type AccessCandidate, type ZoneSearchSet } from './planner/compare.js';
+export { connections, type ConnectionsRequest, type ConnectionsResult } from './planner/connections.js';
 export { groupItineraries, type RouteGroup } from './planner/group.js';
 export { priceTransit, coveredByZones, estimatedTariffKm, type PriceDeps } from './fares/price.js';
 export { createZoneIndex, type ZoneIndex, type ZoneIndexOptions, type ZoneTable } from './fares/zones.js';

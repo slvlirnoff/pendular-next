@@ -1,10 +1,10 @@
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
-import { compare, type CommuteRequest } from '@pendular/engine';
+import { compare, connections, type CommuteRequest, type ConnectionsRequest } from '@pendular/engine';
 import { buildDeps, readConfig } from './deps.js';
 import { httpGet } from './httpGet.js';
-import { parseRequest } from './validate.js';
+import { parseConnections, parseRequest } from './validate.js';
 
 const cfg = readConfig();
 const deps = buildDeps(cfg);
@@ -54,6 +54,22 @@ app.post('/api/compare', async (c) => {
   } catch (e) {
     console.error(e);
     return c.json({ error: 'comparison failed' }, 500);
+  }
+});
+
+/** Every connection one ticket allows, there or back, in a period of the day. */
+app.post('/api/connections', async (c) => {
+  let req: ConnectionsRequest;
+  try {
+    req = parseConnections(await c.req.json());
+  } catch (e) {
+    return c.json({ error: (e as Error).message }, 400);
+  }
+  try {
+    return c.json(await connections(req, deps));
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: 'search failed' }, 502);
   }
 });
 

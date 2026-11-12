@@ -1,4 +1,4 @@
-import type { AgeGroup, CommuteRequest, OptionKind, Place, TimeWindow, Weekday } from '@pendular/engine';
+import type { AgeGroup, CommuteRequest, ConnectionsRequest, OptionKind, Place, TimeWindow, Weekday } from '@pendular/engine';
 
 const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const AGES: AgeGroup[] = ['child', 'youth', 'adult', 'senior'];
@@ -64,5 +64,23 @@ export function parseRequest(body: unknown): CommuteRequest {
           }
         : undefined,
     kinds: kinds?.length ? kinds : undefined,
+  };
+}
+
+/** Validates the body of a timetable search for one ticket (`/api/connections`). */
+export function parseConnections(body: unknown): ConnectionsRequest {
+  const b = (body ?? {}) as Record<string, any>;
+  const from = place(b.from, 'from');
+  const to = place(b.to, 'to');
+  const zones = Array.isArray(b.zones?.zones) ? (b.zones.zones as unknown[]).filter((z): z is number => Number.isInteger(z) && (z as number) > 0 && (z as number) < 100000).slice(0, 60) : [];
+  const alliance = typeof b.zones?.alliance === 'string' && /^[a-z0-9-]{1,40}$/.test(b.zones.alliance) ? (b.zones.alliance as string) : null;
+  const via = Array.isArray(b.via) ? (b.via as unknown[]).filter((v): v is string => typeof v === 'string' && v.length <= 80).slice(0, 2) : [];
+  return {
+    from: { lat: from.lat, lon: from.lon, name: from.label },
+    to: { lat: to.lat, lon: to.lon, name: to.label },
+    direction: b.direction === 'back' ? 'back' : 'out',
+    window: window(b.window, 'window'),
+    zones: alliance && zones.length ? { alliance, zones } : undefined,
+    via: via.length ? via : undefined,
   };
 }

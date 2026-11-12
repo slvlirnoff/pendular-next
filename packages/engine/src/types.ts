@@ -337,6 +337,8 @@ export interface RoutingProvider {
     allowedSegmentTags?: string[];
     /** With `allowedSegmentTags`: longest door-to-door time of a connection, minutes. */
     maxTravelMin?: number;
+    /** Stops (timetable ids) every connection has to pass, in order: at most two. */
+    via?: string[];
   }): Promise<Itinerary[]>;
   street(q: { from: LatLon; to: LatLon; profile: StreetProfile }): Promise<StreetRoute | null>;
   /** Many origins to one destination (or one origin to many destinations with `reverse`). */

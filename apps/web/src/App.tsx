@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CompareResult } from '@pendular/engine/types';
 import { I18n, LANGS, langFromPath, translator, type Lang } from './i18n/index.js';
 import { compareCommute } from './lib/api.js';
-import { ticketGroups } from './lib/groups.js';
+import { ticketGroups, type TicketGroup } from './lib/groups.js';
+import { Planner } from './components/Planner.js';
 import { fromQuery, toQuery, toRequest, type SearchState } from './lib/state.js';
 import { SearchForm } from './components/SearchForm.js';
 import { Overview } from './components/Overview.js';
@@ -34,6 +35,8 @@ export function App() {
   const [selected, setSelected] = useState<string | null>(null);
   // A departure chosen in a card: its trip replaces the typical one of its route, in the card and on the map.
   const [picked, setPicked] = useState<PickedTrip | null>(null);
+  // The timetable of one ticket, in place of the comparison.
+  const [explored, setExplored] = useState<TicketGroup | null>(null);
   const [sort, setSort] = useState<SortKey>('cost');
   const [page, setPage] = useState<Page>(() => pageFromPath(location.pathname));
   const [tab, setTab] = useState<'list' | 'map'>('list');
@@ -68,6 +71,7 @@ export function App() {
       compareCommute(req, ctl.signal)
         .then((r) => {
           setResult(r);
+          setExplored(null);
           setSearched(s);
           // The cheapest ticket opens on its best route (fewest changes, then fastest).
           const cheapest = ticketGroups(r.options).find((g) => g.routes.some((o) => o.id === r.verdict.cheapest));
@@ -89,6 +93,8 @@ export function App() {
       const p = pageFromPath(location.pathname);
       setLang(langFromPath(location.pathname));
       setPage(p);
+      // The timetable of a ticket is one step of history: going back returns to the comparison.
+      if (location.hash !== '#connections') setExplored(null);
       if (p !== 'search') return;
       const s = fromQuery(location.search);
       setState(s);
@@ -117,6 +123,13 @@ export function App() {
     go(to);
   };
 
+  const openPlanner = (g: TicketGroup) => {
+    setExplored(g);
+    history.pushState(null, '', `${location.pathname}${location.search}#connections`);
+    scrollTo({ top: 0 });
+    requestAnimationFrame(() => document.getElementById('planner-h')?.focus());
+  };
+  const planning = page === 'search' && !!explored && !!searched?.home && !!searched.work;
   const stamp = result?.stamp;
   return (
     <I18n.Provider value={{ lang, t }}>
@@ -136,9 +149,11 @@ export function App() {
         </nav>
       </header>
 
-      <main id="main" tabIndex={-1}>
+      <main id="main" tabIndex={-1} className={planning ? 'is-wide' : undefined}>
         {page === 'method' ? (
           <MethodPage searchHref={searchHref} onBack={() => go('search')} />
+        ) : planning ? (
+          <Planner group={explored!} home={searched!.home!} work={searched!.work!} arrival={{ from: searched!.from, to: searched!.to }} onClose={() => history.back()} />
         ) : (
           <>
         <h1 tabIndex={-1}>{t('app.tagline')}</h1>
@@ -210,7 +225,7 @@ export function App() {
             </div>
             <div className={`split show-${tab}`}>
               <div className="split-list">
-                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} car={stamp?.car} picked={picked} onPick={setPicked} />
+                <OptionList options={result.options} selected={selected} onSelect={setSelected} sort={sort} onSort={setSort} car={stamp?.car} picked={picked} onPick={setPicked} onExplore={openPlanner} />
                 <LeftOutList items={result.leftOut} />
               </div>
               <div className="split-map">
