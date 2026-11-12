@@ -12,7 +12,7 @@ cost, door-to-door time, changes, frequency and CO₂. Prices are tuned for the 
 | `packages/engine/data` | Tariff tables, zone table, emission factors: data with sources and validity dates. |
 | `apps/api` | HTTP API (`POST /api/compare`, `GET /api/places`). |
 | `apps/web` | The site. |
-| `apps/analytics` | Commute Analytics: staff list, address check, analysis for a site, indicators, export. |
+| `apps/analytics` | Pendular Plural: staff list, address check, analysis for a site, indicators, export. |
 | `data/` | Data pipeline: fetch scripts, MOTIS configuration, parking build. Raw and built data are not committed. |
 | `tools/` | One-off extraction tools (Mobilis zones). |
 
@@ -20,7 +20,7 @@ cost, door-to-door time, changes, frequency and CO₂. Prices are tuned for the 
 
 Needs Node 22 with pnpm, the osmium command-line tool (`apt install osmium-tool` or
 `brew install osmium-tool`), Python 3 with the `osmium` package (`pip install osmium`), about
-6 GB of free memory for the MOTIS import and 8 GB of disk. Commute Analytics also needs
+6 GB of free memory for the MOTIS import and 8 GB of disk. Pendular Plural also needs
 PostgreSQL 16.
 
 ```sh
@@ -36,7 +36,7 @@ pnpm test
 | --- | --- |
 | Site (Pendular) | http://127.0.0.1:5173 |
 | API | http://127.0.0.1:8787 |
-| Commute Analytics (no sign-in, this machine only) | http://127.0.0.1:8788 |
+| Pendular Plural (no sign-in, this machine only) | http://127.0.0.1:8788 |
 | MOTIS | http://127.0.0.1:8080 |
 | PostgreSQL | port 5433, database and user `pendular` |
 
@@ -54,7 +54,7 @@ Good to know:
   Refresh the official fare data with `pnpm tsx tools/nova-import/import.ts` (6 minutes).
 - Check results against the reference commutes: `pnpm tsx tools/golden/run.ts`
   (`--update` records the current results as the new reference).
-- An example staff list for Commute Analytics: `apps/analytics/examples/staff-chuv.csv`
+- An example staff list for Pendular Plural: `apps/analytics/examples/staff-chuv.csv`
   (60 invented people around Lausanne, with a few wrong addresses on purpose).
 
 ### MOTIS fork (optional)

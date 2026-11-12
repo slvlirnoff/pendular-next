@@ -25,7 +25,7 @@ export function listView(root, ctx, id) {
     list = await get('/api/lists/' + lid);
     if (ctx.dead) return;
     title.textContent = list.name;
-    document.title = list.name + ' · Commute Analytics';
+    document.title = list.name + ' · Pendular Plural';
     renderHead();
     renderAnalyses();
     updateGate();

@@ -31,7 +31,7 @@ export function analysisView(root, ctx, id) {
 
   function render() {
     title.textContent = a.name;
-    document.title = a.name + ' · Commute Analytics';
+    document.title = a.name + ' · Pendular Plural';
     clear(root.querySelector('#back-slot'), h('a', { class: 'back', href: '#/list/' + encodeURIComponent(a.listId) }, '← Back to the list'));
     const active = a.status === 'queued' || a.status === 'running';
     clear(head,

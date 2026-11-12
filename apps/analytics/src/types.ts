@@ -1,5 +1,5 @@
 /**
- * Commute Analytics: shared types. People are known by the client's own pseudonymous id
+ * Pendular Plural: shared types. People are known by the client's own pseudonymous id
  * (`extId`); no names or e-mail addresses are stored.
  */
 

@@ -1,4 +1,4 @@
-// Commute Analytics: router. State lives in the URL hash: #/ , #/list/<id>, #/analysis/<id>.
+// Pendular Plural: router. State lives in the URL hash: #/ , #/list/<id>, #/analysis/<id>.
 import { h, clear, errorBox } from './util.js';
 import { homeView } from './home.js';
 import { listView } from './list.js';

@@ -12,7 +12,7 @@ export function statusSummary(by) {
 
 export function homeView(root, ctx) {
   root.append(h('h1', { tabindex: '-1' }, 'Lists'));
-  document.title = 'Lists · Commute Analytics';
+  document.title = 'Lists · Pendular Plural';
   const listBox = h('div', { class: 'card' });
   root.append(listBox, newListCard(ctx));
 

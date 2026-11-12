@@ -1,7 +1,7 @@
 import pg from 'pg';
 
 /**
- * Storage for Commute Analytics. Everything derived from a list hangs off it with
+ * Storage for Pendular Plural. Everything derived from a list hangs off it with
  * ON DELETE CASCADE: deleting a list removes its people, analyses and results.
  */
 const SCHEMA = `

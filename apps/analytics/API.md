@@ -1,4 +1,4 @@
-# Commute Analytics API (first slice)
+# Pendular Plural API (first slice)
 
 Base URL `http://127.0.0.1:8788`. JSON in and out. No sign-in yet: this slice runs on a
 trusted machine only. Types are in `src/types.ts`.

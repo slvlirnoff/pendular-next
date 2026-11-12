@@ -1,5 +1,5 @@
 /**
- * Address check for Commute Analytics.
+ * Address check for Pendular Plural.
  *
  * Every address is looked up in the official building address register (swisstopo search
  * service); the local MOTIS geocoder is the fallback. Search services are fuzzy: they silently
