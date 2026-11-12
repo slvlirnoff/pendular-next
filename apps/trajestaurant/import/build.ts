@@ -22,7 +22,7 @@ import { createInterface } from 'node:readline';
 import { dirname, resolve } from 'node:path';
 import { classify } from '../src/foods.js';
 import { FOOD_KINDS, mainKind } from '../src/kinds.js';
-import { fold, searchKey } from '../src/text.js';
+import { fold, sameName, searchKey } from '../src/text.js';
 import { distanceM } from '../server/estimate.js';
 import { createPool, DEFAULT_DATABASE_URL, ensureDatabase, SCHEMA } from '../server/db.js';
 
@@ -296,30 +296,7 @@ class Grid {
   }
 }
 
-/** Words that say what a place is rather than which one it is. */
-const GENERIC = new Set(
-  'restaurant ristorante restaurante gasthaus gasthof wirtschaft beiz pinte cafe caffe bar pub bistro brasserie hotel auberge pizzeria pizza kebab burger burgers sushi take away takeaway snack grill trattoria osteria la le les l du de des d the and et und zum zur chez au aux sa ag gmbh sarl s a'.split(' '),
-);
-
-export function nameTokens(name: string): string[] {
-  return fold(name)
-    .replace(/[^a-z0-9]+/g, ' ')
-    .split(' ')
-    .filter((w) => w.length > 1 && !GENERIC.has(w));
-}
-
-/** Whether two names are those of one place: shared distinctive words, or one name inside the other. */
-export function sameName(a: string, b: string): boolean {
-  const fa = fold(a).replace(/[^a-z0-9]+/g, ' ').trim();
-  const fb = fold(b).replace(/[^a-z0-9]+/g, ' ').trim();
-  if (fa === fb) return true;
-  const ta = new Set(nameTokens(a));
-  const tb = new Set(nameTokens(b));
-  if (ta.size === 0 || tb.size === 0) return false;
-  let shared = 0;
-  for (const t of ta) if (tb.has(t)) shared++;
-  return shared / Math.min(ta.size, tb.size) >= 0.5;
-}
+export { nameTokens, sameName } from '../src/text.js';
 
 /** Fills tags the place lacks; `prefer` tags replace what it has (opening hours from a store finder). */
 function absorb(into: Place, from: Place, prefer: string[] = []) {

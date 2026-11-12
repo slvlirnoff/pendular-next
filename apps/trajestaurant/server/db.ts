@@ -52,6 +52,7 @@ create table if not exists place (
 create index if not exists place_geom on place using gist (geom);
 create index if not exists place_name on place using gin (name_folded gin_trgm_ops);
 create index if not exists place_brand on place (brand_key);
+create index if not exists place_kind on place (kind_key, kind);
 
 create table if not exists place_food (
   place_id bigint not null references place(id) on delete cascade,

@@ -1,4 +1,4 @@
-import { fold } from './text.js';
+import { fold, rankMatches } from './text.js';
 
 /**
  * The food types one can search for, and how a place from OpenStreetMap is given them.
@@ -367,17 +367,5 @@ export function classify(tags: Record<string, string | undefined>): string[] {
  * starting with it, then one containing it.
  */
 export function matchFoods(q: string): string[] {
-  const text = fold(q);
-  if (!text) return [];
-  const scored: { key: string; score: number }[] = [];
-  for (const f of FOODS) {
-    let score = 0;
-    for (const w of [fold(f.label), f.key, ...f.synonyms]) {
-      if (w === text) score = Math.max(score, 3);
-      else if (w.startsWith(text)) score = Math.max(score, 2);
-      else if (text.length >= 3 && (w.includes(text) || w.split(/[\s&,-]+/).some((p) => p.startsWith(text)))) score = Math.max(score, 1);
-    }
-    if (score) scored.push({ key: f.key, score });
-  }
-  return scored.sort((a, b) => b.score - a.score || (FOOD_ORDER.get(a.key) ?? 0) - (FOOD_ORDER.get(b.key) ?? 0)).map((s) => s.key);
+  return rankMatches(FOODS, q);
 }

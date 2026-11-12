@@ -4,9 +4,9 @@ import { fold } from '../src/text.js';
 import { transitToPlaces, usefulTransit } from '../server/estimate.js';
 import { referenceMonday, routingDate } from '../server/timetable.js';
 import { atpPlace, brandFromName, centre, keepOverture, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, sameName, type Brands } from '../import/build.js';
-import { kindInfo, mainKind } from '../src/kinds.js';
+import { KIND_SEARCHES, kindInfo, mainKind, matchKinds } from '../src/kinds.js';
 import { searchKey } from '../src/text.js';
-import { maxMinutes, Ttl } from '../server/search.js';
+import { maxMinutes, onePlace, Ttl } from '../server/search.js';
 import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
 
 describe('food types', () => {
@@ -235,5 +235,36 @@ describe('car times', () => {
     // Beyond its size the oldest goes.
     expect(c.get('a')).toBeUndefined();
     expect(c.get('c')).toBe(3);
+  });
+});
+
+describe('kinds of shops and places', () => {
+  it('finds kinds from what is typed, in several languages', () => {
+    expect(matchKinds('pharm')[0]).toBe('pharmacie');
+    expect(matchKinds('Apotheke')[0]).toBe('pharmacie');
+    expect(matchKinds('coiff')[0]).toBe('coiffeur');
+    expect(matchKinds('essence')[0]).toBe('station');
+    expect(matchKinds('Tankstelle')[0]).toBe('station');
+    expect(matchKinds('poste')[0]).toBe('poste');
+    expect(matchKinds('Schuhe')[0]).toBe('chaussures');
+    expect(matchKinds('migros')).toEqual([]);
+  });
+
+  it('has unique keys, folded synonyms and OSM kinds that are kept', () => {
+    expect(new Set(KIND_SEARCHES.map((k) => k.key)).size).toBe(KIND_SEARCHES.length);
+    for (const k of KIND_SEARCHES) {
+      for (const s of k.synonyms) expect(fold(s)).toBe(s);
+      for (const kv of k.kinds) {
+        const [key, value] = kv.split('=') as [string, string];
+        expect(mainKind({ [key]: value }), kv).not.toBeNull();
+      }
+    }
+  });
+
+  it('shows a shop two sources place a few metres apart once, two shops of a mall twice', () => {
+    const row = (id: string, name: string, lat: number, sources: string[]) =>
+      ({ id, name, kind_key: 'shop', kind: 'hairdresser', brand: null, brand_key: null, sources, town: 'Lucens', lat, lon: 6.84, opening_hours: null, foods: [], dist: lat * 1000 }) as Parameters<typeof onePlace>[0][number];
+    const out = onePlace([row('1', 'Coiffure Sandra', 46.7, ['osm']), row('2', 'Sandra Coiffure', 46.7002, ['overture']), row('3', 'Bea coiffure', 46.7001, ['osm'])]);
+    expect(out.map((r) => r.name).sort()).toEqual(['Bea coiffure', 'Coiffure Sandra']);
   });
 });

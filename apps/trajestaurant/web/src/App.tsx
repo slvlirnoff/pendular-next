@@ -6,7 +6,8 @@ import { MapView, type Padding } from './components/MapView';
 import { PlacePicker } from './components/PlacePicker';
 import { SearchPanel, type SearchState } from './components/SearchPanel';
 import { Welcome } from './components/Welcome';
-import { api, bestMode, brandSearch, foodSearch, nameSearch, type Here, type Searched } from './lib';
+import { api, bestMode, brandSearch, foodSearch, kindSearch, nameSearch, type Here, type Searched } from './lib';
+import { KIND_SEARCH_BY_KEY } from '../../src/kinds';
 
 const HERE_KEY = 'trajestaurant.here';
 
@@ -19,18 +20,21 @@ function storedHere(): Here | null {
   }
 }
 
-/** What the address bar holds: ?ici=lat,lon,label, then food=pizza, brand=migros or name=mix image, and r=123 (a place). */
+/** What the address bar holds: ?ici=lat,lon,label, then food=pizza, kind=pharmacie, brand=migros or name=mix image, and r=123 (a place). */
 function readUrl(): { here: Here | null; searched: Searched | null; place: number | null } {
   const p = new URLSearchParams(location.search);
   const [lat, lon, ...label] = (p.get('ici') ?? '').split(',');
   const here = lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon) ? { lat: +lat, lon: +lon, label: label.join(',') || 'Ma position' } : null;
   const food = p.get('food');
+  const kind = p.get('kind');
   const brand = p.get('brand');
   const name = p.get('name');
   const searched =
     food && FOOD_BY_KEY.has(food)
       ? foodSearch(food)
-      : brand
+      : kind && KIND_SEARCH_BY_KEY.has(kind)
+        ? kindSearch(kind)
+        : brand
         ? brandSearch({ key: brand, name: brand, kindKey: 'shop', kind: '' })
         : name
           ? nameSearch(name)

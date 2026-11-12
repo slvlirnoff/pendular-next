@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import type { BrandHit, PlaceSummary, SearchResponse, SearchResult, Suggestion } from '../../../src/api';
 import { FOODS, FOOD_BY_KEY } from '../../../src/foods';
-import { kindInfo } from '../../../src/kinds';
+import { KIND_SEARCHES, KIND_SEARCH_BY_KEY, kindInfo } from '../../../src/kinds';
 import {
   api,
   bestMode,
@@ -9,6 +9,7 @@ import {
   distance,
   foodSearch,
   kindLabel,
+  kindSearch,
   MODE,
   minutes,
   nameSearch,
@@ -24,6 +25,7 @@ import { Logo } from './Welcome';
 
 const PAGE = 5;
 const CHIPS = FOODS.filter((f) => !f.generic).slice(0, 16);
+const KIND_CHIPS = KIND_SEARCHES.slice(0, 16);
 
 export interface SearchState {
   searched: Searched | null;
@@ -34,11 +36,14 @@ export interface SearchState {
 
 type Option =
   | { type: 'food'; key: string }
+  | { type: 'kind'; key: string }
   | { type: 'brand'; b: BrandHit }
   | { type: 'named'; key: string; count: number }
   | { type: 'place'; r: PlaceSummary };
 
 const count = (n: number) => n.toLocaleString('fr-CH');
+/** Searches for one sort of place (a food, a kind): rows show the town rather than the kind. */
+const byType = (s: Searched) => s.target.type === 'food' || s.target.type === 'kind';
 
 export const SearchPanel = forwardRef<
   HTMLElement,
@@ -93,7 +98,9 @@ export const SearchPanel = forwardRef<
     typing && hits
       ? [
           ...hits.foods.map((key): Option => ({ type: 'food', key })),
-          ...hits.brands.map((b): Option => ({ type: 'brand', b })),
+          ...hits.kinds.map((key): Option => ({ type: 'kind', key })),
+          // A food or a kind matched: a few chains only (Pharmacie Populaire…).
+          ...hits.brands.slice(0, hits.foods.length || hits.kinds.length ? 2 : 5).map((b): Option => ({ type: 'brand', b })),
           ...(hits.named ? [{ type: 'named' as const, ...hits.named }] : []),
           // Chains first; a few single places after them.
           ...hits.places.slice(0, hits.brands.length ? 3 : 6).map((r): Option => ({ type: 'place', r })),
@@ -102,6 +109,7 @@ export const SearchPanel = forwardRef<
 
   const choose = (o: Option) => {
     if (o.type === 'food') props.onSearch(foodSearch(o.key));
+    else if (o.type === 'kind') props.onSearch(kindSearch(o.key));
     else if (o.type === 'brand') props.onSearch(brandSearch(o.b));
     else if (o.type === 'named') props.onSearch(nameSearch(o.key));
     else props.onPick(o.r);
@@ -128,8 +136,8 @@ export const SearchPanel = forwardRef<
           aria-controls={`${id}-list`}
           aria-autocomplete="list"
           aria-activedescendant={options.length ? `${id}-o${active}` : undefined}
-          aria-label="Que cherches-tu ? Une nourriture, une enseigne ou un nom"
-          placeholder="Pizza, Migros, IKEA…"
+          aria-label="Que cherches-tu ? Une nourriture, un commerce, une enseigne ou un nom"
+          placeholder="Pizza, pharmacie, Migros…"
           autoComplete="off"
           spellCheck={false}
           enterKeyHint="search"
@@ -183,7 +191,7 @@ export const SearchPanel = forwardRef<
         <ul className="card suggestions" id={`${id}-list`} role="listbox" aria-label="Suggestions">
           {options.map((o, i) => (
             <li
-              key={o.type === 'food' ? `f-${o.key}` : o.type === 'brand' ? `b-${o.b.key}` : o.type === 'named' ? 'n' : `p-${o.r.id}`}
+              key={o.type === 'food' ? `f-${o.key}` : o.type === 'kind' ? `k-${o.key}` : o.type === 'brand' ? `b-${o.b.key}` : o.type === 'named' ? 'n' : `p-${o.r.id}`}
               id={`${id}-o${i}`}
               role="option"
               aria-selected={i === active}
@@ -195,7 +203,9 @@ export const SearchPanel = forwardRef<
               <span className="emoji-dot">
                 {o.type === 'food'
                   ? FOOD_BY_KEY.get(o.key)?.emoji
-                  : o.type === 'brand'
+                  : o.type === 'kind'
+                    ? KIND_SEARCH_BY_KEY.get(o.key)?.emoji
+                    : o.type === 'brand'
                     ? kindInfo(o.b.kindKey, o.b.kind).emoji
                     : o.type === 'named'
                       ? '🔎'
@@ -206,6 +216,11 @@ export const SearchPanel = forwardRef<
                   <>
                     <strong>{FOOD_BY_KEY.get(o.key)?.label}</strong>
                     <small>Type de nourriture</small>
+                  </>
+                ) : o.type === 'kind' ? (
+                  <>
+                    <strong>{KIND_SEARCH_BY_KEY.get(o.key)?.label}</strong>
+                    <small>Type de commerce ou de lieu</small>
                   </>
                 ) : o.type === 'brand' ? (
                   <>
@@ -254,6 +269,16 @@ export const SearchPanel = forwardRef<
             {CHIPS.map((f) => (
               <button key={f.key} type="button" role="listitem" className="chip" onClick={() => props.onSearch(foodSearch(f.key))}>
                 <span aria-hidden="true">{f.emoji}</span> {f.label}
+              </button>
+            ))}
+          </div>
+          <div className="chips" role="list" aria-label="Commerces">
+            <span className="chips-title" aria-hidden="true">
+              Commerces
+            </span>
+            {KIND_CHIPS.map((k) => (
+              <button key={k.key} type="button" role="listitem" className="chip" onClick={() => props.onSearch(kindSearch(k.key))}>
+                <span aria-hidden="true">{k.emoji}</span> {k.label}
               </button>
             ))}
           </div>
@@ -391,10 +416,10 @@ function ResultRow(props: { r: SearchResult; searched: Searched; sort: Sort; onP
         <span className="result-main">
           <span className="result-name">
             {r.name}
-            {props.searched.target.type !== 'food' && r.town && !r.name.includes(r.town) ? <span className="result-town"> {r.town}</span> : null}
+            {!byType(props.searched) && r.town && !r.name.includes(r.town) ? <span className="result-town"> {r.town}</span> : null}
           </span>
           <span className="result-meta">
-            {props.searched.target.type === 'food' ? (r.town ? `${r.town} · ` : '') : `${kindLabel(r)} · `}
+            {byType(props.searched) ? (r.town ? `${r.town} · ` : '') : `${kindLabel(r)} · `}
             {distance(r.distanceM)}
             {open ? <span className={`open open-${open.tone}`}>{open.text}</span> : null}
           </span>

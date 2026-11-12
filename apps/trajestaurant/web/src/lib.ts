@@ -1,6 +1,6 @@
 import type { BrandHit, Mode, OpenState, PlaceHit, PlaceSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion, Target } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
-import { kindInfo } from '../../src/kinds';
+import { KIND_SEARCH_BY_KEY, kindInfo } from '../../src/kinds';
 
 export interface Here {
   lat: number;
@@ -35,6 +35,11 @@ export interface Searched {
 export function foodSearch(key: string): Searched {
   const f = FOOD_BY_KEY.get(key);
   return { target: { type: 'food', key }, label: f?.label ?? key, emoji: f?.emoji ?? '🍽️' };
+}
+
+export function kindSearch(key: string): Searched {
+  const k = KIND_SEARCH_BY_KEY.get(key);
+  return { target: { type: 'kind', key }, label: k?.label ?? key, emoji: k?.emoji ?? '📍' };
 }
 
 export function brandSearch(b: Pick<BrandHit, 'key' | 'name' | 'kindKey' | 'kind'>): Searched {
@@ -84,25 +89,34 @@ export function timeOf(r: SearchResult, mode: Mode): number | null {
   return mode === 'walk' ? r.walkMin : mode === 'car' ? r.carMin : r.transitMin;
 }
 
-/** The quickest way, preferring walking and public transport over the car when they are close. */
+/** A walk this short is the way to go: the car would still need parking (minutes). */
+export const SHORT_WALK_MIN = 12;
+/** Parking and walking to the door, which car times leave out, when car and other ways are compared (minutes). */
+export const CAR_PARKING_MIN = 5;
+
+/**
+ * The way shown first for a place: walking when it is short, else the quickest of walking, public
+ * transport and the car, the car counted with its parking.
+ */
 export function bestMode(r: Pick<SearchResult, 'walkMin' | 'carMin' | 'transitMin'>): Mode | null {
-  const soft = [
-    ['walk', r.walkMin],
-    ['transit', r.transitMin],
-  ].filter((x): x is [Mode, number] => x[1] !== null);
-  const fastSoft = soft.sort((a, b) => a[1] - b[1])[0];
-  if (fastSoft && (r.carMin === null || fastSoft[1] <= r.carMin + 5)) return fastSoft[0];
-  if (r.carMin !== null) return 'car';
-  return fastSoft?.[0] ?? null;
+  if (r.walkMin !== null && r.walkMin <= SHORT_WALK_MIN && (r.transitMin === null || r.walkMin <= r.transitMin)) return 'walk';
+  const ways = (
+    [
+      ['walk', r.walkMin],
+      ['transit', r.transitMin],
+      ['car', r.carMin === null ? null : r.carMin + CAR_PARKING_MIN],
+    ] as [Mode, number | null][]
+  ).filter((x): x is [Mode, number] => x[1] !== null);
+  return ways.sort((a, b) => a[1] - b[1])[0]?.[0] ?? null;
 }
 
+/** Sorted by the way shown first (car with its parking), or by one way of going. */
 export function sortResults(list: SearchResult[], sort: Sort): SearchResult[] {
   const key = (r: SearchResult) => {
-    if (sort === 'best') {
-      const m = bestMode(r);
-      return m ? (timeOf(r, m) ?? Infinity) : Infinity;
-    }
-    return timeOf(r, sort) ?? Infinity;
+    const m = sort === 'best' ? bestMode(r) : sort;
+    const t = m ? timeOf(r, m) : null;
+    if (t === null) return Infinity;
+    return sort === 'best' && m === 'car' ? t + CAR_PARKING_MIN : t;
   };
   return [...list].sort((a, b) => key(a) - key(b) || a.distanceM - b.distanceM);
 }

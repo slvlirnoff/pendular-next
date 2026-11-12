@@ -2,7 +2,8 @@ import type pg from 'pg';
 import { localToUtc, type LatLon, type MotisRouting } from '@pendular/engine';
 import type { BrandHit, PlaceSummary, SearchResponse, SearchResult, Suggestion, Target } from '../src/api.js';
 import { FOOD_BY_KEY, FOOD_ORDER, matchFoods } from '../src/foods.js';
-import { searchKey } from '../src/text.js';
+import { KIND_SEARCH_BY_KEY, matchKinds } from '../src/kinds.js';
+import { sameName, searchKey } from '../src/text.js';
 import type { CarRouter } from './car.js';
 import { distanceM, transitToPlaces, usefulTransit, type StopReach } from './estimate.js';
 import { openState } from './open.js';
@@ -110,8 +111,9 @@ export async function popularBrands(db: pg.Pool): Promise<BrandHit[]> {
 /** What is being typed: food types, chains, all places of a name, and single places (nearest first). */
 export async function suggest(deps: SearchDeps, q: string, at: LatLon | null): Promise<Suggestion> {
   const foods = matchFoods(q).slice(0, 4);
+  const kinds = matchKinds(q).slice(0, 3);
   const text = searchKey(q);
-  if (text.length < 2) return { foods, brands: [], named: null, places: [] };
+  if (text.length < 2) return { foods, kinds, brands: [], named: null, places: [] };
   const origin = at ?? { lat: 46.8, lon: 8.2 };
   const [brands, places, named] = await Promise.all([
     findBrands(deps.db, text),
@@ -126,13 +128,28 @@ export async function suggest(deps: SearchDeps, q: string, at: LatLon | null): P
   const now = new Date();
   const n = Number(named?.rows[0]?.n ?? 0);
   // A food type or a chain that matches already lists the places; "all places named …" is for the rest (Mix-Image).
-  const covered = foods.length > 0 || brands.some((b) => b.key.startsWith(text));
+  const covered = foods.length > 0 || kinds.length > 0 || brands.some((b) => b.key.startsWith(text));
   return {
     foods,
+    kinds,
     brands,
     named: n >= 2 && !covered ? { key: text, count: n } : null,
     places: places.rows.map((r) => toSummary(r, now)),
   };
+}
+
+/**
+ * One result per place in a search by kind: a shop that two sources place a few metres apart
+ * under similar names (OSM "Coiffure Sandra", Overture "Sandra Coiffure") is shown once, the
+ * record with the most sources standing for it. Two shops of one kind in one mall keep their own lines.
+ */
+export function onePlace(rows: Row[]): Row[] {
+  const kept: Row[] = [];
+  for (const r of [...rows].sort((a, b) => b.sources.length - a.sources.length)) {
+    const twin = kept.find((k) => k.kind_key === r.kind_key && k.kind === r.kind && distanceM(k, r) < 80 && sameName(k.name, r.name));
+    if (!twin) kept.push(r);
+  }
+  return kept.sort((a, b) => a.dist - b.dist);
 }
 
 /** The places a search is about, nearest first. */
@@ -144,11 +161,16 @@ async function candidates(db: pg.Pool, target: Target, from: LatLon): Promise<Ro
       : target.type === 'brand'
         ? `join (select key from brand where name_folded = $3) b on b.key = p.brand_key`
         : '';
-  const nameFilter = target.type === 'name' ? `and p.name_folded like '%' || $3 || '%'` : '';
-  const key = target.type === 'name' ? likeEscape(target.key) : target.key;
+  const filter =
+    target.type === 'name'
+      ? `and p.name_folded like '%' || $3 || '%'`
+      : target.type === 'kind'
+        ? `and (p.kind_key || '=' || p.kind) = any($3::text[])`
+        : '';
+  const key = target.type === 'name' ? likeEscape(target.key) : target.type === 'kind' ? (KIND_SEARCH_BY_KEY.get(target.key)?.kinds ?? []) : target.key;
   const r = await db.query<Row>(
     `select ${SUMMARY} from place p ${where} ${ORIGIN}
-     where st_dwithin(p.geom, o.g, $4) ${nameFilter}
+     where st_dwithin(p.geom, o.g, $4) ${filter}
      order by p.geom <-> o.g limit $5`,
     [from.lat, from.lon, key, lim.radiusM, lim.candidates],
   );
@@ -188,9 +210,11 @@ export function oneBranch(rows: Row[], mainKind?: string, sameChain = false): Ro
 /** Places of a food type, a chain or a name near a place, with the time to each on foot, by car and by public transport. */
 export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLon, now = new Date()): Promise<SearchResponse> {
   let rows = await candidates(deps.db, target, from);
-  if (target.type !== 'food') {
+  if (target.type === 'brand' || target.type === 'name') {
     const main = target.type === 'brand' ? await deps.db.query<{ k: string }>(`select kind_key || '=' || kind as k from brand where name_folded = $1 order by count desc limit 1`, [target.key]) : null;
     rows = oneBranch(rows, main?.rows[0]?.k, target.type === 'brand');
+  } else if (target.type === 'kind') {
+    rows = onePlace(rows);
   }
   const local = localNow(now);
   const day = routingDate(local.date, deps.timetable);
@@ -252,6 +276,7 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
 
 async function labelOf(db: pg.Pool, target: Target): Promise<string> {
   if (target.type === 'food') return FOOD_BY_KEY.get(target.key)?.label ?? target.key;
+  if (target.type === 'kind') return KIND_SEARCH_BY_KEY.get(target.key)?.label ?? target.key;
   if (target.type === 'brand') {
     const r = await db.query<{ name: string }>('select name from brand where name_folded = $1 order by count desc limit 1', [target.key]);
     return r.rows[0]?.name ?? target.key;

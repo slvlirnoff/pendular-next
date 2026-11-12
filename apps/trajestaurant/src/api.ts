@@ -37,8 +37,12 @@ export interface SearchResult extends PlaceSummary {
   transitMin: number | null;
 }
 
-/** What is searched for: a food type, a chain (by its folded name), or places by name. */
-export type Target = { type: 'food'; key: string } | { type: 'brand'; key: string } | { type: 'name'; key: string };
+/** What is searched for: a food type, a kind of shop or place, a chain (by its folded name), or places by name. */
+export type Target =
+  | { type: 'food'; key: string }
+  | { type: 'kind'; key: string }
+  | { type: 'brand'; key: string }
+  | { type: 'name'; key: string };
 
 /** A chain as suggested: its name, the kind of its places and how many there are in Switzerland. */
 export interface BrandHit {
@@ -61,6 +65,8 @@ export interface SearchResponse {
 
 export interface Suggestion {
   foods: string[];
+  /** Kinds of shops and places (src/kinds.ts KIND_SEARCHES keys). */
+  kinds: string[];
   brands: BrandHit[];
   /** Places whose name contains the text, when there are several: searching them all by name. */
   named: { key: string; count: number } | null;

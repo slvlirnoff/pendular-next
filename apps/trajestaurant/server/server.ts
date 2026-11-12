@@ -7,6 +7,7 @@ import { MotisRouting, type LatLon } from '@pendular/engine';
 import { httpGet } from '../../api/src/httpGet.js';
 import type { PlaceHit, Target } from '../src/api.js';
 import { FOODS, FOOD_BY_KEY } from '../src/foods.js';
+import { KIND_SEARCH_BY_KEY } from '../src/kinds.js';
 import { motisCar, valhallaCar, withFallback } from './car.js';
 import { createPool } from './db.js';
 import { routesTo } from './routes.js';
@@ -73,17 +74,19 @@ app.get('/api/suggest', async (c) => {
 let popular: Awaited<ReturnType<typeof popularBrands>> | null = null;
 app.get('/api/brands/popular', async (c) => c.json((popular ??= await popularBrands(deps.db))));
 
-/** ?food=pizza, ?brand=migros (a chain by its folded name) or ?name=mix image, with ?lat=…&lon=… */
+/** ?food=pizza, ?kind=pharmacie, ?brand=migros (a chain by its folded name) or ?name=mix image, with ?lat=…&lon=… */
 app.get('/api/search', async (c) => {
   const from = position(c.req.query('lat'), c.req.query('lon'));
   const food = c.req.query('food');
+  const kind = c.req.query('kind');
   const brand = c.req.query('brand');
   const name = c.req.query('name');
   let target: Target | null = null;
   if (food) target = FOOD_BY_KEY.has(food) ? { type: 'food', key: food } : null;
+  else if (kind) target = KIND_SEARCH_BY_KEY.has(kind) ? { type: 'kind', key: kind } : null;
   else if (brand) target = { type: 'brand', key: searchKey(brand) };
   else if (name && searchKey(name).length >= 2) target = { type: 'name', key: searchKey(name) };
-  if (!target) return c.json({ error: 'food, brand or name needed' }, 400);
+  if (!target) return c.json({ error: 'food, kind, brand or name needed' }, 400);
   if (!from) return c.json({ error: 'position needed (lat, lon)' }, 400);
   try {
     return c.json(await searchPlaces(deps, target, from));
