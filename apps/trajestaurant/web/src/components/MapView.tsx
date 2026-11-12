@@ -121,7 +121,7 @@ export function MapView(props: {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const ready = useRef<Promise<void> | null>(null);
-  const markers = useRef(new Map<number, { marker: maplibregl.Marker; el: HTMLButtonElement }>());
+  const markers = useRef(new Map<number, { marker: maplibregl.Marker; pin: HTMLDivElement; el: HTMLButtonElement }>());
   const hereMarker = useRef<maplibregl.Marker | null>(null);
   const labels = useRef<maplibregl.Marker[]>([]);
   const [zoomedOut, setZoomedOut] = useState(false);
@@ -261,6 +261,11 @@ export function MapView(props: {
     shown.forEach((r, i) => {
       let x = markers.current.get(r.id);
       if (!x) {
+        // MapLibre places the element it is given (position and transform): that element has no
+        // style of its own. The round badge and the tip under it are its children, the tip's point
+        // being the bottom of the element, so the place.
+        const pin = document.createElement('div');
+        pin.className = 'pin';
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'food-pin';
@@ -269,15 +274,19 @@ export function MapView(props: {
           const target = (props.selected ? [props.selected] : props.results).find((p) => p.id === r.id) ?? r;
           onPick.current(target);
         });
-        const marker = new maplibregl.Marker({ element: b, anchor: 'bottom' }).setLngLat([r.lon, r.lat]).addTo(m);
-        x = { marker, el: b };
+        const tip = document.createElement('span');
+        tip.className = 'pin-tip';
+        pin.append(b, tip);
+        const marker = new maplibregl.Marker({ element: pin, anchor: 'bottom' }).setLngLat([r.lon, r.lat]).addTo(m);
+        x = { marker, pin, el: b };
         markers.current.set(r.id, x);
       }
       x.el.textContent = placeEmoji(r, props.target);
       x.el.setAttribute('aria-label', `${r.name}${r.town ? `, ${r.town}` : ''}`);
       x.el.classList.toggle('is-selected', props.selected?.id === r.id);
       x.el.classList.toggle('is-hovered', props.hovered === r.id);
-      x.el.style.zIndex = String(props.selected?.id === r.id || props.hovered === r.id ? 1000 : 100 - i);
+      x.pin.classList.toggle('is-selected', props.selected?.id === r.id);
+      x.pin.style.zIndex = String(props.selected?.id === r.id || props.hovered === r.id ? 1000 : 100 - i);
     });
   }, [props.results, props.selected, props.hovered, props.target]);
 
