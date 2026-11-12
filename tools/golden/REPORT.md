@@ -1,9 +1,9 @@
 # Golden commutes report
 
-Generated 2026-11-12T01:15:42.684Z against http://127.0.0.1:8787.
+Generated 2026-11-12T17:05:34.233Z against http://127.0.0.1:8787.
 Timetable GTFS 2027, fetched 2026-11-10, tariffs Mobilis 13.12.2026; GA/Half Fare 13.12.2026; T601/T650 edition 01.06.2026, engine MOTIS 2, reference day 2027-01-19.
 
-Checks: 470 PASS, 0 WARN, 0 FAIL.
+Checks: 461 PASS, 0 WARN, 0 FAIL.
 
 | Commute | Cheapest | Fastest | Greenest | Options | Left out |
 |---|---|---|---|---|---|
@@ -18,7 +18,7 @@ Checks: 470 PASS, 0 WARN, 0 FAIL.
 | aigle-lausanne | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min) | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min) | Aigle → Lausanne, IR90/IR95/RE33 (2'475 CHF, 47 min), 145 kg CO2 | 2 (transit, car) | 5 |
 | chailly-flon | walk (0 CHF, 35 min) | ebike (290 CHF, 8 min) | walk (0 CHF, 35 min), 0 kg CO2 | 7 (walk, bike, ebike, transit, car) | 10 |
 | renens-chuv | bike (122 CHF, 21 min) | ebike (561 CHF, 15 min) | bike (122 CHF, 21 min), 14 kg CO2 | 6 (bike, ebike, transit, car) | 8 |
-| bulle-fribourg | Bulle, gare routière → Fribourg/Freiburg, gare rout., 336 (1'926 CHF, 96 min) | car (13'543 CHF, 38 min) | Bulle → Fribourg, Tilleul/Cathédrale, R/RE3 · 123/182 (2'511 CHF, 56 min), 228 kg CO2 | 5 (transit, car) | 3 |
+| bulle-fribourg | Bulle → Fribourg, Tilleul/Cathédrale, R/RE3 · 123/182 (2'511 CHF, 56 min) | car (13'543 CHF, 38 min) | Bulle → Fribourg, Tilleul/Cathédrale, R/RE3 · 123/182 (2'511 CHF, 56 min), 228 kg CO2 | 4 (transit, car) | 3 |
 | zurich-hb-winterthur | Zürich HB → Winterthur, IC1/IR13/IR75… (2'363 CHF, 32 min) | Zürich HB → Winterthur, IC1/IR13/IR75… (2'363 CHF, 32 min) | Zürich HB → Winterthur, IC1/IR13/IR75… (2'363 CHF, 32 min), 111 kg CO2 | 2 (transit, car) | 7 |
 | yverdon-lausanne-youth | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (869 CHF, 37 min) | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (869 CHF, 37 min) | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (869 CHF, 37 min), 145 kg CO2 | 2 (transit, car) | 6 |
 | yverdon-lausanne-senior | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (1'116 CHF, 37 min) | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (1'116 CHF, 37 min) | Yverdon-les-Bains → Lausanne, IC5/IC51/R1… (1'116 CHF, 37 min), 145 kg CO2 | 2 (transit, car) | 6 |

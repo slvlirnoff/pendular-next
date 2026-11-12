@@ -2,6 +2,7 @@ import type { CostComponent, Leg, PricedProduct, ProductKind, Provenance, Travel
 import type { FareContext } from '../planner/compare.js';
 import type { ZoneIndex } from './zones.js';
 import type { NovaData } from './nova.js';
+import { haversineKm } from '../places/parking.js';
 import { MOBILIS, TARIFF_YEAR, builtInNetworks, passCategory, tripResolver, type Network, type Networks, type TripNetworks } from './networks.js';
 import {
   DISTANCE_TABLE_SOURCE,
@@ -359,11 +360,42 @@ function nationalProducts(legs: Leg[], ctx: FareContext, deps: PriceDeps, note?:
 
 // ---------------------------------------------------------------------------------------------
 
+/** A stop the fare data does not know stands for a known stop of the trip this near, metres. */
+const UNKNOWN_STOP_REACH_M = 300;
+
+/**
+ * The stops of each leg for the fare data. The timetable has stops the fare data does not list
+ * (a new stop, a new platform group: "Fribourg, Route-Neuve/gare" beside the bus station). Such
+ * a stop is read as the nearest stop of the same trip that the fare data knows, when one lies
+ * within a short walk; a leg left with a single stop adds no zone and is dropped. Without this
+ * one unknown stop would take the whole trip out of its fare network.
+ */
+export function fareSequences(legs: Leg[], nova: NovaData): string[][] | null {
+  const points = legs.flatMap((l) => [l.from, ...(l.intermediateStops ?? []), l.to]);
+  if (!points.every((x) => !!x.stopId)) return null;
+  // Known: named in the fare data, or served by a fare network (stops abroad have no name there).
+  const isKnown = (id: string) => nova.stopName(id) !== undefined || nova.alliancesAt(id).length > 0;
+  const known = points.filter((x) => isKnown(x.stopId!));
+  const standIn = (x: (typeof points)[number]): string => {
+    if (isKnown(x.stopId!)) return x.stopId!;
+    let best: { id: string; m: number } | undefined;
+    for (const k of known) {
+      const m = haversineKm(x, k) * 1000;
+      if (m <= UNKNOWN_STOP_REACH_M && (!best || m < best.m)) best = { id: k.stopId!, m };
+    }
+    return best?.id ?? x.stopId!;
+  };
+  const seqs = legs
+    .map((l) => [l.from, ...(l.intermediateStops ?? []), l.to].map(standIn).filter((id, i, all) => i === 0 || id !== all[i - 1]))
+    .filter((seq) => seq.length >= 2);
+  return seqs.length > 0 ? seqs : null;
+}
+
 /** The zone networks that contain the trip, from the official data; null without it or without stop ids. */
 function networksOfTrip(legs: Leg[], deps: PriceDeps): TripNetworks | null {
   if (!deps.nova) return null;
-  const seqs = legs.map(stopsOf);
-  if (!seqs.every((s): s is string[] => s !== null)) return null;
+  const seqs = fareSequences(legs, deps.nova);
+  if (!seqs) return null;
   return tripResolver(deps.nova, deps.networks ?? builtInNetworks())(seqs);
 }
 

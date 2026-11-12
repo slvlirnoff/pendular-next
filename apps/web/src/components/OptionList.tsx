@@ -101,8 +101,9 @@ function Products({ products }: { products: PricedProduct[] }) {
 
 export function Timeline({ legs: allLegs, note }: { legs: Leg[]; note?: string }) {
   const { t } = useI18n();
-  // A one- or two-minute walk to, from or between vehicles is not a step worth a line.
-  const legs = allLegs.filter((l, i) => !(l.mode === 'walk' && l.durationMin <= 2 && allLegs.length > 1));
+  // A one- or two-minute walk within one stop is not a step worth a line. A walk to another
+  // stop is, however short: without it the vehicle seems to arrive where the next one leaves.
+  const legs = allLegs.filter((l) => !(l.mode === 'walk' && l.durationMin <= 2 && allLegs.length > 1 && l.from.name === l.to.name));
   return (
     <div className="detail-block">
       <h4>

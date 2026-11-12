@@ -227,11 +227,11 @@
  },
  "bulle-fribourg": {
   "transit": {
-   "count": 4,
+   "count": 3,
    "bestDurationMin": 56,
-   "cheapestYearly": 1926,
-   "cheapestProduct": "routePassYearly",
-   "tariffKm": 28
+   "cheapestYearly": 2511,
+   "cheapestProduct": "zonePassYearly",
+   "zones": 9
   },
   "car": {
    "count": 1,

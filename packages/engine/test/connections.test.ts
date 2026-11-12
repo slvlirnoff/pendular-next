@@ -53,3 +53,21 @@ describe('connections of one ticket', () => {
     expect((await connections({ from: home, to: work, direction: 'out', window: { from: '06:00', to: '09:00' }, zones }, { routing, rules: PENDULAR_RULES })).within).toBe('none');
   });
 });
+
+describe('stops the fare data does not know', () => {
+  it('stand for a known stop of the trip nearby, and a leg left with one stop is dropped', async () => {
+    const { fareSequences } = await import('../src/fares/price.js');
+    const known = new Set(['8504023', '8504100', '8504881']);
+    const nova = { stopName: (s: string) => (known.has(s) ? 'x' : undefined), alliancesAt: () => [] } as never;
+    const at = (stopId: string, lat: number, lon: number) => ({ name: stopId, stopId, lat, lon });
+    const leg = (from: ReturnType<typeof at>, to: ReturnType<typeof at>) => ({ mode: 'bus', from, to, departure: '', arrival: '', durationMin: 1, distanceM: 100 }) as never;
+    const romont = at('8504023', 46.693, 6.912);
+    const fribourg = at('8504100', 46.8032, 7.1511);
+    const routeNeuve = at('8512790', 46.8026, 7.1513); // not in the fare data, 70 m from the station
+    const busStation = at('8504881', 46.8035, 7.1502);
+    expect(fareSequences([leg(romont, fribourg), leg(routeNeuve, busStation)], nova)).toEqual([['8504023', '8504100'], ['8504100', '8504881']]);
+    // Nothing known nearby: the stop stays, and the trip is priced as before.
+    const far = at('8599999', 46.9, 7.3);
+    expect(fareSequences([leg(romont, far)], nova)).toEqual([['8504023', '8599999']]);
+  });
+});
