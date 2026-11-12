@@ -212,4 +212,40 @@ export interface PlaceHit {
   lon: number;
   /** What the geocoder found: a street address, a public transport stop, a named place. */
   type?: 'address' | 'stop' | 'place';
+  /** A stop's id in the timetable (its departure board). */
+  stopId?: string;
+  /** A stop's modes, main first. */
+  modes?: Departure['mode'][];
+}
+
+/** A public transport stop on the map: one per station or stop, its platforms together. */
+export interface MapStop {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  modes: Departure['mode'][];
+}
+
+/** One departure on a stop's board. */
+export interface Departure {
+  /** Scheduled, local "HH:MM". */
+  time: string;
+  /** From now (or from now on the typical timetable's day). */
+  minutes: number;
+  delayMin?: number;
+  mode: 'rail' | 'tram' | 'metro' | 'bus' | 'boat' | 'cableway' | 'funicular' | 'other';
+  /** Line or train: "R8", "475", "IC 1". */
+  line: string;
+  direction: string;
+  track?: string;
+  operator?: string;
+  cancelled?: boolean;
+}
+
+export interface DeparturesResponse {
+  stopId: string;
+  name: string | null;
+  departures: Departure[];
+  typicalTimetable: boolean;
 }

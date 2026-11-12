@@ -1122,6 +1122,93 @@ a {
 .hours-raw {
   white-space: pre-line;
 }
+/* A stop's departure board. */
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.board-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.departures-board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.dep {
+  display: grid;
+  grid-template-columns: 52px auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--soft);
+  font-size: 15px;
+}
+.dep:last-child {
+  border-bottom: 0;
+}
+.dep-time {
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+.dep-delay {
+  color: var(--red);
+  font-weight: 750;
+}
+.dep-line {
+  min-width: 58px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--white);
+  background: #475569;
+}
+.dep-rail {
+  background: var(--transit);
+}
+.dep-bus {
+  background: #1e3a8a;
+}
+.dep-tram,
+.dep-metro {
+  background: #0f766e;
+}
+.dep-boat {
+  background: #0369a1;
+}
+.dep-cableway,
+.dep-funicular {
+  background: #7c3aed;
+}
+.dep-dir {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.dep-dir small {
+  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.dep.is-cancelled .dep-time,
+.dep.is-cancelled .dep-dir {
+  text-decoration: line-through;
+  color: var(--muted);
+}
 .source {
   margin: 0;
   font-size: 13px;

@@ -138,6 +138,13 @@ addresses, stops and named places of MOTIS's geocoder, near the searcher first. 
 it close up with the places around it, and a card with the way there from the searcher
 (`/api/route`, `&adr=lat,lon,label` in the link).
 
+**Stops**: public transport stops (MOTIS's timetable: one per station or stop, its platforms
+together, by its main mode 🚆 🚌 🚊 ⛴️ 🚡) show on the map from zoom 15 and in the search bar
+("lucens gare"). A stop's card has its departure board: the next ten departures with their time,
+line ("R9", "475"), mode, direction and platform, the trips that end there left out, asked again
+every minute (`/api/stops/departures`; the typical timetable's day when 2027's does not cover
+today). The way there from the searcher is under it.
+
 **On the map**, only the chosen way carries its time; the others are drawn faint, and a click on
 one chooses it.
 

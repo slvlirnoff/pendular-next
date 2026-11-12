@@ -12,6 +12,7 @@ import { motisCar, valhallaCar, withFallback } from './car.js';
 import { createCarSharing } from './sharing.js';
 import { createPool } from './db.js';
 import { addressPlace, routesTo, routesToPlace } from './routes.js';
+import { departures, mapStops, modeOf } from './stops.js';
 import { placesIn, popularBrands, searchPlaces, suggest, type SearchDeps } from './search.js';
 import { searchKey } from '../src/text.js';
 import { readTimetableRange, referenceMonday, TIMEZONE } from './timetable.js';
@@ -122,6 +123,35 @@ app.get('/api/places/:id', async (c) => {
   }
 });
 
+/** Public transport stops in a box (the map, from zoom 15): ?min=lat,lon&max=lat,lon. */
+app.get('/api/stops', async (c) => {
+  const box = (v: string | undefined) => {
+    const [a, b] = (v ?? '').split(',').map(Number);
+    return Number.isFinite(a) && Number.isFinite(b) ? ([a, b] as [number, number]) : null;
+  };
+  const min = box(c.req.query('min'));
+  const max = box(c.req.query('max'));
+  if (!min || !max) return c.json({ error: 'min and max needed (lat,lon)' }, 400);
+  try {
+    return c.json(await mapStops(deps, min, max));
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: 'stops failed' }, 502);
+  }
+});
+
+/** A stop's next departures (its board): ?id=<stop id>. */
+app.get('/api/stops/departures', async (c) => {
+  const id = c.req.query('id');
+  if (!id) return c.json({ error: 'id needed' }, 400);
+  try {
+    return c.json(await departures(deps, id, 10));
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: 'departures failed' }, 502);
+  }
+});
+
 /** The way to an address the geocoder found (the address card): ?lat&lon (from), toLat, toLon, label. */
 app.get('/api/route', async (c) => {
   const from = position(c.req.query('lat'), c.req.query('lon'));
@@ -154,6 +184,9 @@ app.get('/api/geocode', async (c) => {
   const url = new URL('/api/v1/geocode', motisUrl);
   url.searchParams.set('text', q);
   url.searchParams.set('language', 'fr');
+  // ?type=stop: the stops only (the search bar's stops).
+  const onlyStops = c.req.query('type') === 'stop';
+  if (onlyStops) url.searchParams.set('type', 'STOP');
   // Near the searcher first ("chemin du…" in Lucens before Geneva's).
   const near = position(c.req.query('lat'), c.req.query('lon'));
   if (near) {
@@ -171,6 +204,8 @@ app.get('/api/geocode', async (c) => {
     houseNumber?: string;
     zip?: string;
     areas?: { name: string; default?: boolean; adminLevel?: number }[];
+    id?: string;
+    modes?: string[];
   }[];
   const hits: PlaceHit[] = matches.slice(0, 6).map((m) => {
     // The commune (admin level 8) rather than a quarter ("Centre Ville").
@@ -181,6 +216,8 @@ app.get('/api/geocode', async (c) => {
       lat: m.lat,
       lon: m.lon,
       type: m.type === 'ADDRESS' ? 'address' : m.type === 'STOP' ? 'stop' : 'place',
+      ...(m.type === 'STOP' && m.id ? { stopId: m.id } : {}),
+      ...(m.type === 'STOP' && m.modes?.length ? { modes: [...new Set(m.modes.map(modeOf))] } : {}),
     };
   });
   return c.json(hits);

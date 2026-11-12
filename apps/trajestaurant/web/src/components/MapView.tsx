@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { DetailMode, MapPlaces, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
-import { distanceTo, MODE, minutes, placeEmoji, type Here } from '../lib';
+import type { DetailMode, MapPlaces, MapStop, PlaceHit, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
+import { distanceTo, MODE, minutes, placeEmoji, stopEmoji, type Here } from '../lib';
 
 export interface Padding {
   top: number;
@@ -83,6 +83,9 @@ function pointAlong(coords: [number, number][], share: number): [number, number]
 /** From this zoom on, the places around are shown when nothing is searched (a village, a city district). */
 const PLACES_MIN_ZOOM = 14;
 
+/** Stops are shown from this zoom on (a stop every few hundred metres in a town). */
+const STOPS_MIN_ZOOM = 15;
+
 /** A map icon for a place: its emoji on a white disc, drawn once per emoji. */
 function drawPlaceIcon(emoji: string): ImageData {
   const size = 48;
@@ -121,6 +124,8 @@ export function MapView(props: {
   padding: Padding;
   onPick: (r: PlaceSummary) => void;
   onMode: (m: DetailMode) => void;
+  /** A public transport stop clicked on the map: its card and departure board. */
+  onStop?: (s: PlaceHit) => void;
 }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -138,6 +143,8 @@ export function MapView(props: {
   const onMode = useRef(props.onMode);
   onPick.current = props.onPick;
   onMode.current = props.onMode;
+  const onStop = useRef(props.onStop);
+  onStop.current = props.onStop;
 
   useEffect(() => {
     if (!el.current) return;
@@ -184,6 +191,34 @@ export function MapView(props: {
         });
         m.on('mouseenter', 'places', () => (m.getCanvas().style.cursor = 'pointer'));
         m.on('mouseleave', 'places', () => (m.getCanvas().style.cursor = ''));
+        // Public transport stops, from STOPS_MIN_ZOOM on, over the places (they win where icons overlap).
+        m.addSource('stops', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+        m.addLayer({
+          id: 'stops',
+          type: 'symbol',
+          source: 'stops',
+          layout: {
+            'icon-image': ['get', 'icon'],
+            'icon-size': ['interpolate', ['linear'], ['zoom'], STOPS_MIN_ZOOM, 0.8, 17, 1],
+            'text-field': ['step', ['zoom'], '', 16, ['get', 'name']],
+            'text-font': ['Noto Sans Regular'],
+            'text-size': 11,
+            'text-offset': [0, 1.3],
+            'text-anchor': 'top',
+            'text-max-width': 9,
+            'text-optional': true,
+          },
+          paint: { 'text-color': '#1e3a8a', 'text-halo-color': '#ffffff', 'text-halo-width': 1.6 },
+        });
+        m.on('click', 'stops', (e) => {
+          const f = e.features?.[0];
+          if (!f) return;
+          const p = f.properties as { id: string; name: string; modes: string };
+          const [lon, lat] = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+          onStop.current?.({ label: p.name, lat, lon, type: 'stop', stopId: p.id, modes: JSON.parse(p.modes) as MapStop['modes'] });
+        });
+        m.on('mouseenter', 'stops', () => (m.getCanvas().style.cursor = 'pointer'));
+        m.on('mouseleave', 'stops', () => (m.getCanvas().style.cursor = ''));
         m.addSource('routes', { type: 'geojson', data: routeFeatures(null, 0, 'walk') });
         const sel: maplibregl.ExpressionSpecification = ['==', ['get', 'selected'], true];
         const color: maplibregl.ExpressionSpecification = ['match', ['get', 'mode'], 'walk', COLORS.walk, 'bike', COLORS.bike, 'car', COLORS.car, 'sharing', COLORS.sharing, COLORS.transit];
@@ -237,8 +272,37 @@ export function MapView(props: {
         })
         .catch(() => undefined);
     };
+    // The stops in view, likewise.
+    let pendingStops: AbortController | null = null;
+    const loadStops = () => {
+      pendingStops?.abort();
+      const source = m.getSource('stops') as GeoJSONSource | undefined;
+      if (!source) return;
+      if (!showPlaces.current || m.getZoom() < STOPS_MIN_ZOOM) {
+        source.setData({ type: 'FeatureCollection', features: [] });
+        return;
+      }
+      const b = m.getBounds();
+      const ctl = (pendingStops = new AbortController());
+      fetch(`/api/stops?min=${b.getSouth().toFixed(5)},${b.getWest().toFixed(5)}&max=${b.getNorth().toFixed(5)},${b.getEast().toFixed(5)}`, { signal: ctl.signal })
+        .then((r) => r.json() as Promise<MapStop[]>)
+        .then((list) => {
+          if (!Array.isArray(list)) return;
+          source.setData({
+            type: 'FeatureCollection',
+            features: list.map((s) => ({
+              type: 'Feature' as const,
+              properties: { id: s.id, name: s.name, modes: JSON.stringify(s.modes), icon: `place:${stopEmoji(s.modes)}` },
+              geometry: { type: 'Point' as const, coordinates: [s.lon, s.lat] },
+            })),
+          });
+        })
+        .catch(() => undefined);
+    };
     m.on('moveend', loadPlaces);
     m.on('trajestaurant:places', loadPlaces);
+    m.on('moveend', loadStops);
+    m.on('trajestaurant:places', loadStops);
     return () => {
       m.remove();
       map.current = null;
@@ -392,6 +456,7 @@ export function MapView(props: {
       const m = map.current;
       if (!m) return;
       m.setLayoutProperty('places', 'visibility', props.showPlaces ? 'visible' : 'none');
+      m.setLayoutProperty('stops', 'visibility', props.showPlaces ? 'visible' : 'none');
       m.fire('trajestaurant:places');
     });
   }, [props.showPlaces]);

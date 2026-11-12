@@ -20,19 +20,20 @@ function storedHere(): Here | null {
   }
 }
 
-/** An address from the geocoder as the URL holds it: adr=lat,lon,label. */
-function readAddress(v: string | null): PlaceHit | null {
+/** An address from the geocoder as the URL holds it: adr=lat,lon,label, and stop=<id> for a stop. */
+function readAddress(v: string | null, stop: string | null): PlaceHit | null {
   const [lat, lon, ...label] = (v ?? '').split(',');
-  return lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon) ? { lat: +lat, lon: +lon, label: label.join(',') || 'Adresse', type: 'address' } : null;
+  if (!(lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon))) return null;
+  return { lat: +lat, lon: +lon, label: label.join(',') || 'Adresse', ...(stop ? { type: 'stop' as const, stopId: stop } : { type: 'address' as const }) };
 }
 
 /** An address shown as a place: its card and its pin (id 0: not a place of the database). */
 function addressSummary(a: PlaceHit, here: Here | null): PlaceSummary {
+  const distanceM = here ? Math.round(distanceTo(here, a)) : 0;
+  // A stop keeps its whole name ("Lucens, gare"), shown as its main mode's kind (Gare, Arrêt de bus…).
+  if (a.stopId) return { id: 0, name: a.label, kindKey: 'stop', kind: a.modes?.[0] ?? 'stop', brand: null, town: null, lat: a.lat, lon: a.lon, foods: [], distanceM, open: null };
   const [name, ...rest] = a.label.split(', ');
-  return {
-    id: 0, name: name || a.label, kindKey: 'address', kind: 'address', brand: null, town: rest.join(', ') || null, lat: a.lat, lon: a.lon, foods: [],
-    distanceM: here ? Math.round(distanceTo(here, a)) : 0, open: null,
-  };
+  return { id: 0, name: name || a.label, kindKey: 'address', kind: 'address', brand: null, town: rest.join(', ') || null, lat: a.lat, lon: a.lon, foods: [], distanceM, open: null };
 }
 
 /** What the address bar holds: ?ici=lat,lon,label, then food=pizza, kind=pharmacie, brand=migros or name=mix image, and r=123 (a place) or adr=lat,lon,label (an address). */
@@ -55,7 +56,7 @@ function readUrl(): { here: Here | null; searched: Searched | null; place: numbe
           ? nameSearch(name)
           : null;
   const r = Number(p.get('r'));
-  return { here, searched, place: Number.isInteger(r) && r > 0 ? r : null, address: readAddress(p.get('adr')) };
+  return { here, searched, place: Number.isInteger(r) && r > 0 ? r : null, address: readAddress(p.get('adr'), p.get('stop')) };
 }
 
 function writeUrl(s: { here: Here | null; searched: Searched | null; place: number | null; address?: PlaceHit | null }, push: boolean) {
@@ -63,7 +64,10 @@ function writeUrl(s: { here: Here | null; searched: Searched | null; place: numb
   if (s.here) p.set('ici', `${s.here.lat.toFixed(5)},${s.here.lon.toFixed(5)},${s.here.label}`);
   if (s.searched) p.set(s.searched.target.type, s.searched.target.key);
   if (s.place) p.set('r', String(s.place));
-  else if (s.address) p.set('adr', `${s.address.lat.toFixed(6)},${s.address.lon.toFixed(6)},${s.address.label}`);
+  else if (s.address) {
+    p.set('adr', `${s.address.lat.toFixed(6)},${s.address.lon.toFixed(6)},${s.address.label}`);
+    if (s.address.stopId) p.set('stop', s.address.stopId);
+  }
   const url = `${location.pathname}${p.size ? `?${p.toString()}` : ''}`;
   if (url === `${location.pathname}${location.search}`) return;
   if (push) history.pushState(null, '', url);
@@ -306,6 +310,7 @@ export function App() {
         padding={padding}
         onPick={pick}
         onMode={setMode}
+        onStop={goTo}
       />
       {showDetail && summary ? (
         <Detail
@@ -320,6 +325,7 @@ export function App() {
           onMode={setMode}
           onDeparture={setDeparture}
           onBack={back}
+          stopId={address?.stopId ?? null}
         />
       ) : (
         <SearchPanel

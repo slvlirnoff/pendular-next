@@ -1,4 +1,4 @@
-import type { BrandHit, DetailMode, Mode, OpenState, PlaceHit, PlaceSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion, Target } from '../../src/api';
+import type { BrandHit, Departure, DeparturesResponse, DetailMode, Mode, OpenState, PlaceHit, PlaceSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion, Target } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
 import { KIND_SEARCH_BY_KEY, kindInfo } from '../../src/kinds';
 
@@ -21,7 +21,10 @@ export const api = {
   search: (t: Target, here: Here, signal?: AbortSignal) => get<SearchResponse>(`/api/search?${t.type}=${encodeURIComponent(t.key)}${at(here)}`, signal),
   place: (id: number, here: Here, signal?: AbortSignal) => get<RoutesResponse>(`/api/places/${id}?x=1${at(here)}`, signal),
   where: (lat: number, lon: number) => get<{ town: string | null }>(`/api/where?lat=${lat}&lon=${lon}`),
-  geocode: (q: string, signal?: AbortSignal, near?: Here | null) => get<PlaceHit[]>(`/api/geocode?q=${encodeURIComponent(q)}${at(near ?? null)}`, signal),
+  geocode: (q: string, signal?: AbortSignal, near?: Here | null, type?: 'stop') =>
+    get<PlaceHit[]>(`/api/geocode?q=${encodeURIComponent(q)}${at(near ?? null)}${type ? `&type=${type}` : ''}`, signal),
+  /** A stop's next departures. */
+  departures: (stopId: string, signal?: AbortSignal) => get<DeparturesResponse>(`/api/stops/departures?id=${encodeURIComponent(stopId)}`, signal),
   /** The way to an address the geocoder found. */
   route: (to: PlaceHit, here: Here, signal?: AbortSignal) =>
     get<RoutesResponse>(`/api/route?toLat=${to.lat}&toLon=${to.lon}&label=${encodeURIComponent(to.label)}${at(here)}`, signal),
@@ -150,6 +153,14 @@ export function sortResults(list: SearchResult[], sort: Sort): SearchResult[] {
     return t;
   };
   return [...list].sort((a, b) => key(a) - key(b) || a.distanceM - b.distanceM);
+}
+
+/** A departure's mode → pictogram. */
+export const DEPARTURE_EMOJI: Record<Departure['mode'], string> = { rail: '🚆', tram: '🚊', metro: '🚇', bus: '🚌', boat: '⛴️', cableway: '🚡', funicular: '🚞', other: '🚏' };
+
+/** A stop's pictogram: its main mode's (a station with buses is a station). */
+export function stopEmoji(modes: Departure['mode'][] | undefined): string {
+  return modes?.length ? DEPARTURE_EMOJI[modes[0]!] : '🚏';
 }
 
 /** Leg mode → pictogram. */

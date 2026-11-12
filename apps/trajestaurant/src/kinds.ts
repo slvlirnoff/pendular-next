@@ -12,6 +12,16 @@ export interface KindInfo {
 const KINDS: Record<string, KindInfo> = {
   // An address the geocoder found (the address card), not a place of the database.
   'address=address': { emoji: '📍', label: 'Adresse' },
+  // Public transport stops (the stop card and its departure board), by their main mode.
+  'stop=stop': { emoji: '🚏', label: 'Arrêt' },
+  'stop=rail': { emoji: '🚆', label: 'Gare' },
+  'stop=bus': { emoji: '🚌', label: 'Arrêt de bus' },
+  'stop=tram': { emoji: '🚊', label: 'Arrêt de tram' },
+  'stop=metro': { emoji: '🚇', label: 'Métro' },
+  'stop=boat': { emoji: '⛴️', label: 'Débarcadère' },
+  'stop=cableway': { emoji: '🚡', label: 'Remontée mécanique' },
+  'stop=funicular': { emoji: '🚞', label: 'Funiculaire' },
+  'stop=other': { emoji: '🚏', label: 'Arrêt' },
   'amenity=restaurant': { emoji: '🍽️', label: 'Restaurant' },
   'amenity=fast_food': { emoji: '🍟', label: 'Fast-food' },
   'amenity=cafe': { emoji: '☕', label: 'Café' },

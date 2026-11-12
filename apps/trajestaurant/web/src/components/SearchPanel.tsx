@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import type { BrandHit, PlaceHit, PlaceSummary, SearchResponse, SearchResult, Suggestion } from '../../../src/api';
 import { FOODS, FOOD_BY_KEY } from '../../../src/foods';
 import { KIND_SEARCHES, KIND_SEARCH_BY_KEY, kindInfo } from '../../../src/kinds';
+import { searchKey } from '../../../src/text';
 import {
   api,
   brandSearch,
@@ -17,6 +18,7 @@ import {
   openLabel,
   placeEmoji,
   sortResults,
+  stopEmoji,
   timeOf,
   type Here,
   type Searched,
@@ -100,6 +102,15 @@ const SORT_HINT: Record<'walk' | 'bike' | 'transit' | 'car', string> = {
   transit: 'Sans voiture : transports publics ou à pied',
   car: 'En voiture',
 };
+/** Whether a stop's name holds every word typed, as the start of one of its words ("luc gare" → "Lucens, gare"). */
+export function namesStop(text: string, name: string): boolean {
+  const words = searchKey(name).split(' ');
+  return searchKey(text)
+    .split(' ')
+    .filter((w) => w.length >= 2)
+    .every((w) => words.some((n) => n.startsWith(w)));
+}
+
 /** The shortcut rows of kinds of places, by their group (src/kinds.ts). */
 const KIND_ROWS = [
   { id: 'shop', title: 'Commerces' },
@@ -133,6 +144,7 @@ export const SearchPanel = forwardRef<
   const [focused, setFocused] = useState(false);
   const [hits, setHits] = useState<Suggestion | null>(null);
   const [addresses, setAddresses] = useState<PlaceHit[]>([]);
+  const [stops, setStops] = useState<PlaceHit[]>([]);
   const [active, setActive] = useState(0);
   const [sort, setSort] = useState<Sort>('best');
   const [shown, setShown] = useState(PAGE);
@@ -169,13 +181,20 @@ export const SearchPanel = forwardRef<
           setActive(0);
         })
         .catch(() => undefined);
-      // Addresses, stops and named places from the routing engine's geocoder, nearest first.
+      // Addresses and named places from the routing engine's geocoder, and its stops, nearest first.
       if (text.trim().length >= 3) {
         api
           .geocode(text, ctl.signal, props.here)
-          .then((a) => setAddresses(Array.isArray(a) ? a : []))
+          .then((a) => setAddresses(Array.isArray(a) ? a.filter((h) => h.type !== 'stop') : []))
           .catch(() => undefined);
-      } else setAddresses([]);
+        api
+          .geocode(text, ctl.signal, props.here, 'stop')
+          .then((a) => setStops(Array.isArray(a) ? a.filter((h) => namesStop(text, h.label)) : []))
+          .catch(() => undefined);
+      } else {
+        setAddresses([]);
+        setStops([]);
+      }
     }, 120);
     return () => {
       clearTimeout(t);
@@ -193,6 +212,8 @@ export const SearchPanel = forwardRef<
           ...(hits.named ? [{ type: 'named' as const, ...hits.named }] : []),
           // Chains first; a few single places after them.
           ...hits.places.slice(0, hits.brands.length ? 3 : 6).map((r): Option => ({ type: 'place', r })),
+          // Stops whose name holds what was typed ("lucens gare", "moudon").
+          ...stops.slice(0, 3).map((hit): Option => ({ type: 'address', hit })),
           // Addresses when the text is not a food or a kind of place: all of them when nothing else matched.
           ...(hits.foods.length || hits.kinds.length
             ? []
@@ -305,7 +326,7 @@ export const SearchPanel = forwardRef<
                       ? '🔎'
                       : o.type === 'address'
                         ? o.hit.type === 'stop'
-                          ? '🚏'
+                          ? stopEmoji(o.hit.modes)
                           : '📍'
                         : placeEmoji(o.r, null)}
               </span>
@@ -336,7 +357,7 @@ export const SearchPanel = forwardRef<
                   <>
                     <strong>{o.hit.label}</strong>
                     <small>
-                      {o.hit.type === 'stop' ? 'Arrêt' : o.hit.type === 'place' ? 'Lieu' : 'Adresse'}
+                      {o.hit.type === 'stop' ? (o.hit.modes?.[0] === 'rail' ? 'Gare' : 'Arrêt') + ' · départs' : o.hit.type === 'place' ? 'Lieu' : 'Adresse'}
                       {props.here ? ` · ${distance(distanceTo(props.here, o.hit))}` : ''}
                     </small>
                   </>

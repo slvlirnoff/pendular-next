@@ -1,10 +1,64 @@
-import { forwardRef, useState } from 'react';
-import type { DetailMode, PlaceDetail, PlaceSummary, RoutesResponse, Target, TransitOption, WeekHours } from '../../../src/api';
+import { forwardRef, useEffect, useState } from 'react';
+import type { DeparturesResponse, DetailMode, PlaceDetail, PlaceSummary, RoutesResponse, Target, TransitOption, WeekHours } from '../../../src/api';
 import { FOOD_BY_KEY } from '../../../src/foods';
-import { clock, distance, kindLabel, legEmoji, MODE, minutes, openLabel, placeEmoji } from '../lib';
+import { api, clock, DEPARTURE_EMOJI, distance, kindLabel, legEmoji, MODE, minutes, openLabel, placeEmoji } from '../lib';
 
 const YES = new Set(['yes', 'only', 'designated']);
 const SOURCE_NAMES: Record<string, string> = { osm: 'OpenStreetMap', atp: 'All The Places', overture: 'Overture Maps', gbfs: 'sharedmobility.ch' };
+
+/** A stop's next departures, asked again every minute. */
+function Departures(props: { stopId: string }) {
+  const [board, setBoard] = useState<DeparturesResponse | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    const ctl = new AbortController();
+    const load = () =>
+      api
+        .departures(props.stopId, ctl.signal)
+        .then((b) => {
+          setBoard(b);
+          setFailed(false);
+        })
+        .catch((e: Error) => {
+          if (e.name !== 'AbortError') setFailed(true);
+        });
+    void load();
+    const t = setInterval(load, 60_000);
+    return () => {
+      clearInterval(t);
+      ctl.abort();
+    };
+  }, [props.stopId]);
+  if (failed) return <p className="way-loading">Les départs n'ont pas pu être chargés.</p>;
+  if (!board) return <p className="way-loading">Je cherche les prochains départs…</p>;
+  if (board.departures.length === 0) return <p className="way-loading">Pas de départ dans les heures qui viennent.</p>;
+  return (
+    <div className="board">
+      <h3 className="board-title">Prochains départs</h3>
+      <ol className="departures-board">
+        {board.departures.map((d, i) => (
+          <li key={`${d.time}-${d.line}-${i}`} className={`dep${d.cancelled ? ' is-cancelled' : ''}`}>
+            <span className="dep-time">
+              {d.time}
+              {d.delayMin ? <small className="dep-delay"> +{d.delayMin}</small> : null}
+            </span>
+            <span className={`dep-line dep-${d.mode}`}>
+              <span aria-hidden="true">{DEPARTURE_EMOJI[d.mode]}</span> {d.line || '—'}
+            </span>
+            <span className="dep-dir">
+              {d.direction}
+              <small>
+                {d.track ? `Voie ${d.track} · ` : ''}
+                {d.cancelled ? 'supprimé' : d.minutes < 1 ? 'maintenant' : `dans ${minutes(d.minutes)}`}
+              </small>
+            </span>
+          </li>
+        ))}
+      </ol>
+      {board.typicalTimetable ? <p className="results-note">🚆 Horaire type : même jour et même heure dans l'horaire 2027.</p> : null}
+    </div>
+  );
+}
 
 /** A picture from elsewhere (Wikimedia Commons, a shop's site): gone without a trace when it does not load. */
 function Picture(props: { src: string; className: string; alt?: string }) {
@@ -160,9 +214,12 @@ export const Detail = forwardRef<
     onMode: (m: DetailMode) => void;
     onDeparture: (i: number) => void;
     onBack: () => void;
+    /** A public transport stop: its departure board. */
+    stopId?: string | null;
   }
 >(function Detail(props, ref) {
-  const r = props.routes?.place ?? props.summary;
+  // An address or a stop (id 0) keeps the head the app gave it (a stop: "Lucens, gare", Gare).
+  const r = props.summary.id === 0 ? props.summary : (props.routes?.place ?? props.summary);
   const detail = props.routes?.place;
   const open = openLabel(r.open);
   const foods = r.foods.map((k) => FOOD_BY_KEY.get(k)).filter((f) => f && !f.generic);
@@ -224,6 +281,8 @@ export const Detail = forwardRef<
         ) : null}
 
         {detail ? <Actions place={detail} /> : null}
+
+        {props.stopId ? <Departures stopId={props.stopId} /> : null}
 
         <div className={`modes modes-${modes.length}`} role="tablist" aria-label="Comment y aller">
           {modes.map((m) => (

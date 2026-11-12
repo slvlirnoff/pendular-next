@@ -13,6 +13,7 @@ import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
 import { clockOf, createTraffic, rushShare } from '../server/traffic.js';
 import { createCarSharing } from '../server/sharing.js';
 import { weekHours } from '../server/open.js';
+import { departures, groupStops, modeOf } from '../server/stops.js';
 import { loadDensity } from '@pendular/engine';
 
 describe('food types', () => {
@@ -514,5 +515,43 @@ describe('the place card', () => {
     expect(extraOf({ 'brand:wikidata': 'Q680990', email: 'info@example.ch' }, logos)).toEqual({ logo: logos.get('Q680990'), email: 'info@example.ch' });
     expect(extraOf({ logo: 'File:Own.png', 'brand:wikidata': 'Q680990' }, logos)?.logo).toContain('Own.png');
     expect(extraOf({})).toBeNull();
+  });
+});
+
+describe('stops and their departures', () => {
+  it('shows one stop per station, its platforms together, main mode first', () => {
+    const stops = groupStops([
+      { name: 'Lucens, gare', stopId: 'p1:a', parentId: 'p1', lat: 46.7084, lon: 6.8424, modes: ['BUS'] },
+      { name: 'Lucens, gare', stopId: 'p1', parentId: 'p1', lat: 46.7079, lon: 6.8421, modes: ['REGIONAL_RAIL'] },
+      { name: 'Lucens, centre', stopId: 'p2:a', parentId: 'p2', lat: 46.7078, lon: 6.8385, modes: ['BUS'] },
+    ]);
+    expect(stops).toEqual([
+      { id: 'p1', name: 'Lucens, gare', lat: 46.7079, lon: 6.8421, modes: ['rail', 'bus'] },
+      { id: 'p2', name: 'Lucens, centre', lat: 46.7078, lon: 6.8385, modes: ['bus'] },
+    ]);
+    expect(modeOf('HIGHSPEED_RAIL')).toBe('rail');
+    expect(modeOf('FERRY')).toBe('boat');
+    expect(modeOf('AERIAL_LIFT')).toBe('cableway');
+  });
+
+  it('lists the next departures in Swiss time, without the trips that end there', async () => {
+    const stopTimes = [
+      { mode: 'REGIONAL_RAIL', routeShortName: 'R9', headsign: 'Murten/Morat', place: { name: 'Lucens', departure: '2027-01-21T15:44:00Z', scheduledDeparture: '2027-01-21T15:44:00Z', track: '1' } },
+      { mode: 'BUS', routeShortName: '475', headsign: 'Lucens, gare', place: { name: 'Lucens, gare', departure: '2027-01-21T15:45:00Z' } },
+      { mode: 'BUS', routeShortName: '361', headsign: 'Epalinges, Croisettes', realTime: true, place: { name: 'Lucens, gare', departure: '2027-01-21T15:50:00Z', scheduledDeparture: '2027-01-21T15:48:00Z' } },
+    ];
+    let asked = '';
+    const fakeFetch = (async (url: URL) => {
+      asked = url.toString();
+      return new Response(JSON.stringify({ stopTimes, place: { name: 'Lucens' } }));
+    }) as unknown as typeof fetch;
+    // A Thursday at 16:36 in Lucens, outside the 2027 timetable: the same weekday and time of its reference week.
+    const board = await departures({ motisUrl: 'http://motis', fetch: fakeFetch, timetable: { firstDay: '2026-12-13', days: 364 } }, 'p1', 10, new Date('2026-11-12T15:36:00Z'));
+    expect(asked).toContain('time=2027-01-21T15%3A36%3A00.000Z');
+    expect(board.typicalTimetable).toBe(true);
+    expect(board.departures).toEqual([
+      { time: '16:44', minutes: 8, mode: 'rail', line: 'R9', direction: 'Murten/Morat', track: '1' },
+      { time: '16:48', minutes: 14, delayMin: 2, mode: 'bus', line: '361', direction: 'Epalinges, Croisettes' },
+    ]);
   });
 });
