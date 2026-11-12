@@ -20,7 +20,7 @@ export function PlacePicker(props: { onPlace: (h: Here) => void; onLocate: () =>
     const ctl = new AbortController();
     const t = setTimeout(() => {
       api
-        .places(q, ctl.signal)
+        .geocode(q, ctl.signal)
         .then((h) => {
           setHits(h);
           setActive(0);

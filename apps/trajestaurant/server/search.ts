@@ -1,9 +1,9 @@
 import type pg from 'pg';
 import { localToUtc, type LatLon, type MotisRouting } from '@pendular/engine';
-import type { RestaurantSummary, SearchResponse, SearchResult, Suggestion } from '../src/api.js';
-import { FOOD_ORDER, matchFoods } from '../src/foods.js';
-import { fold } from '../src/text.js';
-import { transitToPlaces, usefulTransit, type StopReach } from './estimate.js';
+import type { BrandHit, PlaceSummary, SearchResponse, SearchResult, Suggestion, Target } from '../src/api.js';
+import { FOOD_BY_KEY, FOOD_ORDER, matchFoods } from '../src/foods.js';
+import { searchKey } from '../src/text.js';
+import { distanceM, transitToPlaces, usefulTransit, type StopReach } from './estimate.js';
 import { openState } from './open.js';
 import { localNow, routingDate, TIMEZONE, type TimetableRange } from './timetable.js';
 
@@ -15,17 +15,24 @@ export interface SearchDeps {
   timetable: TimetableRange;
 }
 
-/** How many restaurants get travel times: the nearest ones in a straight line. */
-export const CANDIDATES = 40;
-/** And no further than this. */
-export const MAX_RADIUS_M = 40_000;
-/** Travel times beyond this are not looked for, minutes. */
-export const MAX_MINUTES = { walk: 60, car: 60, transit: 90 };
+/**
+ * How far a search looks and how many places get travel times: places to eat are everywhere, so
+ * the 40 nearest within 40 km; a chain or a name may have its nearest branch further away (the
+ * nearest IKEA), so the 30 nearest within 250 km.
+ */
+export const LIMITS = {
+  food: { radiusM: 40_000, candidates: 40 },
+  wide: { radiusM: 250_000, candidates: 24 },
+};
 
 interface Row {
   id: string;
   name: string;
+  kind_key: string;
   kind: string;
+  brand: string | null;
+  brand_key: string | null;
+  sources: string[];
   town: string | null;
   lat: number;
   lon: number;
@@ -35,21 +42,24 @@ interface Row {
 }
 
 const SUMMARY = `
-  r.id, r.name, r.kind, r.town, st_y(r.geom::geometry) as lat, st_x(r.geom::geometry) as lon, r.opening_hours,
-  array(select food from restaurant_food f2 where f2.restaurant_id = r.id) as foods,
-  st_distance(r.geom, o.g) as dist`;
+  p.id, p.name, p.kind_key, p.kind, p.brand, p.brand_key, p.sources, p.town, st_y(p.geom::geometry) as lat, st_x(p.geom::geometry) as lon, p.opening_hours,
+  array(select food from place_food f2 where f2.place_id = p.id) as foods,
+  st_distance(p.geom, o.g) as dist`;
 const ORIGIN = `cross join (select st_setsrid(st_makepoint($2, $1), 4326)::geography as g) o`;
+const likeEscape = (s: string) => s.replace(/[%_\\]/g, (c) => `\\${c}`);
 
 /** Most specific food first, the generic kinds (restaurant, fast food…) last. */
 export function sortFoods(foods: string[]): string[] {
   return [...foods].sort((a, b) => (FOOD_ORDER.get(a) ?? 999) - (FOOD_ORDER.get(b) ?? 999));
 }
 
-function toSummary(r: Row, now: Date): RestaurantSummary {
+function toSummary(r: Row, now: Date): PlaceSummary {
   return {
     id: Number(r.id),
     name: r.name,
+    kindKey: r.kind_key,
     kind: r.kind,
+    brand: r.brand,
     town: r.town,
     lat: r.lat,
     lon: r.lon,
@@ -59,49 +69,153 @@ function toSummary(r: Row, now: Date): RestaurantSummary {
   };
 }
 
-/** Food types and restaurant names for what is being typed, restaurants nearest first. */
-export async function suggest(deps: SearchDeps, q: string, at: LatLon | null): Promise<Suggestion> {
-  const foods = matchFoods(q).slice(0, 6);
-  const text = fold(q);
-  if (text.length < 2) return { foods, restaurants: [] };
-  const origin = at ?? { lat: 46.8, lon: 8.2 };
-  const res = await deps.db.query<Row>(
-    `select ${SUMMARY} from restaurant r ${ORIGIN}
-     where r.name_folded like '%' || $3 || '%'
-     order by (r.name_folded like $3 || '%') desc, r.geom <-> o.g limit 6`,
-    [origin.lat, origin.lon, text.replace(/[%_\\]/g, (c) => `\\${c}`)],
+/** Chains whose name (or another name of theirs) starts with or contains the text, exact name and largest first. */
+export async function findBrands(db: pg.Pool, text: string, limit = 5): Promise<BrandHit[]> {
+  if (text.length < 2) return [];
+  const contains = text.length >= 4;
+  const r = await db.query<{ key: string; name: string; kind_key: string; kind: string; count: string }>(
+    `select name_folded as key, (array_agg(name order by count desc))[1] as name,
+            (array_agg(kind_key order by count desc))[1] as kind_key, (array_agg(kind order by count desc))[1] as kind,
+            sum(count) as count
+     from brand
+     where name_folded like $1 || '%' or exists (select 1 from unnest(aliases) a where a like $1 || '%')
+        or ($3 and name_folded like '%' || $1 || '%')
+     group by name_folded
+     order by bool_or(name_folded = $2) desc, bool_or(name_folded like $1 || '%') desc, sum(count) desc
+     limit $4`,
+    [likeEscape(text), text, contains, limit],
   );
-  const now = new Date();
-  return { foods, restaurants: res.rows.map((r) => toSummary(r, now)) };
+  return r.rows.map((x) => ({ key: x.key, name: x.name, kindKey: x.kind_key, kind: x.kind, count: Number(x.count) }));
 }
 
-/** Restaurants serving a food near a place, with the time to each by foot, car and public transport. */
-export async function searchFood(deps: SearchDeps, food: string, from: LatLon, now = new Date()): Promise<SearchResponse> {
-  const res = await deps.db.query<Row>(
-    `select ${SUMMARY} from restaurant r
-     join restaurant_food f on f.restaurant_id = r.id and f.food = $3
-     ${ORIGIN}
-     where st_dwithin(r.geom, o.g, $4)
-     order by r.geom <-> o.g limit $5`,
-    [from.lat, from.lon, food, MAX_RADIUS_M, CANDIDATES],
+/** Well-known chains shown as shortcuts, those present in the data, in this order. */
+export const POPULAR_BRANDS = ['migros', 'coop', 'denner', 'lidl', 'aldi', 'manor', 'ikea', 'dosenbach', 'interdiscount', 'decathlon', 'mcdonald s', 'burger king', 'starbucks', 'fust', 'ochsner sport', 'jumbo'];
+
+export async function popularBrands(db: pg.Pool): Promise<BrandHit[]> {
+  const r = await db.query<{ key: string; name: string; kind_key: string; kind: string; count: string }>(
+    `select name_folded as key, (array_agg(name order by count desc))[1] as name,
+            (array_agg(kind_key order by count desc))[1] as kind_key, (array_agg(kind order by count desc))[1] as kind, sum(count) as count
+     from brand where name_folded = any($1) group by name_folded`,
+    [POPULAR_BRANDS],
   );
-  const rows = res.rows;
+  const order = new Map(POPULAR_BRANDS.map((k, i) => [k, i]));
+  return r.rows
+    .map((x) => ({ key: x.key, name: x.name, kindKey: x.kind_key, kind: x.kind, count: Number(x.count) }))
+    .sort((a, b) => (order.get(a.key) ?? 99) - (order.get(b.key) ?? 99));
+}
+
+/** What is being typed: food types, chains, all places of a name, and single places (nearest first). */
+export async function suggest(deps: SearchDeps, q: string, at: LatLon | null): Promise<Suggestion> {
+  const foods = matchFoods(q).slice(0, 4);
+  const text = searchKey(q);
+  if (text.length < 2) return { foods, brands: [], named: null, places: [] };
+  const origin = at ?? { lat: 46.8, lon: 8.2 };
+  const [brands, places, named] = await Promise.all([
+    findBrands(deps.db, text),
+    deps.db.query<Row>(
+      `select ${SUMMARY} from place p ${ORIGIN}
+       where p.name_folded like '%' || $3 || '%'
+       order by (p.name_folded like $3 || '%') desc, p.geom <-> o.g limit 6`,
+      [origin.lat, origin.lon, likeEscape(text)],
+    ),
+    text.length >= 3 ? deps.db.query<{ n: string }>(`select count(*) as n from place where name_folded like '%' || $1 || '%'`, [likeEscape(text)]) : null,
+  ]);
+  const now = new Date();
+  const n = Number(named?.rows[0]?.n ?? 0);
+  // A food type or a chain that matches already lists the places; "all places named …" is for the rest (Mix-Image).
+  const covered = foods.length > 0 || brands.some((b) => b.key.startsWith(text));
+  return {
+    foods,
+    brands,
+    named: n >= 2 && !covered ? { key: text, count: n } : null,
+    places: places.rows.map((r) => toSummary(r, now)),
+  };
+}
+
+/** The places a search is about, nearest first. */
+async function candidates(db: pg.Pool, target: Target, from: LatLon): Promise<Row[]> {
+  const lim = target.type === 'food' ? LIMITS.food : LIMITS.wide;
+  const where =
+    target.type === 'food'
+      ? `join place_food f on f.place_id = p.id and f.food = $3`
+      : target.type === 'brand'
+        ? `join (select key from brand where name_folded = $3) b on b.key = p.brand_key`
+        : '';
+  const nameFilter = target.type === 'name' ? `and p.name_folded like '%' || $3 || '%'` : '';
+  const key = target.type === 'name' ? likeEscape(target.key) : target.key;
+  const r = await db.query<Row>(
+    `select ${SUMMARY} from place p ${where} ${ORIGIN}
+     where st_dwithin(p.geom, o.g, $4) ${nameFilter}
+     order by p.geom <-> o.g limit $5`,
+    [from.lat, from.lon, key, lim.radiusM, lim.candidates],
+  );
+  return r.rows;
+}
+
+/**
+ * How long the street and public transport searches look, minutes: long enough for the places
+ * found (a car covers a kilometre in about a minute on country roads; public transport needs the
+ * nearest place within about twice that), no longer, since longer searches are slower.
+ */
+export function maxMinutes(nearestM: number, farthestM: number): { walk: number; car: number; transit: number } {
+  const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(x)));
+  return {
+    walk: 60,
+    car: clamp((farthestM / 1000) * 1.3 + 15, 60, 180),
+    transit: clamp((nearestM / 1000) * 2.5 + 40, 90, 180),
+  };
+}
+
+/**
+ * One result per branch: places of one chain within 150 m are one shop seen twice (a building and
+ * its entrance, a store and its café, two sources, two Wikidata ids for one company). The one with
+ * the chain's main kind, or the most sources, stands for it. In a search by name, only places of
+ * one brand are merged.
+ */
+export function oneBranch(rows: Row[], mainKind?: string, sameChain = false): Row[] {
+  const kept: Row[] = [];
+  const score = (r: Row) => (mainKind && `${r.kind_key}=${r.kind}` === mainKind ? 10 : 0) + (r.kind_key === 'shop' ? 2 : 0) + r.sources.length;
+  for (const r of [...rows].sort((a, b) => score(b) - score(a))) {
+    const twin = sameChain || r.brand_key ? kept.find((k) => (sameChain || k.brand_key === r.brand_key) && distanceM(k, r) < 150) : undefined;
+    if (!twin) kept.push(r);
+  }
+  return kept.sort((a, b) => a.dist - b.dist);
+}
+
+/** Places of a food type, a chain or a name near a place, with the time to each on foot, by car and by public transport. */
+export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLon, now = new Date()): Promise<SearchResponse> {
+  let rows = await candidates(deps.db, target, from);
+  if (target.type !== 'food') {
+    const main = target.type === 'brand' ? await deps.db.query<{ k: string }>(`select kind_key || '=' || kind as k from brand where name_folded = $1 order by count desc limit 1`, [target.key]) : null;
+    rows = oneBranch(rows, main?.rows[0]?.k, target.type === 'brand');
+  }
   const local = localNow(now);
   const day = routingDate(local.date, deps.timetable);
-  if (rows.length === 0) return { food, results: [], typicalTimetable: day.typical };
+  const label = await labelOf(deps.db, target);
+  if (rows.length === 0) return { target, label, results: [], typicalTimetable: day.typical };
 
   const points = rows.map((r) => ({ lat: r.lat, lon: r.lon }));
-  const matrix = (profile: 'walk' | 'car') =>
-    deps.routing
-      .streetMatrix({ points, anchor: from, profile, direction: 'fromAnchor', maxMin: MAX_MINUTES[profile] })
+  const dists = rows.map((r) => r.dist);
+  const max = maxMinutes(Math.min(...dists), Math.max(...dists));
+  const matrix = (profile: 'walk' | 'car') => {
+    // Walking only to places within reach (an hour is about 5 km).
+    const idx = points.map((p, i) => i).filter((i) => profile === 'car' || dists[i]! < 7_000);
+    return deps.routing
+      .streetMatrix({ points: idx.map((i) => points[i]!), anchor: from, profile, direction: 'fromAnchor', maxMin: max[profile] })
+      .then((res) => {
+        const out: (number | null)[] = points.map(() => null);
+        idx.forEach((i, k) => (out[i] = res[k] ? res[k]!.durationMin : null));
+        return out;
+      })
       .catch((e: unknown) => {
         console.error(`${profile} matrix`, e);
         return points.map(() => null);
       });
+  };
   const [walk, car, stops] = await Promise.all([
     matrix('walk'),
     matrix('car'),
-    reachableStops(deps, from, day.date, local.time).catch((e: unknown) => {
+    reachableStops(deps, from, day.date, local.time, max.transit).catch((e: unknown) => {
       console.error('one-to-all', e);
       return [] as StopReach[];
     }),
@@ -109,16 +223,25 @@ export async function searchFood(deps: SearchDeps, food: string, from: LatLon, n
   const transit = transitToPlaces(stops, points);
 
   const results: SearchResult[] = rows.map((r, i) => {
-    const walkMin = walk[i] ? Math.round(walk[i]!.durationMin) : null;
+    const walkMin = walk[i] !== null && walk[i] !== undefined ? Math.round(walk[i]!) : null;
     return {
       ...toSummary(r, now),
       walkMin,
-      carMin: car[i] ? Math.max(1, Math.round(car[i]!.durationMin)) : null,
+      carMin: car[i] !== null && car[i] !== undefined ? Math.max(1, Math.round(car[i]!)) : null,
       transitMin: usefulTransit(transit[i] ?? null, walkMin),
     };
   });
   results.sort((a, b) => bestMinutes(a) - bestMinutes(b) || a.distanceM - b.distanceM);
-  return { food, results, typicalTimetable: day.typical };
+  return { target, label, results, typicalTimetable: day.typical };
+}
+
+async function labelOf(db: pg.Pool, target: Target): Promise<string> {
+  if (target.type === 'food') return FOOD_BY_KEY.get(target.key)?.label ?? target.key;
+  if (target.type === 'brand') {
+    const r = await db.query<{ name: string }>('select name from brand where name_folded = $1 order by count desc limit 1', [target.key]);
+    return r.rows[0]?.name ?? target.key;
+  }
+  return target.key;
 }
 
 /** The quickest way there, minutes (Infinity when nothing reaches it). */
@@ -132,11 +255,11 @@ export function bestMinutes(r: Pick<SearchResult, 'walkMin' | 'carMin' | 'transi
  * the minutes it takes, waiting included. Stops reached on foot only are left out: walking
  * is counted by the street search.
  */
-async function reachableStops(deps: SearchDeps, from: LatLon, date: string, time: string): Promise<StopReach[]> {
+async function reachableStops(deps: SearchDeps, from: LatLon, date: string, time: string, maxMin: number): Promise<StopReach[]> {
   const url = new URL('/api/v6/one-to-all', deps.motisUrl);
   url.searchParams.set('one', `${from.lat.toFixed(6)},${from.lon.toFixed(6)}`);
   url.searchParams.set('time', localToUtc(date, time, TIMEZONE).toISOString());
-  url.searchParams.set('maxTravelTime', String(MAX_MINUTES.transit));
+  url.searchParams.set('maxTravelTime', String(maxMin));
   url.searchParams.set('arriveBy', 'false');
   const r = await deps.fetch(url);
   if (!r.ok) throw new Error(`MOTIS one-to-all ${r.status}: ${(await r.text()).slice(0, 200)}`);
@@ -149,3 +272,5 @@ async function reachableStops(deps: SearchDeps, from: LatLon, date: string, time
   }
   return out;
 }
+
+export { distanceM };

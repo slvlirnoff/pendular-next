@@ -9,3 +9,10 @@ export function fold(s: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+/** The form names are searched by: folded, punctuation as spaces ("Mix-Image" → "mix image"). */
+export function searchKey(s: string): string {
+  return fold(s)
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}

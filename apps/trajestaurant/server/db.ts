@@ -3,24 +3,34 @@ import pg from 'pg';
 export const DEFAULT_DATABASE_URL = 'postgres://pendular@127.0.0.1:5433/trajestaurant';
 
 /**
- * Restaurants and the food types they serve. A restaurant comes from one source (OSM today) and
- * keeps its id across imports: the import updates rows in place by (source, source_id).
+ * Places (to eat, shops, and other places one goes to), the food types of those that serve food,
+ * the brands, and the towns. A place is keyed by the record it was first built from (OSM when OSM
+ * has it) and keeps its id across imports; `sources` lists every source that contributed to it.
  */
 export const SCHEMA = `
 create extension if not exists postgis;
 create extension if not exists pg_trgm;
 
-create table if not exists restaurant (
+-- The first version held restaurants only.
+drop table if exists restaurant_food;
+drop table if exists restaurant;
+
+create table if not exists place (
   id bigserial primary key,
+  -- osm | atp (All The Places) | overture
   source text not null,
   source_id text not null,
+  sources text[] not null,
   name text not null,
-  -- Lower case without accents, for the name search.
+  -- Lower case without accents, punctuation as spaces: what the name search compares.
   name_folded text not null,
-  -- OSM amenity: restaurant, fast_food, cafe, ice_cream, food_court, biergarten.
+  -- Main OSM key and value: amenity=restaurant, shop=supermarket, leisure=fitness_centre…
+  kind_key text not null,
   kind text not null,
   cuisine text,
   brand text,
+  -- Wikidata id of the brand, or 'b:' and the folded brand name when it has none.
+  brand_key text,
   geom geography(Point, 4326) not null,
   street text,
   housenumber text,
@@ -39,17 +49,30 @@ create table if not exists restaurant (
   imported_at timestamptz not null default now(),
   unique (source, source_id)
 );
-create index if not exists restaurant_geom on restaurant using gist (geom);
-create index if not exists restaurant_name on restaurant using gin (name_folded gin_trgm_ops);
+create index if not exists place_geom on place using gist (geom);
+create index if not exists place_name on place using gin (name_folded gin_trgm_ops);
+create index if not exists place_brand on place (brand_key);
 
-create table if not exists restaurant_food (
-  restaurant_id bigint not null references restaurant(id) on delete cascade,
+create table if not exists place_food (
+  place_id bigint not null references place(id) on delete cascade,
   food text not null,
-  primary key (restaurant_id, food)
+  primary key (place_id, food)
 );
-create index if not exists restaurant_food_food on restaurant_food (food, restaurant_id);
+create index if not exists place_food_food on place_food (food, place_id);
 
--- Towns and villages: to name where a restaurant is when its address has no town.
+-- Chains: every brand with at least two places in Switzerland.
+create table if not exists brand (
+  key text primary key,
+  name text not null,
+  name_folded text not null,
+  -- Folded names to search by (brand tags, names, NSI match names).
+  aliases text[] not null,
+  kind_key text not null,
+  kind text not null,
+  count integer not null
+);
+create index if not exists brand_name on brand (name_folded);
+
 create table if not exists town (
   id bigserial primary key,
   name text not null,

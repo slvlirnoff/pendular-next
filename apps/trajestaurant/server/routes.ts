@@ -1,5 +1,5 @@
 import type { Itinerary, LatLon } from '@pendular/engine';
-import type { RestaurantDetail, RouteLeg, RoutesResponse, StreetOption, TransitOption } from '../src/api.js';
+import type { PlaceDetail, RouteLeg, RoutesResponse, StreetOption, TransitOption } from '../src/api.js';
 import { distanceM } from './estimate.js';
 import { openState } from './open.js';
 import { sortFoods, type SearchDeps } from './search.js';
@@ -7,15 +7,17 @@ import { localNow, routingDate } from './timetable.js';
 
 /** Walking is not offered beyond this straight-line distance, metres (about an hour and a half). */
 const MAX_WALK_M = 7_000;
-/** Departures looked for after now, minutes. */
-const TRANSIT_WINDOW_MIN = 90;
+/** Departures looked for after now, minutes (a far branch may be reached on the next train only). */
+const TRANSIT_WINDOW_MIN = 120;
 const MAX_DEPARTURES = 4;
 
 interface DetailRow {
   id: string;
   source: string;
   source_id: string;
+  sources: string[];
   name: string;
+  kind_key: string;
   kind: string;
   cuisine: string | null;
   brand: string | null;
@@ -39,11 +41,11 @@ interface DetailRow {
 
 const OSM_TYPES: Record<string, string> = { n: 'node', w: 'way', r: 'relation' };
 
-export async function restaurantDetail(deps: SearchDeps, id: number, from: LatLon | null, now = new Date()): Promise<RestaurantDetail | null> {
+export async function placeDetail(deps: SearchDeps, id: number, from: LatLon | null, now = new Date()): Promise<PlaceDetail | null> {
   const res = await deps.db.query<DetailRow>(
-    `select r.*, st_y(r.geom::geometry) as lat, st_x(r.geom::geometry) as lon,
-       array(select food from restaurant_food f where f.restaurant_id = r.id) as foods
-     from restaurant r where r.id = $1`,
+    `select p.*, st_y(p.geom::geometry) as lat, st_x(p.geom::geometry) as lon,
+       array(select food from place_food f where f.place_id = p.id) as foods
+     from place p where p.id = $1`,
     [id],
   );
   const r = res.rows[0];
@@ -54,6 +56,7 @@ export async function restaurantDetail(deps: SearchDeps, id: number, from: LatLo
   return {
     id: Number(r.id),
     name: r.name,
+    kindKey: r.kind_key,
     kind: r.kind,
     town: r.town,
     lat: r.lat,
@@ -74,6 +77,7 @@ export async function restaurantDetail(deps: SearchDeps, id: number, from: LatLo
     vegetarian: r.vegetarian,
     vegan: r.vegan,
     osmUrl: osmType ? `https://www.openstreetmap.org/${osmType}/${r.source_id.slice(1)}` : null,
+    sources: r.sources,
   };
 }
 
@@ -98,9 +102,9 @@ const STREET = new Set(['walk', 'bike', 'ebike', 'car', 'sharedBike']);
 
 /** The way there from a place: on foot, by car and the next public transport departures. */
 export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now = new Date()): Promise<RoutesResponse | null> {
-  const restaurant = await restaurantDetail(deps, id, from, now);
-  if (!restaurant) return null;
-  const to = { lat: restaurant.lat, lon: restaurant.lon };
+  const place = await placeDetail(deps, id, from, now);
+  if (!place) return null;
+  const to = { lat: place.lat, lon: place.lon };
   const local = localNow(now);
   const day = routingDate(local.date, deps.timetable);
   const end = new Date(Date.UTC(2000, 0, 1, +local.time.slice(0, 2), +local.time.slice(3, 5) + TRANSIT_WINDOW_MIN));
@@ -116,7 +120,7 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
       });
 
   const [walk, car, transit] = await Promise.all([
-    restaurant.distanceM <= MAX_WALK_M ? street('walk') : Promise.resolve(null),
+    place.distanceM <= MAX_WALK_M ? street('walk') : Promise.resolve(null),
     street('car'),
     deps.routing
       .transit({ from, to, date: day.date, window: { from: local.time, to: windowEnd }, by: 'depart' })
@@ -134,5 +138,5 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
     .slice(0, MAX_DEPARTURES)
     .map((it) => ({ departure: it.departure, arrival: it.arrival, durationMin: it.durationMin, changes: it.changes, legs: toLegs(it) }));
 
-  return { restaurant, walk, car, transit: options, typicalTimetable: day.typical };
+  return { place, walk, car, transit: options, typicalTimetable: day.typical };
 }

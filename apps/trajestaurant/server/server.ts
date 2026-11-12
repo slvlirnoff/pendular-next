@@ -5,11 +5,12 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { MotisRouting, type LatLon } from '@pendular/engine';
 import { httpGet } from '../../api/src/httpGet.js';
-import type { PlaceHit } from '../src/api.js';
+import type { PlaceHit, Target } from '../src/api.js';
 import { FOODS, FOOD_BY_KEY } from '../src/foods.js';
 import { createPool } from './db.js';
 import { routesTo } from './routes.js';
-import { searchFood, suggest, type SearchDeps } from './search.js';
+import { popularBrands, searchPlaces, suggest, type SearchDeps } from './search.js';
+import { searchKey } from '../src/text.js';
 import { readTimetableRange, referenceMonday, TIMEZONE } from './timetable.js';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
@@ -43,15 +44,15 @@ function position(lat: string | undefined, lon: string | undefined): LatLon | nu
 }
 
 app.get('/api/health', async (c) => {
-  const n = await deps.db.query<{ n: string }>('select count(*) as n from restaurant').catch(() => null);
-  return c.json({ ok: n !== null, restaurants: Number(n?.rows[0]?.n ?? 0), timetable });
+  const n = await deps.db.query<{ n: string }>('select count(*) as n from place').catch(() => null);
+  return c.json({ ok: n !== null, places: Number(n?.rows[0]?.n ?? 0), timetable });
 });
 
 /** Every food type, with how many places in the data have it. */
 let foodCounts: Map<string, number> | null = null;
 app.get('/api/foods', async (c) => {
   if (!foodCounts) {
-    const r = await deps.db.query<{ food: string; n: string }>('select food, count(*) as n from restaurant_food group by food');
+    const r = await deps.db.query<{ food: string; n: string }>('select food, count(*) as n from place_food group by food');
     foodCounts = new Map(r.rows.map((x) => [x.food, Number(x.n)]));
   }
   return c.json(FOODS.map((f) => ({ key: f.key, emoji: f.emoji, label: f.label, generic: f.generic === true, count: foodCounts!.get(f.key) ?? 0 })));
@@ -63,20 +64,31 @@ app.get('/api/suggest', async (c) => {
   return c.json(await suggest(deps, q, position(c.req.query('lat'), c.req.query('lon'))));
 });
 
+/** Chains shown as shortcuts under the search bar. */
+let popular: Awaited<ReturnType<typeof popularBrands>> | null = null;
+app.get('/api/brands/popular', async (c) => c.json((popular ??= await popularBrands(deps.db))));
+
+/** ?food=pizza, ?brand=migros (a chain by its folded name) or ?name=mix image, with ?lat=…&lon=… */
 app.get('/api/search', async (c) => {
-  const food = c.req.query('food') ?? '';
   const from = position(c.req.query('lat'), c.req.query('lon'));
-  if (!FOOD_BY_KEY.has(food)) return c.json({ error: 'unknown food' }, 400);
+  const food = c.req.query('food');
+  const brand = c.req.query('brand');
+  const name = c.req.query('name');
+  let target: Target | null = null;
+  if (food) target = FOOD_BY_KEY.has(food) ? { type: 'food', key: food } : null;
+  else if (brand) target = { type: 'brand', key: searchKey(brand) };
+  else if (name && searchKey(name).length >= 2) target = { type: 'name', key: searchKey(name) };
+  if (!target) return c.json({ error: 'food, brand or name needed' }, 400);
   if (!from) return c.json({ error: 'position needed (lat, lon)' }, 400);
   try {
-    return c.json(await searchFood(deps, food, from));
+    return c.json(await searchPlaces(deps, target, from));
   } catch (e) {
     console.error(e);
     return c.json({ error: 'search failed' }, 500);
   }
 });
 
-app.get('/api/restaurants/:id', async (c) => {
+app.get('/api/places/:id', async (c) => {
   const id = Number(c.req.param('id'));
   const from = position(c.req.query('lat'), c.req.query('lon'));
   if (!Number.isInteger(id)) return c.json({ error: 'bad id' }, 400);
@@ -102,7 +114,7 @@ app.get('/api/where', async (c) => {
 });
 
 /** Place search for "I am in …": the routing engine's geocoder (stops, addresses, places). */
-app.get('/api/places', async (c) => {
+app.get('/api/geocode', async (c) => {
   const q = (c.req.query('q') ?? '').trim();
   if (q.length < 2) return c.json([]);
   const url = new URL('/api/v1/geocode', motisUrl);

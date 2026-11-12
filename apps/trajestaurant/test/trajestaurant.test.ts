@@ -3,7 +3,10 @@ import { classify, FOODS, matchFoods } from '../src/foods.js';
 import { fold } from '../src/text.js';
 import { transitToPlaces, usefulTransit } from '../server/estimate.js';
 import { referenceMonday, routingDate } from '../server/timetable.js';
-import { centre, osmObject, toRow } from '../import/load.js';
+import { atpPlace, brandFromName, centre, keepOverture, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, sameName, type Brands } from '../import/build.js';
+import { kindInfo, mainKind } from '../src/kinds.js';
+import { searchKey } from '../src/text.js';
+import { maxMinutes } from '../server/search.js';
 
 describe('food types', () => {
   it('reads the OSM cuisine, several values included', () => {
@@ -109,14 +112,99 @@ describe('OSM import', () => {
     expect(c!.lon).toBeCloseTo(6.001, 6);
   });
 
-  it('keeps named food places only, with their address and types', () => {
-    const row = toRow({
+  it('keeps named places of the kinds it shows, with their address', () => {
+    const place = osmPlace({
       id: 'n1',
       geometry: { type: 'Point', coordinates: [6.84, 46.71] },
       properties: { amenity: 'restaurant', name: 'Pizzeria du Pont', 'addr:street': 'Rue du Pont', 'addr:housenumber': '2', 'addr:city': 'Lucens', opening_hours: 'Mo-Su 11:00-22:00' },
     });
-    expect(row).toMatchObject({ source_id: 'n1', name: 'Pizzeria du Pont', town: 'Lucens', street: 'Rue du Pont', foods: ['pizza', 'restaurant'] });
-    expect(toRow({ id: 'n2', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'restaurant' } })).toBeNull();
-    expect(toRow({ id: 'n3', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'bench', name: 'Banc' } })).toBeNull();
+    expect(place).toMatchObject({ sourceId: 'n1', name: 'Pizzeria du Pont', kindKey: 'amenity', kind: 'restaurant' });
+    expect(place!.tags['addr:city']).toBe('Lucens');
+    const shop = osmPlace({ id: 'w2', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { shop: 'shoes', brand: 'Dosenbach' } });
+    expect(shop).toMatchObject({ name: 'Dosenbach', kindKey: 'shop', kind: 'shoes' });
+    expect(osmPlace({ id: 'n3', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'restaurant' } })).toBeNull();
+    expect(osmPlace({ id: 'n4', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'vending_machine', name: 'Robidog' } })).toBeNull();
+  });
+
+  it('reads All The Places branches, street and number in one', () => {
+    const a = atpPlace({
+      id: 'x',
+      geometry: { type: 'Point', coordinates: [6.94, 46.82] },
+      properties: { '@spider': 'migros_ch', ref: '42', shop: 'supermarket', name: 'Migros', brand: 'Migros', 'brand:wikidata': 'Q680727', 'addr:street_address': 'Rue de Lausanne 6', opening_hours: 'Mo-Sa 08:00-19:00' },
+    });
+    expect(a).toMatchObject({ source: 'atp', sourceId: 'migros_ch:42', kindKey: 'shop', kind: 'supermarket' });
+    expect(a!.tags['addr:street']).toBe('Rue de Lausanne 6');
+  });
+});
+
+describe('Overture', () => {
+  it('maps categories to OSM kinds, leaving out wineries', () => {
+    expect(overtureKind('pizza_restaurant', 'restaurant')).toEqual({ kindKey: 'amenity', kind: 'restaurant' });
+    expect(overtureKind('doner_kebab_restaurant', 'restaurant')).toEqual({ kindKey: 'amenity', kind: 'fast_food' });
+    expect(overtureKind('sushi_bar', 'restaurant')).toEqual({ kindKey: 'amenity', kind: 'restaurant' });
+    expect(overtureKind('coffee_shop', 'coffee_shop')).toEqual({ kindKey: 'amenity', kind: 'cafe' });
+    expect(overtureKind('wine_bar', 'bar')).toEqual({ kindKey: 'amenity', kind: 'bar' });
+    expect(overtureKind('bakery', 'casual_eatery')).toEqual({ kindKey: 'shop', kind: 'bakery' });
+    expect(overtureKind('winery', 'winery')).toBeNull();
+  });
+
+  it('turns categories into cuisines and food types', () => {
+    expect(overtureCuisines(['pizza_restaurant'])).toContain('pizza');
+    const o = overturePlace({
+      id: 'ov1', name: 'Sherlock Pizza Kebab Burger', category: 'pizza_restaurant', basic_category: 'restaurant', alternates: ['burger_restaurant'],
+      confidence: 0.75, brand: null, brand_wikidata: null, website: null, phone: '+41 77 955 34 99', street: null, postcode: '1522', locality: 'Lucens', lat: 46.71, lon: 6.839,
+    });
+    expect([...o!.extraFoods]).toEqual(expect.arrayContaining(['pizza', 'burger', 'kebab']));
+  });
+
+  it('keeps an unknown place when confident, or less so with a way to reach it', () => {
+    expect(keepOverture({ confidence: 0.7, tags: {} })).toBe(true);
+    expect(keepOverture({ confidence: 0.5, tags: {} })).toBe(false);
+    expect(keepOverture({ confidence: 0.5, tags: { phone: '+41' } })).toBe(true);
+    // Grill House, Lucens.
+    expect(keepOverture({ confidence: 0.3, tags: { phone: '+41', website: 'https://grillhouselucens.com/' } })).toBe(true);
+    expect(keepOverture({ confidence: 0.2, tags: { phone: '+41', website: 'x' } })).toBe(false);
+  });
+
+  it('knows two names of one place, not two places of one street', () => {
+    expect(sameName('Café du Poids', 'Cafe du Poids')).toBe(true);
+    expect(sameName('Sherlock Pizza Kebab Burger', 'Sherlock')).toBe(true);
+    expect(sameName('Restaurant du Pont', 'Pont')).toBe(true);
+    expect(sameName('Vesuvio Pizza Lucens', 'De la Gare - La Table des Suter')).toBe(false);
+    expect(sameName('Restaurant', 'Restaurant')).toBe(true);
+    expect(sameName('Pizzeria', 'Restaurant')).toBe(false);
+  });
+});
+
+describe('brands', () => {
+  const nsi: Brands = {
+    byWikidata: new Map([['Q680727', new Map([['shop=supermarket', { name: 'Migros', kindKey: 'shop', kind: 'supermarket', aliases: ['migros'] }]])]]),
+    byName: new Map([['shop=supermarket|migros', 'Q680727']]),
+  };
+
+  it('names the brand of a place tagged with its name only', () => {
+    expect(brandFromName(nsi, { kindKey: 'shop', kind: 'supermarket', name: 'Migros Lucens', tags: {} })).toBe('Q680727');
+    expect(brandFromName(nsi, { kindKey: 'shop', kind: 'supermarket', name: 'MIGROS', tags: {} })).toBe('Q680727');
+    // Same name, another kind: not the supermarket chain.
+    expect(brandFromName(nsi, { kindKey: 'amenity', kind: 'restaurant', name: 'Migros', tags: {} })).toBeNull();
+    expect(brandFromName(nsi, { kindKey: 'shop', kind: 'supermarket', name: 'Épicerie du village', tags: {} })).toBeNull();
+  });
+
+  it('gives shops a pictogram and a label', () => {
+    expect(kindInfo('shop', 'shoes')).toEqual({ emoji: '👟', label: 'Chaussures' });
+    expect(kindInfo('shop', 'something_new').label).toBe('Magasin');
+    expect(mainKind({ amenity: 'vending_machine', shop: 'kiosk' })).toEqual({ kindKey: 'shop', kind: 'kiosk' });
+    expect(mainKind({ amenity: 'parking' })).toBeNull();
+  });
+
+  it('searches names without punctuation', () => {
+    expect(searchKey('Mix-Image')).toBe('mix image');
+    expect(searchKey("McDonald's")).toBe('mcdonald s');
+  });
+
+  it('looks far enough for a far branch, no further', () => {
+    expect(maxMinutes(400, 9_000)).toEqual({ walk: 60, car: 60, transit: 90 });
+    // The nearest IKEA from Lucens: 43 km.
+    expect(maxMinutes(43_000, 120_000)).toEqual({ walk: 60, car: 171, transit: 148 });
   });
 });

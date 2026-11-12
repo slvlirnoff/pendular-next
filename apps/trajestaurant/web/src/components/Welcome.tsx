@@ -44,7 +44,7 @@ export function Welcome(props: { onStart: () => void; locating: boolean }) {
         </div>
         <p className="welcome-hello">Bienvenue sur</p>
         <h1 className="welcome-title">Trajestaurant</h1>
-        <p className="welcome-lede">Trouve où manger près de toi, et le chemin pour y aller : à pied, en train, en bus ou en voiture.</p>
+        <p className="welcome-lede">Trouve où manger, ou ton magasin, près de toi, et le chemin pour y aller : à pied, en train, en bus ou en voiture.</p>
         <div className="welcome-actions">
           <button type="button" className="btn btn-white" onClick={props.onStart} disabled={props.locating}>
             {props.locating ? 'Je cherche où tu es…' : 'Commencer'}
@@ -56,7 +56,7 @@ export function Welcome(props: { onStart: () => void; locating: boolean }) {
       </div>
       <footer className="welcome-foot">
         <span>trajestaurant.ch</span>
-        <span>Données © OpenStreetMap</span>
+        <span>Lieux © OpenStreetMap, Overture, All The Places</span>
       </footer>
     </main>
   );

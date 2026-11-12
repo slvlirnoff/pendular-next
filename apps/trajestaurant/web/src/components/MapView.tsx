@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { Mode, RestaurantSummary, RoutesResponse } from '../../../src/api';
-import { foodEmoji, MODE, minutes, type Here } from '../lib';
+import type { Mode, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
+import { MODE, minutes, placeEmoji, type Here } from '../lib';
 
 export interface Padding {
   top: number;
@@ -75,16 +75,16 @@ function pointAlong(coords: [number, number][], share: number): [number, number]
 
 export function MapView(props: {
   here: Here | null;
-  /** The food searched for: its pictogram marks the restaurants. */
-  food: string | null;
-  results: RestaurantSummary[];
+  /** What was searched for: the food searched for gives the pictogram. */
+  target: Target | null;
+  results: PlaceSummary[];
   hovered: number | null;
-  selected: RestaurantSummary | null;
+  selected: PlaceSummary | null;
   routes: RoutesResponse | null;
   mode: Mode;
   departure: number;
   padding: Padding;
-  onPick: (r: RestaurantSummary) => void;
+  onPick: (r: PlaceSummary) => void;
   onMode: (m: Mode) => void;
 }) {
   const el = useRef<HTMLDivElement>(null);
@@ -111,7 +111,7 @@ export function MapView(props: {
     map.current = m;
     if (import.meta.env.DEV) (window as unknown as { __map: maplibregl.Map }).__map = m;
     m.touchZoomRotate.disableRotation();
-    m.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Restaurants © OpenStreetMap · Itinéraires MOTIS, opentransportdata.swiss' }), 'bottom-right');
+    m.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Lieux © OpenStreetMap, Overture Maps Foundation, All The Places · Itinéraires MOTIS, opentransportdata.swiss' }), 'bottom-right');
     ready.current = new Promise((resolve) =>
       m.on('load', () => {
         m.addSource('routes', { type: 'geojson', data: routeFeatures(null, 0, 'walk') });
@@ -172,13 +172,13 @@ export function MapView(props: {
         x = { marker, el: b };
         markers.current.set(r.id, x);
       }
-      x.el.textContent = foodEmoji(r, props.food);
+      x.el.textContent = placeEmoji(r, props.target);
       x.el.setAttribute('aria-label', `${r.name}${r.town ? `, ${r.town}` : ''}`);
       x.el.classList.toggle('is-selected', props.selected?.id === r.id);
       x.el.classList.toggle('is-hovered', props.hovered === r.id);
       x.el.style.zIndex = String(props.selected?.id === r.id || props.hovered === r.id ? 1000 : 100 - i);
     });
-  }, [props.results, props.selected, props.hovered, props.food]);
+  }, [props.results, props.selected, props.hovered, props.target]);
 
   // The ways there, with their duration written on the map (as on the sketch).
   useEffect(() => {

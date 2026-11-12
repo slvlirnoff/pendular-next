@@ -12,11 +12,14 @@ export interface OpenState {
   changesDay?: number;
 }
 
-export interface RestaurantSummary {
+export interface PlaceSummary {
   id: number;
   name: string;
-  /** OSM amenity: restaurant, fast_food, cafe, ice_cream, food_court, biergarten. */
+  /** Main OSM key and value: amenity=restaurant, shop=supermarket… */
+  kindKey: string;
   kind: string;
+  /** The chain it belongs to, if any. */
+  brand: string | null;
   town: string | null;
   lat: number;
   lon: number;
@@ -27,15 +30,30 @@ export interface RestaurantSummary {
   open: OpenState | null;
 }
 
-export interface SearchResult extends RestaurantSummary {
+export interface SearchResult extends PlaceSummary {
   walkMin: number | null;
   carMin: number | null;
   /** Leaving now with public transport, waiting included; null when walking is as fast or nothing goes. */
   transitMin: number | null;
 }
 
+/** What is searched for: a food type, a chain (by its folded name), or places by name. */
+export type Target = { type: 'food'; key: string } | { type: 'brand'; key: string } | { type: 'name'; key: string };
+
+/** A chain as suggested: its name, the kind of its places and how many there are in Switzerland. */
+export interface BrandHit {
+  /** Folded name: the search key. */
+  key: string;
+  name: string;
+  kindKey: string;
+  kind: string;
+  count: number;
+}
+
 export interface SearchResponse {
-  food: string;
+  target: Target;
+  /** The chain's name, or the name searched for. */
+  label: string;
   results: SearchResult[];
   /** The search used the same weekday of another week (the timetable does not cover today). */
   typicalTimetable: boolean;
@@ -43,10 +61,13 @@ export interface SearchResponse {
 
 export interface Suggestion {
   foods: string[];
-  restaurants: (RestaurantSummary & { foods: string[] })[];
+  brands: BrandHit[];
+  /** Places whose name contains the text, when there are several: searching them all by name. */
+  named: { key: string; count: number } | null;
+  places: PlaceSummary[];
 }
 
-export interface RestaurantDetail extends RestaurantSummary {
+export interface PlaceDetail extends PlaceSummary {
   address: string | null;
   cuisine: string | null;
   brand: string | null;
@@ -61,6 +82,8 @@ export interface RestaurantDetail extends RestaurantSummary {
   vegan: string | null;
   /** Link to the object on openstreetmap.org. */
   osmUrl: string | null;
+  /** Where its data comes from: osm, atp (All The Places), overture. */
+  sources: string[];
 }
 
 export interface RouteLeg {
@@ -92,7 +115,7 @@ export interface TransitOption {
 }
 
 export interface RoutesResponse {
-  restaurant: RestaurantDetail;
+  place: PlaceDetail;
   walk: StreetOption | null;
   car: StreetOption | null;
   /** The next departures, earliest first. */

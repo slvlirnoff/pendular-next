@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Mode, RestaurantSummary, RoutesResponse, SearchResult } from '../../src/api';
+import type { Mode, PlaceSummary, RoutesResponse, SearchResult } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
 import { Detail } from './components/Detail';
 import { MapView, type Padding } from './components/MapView';
 import { PlacePicker } from './components/PlacePicker';
 import { SearchPanel, type SearchState } from './components/SearchPanel';
 import { Welcome } from './components/Welcome';
-import { api, bestMode, type Here } from './lib';
+import { api, bestMode, brandSearch, foodSearch, nameSearch, type Here, type Searched } from './lib';
 
 const HERE_KEY = 'trajestaurant.here';
 
@@ -19,21 +19,31 @@ function storedHere(): Here | null {
   }
 }
 
-/** What the address bar holds: ?ici=lat,lon,label &food=pizza &r=123 */
-function readUrl(): { here: Here | null; food: string | null; restaurant: number | null } {
+/** What the address bar holds: ?ici=lat,lon,label, then food=pizza, brand=migros or name=mix image, and r=123 (a place). */
+function readUrl(): { here: Here | null; searched: Searched | null; place: number | null } {
   const p = new URLSearchParams(location.search);
   const [lat, lon, ...label] = (p.get('ici') ?? '').split(',');
   const here = lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon) ? { lat: +lat, lon: +lon, label: label.join(',') || 'Ma position' } : null;
   const food = p.get('food');
+  const brand = p.get('brand');
+  const name = p.get('name');
+  const searched =
+    food && FOOD_BY_KEY.has(food)
+      ? foodSearch(food)
+      : brand
+        ? brandSearch({ key: brand, name: brand, kindKey: 'shop', kind: '' })
+        : name
+          ? nameSearch(name)
+          : null;
   const r = Number(p.get('r'));
-  return { here, food: food && FOOD_BY_KEY.has(food) ? food : null, restaurant: Number.isInteger(r) && r > 0 ? r : null };
+  return { here, searched, place: Number.isInteger(r) && r > 0 ? r : null };
 }
 
-function writeUrl(s: { here: Here | null; food: string | null; restaurant: number | null }, push: boolean) {
+function writeUrl(s: { here: Here | null; searched: Searched | null; place: number | null }, push: boolean) {
   const p = new URLSearchParams();
   if (s.here) p.set('ici', `${s.here.lat.toFixed(5)},${s.here.lon.toFixed(5)},${s.here.label}`);
-  if (s.food) p.set('food', s.food);
-  if (s.restaurant) p.set('r', String(s.restaurant));
+  if (s.searched) p.set(s.searched.target.type, s.searched.target.key);
+  if (s.place) p.set('r', String(s.place));
   const url = `${location.pathname}${p.size ? `?${p.toString()}` : ''}`;
   if (url === `${location.pathname}${location.search}`) return;
   if (push) history.pushState(null, '', url);
@@ -71,16 +81,16 @@ function useWide(): boolean {
 
 export function App() {
   const initial = useRef(readUrl());
-  const [started, setStarted] = useState(initial.current.here !== null || initial.current.food !== null || initial.current.restaurant !== null);
+  const [started, setStarted] = useState(initial.current.here !== null || initial.current.searched !== null || initial.current.place !== null);
   const [here, setHere] = useState<Here | null>(initial.current.here ?? storedHere());
   const [picker, setPicker] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locateFailed, setLocateFailed] = useState(false);
-  const [search, setSearch] = useState<SearchState>({ food: initial.current.food, response: null, loading: false, error: null });
+  const [search, setSearch] = useState<SearchState>({ searched: initial.current.searched, response: null, loading: false, error: null });
   const [visible, setVisible] = useState<SearchResult[]>([]);
   const [hovered, setHovered] = useState<number | null>(null);
-  const [selected, setSelected] = useState<RestaurantSummary | null>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(initial.current.restaurant);
+  const [selected, setSelected] = useState<PlaceSummary | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(initial.current.place);
   const [routes, setRoutes] = useState<RoutesResponse | null>(null);
   const [routesState, setRoutesState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [mode, setMode] = useState<Mode>('walk');
@@ -135,33 +145,34 @@ export function App() {
 
   // The address bar follows the state; the back button closes a restaurant.
   useEffect(() => {
-    if (started) writeUrl({ here, food: search.food, restaurant: selectedId }, false);
-  }, [started, here, search.food, selectedId]);
+    if (started) writeUrl({ here, searched: search.searched, place: selectedId }, false);
+  }, [started, here, search.searched, selectedId]);
   useEffect(() => {
     const onPop = () => {
       const u = readUrl();
-      setSelectedId(u.restaurant);
-      if (!u.restaurant) setSelected(null);
-      setSearch((s) => (s.food === u.food ? s : { food: u.food, response: null, loading: false, error: null }));
+      setSelectedId(u.place);
+      if (!u.place) setSelected(null);
+      const same = (a: Searched | null, b: Searched | null) => a?.target.type === b?.target.type && a?.target.key === b?.target.key;
+      setSearch((s) => (same(s.searched, u.searched) ? s : { searched: u.searched, response: null, loading: false, error: null }));
     };
     addEventListener('popstate', onPop);
     return () => removeEventListener('popstate', onPop);
   }, []);
 
-  // Search when the food or the place changes.
+  // Search when what is searched for or the place changes.
   useEffect(() => {
-    const food = search.food;
-    if (!food || !here) return;
+    const searched = search.searched;
+    if (!searched || !here) return;
     const ctl = new AbortController();
     setSearch((s) => ({ ...s, loading: true, error: null }));
     api
-      .search(food, here, ctl.signal)
-      .then((response) => setSearch((s) => (s.food === food ? { food, response, loading: false, error: null } : s)))
+      .search(searched.target, here, ctl.signal)
+      .then((response) => setSearch((s) => (s.searched === searched ? { searched, response, loading: false, error: null } : s)))
       .catch((e: Error) => {
         if (e.name !== 'AbortError') setSearch((s) => ({ ...s, loading: false, error: e.message }));
       });
     return () => ctl.abort();
-  }, [search.food, here]);
+  }, [search.searched, here]);
 
   // The way to the chosen restaurant.
   useEffect(() => {
@@ -175,11 +186,11 @@ export function App() {
     setRoutes(null);
     setDeparture(0);
     api
-      .restaurant(selectedId, here, ctl.signal)
+      .place(selectedId, here, ctl.signal)
       .then((r) => {
         setRoutes(r);
         setRoutesState('idle');
-        setSelected((s) => s ?? r.restaurant);
+        setSelected((s) => s ?? r.place);
         const listed = search.response?.results.find((x) => x.id === selectedId);
         const times = { walkMin: r.walk?.durationMin ?? null, transitMin: r.transit[0]?.durationMin ?? null, carMin: r.car?.durationMin ?? null };
         setMode(bestMode(listed ?? times) ?? bestMode(times) ?? 'car');
@@ -190,11 +201,11 @@ export function App() {
     return () => ctl.abort();
   }, [selectedId, here]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const pick = (r: RestaurantSummary) => {
+  const pick = (r: PlaceSummary) => {
     setSelected(r);
     setSelectedId(r.id);
     setHovered(null);
-    writeUrl({ here, food: search.food, restaurant: r.id }, true);
+    writeUrl({ here, searched: search.searched, place: r.id }, true);
   };
   const back = () => {
     if (history.length > 1 && new URLSearchParams(location.search).get('r')) history.back();
@@ -212,7 +223,7 @@ export function App() {
   if (!started) return <Welcome onStart={start} locating={locating} />;
 
   const showDetail = selectedId !== null;
-  const summary = selected ?? routes?.restaurant ?? null;
+  const summary = selected ?? routes?.place ?? null;
   const padding: Padding = wide
     ? { top: 0, bottom: 0, left: 440, right: 0 }
     : showDetail
@@ -223,7 +234,7 @@ export function App() {
     <div className={`app${showDetail ? ' has-detail' : ''}`}>
       <MapView
         here={here}
-        food={search.food}
+        target={search.searched?.target ?? null}
         results={showDetail ? [] : visible}
         hovered={hovered}
         selected={showDetail ? summary : null}
@@ -238,7 +249,7 @@ export function App() {
         <Detail
           ref={detailRef}
           summary={summary}
-          food={search.food}
+          target={search.searched?.target ?? null}
           routes={routes}
           loading={routesState === 'loading'}
           error={routesState === 'error'}
@@ -253,7 +264,7 @@ export function App() {
           ref={searchRef}
           here={here}
           search={search}
-          onFood={(food) => setSearch({ food, response: null, loading: food !== null && here !== null, error: null })}
+          onSearch={(searched) => setSearch({ searched, response: null, loading: searched !== null && here !== null, error: null })}
           onPick={pick}
           onHover={setHovered}
           onChangePlace={() => setPicker(true)}

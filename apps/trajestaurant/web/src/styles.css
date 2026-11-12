@@ -330,6 +330,23 @@ a {
 .chips::-webkit-scrollbar {
   display: none;
 }
+.chip-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chips-title {
+  flex: none;
+  align-self: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .chip {
   flex: none;
   display: inline-flex;
@@ -1038,6 +1055,9 @@ a {
 
 /* ---------- Wide screens: a side panel beside the map ---------- */
 @media (min-width: 900px) {
+  .chip-rows {
+    gap: 10px;
+  }
   .panel-search,
   .panel-detail {
     top: 16px;

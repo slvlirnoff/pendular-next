@@ -1,5 +1,6 @@
-import type { Mode, OpenState, PlaceHit, RestaurantSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion } from '../../src/api';
+import type { BrandHit, Mode, OpenState, PlaceHit, PlaceSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion, Target } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
+import { kindInfo } from '../../src/kinds';
 
 export interface Here {
   lat: number;
@@ -17,11 +18,32 @@ const at = (h: Here | null) => (h ? `&lat=${h.lat.toFixed(5)}&lon=${h.lon.toFixe
 
 export const api = {
   suggest: (q: string, here: Here | null, signal?: AbortSignal) => get<Suggestion>(`/api/suggest?q=${encodeURIComponent(q)}${at(here)}`, signal),
-  search: (food: string, here: Here, signal?: AbortSignal) => get<SearchResponse>(`/api/search?food=${encodeURIComponent(food)}${at(here)}`, signal),
-  restaurant: (id: number, here: Here, signal?: AbortSignal) => get<RoutesResponse>(`/api/restaurants/${id}?x=1${at(here)}`, signal),
+  search: (t: Target, here: Here, signal?: AbortSignal) => get<SearchResponse>(`/api/search?${t.type}=${encodeURIComponent(t.key)}${at(here)}`, signal),
+  place: (id: number, here: Here, signal?: AbortSignal) => get<RoutesResponse>(`/api/places/${id}?x=1${at(here)}`, signal),
   where: (lat: number, lon: number) => get<{ town: string | null }>(`/api/where?lat=${lat}&lon=${lon}`),
-  places: (q: string, signal?: AbortSignal) => get<PlaceHit[]>(`/api/places?q=${encodeURIComponent(q)}`, signal),
+  geocode: (q: string, signal?: AbortSignal) => get<PlaceHit[]>(`/api/geocode?q=${encodeURIComponent(q)}`, signal),
+  popularBrands: () => get<BrandHit[]>('/api/brands/popular'),
 };
+
+/** A search as shown: what it is for, its title and its pictogram. */
+export interface Searched {
+  target: Target;
+  label: string;
+  emoji: string;
+}
+
+export function foodSearch(key: string): Searched {
+  const f = FOOD_BY_KEY.get(key);
+  return { target: { type: 'food', key }, label: f?.label ?? key, emoji: f?.emoji ?? '🍽️' };
+}
+
+export function brandSearch(b: Pick<BrandHit, 'key' | 'name' | 'kindKey' | 'kind'>): Searched {
+  return { target: { type: 'brand', key: b.key }, label: b.name, emoji: kindInfo(b.kindKey, b.kind).emoji };
+}
+
+export function nameSearch(key: string): Searched {
+  return { target: { type: 'name', key }, label: `« ${key} »`, emoji: '🔎' };
+}
 
 export function minutes(m: number): string {
   if (m < 60) return `${m} min`;
@@ -49,14 +71,6 @@ export function openLabel(o: OpenState | null): { text: string; tone: 'open' | '
   return { text: 'Horaires à vérifier', tone: 'unknown' };
 }
 
-export const KIND_LABEL: Record<string, string> = {
-  restaurant: 'Restaurant',
-  fast_food: 'Fast-food',
-  cafe: 'Café',
-  ice_cream: 'Glacier',
-  food_court: 'Food court',
-  biergarten: 'Jardin à bière',
-};
 
 export const MODE: Record<Mode, { emoji: string; label: string }> = {
   walk: { emoji: '🚶', label: 'À pied' },
@@ -120,8 +134,17 @@ export function legEmoji(mode: string): string {
   }
 }
 
-/** The pictogram of a restaurant: the food searched for when it serves it, else its most specific food. */
-export function foodEmoji(r: Pick<RestaurantSummary, 'foods'>, searched: string | null): string {
-  const key = searched && r.foods.includes(searched) ? searched : (r.foods[0] ?? 'restaurant');
-  return FOOD_BY_KEY.get(key)?.emoji ?? '🍽️';
+/**
+ * The pictogram of a place: the food searched for when it serves it, else its most specific food,
+ * else its kind (🛒 supermarket, 👟 shoes…).
+ */
+export function placeEmoji(r: Pick<PlaceSummary, 'foods' | 'kindKey' | 'kind'>, target: Target | null): string {
+  if (target?.type === 'food' && r.foods.includes(target.key)) return FOOD_BY_KEY.get(target.key)?.emoji ?? '🍽️';
+  const specific = r.foods.find((f) => !FOOD_BY_KEY.get(f)?.generic);
+  if (specific) return FOOD_BY_KEY.get(specific)!.emoji;
+  return kindInfo(r.kindKey, r.kind).emoji;
+}
+
+export function kindLabel(r: Pick<PlaceSummary, 'kindKey' | 'kind'>): string {
+  return kindInfo(r.kindKey, r.kind).label;
 }

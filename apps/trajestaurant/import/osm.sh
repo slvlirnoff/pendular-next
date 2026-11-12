@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Trajestaurant: restaurants, cafés, fast food and ice cream from the Swiss OpenStreetMap extract
-# (data/raw/switzerland.osm.pbf, fetched by data/scripts/fetch.sh osm) into PostgreSQL.
+# Trajestaurant: places to eat, shops and other places one goes to, from the Swiss OpenStreetMap
+# extract (data/raw/switzerland.osm.pbf, fetched by data/scripts/fetch.sh osm), merged with the
+# other sources (import/fetch.sh) and loaded into PostgreSQL by import/build.ts.
 # Needs the osmium command-line tool. DATABASE_URL defaults to the local database of scripts/dev.sh.
 #
 #   pnpm --filter @pendular/trajestaurant import:osm
@@ -12,9 +13,15 @@ pbf="${OSM_PBF:-$root/data/raw/switzerland.osm.pbf}"
 [ -f "$pbf" ] || { echo "no OSM extract: run data/scripts/fetch.sh osm" >&2; exit 1; }
 out="$root/data/build/trajestaurant"; mkdir -p "$out"
 
-# Food places (points, buildings and areas) and the towns and villages that name where they are.
+# Food places, shops, and other places one goes to (points, buildings and areas), any place of a
+# brand, and the towns and villages that name where they are.
 osmium tags-filter "$pbf" \
-  nwr/amenity=restaurant,fast_food,cafe,ice_cream,food_court,biergarten \
+  nwr/amenity=restaurant,fast_food,cafe,ice_cream,food_court,biergarten,pub,bar \
+  nwr/amenity=pharmacy,fuel,bank,post_office,cinema,car_rental,theatre,library,marketplace \
+  nwr/shop \
+  nwr/leisure=fitness_centre,sports_centre,bowling_alley,escape_game,trampoline_park,water_park,amusement_arcade,ice_rink,swimming_pool \
+  nwr/tourism=hotel,motel,hostel,museum,zoo,theme_park,attraction \
+  nwr/brand:wikidata \
   n/place=city,town,village \
   -o "$out/food.osm.pbf" --overwrite --no-progress
 # One GeoJSON feature per line; areas as polygons (the loader takes their centre).
@@ -22,4 +29,4 @@ osmium export "$out/food.osm.pbf" -f geojsonseq --format-option=print_record_sep
   --add-unique-id=type_id --geometry-types=point,polygon \
   -o "$out/food.geojsonseq" --overwrite --no-progress
 echo "extracted $(wc -l < "$out/food.geojsonseq") features from $(basename "$pbf")"
-cd "$here/.." && pnpm exec tsx import/load.ts "$out/food.geojsonseq"
+cd "$here/.." && pnpm exec tsx import/build.ts "$out/food.geojsonseq"

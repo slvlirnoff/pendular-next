@@ -1,17 +1,18 @@
 import { forwardRef } from 'react';
-import type { Mode, RestaurantSummary, RoutesResponse, TransitOption } from '../../../src/api';
+import type { Mode, PlaceSummary, RoutesResponse, Target, TransitOption } from '../../../src/api';
 import { FOOD_BY_KEY } from '../../../src/foods';
-import { clock, distance, foodEmoji, KIND_LABEL, legEmoji, MODE, minutes, openLabel } from '../lib';
+import { clock, distance, kindLabel, legEmoji, MODE, minutes, openLabel, placeEmoji } from '../lib';
 
 const YES = new Set(['yes', 'only', 'designated']);
+const SOURCE_NAMES: Record<string, string> = { osm: 'OpenStreetMap', atp: 'All The Places', overture: 'Overture Maps' };
 
 /** One restaurant: how to get there (tabs per mode) and what is known about it. */
 export const Detail = forwardRef<
   HTMLElement,
   {
-    summary: RestaurantSummary;
-    /** The food searched for, whose pictogram stands for the restaurant. */
-    food: string | null;
+    summary: PlaceSummary;
+    /** What was searched for: the food searched for gives the pictogram. */
+    target: Target | null;
     routes: RoutesResponse | null;
     loading: boolean;
     error: boolean;
@@ -22,8 +23,8 @@ export const Detail = forwardRef<
     onBack: () => void;
   }
 >(function Detail(props, ref) {
-  const r = props.routes?.restaurant ?? props.summary;
-  const detail = props.routes?.restaurant;
+  const r = props.routes?.place ?? props.summary;
+  const detail = props.routes?.place;
   const open = openLabel(r.open);
   const foods = r.foods.map((k) => FOOD_BY_KEY.get(k)).filter((f) => f && !f.generic);
   const times: Record<Mode, number | null> = {
@@ -52,12 +53,13 @@ export const Detail = forwardRef<
             </svg>
           </button>
           <span className="emoji-dot emoji-big" aria-hidden="true">
-            {foodEmoji(r, props.food)}
+            {placeEmoji(r, props.target)}
           </span>
           <div className="detail-title">
             <h2>{r.name}</h2>
             <p>
-              {KIND_LABEL[r.kind] ?? 'Restaurant'}
+              {kindLabel(r)}
+              {r.brand && !r.name.toLowerCase().includes(r.brand.toLowerCase()) ? ` ${r.brand}` : ''}
               {r.town ? ` · ${r.town}` : ''} · {distance(r.distanceM)}
             </p>
           </div>
@@ -100,7 +102,7 @@ export const Detail = forwardRef<
           ) : props.error ? (
             <p className="way-loading">Le calcul du chemin n'a pas marché. Réessaie.</p>
           ) : props.mode === 'transit' ? (
-            <Transit options={props.routes?.transit ?? []} chosen={props.departure} onChoose={props.onDeparture} typical={props.routes?.typicalTimetable ?? false} />
+            <Transit options={props.routes?.transit ?? []} chosen={props.departure} onChoose={props.onDeparture} typical={props.routes?.typicalTimetable ?? false} destination={r.name} />
           ) : props.mode === 'walk' ? (
             props.routes?.walk ? (
               <p className="way-street">
@@ -159,12 +161,26 @@ export const Detail = forwardRef<
             ))}
           </div>
         ) : null}
-        {detail?.osmUrl ? (
+        {detail ? (
           <p className="source">
-            Une info manque ou est fausse ?{' '}
-            <a href={detail.osmUrl} target="_blank" rel="noreferrer">
-              Corriger sur OpenStreetMap
-            </a>
+            Source : {detail.sources.map((x) => SOURCE_NAMES[x] ?? x).join(', ')}.
+            {detail.osmUrl ? (
+              <>
+                {' '}
+                Une info manque ou est fausse ?{' '}
+                <a href={detail.osmUrl} target="_blank" rel="noreferrer">
+                  Corriger sur OpenStreetMap
+                </a>
+              </>
+            ) : (
+              <>
+                {' '}
+                Absent d'OpenStreetMap :{' '}
+                <a href={`https://www.openstreetmap.org/#map=19/${r.lat}/${r.lon}`} target="_blank" rel="noreferrer">
+                  l'ajouter
+                </a>
+              </>
+            )}
           </p>
         ) : null}
       </div>
@@ -172,7 +188,7 @@ export const Detail = forwardRef<
   );
 });
 
-function Transit(props: { options: TransitOption[]; chosen: number; onChoose: (i: number) => void; typical: boolean }) {
+function Transit(props: { options: TransitOption[]; chosen: number; onChoose: (i: number) => void; typical: boolean; destination: string }) {
   if (props.options.length === 0) return <p className="way-street">Pas de transports publics plus rapides que la marche dans l'heure et demie qui vient.</p>;
   const chosen = props.options[props.chosen] ?? props.options[0]!;
   return (
@@ -201,7 +217,7 @@ function Transit(props: { options: TransitOption[]; chosen: number; onChoose: (i
             {l.mode === 'walk' ? (
               <span className="leg-text">
                 Marcher {minutes(Math.max(1, l.durationMin))}
-                {l.to && i < chosen.legs.length - 1 ? ` jusqu'à ${l.to}` : ' jusqu’au restaurant'}
+                {` jusqu’à ${l.to && i < chosen.legs.length - 1 ? l.to : props.destination}`}
               </span>
             ) : (
               <span className="leg-text">
