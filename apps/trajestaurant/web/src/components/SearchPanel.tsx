@@ -24,8 +24,58 @@ import {
 import { Logo } from './Welcome';
 
 const PAGE = 5;
-const CHIPS = FOODS.filter((f) => !f.generic).slice(0, 16);
-const KIND_CHIPS = KIND_SEARCHES.slice(0, 16);
+/** Shortcut rows show this many chips folded (a phone scrolls them sideways); the title opens the whole list. */
+const FOLDED = { wide: 3, narrow: 6 };
+
+type ChipItem = { key: string; emoji: string; label: string; pick: () => void };
+
+function useWide(): boolean {
+  const [wide, setWide] = useState(() => matchMedia('(min-width: 900px)').matches);
+  useEffect(() => {
+    const mq = matchMedia('(min-width: 900px)');
+    const on = () => setWide(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return wide;
+}
+
+/**
+ * One row of shortcuts: a few chips, and its title as the button that unfolds all of them in a
+ * card ("Manger +26"). One row is open at a time.
+ */
+function ChipRow(props: { id: string; title: string; items: ChipItem[]; open: boolean; onToggle: () => void; folded: number }) {
+  const hidden = Math.max(0, props.items.length - props.folded);
+  const shown = props.open ? props.items : props.items.slice(0, props.folded);
+  return (
+    <div className={`chips${props.open ? ' is-open' : ''}`} role="group" aria-label={props.title}>
+      <button
+        type="button"
+        className="chips-title"
+        aria-expanded={props.open}
+        aria-controls={`chips-${props.id}`}
+        aria-label={props.open ? `${props.title} : replier` : `${props.title} : voir les ${props.items.length}`}
+        onClick={props.onToggle}
+        disabled={!props.open && hidden === 0}
+      >
+        {props.title}
+        {props.open ? <span className="chips-count">✕</span> : hidden ? <span className="chips-count">+{hidden}</span> : null}
+      </button>
+      <div className="chips-list" id={`chips-${props.id}`} role="list">
+        {shown.map((c) => (
+          <button key={c.key} type="button" role="listitem" className="chip" onClick={c.pick}>
+            <span aria-hidden="true">{c.emoji}</span> {c.label}
+          </button>
+        ))}
+        {!props.open && hidden ? (
+          <button type="button" className="chip chip-more" onClick={props.onToggle} aria-label={`Voir les ${hidden} autres : ${props.title}`}>
+            +{hidden}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 export interface SearchState {
   searched: Searched | null;
@@ -73,6 +123,14 @@ export const SearchPanel = forwardRef<
   const [shown, setShown] = useState(PAGE);
   const input = useRef<HTMLInputElement>(null);
   const [popular, setPopular] = useState<BrandHit[]>([]);
+  const [openRow, setOpenRow] = useState<string | null>(null);
+  const wide = useWide();
+  const folded = wide ? FOLDED.wide : FOLDED.narrow;
+  const rows: { id: string; title: string; items: ChipItem[] }[] = [
+    { id: 'food', title: 'Manger', items: FOODS.map((f) => ({ key: f.key, emoji: f.emoji, label: f.label, pick: () => props.onSearch(foodSearch(f.key)) })) },
+    { id: 'kind', title: 'Commerces', items: KIND_SEARCHES.map((k) => ({ key: k.key, emoji: k.emoji, label: k.label, pick: () => props.onSearch(kindSearch(k.key)) })) },
+    { id: 'brand', title: 'Enseignes', items: popular.map((b) => ({ key: b.key, emoji: kindInfo(b.kindKey, b.kind).emoji, label: b.name, pick: () => props.onSearch(brandSearch(b)) })) },
+  ];
 
   useEffect(() => setText(shownText), [shownText]);
   useEffect(() => setShown(PAGE), [props.search.response]);
@@ -266,39 +324,12 @@ export const SearchPanel = forwardRef<
           onHover={props.onHover}
         />
       ) : (
-        <div className="chip-rows">
-          <div className="chips" role="list" aria-label="Manger">
-            <span className="chips-title" aria-hidden="true">
-              Manger
-            </span>
-            {CHIPS.map((f) => (
-              <button key={f.key} type="button" role="listitem" className="chip" onClick={() => props.onSearch(foodSearch(f.key))}>
-                <span aria-hidden="true">{f.emoji}</span> {f.label}
-              </button>
+        <div className={`chip-rows${openRow ? ' has-open' : ''}`}>
+          {rows
+            .filter((r) => r.items.length > 0 && (!openRow || openRow === r.id))
+            .map((r) => (
+              <ChipRow key={r.id} {...r} folded={folded} open={openRow === r.id} onToggle={() => setOpenRow((o) => (o === r.id ? null : r.id))} />
             ))}
-          </div>
-          <div className="chips" role="list" aria-label="Commerces">
-            <span className="chips-title" aria-hidden="true">
-              Commerces
-            </span>
-            {KIND_CHIPS.map((k) => (
-              <button key={k.key} type="button" role="listitem" className="chip" onClick={() => props.onSearch(kindSearch(k.key))}>
-                <span aria-hidden="true">{k.emoji}</span> {k.label}
-              </button>
-            ))}
-          </div>
-          {popular.length ? (
-            <div className="chips" role="list" aria-label="Enseignes">
-              <span className="chips-title" aria-hidden="true">
-                Enseignes
-              </span>
-              {popular.map((b) => (
-                <button key={b.key} type="button" role="listitem" className="chip" onClick={() => props.onSearch(brandSearch(b))}>
-                  <span aria-hidden="true">{kindInfo(b.kindKey, b.kind).emoji}</span> {b.name}
-                </button>
-              ))}
-            </div>
-          ) : null}
         </div>
       )}
     </section>

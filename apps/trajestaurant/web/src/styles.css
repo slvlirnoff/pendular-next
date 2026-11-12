@@ -323,32 +323,91 @@ a {
 
 .chips {
   display: flex;
+  align-items: center;
   gap: 8px;
-  overflow-x: auto;
-  padding: 2px 2px 6px;
   margin: 0 -12px;
-  padding-inline: 12px;
+  padding: 2px 12px 6px;
+  overflow-x: auto;
   scrollbar-width: none;
 }
 .chips::-webkit-scrollbar {
   display: none;
 }
+.chips-list {
+  display: flex;
+  gap: 8px;
+}
 .chip-rows {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-height: 0;
 }
 .chips-title {
   flex: none;
-  align-self: center;
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
   color: var(--muted);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+.chips-title:disabled {
+  box-shadow: none;
+}
+.chips-count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--red);
+  color: var(--white);
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.chip-more {
+  /* A phone shows the count on the row's title, at its start: no need to scroll to the end. */
+  display: none;
+  color: var(--red-dark);
+  font-weight: 800;
+}
+/* A row unfolded: every chip, wrapped in a card that scrolls when long. */
+.chips.is-open {
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: var(--shadow);
+  min-height: 0;
+}
+.chips.is-open .chips-title {
+  align-self: flex-start;
+  box-shadow: none;
+  background: var(--soft);
+}
+.chips.is-open .chips-list {
+  flex-wrap: wrap;
+  overflow-y: auto;
+  max-height: 52vh;
+  padding: 2px;
+}
+.chips.is-open .chip {
+  box-shadow: none;
+  background: var(--soft);
+  min-height: 36px;
+  font-size: 14px;
+}
+.chips.is-open .chip:hover {
+  background: var(--red-tint);
 }
 .chip {
   flex: none;
@@ -1088,15 +1147,29 @@ a {
     max-height: calc(100% - 32px);
     padding: 0;
   }
-  /* One scrolling line per kind of shortcut, as on a phone: three wrapped rows filled the panel. */
+  /* Folded rows wrap their few chips: no sideways scrolling with a mouse. */
   .chips {
+    flex-wrap: wrap;
     margin: 0;
-    padding: 2px 0 8px;
-    scrollbar-width: thin;
+    padding: 2px 0;
+    overflow: visible;
   }
-  .chips::-webkit-scrollbar {
-    display: block;
-    height: 6px;
+  .chips-list {
+    display: contents;
+  }
+  /* A wide screen shows the count where the folded chips end: one "+28", not two. */
+  .chip-more {
+    display: inline-flex;
+  }
+  .chips:not(.is-open) .chips-count {
+    display: none;
+  }
+  .chips:not(.is-open) .chips-title {
+    box-shadow: none;
+  }
+  .chips.is-open .chips-list {
+    display: flex;
+    max-height: calc(100vh - 230px);
   }
   .results {
     max-height: calc(100vh - 160px);
