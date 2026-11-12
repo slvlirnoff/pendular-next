@@ -289,6 +289,12 @@ describe('sorting', () => {
     expect(leadMode(list[1]!, 'transit')).toBe('walk');
   });
 
+  it('falls back on public transport in the walking sort when a place is too far to walk', () => {
+    const list = [r('Moudon', null, 31, 6, 5335), r('Lucens', 9, null, 1, 480), r('Romont', null, 92, 11, 6164)];
+    expect(sortResults(list, 'walk').map((x) => x.name)).toEqual(['Lucens', 'Moudon', 'Romont']);
+    expect(leadMode(list[0]!, 'walk')).toBe('transit');
+  });
+
   it('shows a short walk first, and counts parking for the car', () => {
     const list = [r('Midi 480 m', 9, null, 1, 480), r('Bea 70 m', 2, null, 1, 70), r('Imaginatifs 830 m', 16, null, 2, 830), r('Moudon', null, 40, 5, 5500)];
     expect(sortResults(list, 'best').map((x) => x.name)).toEqual(['Bea 70 m', 'Imaginatifs 830 m', 'Midi 480 m', 'Moudon']);

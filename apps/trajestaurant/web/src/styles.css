@@ -212,6 +212,9 @@ a {
 .map {
   position: absolute;
   inset: 0;
+  /* Its own layer: the pins' z-index orders them among themselves, never above the panels. */
+  z-index: 0;
+  isolation: isolate;
   background: #f7f7f5;
 }
 .panel {
@@ -972,6 +975,23 @@ a {
   background: var(--car);
   color: var(--white);
 }
+.map-hint {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-soft);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
 .maplibregl-ctrl-attrib {
   font-size: 11px;
 }
@@ -1068,11 +1088,15 @@ a {
     max-height: calc(100% - 32px);
     padding: 0;
   }
+  /* One scrolling line per kind of shortcut, as on a phone: three wrapped rows filled the panel. */
   .chips {
-    flex-wrap: wrap;
-    overflow: visible;
     margin: 0;
-    padding: 0;
+    padding: 2px 0 8px;
+    scrollbar-width: thin;
+  }
+  .chips::-webkit-scrollbar {
+    display: block;
+    height: 6px;
   }
   .results {
     max-height: calc(100vh - 160px);

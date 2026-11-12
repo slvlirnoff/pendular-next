@@ -238,6 +238,7 @@ export function App() {
     <div className={`app${showDetail ? ' has-detail' : ''}`}>
       <MapView
         here={here}
+        showPlaces={!search.searched && !showDetail}
         target={search.searched?.target ?? null}
         results={showDetail ? [] : visible}
         hovered={hovered}

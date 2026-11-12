@@ -11,7 +11,7 @@ import { KIND_SEARCH_BY_KEY } from '../src/kinds.js';
 import { motisCar, valhallaCar, withFallback } from './car.js';
 import { createPool } from './db.js';
 import { routesTo } from './routes.js';
-import { popularBrands, searchPlaces, suggest, type SearchDeps } from './search.js';
+import { placesIn, popularBrands, searchPlaces, suggest, type SearchDeps } from './search.js';
 import { searchKey } from '../src/text.js';
 import { readTimetableRange, referenceMonday, TIMEZONE } from './timetable.js';
 
@@ -94,6 +94,13 @@ app.get('/api/search', async (c) => {
     console.error(e);
     return c.json({ error: 'search failed' }, 500);
   }
+});
+
+/** Places to show on the map in an area: ?bbox=west,south,east,north. */
+app.get('/api/map/places', async (c) => {
+  const b = (c.req.query('bbox') ?? '').split(',').map(Number);
+  if (b.length !== 4 || b.some((x) => !Number.isFinite(x))) return c.json({ error: 'bbox=west,south,east,north needed' }, 400);
+  return c.json(await placesIn(deps.db, b[0]!, b[1]!, b[2]!, b[3]!));
 });
 
 app.get('/api/places/:id', async (c) => {

@@ -129,6 +129,13 @@ export interface RoutesResponse {
   typicalTimetable: boolean;
 }
 
+/** Places shown on the map when nothing is searched: what a map marker needs. */
+export interface MapPlaces {
+  places: Pick<PlaceSummary, 'id' | 'name' | 'kindKey' | 'kind' | 'brand' | 'town' | 'lat' | 'lon' | 'foods'>[];
+  /** More places lie in the area than were sent (the nearest to its centre were). */
+  truncated: boolean;
+}
+
 export interface PlaceHit {
   label: string;
   lat: number;

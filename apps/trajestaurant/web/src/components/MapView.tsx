@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { Mode, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
-import { MODE, minutes, placeEmoji, type Here } from '../lib';
+import type { MapPlaces, Mode, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
+import { distanceTo, MODE, minutes, placeEmoji, type Here } from '../lib';
 
 export interface Padding {
   top: number;
@@ -73,8 +73,34 @@ function pointAlong(coords: [number, number][], share: number): [number, number]
   return coords[coords.length - 1]!;
 }
 
+/** From this zoom on, the places around are shown when nothing is searched (a village, a city district). */
+const PLACES_MIN_ZOOM = 14;
+
+/** A map icon for a place: its emoji on a white disc, drawn once per emoji. */
+function drawPlaceIcon(emoji: string): ImageData {
+  const size = 48;
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext('2d')!;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 3, 0, 2 * Math.PI);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#b9b0aa';
+  ctx.stroke();
+  ctx.font = '26px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, size / 2, size / 2 + 2);
+  return ctx.getImageData(0, 0, size, size);
+}
+
 export function MapView(props: {
   here: Here | null;
+  /** Nothing is searched nor chosen: show the places around (from PLACES_MIN_ZOOM on). */
+  showPlaces: boolean;
   /** What was searched for: the food searched for gives the pictogram. */
   target: Target | null;
   results: PlaceSummary[];
@@ -93,6 +119,12 @@ export function MapView(props: {
   const markers = useRef(new Map<number, { marker: maplibregl.Marker; el: HTMLButtonElement }>());
   const hereMarker = useRef<maplibregl.Marker | null>(null);
   const labels = useRef<maplibregl.Marker[]>([]);
+  const [zoomedOut, setZoomedOut] = useState(false);
+  const placesById = useRef(new Map<number, MapPlaces['places'][number]>());
+  const showPlaces = useRef(props.showPlaces);
+  showPlaces.current = props.showPlaces;
+  const here = useRef(props.here);
+  here.current = props.here;
   const onPick = useRef(props.onPick);
   const onMode = useRef(props.onMode);
   onPick.current = props.onPick;
@@ -114,6 +146,35 @@ export function MapView(props: {
     m.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Lieux © OpenStreetMap, Overture Maps Foundation, All The Places · Itinéraires MOTIS, opentransportdata.swiss' }), 'bottom-right');
     ready.current = new Promise((resolve) =>
       m.on('load', () => {
+        // The places around, under the routes: an emoji icon, the name when zoomed in. The map
+        // leaves out icons that would overlap, places to eat and chains winning.
+        m.addSource('places', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+        m.addLayer({
+          id: 'places',
+          type: 'symbol',
+          source: 'places',
+          layout: {
+            'icon-image': ['get', 'icon'],
+            'icon-size': ['interpolate', ['linear'], ['zoom'], PLACES_MIN_ZOOM, 0.8, 17, 1.05],
+            'symbol-sort-key': ['get', 'rank'],
+            'text-field': ['step', ['zoom'], '', 15.5, ['get', 'name']],
+            'text-font': ['Noto Sans Regular'],
+            'text-size': 11.5,
+            'text-offset': [0, 1.3],
+            'text-anchor': 'top',
+            'text-max-width': 9,
+            'text-optional': true,
+          },
+          paint: { 'text-color': '#3b3532', 'text-halo-color': '#ffffff', 'text-halo-width': 1.6 },
+        });
+        m.on('click', 'places', (e) => {
+          const id = Number(e.features?.[0]?.properties?.id);
+          const p = placesById.current.get(id);
+          if (!p) return;
+          onPick.current({ ...p, distanceM: here.current ? Math.round(distanceTo(here.current, p)) : 0, open: null });
+        });
+        m.on('mouseenter', 'places', () => (m.getCanvas().style.cursor = 'pointer'));
+        m.on('mouseleave', 'places', () => (m.getCanvas().style.cursor = ''));
         m.addSource('routes', { type: 'geojson', data: routeFeatures(null, 0, 'walk') });
         const sel: maplibregl.ExpressionSpecification = ['==', ['get', 'selected'], true];
         const color: maplibregl.ExpressionSpecification = ['match', ['get', 'mode'], 'walk', COLORS.walk, 'car', COLORS.car, COLORS.transit];
@@ -126,6 +187,41 @@ export function MapView(props: {
         resolve();
       }),
     );
+    m.on('styleimagemissing', (e) => {
+      if (!e.id.startsWith('place:') || m.hasImage(e.id)) return;
+      m.addImage(e.id, drawPlaceIcon(e.id.slice('place:'.length)), { pixelRatio: 2 });
+    });
+    // The places in view, asked again once the map stops moving.
+    let pending: AbortController | null = null;
+    const loadPlaces = () => {
+      pending?.abort();
+      const source = m.getSource('places') as GeoJSONSource | undefined;
+      if (!source) return;
+      const tooFar = m.getZoom() < PLACES_MIN_ZOOM;
+      setZoomedOut(showPlaces.current && tooFar);
+      if (!showPlaces.current || tooFar) {
+        source.setData({ type: 'FeatureCollection', features: [] });
+        return;
+      }
+      const b = m.getBounds();
+      const ctl = (pending = new AbortController());
+      fetch(`/api/map/places?bbox=${[b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map((x) => x.toFixed(5)).join(',')}`, { signal: ctl.signal })
+        .then((r) => r.json() as Promise<MapPlaces>)
+        .then((d) => {
+          placesById.current = new Map(d.places.map((p) => [p.id, p]));
+          source.setData({
+            type: 'FeatureCollection',
+            features: d.places.map((p) => ({
+              type: 'Feature' as const,
+              properties: { id: p.id, name: p.name, icon: `place:${placeEmoji(p, null)}`, rank: p.foods.length ? 0 : p.brand ? 1 : 2 },
+              geometry: { type: 'Point' as const, coordinates: [p.lon, p.lat] },
+            })),
+          });
+        })
+        .catch(() => undefined);
+    };
+    m.on('moveend', loadPlaces);
+    m.on('trajestaurant:places', loadPlaces);
     return () => {
       m.remove();
       map.current = null;
@@ -239,7 +335,7 @@ export function MapView(props: {
       const padding = { top, bottom, left, right };
       if (pts.length === 0) return;
       if (pts.length === 1) {
-        m.easeTo({ center: pts[0], zoom: 13, padding, duration: reduce ? 0 : 500 });
+        m.easeTo({ center: pts[0], zoom: PLACES_MIN_ZOOM + 0.5, padding, duration: reduce ? 0 : 500 });
         return;
       }
       const lons = pts.map((p) => p[0]);
@@ -257,5 +353,20 @@ export function MapView(props: {
     };
   }, [props.here, props.results, props.selected, props.routes, props.mode, props.departure, pad.top, pad.bottom, pad.left, pad.right]);
 
-  return <div ref={el} className="map" role="region" aria-label="Carte" />;
+  // Shown or hidden with the search: asked for the current view when they come back.
+  useEffect(() => {
+    void ready.current?.then(() => {
+      const m = map.current;
+      if (!m) return;
+      m.setLayoutProperty('places', 'visibility', props.showPlaces ? 'visible' : 'none');
+      m.fire('trajestaurant:places');
+    });
+  }, [props.showPlaces]);
+
+  return (
+    <>
+      <div ref={el} className="map" role="region" aria-label="Carte" />
+      {zoomedOut ? <p className="map-hint">Zoome sur la carte pour voir les lieux autour</p> : null}
+    </>
+  );
 }

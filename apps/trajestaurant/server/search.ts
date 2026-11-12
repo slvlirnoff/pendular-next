@@ -1,6 +1,6 @@
 import type pg from 'pg';
 import { localToUtc, type LatLon, type MotisRouting } from '@pendular/engine';
-import type { BrandHit, PlaceSummary, SearchResponse, SearchResult, Suggestion, Target } from '../src/api.js';
+import type { BrandHit, MapPlaces, PlaceSummary, SearchResponse, SearchResult, Suggestion, Target } from '../src/api.js';
 import { FOOD_BY_KEY, FOOD_ORDER, matchFoods } from '../src/foods.js';
 import { KIND_SEARCH_BY_KEY, matchKinds } from '../src/kinds.js';
 import { sameName, searchKey } from '../src/text.js';
@@ -150,6 +150,33 @@ export function onePlace(rows: Row[]): Row[] {
     if (!twin) kept.push(r);
   }
   return kept.sort((a, b) => a.dist - b.dist);
+}
+
+/** The largest area the map asks places for, degrees: beyond, it is zoomed out too far to show them. */
+export const MAP_MAX_SPAN = { lon: 0.3, lat: 0.2 };
+export const MAP_MAX_PLACES = 600;
+
+/**
+ * Places inside an area of the map, to show when nothing is searched: places to eat first, then
+ * the branches of chains, then the others, the nearest to the centre of the area first within each.
+ */
+export async function placesIn(db: pg.Pool, w: number, s: number, e: number, n: number): Promise<MapPlaces> {
+  if (e - w > MAP_MAX_SPAN.lon || n - s > MAP_MAX_SPAN.lat || e <= w || n <= s) return { places: [], truncated: true };
+  const r = await db.query<{ id: string; name: string; kind_key: string; kind: string; brand: string | null; town: string | null; lat: number; lon: number; foods: string[] }>(
+    `select p.id, p.name, p.kind_key, p.kind, p.brand, p.town, st_y(p.geom::geometry) as lat, st_x(p.geom::geometry) as lon,
+            array(select food from place_food f where f.place_id = p.id) as foods
+     from place p
+     where p.geom && st_makeenvelope($1, $2, $3, $4, 4326)::geography
+     order by (case when exists (select 1 from place_food f where f.place_id = p.id) then 0 when p.brand_key is not null then 1 else 2 end),
+              p.geom <-> st_setsrid(st_makepoint(($1 + $3) / 2, ($2 + $4) / 2), 4326)::geography
+     limit $5`,
+    [w, s, e, n, MAP_MAX_PLACES + 1],
+  );
+  const rows = r.rows.slice(0, MAP_MAX_PLACES);
+  return {
+    places: rows.map((x) => ({ id: Number(x.id), name: x.name, kindKey: x.kind_key, kind: x.kind, brand: x.brand, town: x.town, lat: x.lat, lon: x.lon, foods: sortFoods(x.foods) })),
+    truncated: r.rows.length > MAP_MAX_PLACES,
+  };
 }
 
 /** The places a search is about, nearest first. */

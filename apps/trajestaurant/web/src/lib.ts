@@ -50,6 +50,13 @@ export function nameSearch(key: string): Searched {
   return { target: { type: 'name', key }, label: `« ${key} »`, emoji: '🔎' };
 }
 
+/** Straight-line distance, metres. */
+export function distanceTo(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
+  const rad = Math.PI / 180;
+  const h = Math.sin(((b.lat - a.lat) * rad) / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(((b.lon - a.lon) * rad) / 2) ** 2;
+  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+}
+
 export function minutes(m: number): string {
   if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);
@@ -119,10 +126,14 @@ export function noCarMode(r: Pick<SearchResult, 'walkMin' | 'transitMin'>): Mode
   return r.transitMin !== null ? 'transit' : null;
 }
 
-/** The way a sort puts forward for a place: "le plus rapide", without a car (🚆), on foot or by car. */
+/**
+ * The way a sort puts forward for a place: "le plus rapide"; without a car (🚆); on foot, or by
+ * public transport when it is too far to walk (🚶); by car.
+ */
 export function leadMode(r: SearchResult, sort: Sort): Mode | null {
   if (sort === 'best') return bestMode(r);
   if (sort === 'transit') return noCarMode(r);
+  if (sort === 'walk') return r.walkMin !== null ? 'walk' : r.transitMin !== null ? 'transit' : null;
   return timeOf(r, sort) !== null ? sort : null;
 }
 

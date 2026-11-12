@@ -42,6 +42,11 @@ type Option =
   | { type: 'place'; r: PlaceSummary };
 
 const count = (n: number) => n.toLocaleString('fr-CH');
+const SORT_HINT: Record<'walk' | 'transit' | 'car', string> = {
+  walk: 'À pied, ou en transports publics quand c’est trop loin',
+  transit: 'Sans voiture : transports publics ou à pied',
+  car: 'En voiture',
+};
 /** Searches for one sort of place (a food, a kind): rows show the town rather than the kind. */
 const byType = (s: Searched) => s.target.type === 'food' || s.target.type === 'kind';
 
@@ -337,8 +342,8 @@ function Results(props: {
               type="button"
               role="radio"
               aria-checked={props.sort === s.key}
-              aria-label={s.key === 'best' ? undefined : s.key === 'transit' ? 'Trier : sans voiture (transports publics ou à pied)' : `Trier : ${MODE[s.key].label}`}
-              title={s.key === 'transit' ? 'Sans voiture : transports publics ou à pied' : undefined}
+              aria-label={s.key === 'best' ? undefined : SORT_HINT[s.key]}
+              title={s.key === 'best' ? undefined : SORT_HINT[s.key]}
               className={props.sort === s.key ? 'is-on' : ''}
               onClick={() => props.onSort(s.key)}
             >

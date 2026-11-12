@@ -9,7 +9,9 @@ Three screens: a welcome screen (sign-in comes later), a full map with a search 
 of places with their travel times, and a place with its routes and what is known about it. The
 search bar suggests food types, kinds of shops and places, chains ("Migros · 747 in Switzerland"),
 all places of a name ("all « mix image »") and single places, nearest first. Shortcuts under it:
-food types, kinds of shops, well-known chains.
+food types, kinds of shops, well-known chains. When nothing is searched, the map shows the places
+around from zoom 14 on (`/api/map/places`, at most 600, places to eat and chains first; the map
+leaves out icons that would overlap; a click opens the place).
 
 ## Layout
 
@@ -68,7 +70,7 @@ A link can open a search directly: `/?ici=46.7085,6.8405,Lucens&food=burger`, `&
 - **Order** ("le plus rapide"): each place shows its quickest way, walking when it takes 12 minutes
   or less; when ranking, the car counts 5 more minutes for parking and walking to the door. The 🚆
   order is "without a car": public transport, or walking when it is as quick (the post office next
-  door comes first).
+  door comes first); the 🚶 order walks where one can and takes public transport beyond.
 - **Caches**: street times from a place are kept for an hour (a search for pizza, then for Italian
   food, computes only the places that are new), and the stops reached by public transport from a
   place for the minute. At start, one search in the background loads the routing engines' data.
