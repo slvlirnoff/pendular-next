@@ -6,7 +6,7 @@ import { groupRoute, ticketGroups, type TicketGroup } from '../lib/groups.js';
 import { carNote } from '../lib/carNote.js';
 import { modeIcon } from '../lib/pictograms.js';
 import { ModeChain } from './ModeChain.js';
-import { PriceYear, productName } from './OptionList.js';
+import { headTicket, PriceYear, productName } from './OptionList.js';
 
 /** The five ways people think of a commute; each card shows the best option of its kinds. */
 const CATEGORIES: { id: 'transit' | 'car' | 'active' | 'parkRail' | 'bikeRide'; kinds: OptionKind[]; icons: string[] }[] = [
@@ -49,8 +49,22 @@ function ModeCard(props: { category: (typeof CATEGORIES)[number]; result: Compar
   // The route the card draws: the selected one when it is on this ticket, else the best one.
   const best = groupRoute(group, props.selected);
   const has = (g: TicketGroup, id: string | null | undefined) => g.routes.some((o) => o.id === id);
-  // Several routes on one ticket: say how many, the list below tells them apart.
-  const label = (g: TicketGroup) => (g.routes.length > 1 ? t('group.routes', { n: g.routes.length }) : viaLabel(g.routes[0]!, t, lang));
+  // What tells a ticket from the others of the card: where one parks, else where one changes;
+  // several routes without a car park are counted, the list below tells them apart.
+  const place = (g: TicketGroup) => (g.routes[0]!.access || g.routes.length === 1 ? viaLabel(g.routes[0]!, t, lang) : t('group.routes', { n: g.routes.length }));
+  // The same place twice (two tickets from one car park): the ticket says which is which.
+  const ticketOf = (g: TicketGroup) => {
+    const p = (g.routes.find((o) => o.cost.yearly === g.yearly) ?? g.routes[0]!).cost.products[0];
+    if (!p) return '';
+    const zoned = p.components.find((c) => c.key.startsWith('mobilis.') && typeof c.params?.zones === 'number');
+    return zoned ? t('product.zones', { n: zoned.params!.zones as number }) : headTicket(p, t);
+  };
+  const shownGroups = mine.slice(0, 3);
+  const label = (g: TicketGroup) => {
+    const twice = shownGroups.some((x) => x !== g && place(x) === place(g));
+    const ticket = twice ? ticketOf(g) : '';
+    return ticket ? `${place(g)} · ${ticket}` : place(g);
+  };
   // A city park and ride is not a P+Rail: the card takes the name of what it shows.
   const name = best.kind === 'cityParkRide' ? t('kind.cityParkRide') : t(`cat.${category.id}`);
 
@@ -73,7 +87,7 @@ function ModeCard(props: { category: (typeof CATEGORIES)[number]; result: Compar
           </span>
         </span>
         <span className="mode-via">{label(group)}</span>
-        {group.routes.length === 1 && best.itinerary.legs.some((l) => l.line) && <ModeChain legs={best.itinerary.legs} />}
+        {best.itinerary.legs.some((l) => l.line) && <ModeChain legs={best.itinerary.legs} />}
         {note && <span className="mode-note">{note}</span>}
         {tags.length > 0 && (
           <span className="mode-tags">
