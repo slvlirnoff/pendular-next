@@ -8,6 +8,7 @@ import { SearchPanel, type SearchState } from './components/SearchPanel';
 import { Welcome } from './components/Welcome';
 import { api, bestMode, brandSearch, distanceTo, foodSearch, kindSearch, nameSearch, type Here, type Searched, type Sort } from './lib';
 import { KIND_SEARCH_BY_KEY } from '../../src/kinds';
+import { LANG, t } from './i18n';
 
 const HERE_KEY = 'trajestaurant.here';
 
@@ -24,7 +25,7 @@ function storedHere(): Here | null {
 function readAddress(v: string | null, stop: string | null): PlaceHit | null {
   const [lat, lon, ...label] = (v ?? '').split(',');
   if (!(lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon))) return null;
-  return { lat: +lat, lon: +lon, label: label.join(',') || 'Adresse', ...(stop ? { type: 'stop' as const, stopId: stop } : { type: 'address' as const }) };
+  return { lat: +lat, lon: +lon, label: label.join(',') || t('sugg.address'), ...(stop ? { type: 'stop' as const, stopId: stop } : { type: 'address' as const }) };
 }
 
 /** An address shown as a place: its card and its pin (id 0: not a place of the database). */
@@ -40,7 +41,7 @@ function addressSummary(a: PlaceHit, here: Here | null): PlaceSummary {
 function readUrl(): { here: Here | null; searched: Searched | null; place: number | null; address: PlaceHit | null } {
   const p = new URLSearchParams(location.search);
   const [lat, lon, ...label] = (p.get('ici') ?? '').split(',');
-  const here = lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon) ? { lat: +lat, lon: +lon, label: label.join(',') || 'Ma position' } : null;
+  const here = lat && lon && Number.isFinite(+lat) && Number.isFinite(+lon) ? { lat: +lat, lon: +lon, label: label.join(',') || t('myPosition') } : null;
   const food = p.get('food');
   const kind = p.get('kind');
   const brand = p.get('brand');
@@ -68,6 +69,8 @@ function writeUrl(s: { here: Here | null; searched: Searched | null; place: numb
     p.set('adr', `${s.address.lat.toFixed(6)},${s.address.lon.toFixed(6)},${s.address.label}`);
     if (s.address.stopId) p.set('stop', s.address.stopId);
   }
+  // A link shared in another language than French opens in it.
+  if (LANG !== 'fr') p.set('lang', LANG);
   const url = `${location.pathname}${p.size ? `?${p.toString()}` : ''}`;
   if (url === `${location.pathname}${location.search}`) return;
   if (push) history.pushState(null, '', url);
@@ -152,7 +155,7 @@ export function App() {
             .where(lat, lon)
             .catch(() => ({ town: null }))
             .then((w) => {
-              placeHere({ lat, lon, label: w.town ?? 'Ma position' });
+              placeHere({ lat, lon, label: w.town ?? t('myPosition') });
               setLocating(false);
               setLocateFailed(false);
               then?.();

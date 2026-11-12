@@ -1,3 +1,4 @@
+import { LANG, LANGS, setLang, t } from '../i18n';
 export function Logo(props: { size?: number; tone?: 'red' | 'white' }) {
   const size = props.size ?? 40;
   const pin = props.tone === 'white' ? '#ffffff' : 'var(--red)';
@@ -42,22 +43,36 @@ export function Welcome(props: { onStart: () => void; locating: boolean }) {
         <div className="welcome-logo">
           <Logo size={88} tone="white" />
         </div>
-        <p className="welcome-hello">Bienvenue sur</p>
+        <p className="welcome-hello">{t('welcome.hello')}</p>
         <h1 className="welcome-title">Trajestaurant</h1>
-        <p className="welcome-lede">Trouve où manger, ou ton magasin, près de toi, et le chemin pour y aller : à pied, en train, en bus ou en voiture.</p>
+        <p className="welcome-lede">{t('welcome.lede')}</p>
         <div className="welcome-actions">
           <button type="button" className="btn btn-white" onClick={props.onStart} disabled={props.locating}>
-            {props.locating ? 'Je cherche où tu es…' : 'Commencer'}
+            {props.locating ? t('welcome.locating') : t('welcome.start')}
           </button>
-          <button type="button" className="btn btn-ghost" disabled title="Bientôt disponible">
-            Se connecter <span className="soon">bientôt</span>
+          <button type="button" className="btn btn-ghost" disabled title={t('welcome.soonTitle')}>
+            {t('welcome.signin')} <span className="soon">{t('welcome.soon')}</span>
           </button>
         </div>
+        <LangPicker className="welcome-langs" />
       </div>
       <footer className="welcome-foot">
         <span>trajestaurant.ch</span>
-        <span>Lieux © OpenStreetMap, Overture, All The Places</span>
+        <span>{t('credits.places')}</span>
       </footer>
     </main>
+  );
+}
+
+/** The four languages, the current one marked; choosing one reloads the page in it. */
+export function LangPicker(props: { className?: string }) {
+  return (
+    <div className={`langs ${props.className ?? ''}`} role="group" aria-label={t('language')}>
+      {LANGS.map((l) => (
+        <button key={l.key} type="button" lang={l.key} className={`lang${l.key === LANG ? ' is-on' : ''}`} aria-pressed={l.key === LANG} title={l.name} onClick={() => l.key !== LANG && setLang(l.key)}>
+          {l.key.toUpperCase()}
+        </button>
+      ))}
+    </div>
   );
 }

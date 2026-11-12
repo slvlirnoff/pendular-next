@@ -37,6 +37,7 @@ const KINDS: Record<string, KindInfo> = {
   'amenity=cinema': { emoji: '🎬', label: 'Cinéma' },
   'amenity=car_rental': { emoji: '🚙', label: 'Location de voitures' },
   'amenity=car_sharing': { emoji: '🔑', label: 'Car sharing' },
+  'amenity=bicycle_rental': { emoji: '🚲', label: 'Vélos en libre-service' },
   'amenity=theatre': { emoji: '🎭', label: 'Théâtre' },
   'amenity=library': { emoji: '📚', label: 'Bibliothèque' },
   'amenity=marketplace': { emoji: '🧺', label: 'Marché' },
@@ -278,7 +279,7 @@ export const KIND_KEYS = ['amenity', 'shop', 'healthcare', 'craft', 'leisure', '
 export const KEPT: Record<string, Set<string> | 'any'> = {
   shop: 'any',
   amenity: new Set([
-    ...FOOD_KINDS, 'pub', 'bar', 'pharmacy', 'fuel', 'bank', 'post_office', 'cinema', 'car_rental', 'car_sharing', 'theatre', 'library', 'marketplace',
+    ...FOOD_KINDS, 'pub', 'bar', 'pharmacy', 'fuel', 'bank', 'post_office', 'cinema', 'car_rental', 'car_sharing', 'bicycle_rental', 'theatre', 'library', 'marketplace',
     'doctors', 'dentist', 'clinic', 'hospital', 'veterinary', 'police', 'townhall', 'courthouse', 'driving_school', 'car_wash', 'vehicle_inspection',
     'recycling', 'atm', 'bureau_de_change',
   ]),
@@ -388,6 +389,7 @@ export const KIND_SEARCHES: KindSearch[] = [
   { key: 'bibliotheque', emoji: '📚', label: 'Bibliothèque', kinds: ['amenity=library'], synonyms: ['bibliotheque', 'library', 'bibliothek', 'biblioteca', 'ludotheque'] },
   { key: 'marche', emoji: '🧺', label: 'Marché', kinds: ['amenity=marketplace'], synonyms: ['marche', 'market', 'markt', 'mercato', 'marche paysan'] },
   { key: 'car-sharing', emoji: '🔑', label: 'Car sharing', kinds: ['amenity=car_sharing'], synonyms: ['car sharing', 'carsharing', 'autopartage', 'voiture partagee', 'voitures partagees', 'partage de voiture', 'mobility', 'auto teilen', 'auto in condivisione', '2em', 'sponti'] },
+  { key: 'velo-partage', emoji: '🚲', label: 'Vélos en libre-service', kinds: ['amenity=bicycle_rental'], synonyms: ['velo en libre service', 'velos en libre service', 'velo partage', 'velos partages', 'location de velo', 'bike sharing', 'bikesharing', 'velospot', 'donkey', 'nextbike', 'publibike', 'carvelo', 'veloverleih', 'leihvelo', 'bici condivise', 'bike sharing'] },
   { key: 'location-voiture', emoji: '🚙', label: 'Location de voitures', kinds: ['amenity=car_rental'], synonyms: ['location de voiture', 'location voiture', 'louer une voiture', 'car rental', 'autovermietung', 'noleggio auto'] },
 
   // Health.

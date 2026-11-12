@@ -35,6 +35,8 @@ export interface PlaceSummary {
 export interface SearchResult extends PlaceSummary {
   /** A car-sharing station: the cars its provider reports there now (null: unknown). */
   cars?: number | null;
+  /** A bike-sharing station: the bikes there now (null: unknown). */
+  bikes?: number | null;
   walkMin: number | null;
   /** By bike (MOTIS's bike network), for places within 25 km. */
   bikeMin?: number | null;
@@ -216,6 +218,18 @@ export interface PlaceHit {
   stopId?: string;
   /** A stop's modes, main first. */
   modes?: Departure['mode'][];
+}
+
+/** A shared vehicle parked anywhere (free floating), live. */
+export interface FreeVehicle {
+  id: string;
+  /** Lime, Voi, Bird, Velospot… */
+  provider: string;
+  kind: 'scooter' | 'bike' | 'ebike' | 'cargo' | 'moped' | 'car' | 'other';
+  lat: number;
+  lon: number;
+  /** What its battery has left, when it says. */
+  rangeKm?: number;
 }
 
 /** A public transport stop on the map: one per station or stop, its platforms together. */

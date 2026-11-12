@@ -21,7 +21,7 @@ osmium tags-filter "$pbf" \
   nwr/amenity=restaurant,fast_food,cafe,ice_cream,food_court,biergarten,pub,bar \
   nwr/amenity=pharmacy,fuel,bank,post_office,cinema,car_rental,theatre,library,marketplace \
   nwr/amenity=doctors,dentist,clinic,hospital,veterinary,police,townhall,courthouse,driving_school \
-  nwr/amenity=car_wash,vehicle_inspection,recycling,atm,bureau_de_change \
+  nwr/amenity=car_wash,vehicle_inspection,recycling,atm,bureau_de_change,bicycle_rental \
   nwr/healthcare nwr/craft \
   nwr/office=employment_agency,insurance,estate_agent,lawyer,notary,accountant,tax_advisor,government,diplomatic,coworking,physician,travel_agent \
   nwr/shop \

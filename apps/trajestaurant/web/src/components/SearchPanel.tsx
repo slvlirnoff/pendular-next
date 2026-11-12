@@ -3,6 +3,8 @@ import type { BrandHit, PlaceHit, PlaceSummary, SearchResponse, SearchResult, Su
 import { FOODS, FOOD_BY_KEY } from '../../../src/foods';
 import { KIND_SEARCHES, KIND_SEARCH_BY_KEY, kindInfo } from '../../../src/kinds';
 import { searchKey } from '../../../src/text';
+import { count, foodLabel, kindName, searchLabel, t } from '../i18n';
+import { LangPicker } from './Welcome';
 import {
   api,
   brandSearch,
@@ -57,7 +59,7 @@ function ChipRow(props: { id: string; title: string; items: ChipItem[]; open: bo
         className="chips-title"
         aria-expanded={props.open}
         aria-controls={`chips-${props.id}`}
-        aria-label={props.open ? `${props.title} : replier` : `${props.title} : voir les ${props.items.length}`}
+        aria-label={props.open ? t('chips.fold', { title: props.title }) : t('chips.all', { title: props.title, n: props.items.length })}
         onClick={props.onToggle}
         disabled={!props.open && hidden === 0}
       >
@@ -71,7 +73,7 @@ function ChipRow(props: { id: string; title: string; items: ChipItem[]; open: bo
           </button>
         ))}
         {!props.open && hidden ? (
-          <button type="button" className="chip chip-more" onClick={props.onToggle} aria-label={`Voir les ${hidden} autres : ${props.title}`}>
+          <button type="button" className="chip chip-more" onClick={props.onToggle} aria-label={t('chips.more', { n: hidden, title: props.title })}>
             +{hidden}
           </button>
         ) : null}
@@ -95,12 +97,11 @@ type Option =
   | { type: 'named'; key: string; count: number }
   | { type: 'place'; r: PlaceSummary };
 
-const count = (n: number) => n.toLocaleString('fr-CH');
 const SORT_HINT: Record<'walk' | 'bike' | 'transit' | 'car', string> = {
-  walk: 'À pied, ou en transports publics quand c’est trop loin',
-  bike: 'À vélo, ou en transports publics quand c’est trop loin',
-  transit: 'Sans voiture : transports publics ou à pied',
-  car: 'En voiture',
+  walk: t('sort.walk'),
+  bike: t('sort.bike'),
+  transit: t('sort.transit'),
+  car: t('sort.car'),
 };
 /** Whether a stop's name holds every word typed, as the start of one of its words ("luc gare" → "Lucens, gare"). */
 export function namesStop(text: string, name: string): boolean {
@@ -112,10 +113,10 @@ export function namesStop(text: string, name: string): boolean {
 }
 
 /** The shortcut rows of kinds of places, by their group (src/kinds.ts). */
-const KIND_ROWS = [
-  { id: 'shop', title: 'Commerces' },
-  { id: 'health', title: 'Santé' },
-  { id: 'service', title: 'Services' },
+const KIND_ROWS: { id: 'shop' | 'health' | 'service'; title: string }[] = [
+  { id: 'shop', title: t('row.shop') },
+  { id: 'health', title: t('row.health') },
+  { id: 'service', title: t('row.service') },
 ];
 
 /** Searches for one sort of place (a food, a kind): rows show the town rather than the kind. */
@@ -154,13 +155,13 @@ export const SearchPanel = forwardRef<
   const wide = useWide();
   const folded = wide ? FOLDED.wide : FOLDED.narrow;
   const rows: { id: string; title: string; items: ChipItem[] }[] = [
-    { id: 'food', title: 'Manger', items: FOODS.map((f) => ({ key: f.key, emoji: f.emoji, label: f.label, pick: () => props.onSearch(foodSearch(f.key)) })) },
+    { id: 'food', title: t('row.food'), items: FOODS.map((f) => ({ key: f.key, emoji: f.emoji, label: foodLabel(f.key), pick: () => props.onSearch(foodSearch(f.key)) })) },
     ...KIND_ROWS.map((row) => ({
       id: row.id,
       title: row.title,
-      items: KIND_SEARCHES.filter((k) => (k.group ?? 'shop') === row.id).map((k) => ({ key: k.key, emoji: k.emoji, label: k.label, pick: () => props.onSearch(kindSearch(k.key)) })),
+      items: KIND_SEARCHES.filter((k) => (k.group ?? 'shop') === row.id).map((k) => ({ key: k.key, emoji: k.emoji, label: searchLabel(k.key), pick: () => props.onSearch(kindSearch(k.key)) })),
     })),
-    { id: 'brand', title: 'Enseignes', items: popular.map((b) => ({ key: b.key, emoji: kindInfo(b.kindKey, b.kind).emoji, label: b.name, pick: () => props.onSearch(brandSearch(b)) })) },
+    { id: 'brand', title: t('row.brand'), items: popular.map((b) => ({ key: b.key, emoji: kindInfo(b.kindKey, b.kind).emoji, label: b.name, pick: () => props.onSearch(brandSearch(b)) })) },
   ];
 
   useEffect(() => setText(shownText), [shownText]);
@@ -237,7 +238,7 @@ export const SearchPanel = forwardRef<
   useEffect(() => props.onVisible(visible), [props.search.response, sort, shown]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <section ref={ref} className="panel panel-search" aria-label="Recherche">
+    <section ref={ref} className="panel panel-search" aria-label={t('search.region')}>
       <div className="searchbar" role="search">
         <span className="searchbar-logo">
           <Logo size={26} />
@@ -251,8 +252,8 @@ export const SearchPanel = forwardRef<
           aria-controls={`${id}-list`}
           aria-autocomplete="list"
           aria-activedescendant={options.length ? `${id}-o${active}` : undefined}
-          aria-label="Que cherches-tu ? Une nourriture, un commerce, une enseigne ou un nom"
-          placeholder="Pizza, pharmacie, Migros…"
+          aria-label={t('search.aria')}
+          placeholder={t('search.placeholder')}
           autoComplete="off"
           spellCheck={false}
           enterKeyHint="search"
@@ -279,7 +280,7 @@ export const SearchPanel = forwardRef<
           <button
             type="button"
             className="searchbar-clear"
-            aria-label="Effacer"
+            aria-label={t('clear')}
             onClick={() => {
               setText('');
               props.onSearch(null);
@@ -298,12 +299,15 @@ export const SearchPanel = forwardRef<
         )}
       </div>
 
-      <button type="button" className="here-chip" onClick={props.onChangePlace}>
-        <span aria-hidden="true">📍</span> {props.here ? props.here.label : 'Où es-tu ?'} <span className="here-change">changer</span>
-      </button>
+      <div className="here-row">
+        <button type="button" className="here-chip" onClick={props.onChangePlace}>
+          <span aria-hidden="true">📍</span> {props.here ? props.here.label : t('picker.title')} <span className="here-change">{t('here.change')}</span>
+        </button>
+        <LangPicker className="langs-inline" />
+      </div>
 
       {options.length > 0 ? (
-        <ul className="card suggestions" id={`${id}-list`} role="listbox" aria-label="Suggestions">
+        <ul className="card suggestions" id={`${id}-list`} role="listbox" aria-label={t('suggestions')}>
           {options.map((o, i) => (
             <li
               key={o.type === 'food' ? `f-${o.key}` : o.type === 'kind' ? `k-${o.key}` : o.type === 'brand' ? `b-${o.b.key}` : o.type === 'named' ? 'n' : o.type === 'address' ? `a-${o.hit.lat},${o.hit.lon}` : `p-${o.r.id}`}
@@ -333,31 +337,31 @@ export const SearchPanel = forwardRef<
               <span className="suggestion-text">
                 {o.type === 'food' ? (
                   <>
-                    <strong>{FOOD_BY_KEY.get(o.key)?.label}</strong>
-                    <small>Type de nourriture</small>
+                    <strong>{foodLabel(o.key)}</strong>
+                    <small>{t('sugg.food')}</small>
                   </>
                 ) : o.type === 'kind' ? (
                   <>
-                    <strong>{KIND_SEARCH_BY_KEY.get(o.key)?.label}</strong>
-                    <small>Type de commerce ou de lieu</small>
+                    <strong>{searchLabel(o.key)}</strong>
+                    <small>{t('sugg.kind')}</small>
                   </>
                 ) : o.type === 'brand' ? (
                   <>
                     <strong>{o.b.name}</strong>
-                    <small>
-                      Enseigne · {kindInfo(o.b.kindKey, o.b.kind).label} · {count(o.b.count)} en Suisse
-                    </small>
+                    <small>{t('sugg.brand', { kind: kindName(o.b.kindKey, o.b.kind), count: count(o.b.count) })}</small>
                   </>
                 ) : o.type === 'named' ? (
                   <>
-                    <strong>Tous les « {o.key} »</strong>
-                    <small>{count(o.count)} lieux portent ce nom</small>
+                    <strong>{t('sugg.named', { name: o.key })}</strong>
+                    <small>{t('sugg.namedCount', { count: count(o.count) })}</small>
                   </>
                 ) : o.type === 'address' ? (
                   <>
                     <strong>{o.hit.label}</strong>
                     <small>
-                      {o.hit.type === 'stop' ? (o.hit.modes?.[0] === 'rail' ? 'Gare' : 'Arrêt') + ' · départs' : o.hit.type === 'place' ? 'Lieu' : 'Adresse'}
+                      {o.hit.type === 'stop'
+                        ? `${o.hit.modes?.[0] === 'rail' ? t('sugg.station') : t('sugg.stop')} · ${t('sugg.departures')}`
+                        : t(o.hit.type === 'place' ? 'sugg.place' : 'sugg.address')}
                       {props.here ? ` · ${distance(distanceTo(props.here, o.hit))}` : ''}
                     </small>
                   </>
@@ -421,7 +425,7 @@ function Results(props: {
   const first = props.search.response?.results[0];
   const emoji = searched.target.type === 'brand' && first ? placeEmoji(first, searched.target) : searched.emoji;
   const sorts: { key: Sort; label: string }[] = [
-    { key: 'best', label: 'Le plus rapide' },
+    { key: 'best', label: t('sort.best') },
     { key: 'walk', label: MODE.walk.emoji },
     { key: 'bike', label: MODE.bike.emoji },
     { key: 'transit', label: MODE.transit.emoji },
@@ -432,9 +436,9 @@ function Results(props: {
       <div className="results-head">
         <h2>
           <span aria-hidden="true">{emoji}</span> {label}
-          {props.here ? <small> près de {props.here.label}</small> : null}
+          {props.here ? <small> {t('results.near', { place: props.here.label })}</small> : null}
         </h2>
-        <div className="segmented" role="radiogroup" aria-label="Trier par">
+        <div className="segmented" role="radiogroup" aria-label={t('sort.by')}>
           {sorts.map((s) => (
             <button
               key={s.key}
@@ -453,9 +457,9 @@ function Results(props: {
       </div>
 
       {!props.here ? (
-        <p className="results-empty">Dis-nous d'abord où tu es (📍 en haut).</p>
+        <p className="results-empty">{t('results.noHere')}</p>
       ) : props.search.loading && !props.search.response ? (
-        <ul className="result-list" aria-label="Chargement">
+        <ul className="result-list" aria-label={t('loading')}>
           {[0, 1, 2, 3].map((i) => (
             <li key={i} className="result skeleton">
               <span className="emoji-dot" />
@@ -467,10 +471,10 @@ function Results(props: {
           ))}
         </ul>
       ) : props.search.error ? (
-        <p className="results-empty">La recherche n'a pas marché. Réessaie dans un instant.</p>
+        <p className="results-empty">{t('results.error')}</p>
       ) : props.list.length === 0 ? (
         <p className="results-empty">
-          {isFood ? 'Aucun restaurant de ce type à moins de 40 km.' : 'Rien trouvé à moins de 250 km.'} Il en manque un ? Tu peux l'ajouter sur{' '}
+          {isFood ? t('results.noneFood') : t('results.none')} {t('results.missing')}{' '}
           <a href="https://www.openstreetmap.org" target="_blank" rel="noreferrer">
             OpenStreetMap
           </a>
@@ -485,13 +489,13 @@ function Results(props: {
           </ul>
           {props.list.length < props.total ? (
             <button type="button" className="btn btn-more" onClick={props.onMore}>
-              Voir plus
+              {t('more')}
             </button>
           ) : null}
           {props.search.response?.typicalTimetable ? (
-            <p className="results-note">🚆 Horaire type : même jour et même heure dans l'horaire 2027.</p>
+            <p className="results-note">🚆 {t('note.typical')}</p>
           ) : null}
-          {props.list.some((r) => r.carMin !== null) ? <p className="results-note">🚗 Voiture : trafic de l’heure et temps pour se garer compris.</p> : null}
+          {props.list.some((r) => r.carMin !== null) ? <p className="results-note">🚗 {t('note.car')}</p> : null}
         </div>
       )}
     </div>
@@ -529,11 +533,14 @@ function ResultRow(props: { r: SearchResult; searched: Searched; sort: Sort; onP
             {distance(r.distanceM)}
             {open ? <span className={`open open-${open.tone}`}>{open.text}</span> : null}
             {r.kind === 'car_sharing' && r.cars !== undefined && r.cars !== null ? (
-              <span className={`cars${r.cars > 0 ? '' : ' cars-none'}`}>🔑 {r.cars > 0 ? `${r.cars} voiture${r.cars > 1 ? 's' : ''}` : 'aucune voiture'}</span>
+              <span className={`cars${r.cars > 0 ? '' : ' cars-none'}`}>🔑 {r.cars > 0 ? t(r.cars > 1 ? 'cars.many' : 'cars.one', { n: r.cars }) : t('cars.none')}</span>
+            ) : null}
+            {r.kind === 'bicycle_rental' && r.bikes !== undefined && r.bikes !== null ? (
+              <span className={`cars${r.bikes > 0 ? '' : ' cars-none'}`}>🚲 {r.bikes > 0 ? t(r.bikes > 1 ? 'bikes.many' : 'bikes.one', { n: r.bikes }) : t('bikes.none')}</span>
             ) : null}
           </span>
           <span className="result-modes">
-            {modes.length === 0 ? <span className="mode-time is-none">Trop loin pour aujourd'hui</span> : null}
+            {modes.length === 0 ? <span className="mode-time is-none">{t('tooFar')}</span> : null}
             {modes.map((m) => (
               <span key={m} className={`mode-time mode-${m}${m === lead ? ' is-lead' : ''}`}>
                 <span aria-hidden="true">{MODE[m].emoji}</span>

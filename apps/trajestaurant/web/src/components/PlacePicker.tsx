@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { PlaceHit } from '../../../src/api';
 import { api, type Here } from '../lib';
+import { t } from '../i18n';
 
 /** "Where are you?": the device's position, or a place typed by name. */
 export function PlacePicker(props: { onPlace: (h: Here) => void; onLocate: () => void; onClose: (() => void) | null; locating: boolean; failed: boolean }) {
@@ -39,19 +40,19 @@ export function PlacePicker(props: { onPlace: (h: Here) => void; onLocate: () =>
     <div className="sheet-backdrop" role="presentation" onClick={props.onClose ?? undefined}>
       <div className="card sheet" role="dialog" aria-modal="true" aria-labelledby={`${id}-t`} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
-          <h2 id={`${id}-t`}>Où es-tu ?</h2>
+          <h2 id={`${id}-t`}>{t('picker.title')}</h2>
           {props.onClose ? (
-            <button type="button" className="sheet-close" aria-label="Fermer" onClick={props.onClose}>
+            <button type="button" className="sheet-close" aria-label={t('close')} onClick={props.onClose}>
               ×
             </button>
           ) : null}
         </div>
         <button type="button" className="btn btn-red btn-block" onClick={props.onLocate} disabled={props.locating}>
-          <span aria-hidden="true">🎯</span> {props.locating ? 'Je cherche…' : 'Utiliser ma position'}
+          <span aria-hidden="true">🎯</span> {props.locating ? t('picker.locating') : t('picker.useMine')}
         </button>
-        {props.failed ? <p className="sheet-note">Ta position n'est pas disponible. Écris plutôt le nom de ton village ou de ta gare.</p> : null}
+        {props.failed ? <p className="sheet-note">{t('picker.failed')}</p> : null}
         <label className="sheet-label" htmlFor={id}>
-          Ou écris un lieu
+          {t('picker.orType')}
         </label>
         <input
           ref={input}
@@ -62,7 +63,7 @@ export function PlacePicker(props: { onPlace: (h: Here) => void; onLocate: () =>
           aria-controls={`${id}-list`}
           aria-activedescendant={hits.length ? `${id}-o${active}` : undefined}
           autoComplete="off"
-          placeholder="Lucens, gare de Moudon, rue…"
+          placeholder={t('picker.placeholder')}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {

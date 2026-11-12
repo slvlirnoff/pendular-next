@@ -319,10 +319,11 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
       transitMin: usefulTransit(transit[i] ?? null, walkMin),
     };
   });
-  // Car-sharing stations: the cars there now.
+  // Sharing stations: the cars or bikes there now.
   await Promise.all(
     rows.map(async (r, i) => {
       if (r.kind === 'car_sharing' && r.source === 'gbfs') results[i]!.cars = await deps.sharing.cars(r.source_id);
+      if (r.kind === 'bicycle_rental' && r.source === 'gbfs') results[i]!.bikes = await deps.sharing.bikes(r.source_id);
     }),
   );
   results.sort((a, b) => bestMinutes(a) - bestMinutes(b) || a.distanceM - b.distanceM);

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { DetailMode, MapPlaces, MapStop, PlaceHit, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
+import type { DetailMode, FreeVehicle, MapPlaces, MapStop, PlaceHit, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
 import { distanceTo, MODE, minutes, placeEmoji, stopEmoji, type Here } from '../lib';
+import { t } from '../i18n';
 
 export interface Padding {
   top: number;
@@ -87,6 +88,29 @@ const PLACES_MIN_ZOOM = 14;
 const STOPS_MIN_ZOOM = 15;
 
 /** A map icon for a place: its emoji on a white disc, drawn once per emoji. */
+/** A shared vehicle parked anywhere: its emoji on a smaller disc, ringed in the bike's teal. */
+function drawVehicleIcon(emoji: string): ImageData {
+  const size = 36;
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext('2d')!;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 2.5, 0, 2 * Math.PI);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#0e7490';
+  ctx.stroke();
+  ctx.font = '19px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, size / 2, size / 2 + 1.5);
+  return ctx.getImageData(0, 0, size, size);
+}
+
+const VEHICLE_EMOJI: Record<FreeVehicle['kind'], string> = { scooter: '🛴', bike: '🚲', ebike: '🚲', cargo: '🚲', moped: '🛵', car: '🚗', other: '🛴' };
+
 function drawPlaceIcon(emoji: string): ImageData {
   const size = 48;
   const c = document.createElement('canvas');
@@ -159,7 +183,7 @@ export function MapView(props: {
     map.current = m;
     if (import.meta.env.DEV) (window as unknown as { __map: maplibregl.Map }).__map = m;
     m.touchZoomRotate.disableRotation();
-    m.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'Lieux © OpenStreetMap, Overture Maps Foundation, All The Places · Itinéraires MOTIS, opentransportdata.swiss' }), 'bottom-right');
+    m.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: t('credits.map') }), 'bottom-right');
     ready.current = new Promise((resolve) =>
       m.on('load', () => {
         // The places around, under the routes: an emoji icon, the name when zoomed in. The map
@@ -219,6 +243,33 @@ export function MapView(props: {
         });
         m.on('mouseenter', 'stops', () => (m.getCanvas().style.cursor = 'pointer'));
         m.on('mouseleave', 'stops', () => (m.getCanvas().style.cursor = ''));
+        // Shared scooters, bikes and mopeds parked anywhere, live, under the stops and places.
+        m.addSource('vehicles', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+        m.addLayer(
+          {
+            id: 'vehicles',
+            type: 'symbol',
+            source: 'vehicles',
+            layout: { 'icon-image': ['get', 'icon'], 'icon-size': ['interpolate', ['linear'], ['zoom'], STOPS_MIN_ZOOM, 0.75, 18, 1], 'icon-allow-overlap': false },
+          },
+          'places',
+        );
+        m.on('click', 'vehicles', (e) => {
+          const f = e.features?.[0];
+          if (!f) return;
+          const p = f.properties as { provider: string; kind: FreeVehicle['kind']; rangeKm?: number };
+          const text = [`${p.provider} · ${t(`vehicle.${p.kind}`)}`, typeof p.rangeKm === 'number' ? t('vehicle.range', { n: p.rangeKm }) : null, t('vehicle.book', { provider: p.provider })].filter(Boolean);
+          const box = document.createElement('div');
+          box.className = 'vehicle-pop';
+          for (const [i, line] of text.entries()) {
+            const el = document.createElement(i === 0 ? 'strong' : 'span');
+            el.textContent = line!;
+            box.append(el);
+          }
+          new maplibregl.Popup({ closeButton: false, offset: 14, maxWidth: '240px' }).setLngLat((f.geometry as GeoJSON.Point).coordinates as [number, number]).setDOMContent(box).addTo(m);
+        });
+        m.on('mouseenter', 'vehicles', () => (m.getCanvas().style.cursor = 'pointer'));
+        m.on('mouseleave', 'vehicles', () => (m.getCanvas().style.cursor = ''));
         m.addSource('routes', { type: 'geojson', data: routeFeatures(null, 0, 'walk') });
         const sel: maplibregl.ExpressionSpecification = ['==', ['get', 'selected'], true];
         const color: maplibregl.ExpressionSpecification = ['match', ['get', 'mode'], 'walk', COLORS.walk, 'bike', COLORS.bike, 'car', COLORS.car, 'sharing', COLORS.sharing, COLORS.transit];
@@ -240,8 +291,9 @@ export function MapView(props: {
       }),
     );
     m.on('styleimagemissing', (e) => {
-      if (!e.id.startsWith('place:') || m.hasImage(e.id)) return;
-      m.addImage(e.id, drawPlaceIcon(e.id.slice('place:'.length)), { pixelRatio: 2 });
+      if (m.hasImage(e.id)) return;
+      if (e.id.startsWith('place:')) m.addImage(e.id, drawPlaceIcon(e.id.slice('place:'.length)), { pixelRatio: 2 });
+      else if (e.id.startsWith('vehicle:')) m.addImage(e.id, drawVehicleIcon(e.id.slice('vehicle:'.length)), { pixelRatio: 2 });
     });
     // The places in view, asked again once the map stops moving.
     let pending: AbortController | null = null;
@@ -299,11 +351,44 @@ export function MapView(props: {
         })
         .catch(() => undefined);
     };
+    // The shared vehicles in view, likewise, and again every minute while they are shown (they move).
+    let pendingVehicles: AbortController | null = null;
+    const loadVehicles = () => {
+      pendingVehicles?.abort();
+      const source = m.getSource('vehicles') as GeoJSONSource | undefined;
+      if (!source) return;
+      if (!showPlaces.current || m.getZoom() < STOPS_MIN_ZOOM) {
+        source.setData({ type: 'FeatureCollection', features: [] });
+        return;
+      }
+      const b = m.getBounds();
+      const ctl = (pendingVehicles = new AbortController());
+      fetch(`/api/vehicles?min=${b.getSouth().toFixed(5)},${b.getWest().toFixed(5)}&max=${b.getNorth().toFixed(5)},${b.getEast().toFixed(5)}`, { signal: ctl.signal })
+        .then((r) => r.json() as Promise<FreeVehicle[]>)
+        .then((list) => {
+          if (!Array.isArray(list)) return;
+          source.setData({
+            type: 'FeatureCollection',
+            features: list.map((v) => ({
+              type: 'Feature' as const,
+              properties: { provider: v.provider, kind: v.kind, ...(v.rangeKm !== undefined ? { rangeKm: v.rangeKm } : {}), icon: `vehicle:${VEHICLE_EMOJI[v.kind]}` },
+              geometry: { type: 'Point' as const, coordinates: [v.lon, v.lat] },
+            })),
+          });
+        })
+        .catch(() => undefined);
+    };
+    const vehiclesTimer = setInterval(() => {
+      if (showPlaces.current && m.getZoom() >= STOPS_MIN_ZOOM && document.visibilityState === 'visible') loadVehicles();
+    }, 60_000);
     m.on('moveend', loadPlaces);
     m.on('trajestaurant:places', loadPlaces);
     m.on('moveend', loadStops);
     m.on('trajestaurant:places', loadStops);
+    m.on('moveend', loadVehicles);
+    m.on('trajestaurant:places', loadVehicles);
     return () => {
+      clearInterval(vehiclesTimer);
       m.remove();
       map.current = null;
     };
@@ -457,14 +542,15 @@ export function MapView(props: {
       if (!m) return;
       m.setLayoutProperty('places', 'visibility', props.showPlaces ? 'visible' : 'none');
       m.setLayoutProperty('stops', 'visibility', props.showPlaces ? 'visible' : 'none');
+      m.setLayoutProperty('vehicles', 'visibility', props.showPlaces ? 'visible' : 'none');
       m.fire('trajestaurant:places');
     });
   }, [props.showPlaces]);
 
   return (
     <>
-      <div ref={el} className="map" role="region" aria-label="Carte" />
-      {zoomedOut ? <p className="map-hint">Zoome sur la carte pour voir les lieux autour</p> : null}
+      <div ref={el} className="map" role="region" aria-label={t('map.region')} />
+      {zoomedOut ? <p className="map-hint">{t('map.zoom')}</p> : null}
     </>
   );
 }

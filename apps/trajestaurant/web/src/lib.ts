@@ -1,6 +1,7 @@
 import type { BrandHit, Departure, DeparturesResponse, DetailMode, Mode, OpenState, PlaceHit, PlaceSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion, Target } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
 import { KIND_SEARCH_BY_KEY, kindInfo } from '../../src/kinds';
+import { foodLabel, kindName, LANG, LOCALE, searchLabel, t } from './i18n';
 
 export interface Here {
   lat: number;
@@ -22,7 +23,7 @@ export const api = {
   place: (id: number, here: Here, signal?: AbortSignal) => get<RoutesResponse>(`/api/places/${id}?x=1${at(here)}`, signal),
   where: (lat: number, lon: number) => get<{ town: string | null }>(`/api/where?lat=${lat}&lon=${lon}`),
   geocode: (q: string, signal?: AbortSignal, near?: Here | null, type?: 'stop') =>
-    get<PlaceHit[]>(`/api/geocode?q=${encodeURIComponent(q)}${at(near ?? null)}${type ? `&type=${type}` : ''}`, signal),
+    get<PlaceHit[]>(`/api/geocode?q=${encodeURIComponent(q)}${at(near ?? null)}${type ? `&type=${type}` : ''}&lang=${LANG}`, signal),
   /** A stop's next departures. */
   departures: (stopId: string, signal?: AbortSignal) => get<DeparturesResponse>(`/api/stops/departures?id=${encodeURIComponent(stopId)}`, signal),
   /** The way to an address the geocoder found. */
@@ -40,12 +41,12 @@ export interface Searched {
 
 export function foodSearch(key: string): Searched {
   const f = FOOD_BY_KEY.get(key);
-  return { target: { type: 'food', key }, label: f?.label ?? key, emoji: f?.emoji ?? '🍽️' };
+  return { target: { type: 'food', key }, label: f ? foodLabel(key) : key, emoji: f?.emoji ?? '🍽️' };
 }
 
 export function kindSearch(key: string): Searched {
   const k = KIND_SEARCH_BY_KEY.get(key);
-  return { target: { type: 'kind', key }, label: k?.label ?? key, emoji: k?.emoji ?? '📍' };
+  return { target: { type: 'kind', key }, label: k ? searchLabel(key) : key, emoji: k?.emoji ?? '📍' };
 }
 
 export function brandSearch(b: Pick<BrandHit, 'key' | 'name' | 'kindKey' | 'kind'>): Searched {
@@ -53,7 +54,7 @@ export function brandSearch(b: Pick<BrandHit, 'key' | 'name' | 'kindKey' | 'kind
 }
 
 export function nameSearch(key: string): Searched {
-  return { target: { type: 'name', key }, label: `« ${key} »`, emoji: '🔎' };
+  return { target: { type: 'name', key }, label: LANG === 'en' ? `“${key}”` : LANG === 'fr' ? `« ${key} »` : `«${key}»`, emoji: '🔎' };
 }
 
 /** Straight-line distance, metres. */
@@ -72,30 +73,31 @@ export function minutes(m: number): string {
 
 export function distance(m: number): string {
   if (m < 950) return `${Math.max(10, Math.round(m / 10) * 10)} m`;
-  return `${(m / 1000).toLocaleString('fr-CH', { maximumFractionDigits: m < 9500 ? 1 : 0 })} km`;
+  return `${(m / 1000).toLocaleString(LOCALE, { maximumFractionDigits: m < 9500 ? 1 : 0 })} km`;
 }
 
 export function clock(iso: string): string {
-  return new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+  return new Intl.DateTimeFormat(LOCALE, { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso));
 }
 
-const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+/** A day's name, 0 Sunday … 6 Saturday (7 January 2024 was a Sunday). */
+const dayName = (d: number) => new Intl.DateTimeFormat(LOCALE, { weekday: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2024, 0, 7 + d)));
 
 export function openLabel(o: OpenState | null): { text: string; tone: 'open' | 'closed' | 'unknown' } | null {
   if (!o) return null;
-  const when = o.changesAt ? `${o.changesDay !== undefined ? `${DAYS[o.changesDay]} ` : ''}à ${o.changesAt}` : '';
-  if (o.open === true) return { text: when ? `Ouvert · ferme ${when}` : 'Ouvert', tone: 'open' };
-  if (o.open === false) return { text: when ? `Fermé · ouvre ${when}` : 'Fermé', tone: 'closed' };
-  return { text: 'Horaires à vérifier', tone: 'unknown' };
+  const when = o.changesAt ? (o.changesDay !== undefined ? t('open.dayAt', { day: dayName(o.changesDay), time: o.changesAt }) : t('open.at', { time: o.changesAt })) : '';
+  if (o.open === true) return { text: when ? t('open.closes', { when }) : t('open.open'), tone: 'open' };
+  if (o.open === false) return { text: when ? t('open.opens', { when }) : t('open.closed'), tone: 'closed' };
+  return { text: t('open.unknown'), tone: 'unknown' };
 }
 
 
 export const MODE: Record<DetailMode, { emoji: string; label: string }> = {
-  sharing: { emoji: '🔑', label: 'Car sharing' },
-  walk: { emoji: '🚶', label: 'À pied' },
-  bike: { emoji: '🚲', label: 'Vélo' },
-  transit: { emoji: '🚆', label: 'Transports publics' },
-  car: { emoji: '🚗', label: 'Voiture' },
+  sharing: { emoji: '🔑', label: t('mode.sharing') },
+  walk: { emoji: '🚶', label: t('mode.walk') },
+  bike: { emoji: '🚲', label: t('mode.bike') },
+  transit: { emoji: '🚆', label: t('mode.transit') },
+  car: { emoji: '🚗', label: t('mode.car') },
 };
 
 export type Sort = 'best' | Mode;
@@ -202,5 +204,5 @@ export function placeEmoji(r: Pick<PlaceSummary, 'foods' | 'kindKey' | 'kind'>, 
 }
 
 export function kindLabel(r: Pick<PlaceSummary, 'kindKey' | 'kind'>): string {
-  return kindInfo(r.kindKey, r.kind).label;
+  return kindName(r.kindKey, r.kind);
 }

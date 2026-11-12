@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import type { DeparturesResponse, DetailMode, PlaceDetail, PlaceSummary, RoutesResponse, Target, TransitOption, WeekHours } from '../../../src/api';
 import { FOOD_BY_KEY } from '../../../src/foods';
 import { api, clock, DEPARTURE_EMOJI, distance, kindLabel, legEmoji, MODE, minutes, openLabel, placeEmoji } from '../lib';
+import { LOCALE, t } from '../i18n';
 
 const YES = new Set(['yes', 'only', 'designated']);
 const SOURCE_NAMES: Record<string, string> = { osm: 'OpenStreetMap', atp: 'All The Places', overture: 'Overture Maps', gbfs: 'sharedmobility.ch' };
@@ -29,12 +30,12 @@ function Departures(props: { stopId: string }) {
       ctl.abort();
     };
   }, [props.stopId]);
-  if (failed) return <p className="way-loading">Les départs n'ont pas pu être chargés.</p>;
-  if (!board) return <p className="way-loading">Je cherche les prochains départs…</p>;
-  if (board.departures.length === 0) return <p className="way-loading">Pas de départ dans les heures qui viennent.</p>;
+  if (failed) return <p className="way-loading">{t('board.failed')}</p>;
+  if (!board) return <p className="way-loading">{t('board.loading')}</p>;
+  if (board.departures.length === 0) return <p className="way-loading">{t('board.none')}</p>;
   return (
     <div className="board">
-      <h3 className="board-title">Prochains départs</h3>
+      <h3 className="board-title">{t('board.title')}</h3>
       <ol className="departures-board">
         {board.departures.map((d, i) => (
           <li key={`${d.time}-${d.line}-${i}`} className={`dep${d.cancelled ? ' is-cancelled' : ''}`}>
@@ -48,14 +49,14 @@ function Departures(props: { stopId: string }) {
             <span className="dep-dir">
               {d.direction}
               <small>
-                {d.track ? `Voie ${d.track} · ` : ''}
-                {d.cancelled ? 'supprimé' : d.minutes < 1 ? 'maintenant' : `dans ${minutes(d.minutes)}`}
+                {d.track ? `${t('board.track', { n: d.track })} · ` : ''}
+                {d.cancelled ? t('board.cancelled') : d.minutes < 1 ? t('board.now') : t('board.in', { min: minutes(d.minutes) })}
               </small>
             </span>
           </li>
         ))}
       </ol>
-      {board.typicalTimetable ? <p className="results-note">🚆 Horaire type : même jour et même heure dans l'horaire 2027.</p> : null}
+      {board.typicalTimetable ? <p className="results-note">🚆 {t('note.typical')}</p> : null}
     </div>
   );
 }
@@ -67,16 +68,17 @@ function Picture(props: { src: string; className: string; alt?: string }) {
   return <img className={props.className} src={props.src} alt={props.alt ?? ''} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
 }
 
-const DAY_FMT = new Intl.DateTimeFormat('fr-CH', { weekday: 'short', timeZone: 'UTC' });
+const DAY_FMT = new Intl.DateTimeFormat(LOCALE, { weekday: 'short', timeZone: 'UTC' });
 /** Short day name, 1 Monday … 7 Sunday (1 January 2024 was a Monday). */
 const dayName = (weekday: number) => DAY_FMT.format(new Date(Date.UTC(2024, 0, weekday)));
 
 /** One day's opening times as text: "08:00–12:00, 13:30–18:30", "24 h/24", "Fermé". */
 function dayText(d: WeekHours['days'][number]): string {
-  if (d.intervals.length === 0) return 'Fermé';
-  if (d.intervals.length === 1 && d.intervals[0]!.from === '00:00' && d.intervals[0]!.to === '24:00') return '24 h/24';
+  if (d.intervals.length === 0) return t('hours.closed');
+  if (d.intervals.length === 1 && d.intervals[0]!.from === '00:00' && d.intervals[0]!.to === '24:00') return t('hours.allDay');
   const times = d.intervals.map((i) => `${i.from}–${i.to}${i.unknown ? ' ?' : ''}`).join(', ');
-  const comments = [...new Set(d.intervals.map((i) => i.comment).filter(Boolean))];
+  // The server says the usual comments in French ("sur rendez-vous").
+  const comments = [...new Set(d.intervals.map((i) => (i.comment === 'sur rendez-vous' ? t('hours.appointment') : i.comment)).filter(Boolean))];
   return comments.length ? `${times} (${comments.join(', ')})` : times;
 }
 
@@ -97,14 +99,14 @@ function Hours(props: { hours: WeekHours }) {
       <table className="hours-table">
         <tbody>
           {rows.map((row) => (
-            <tr key={row.from} className={`${today >= row.from && today <= row.to ? 'is-today' : ''}${row.text === 'Fermé' ? ' is-closed' : ''}`}>
-              <th scope="row">{everyDay ? 'Tous les jours' : row.from === row.to ? dayName(row.from) : `${dayName(row.from)}–${dayName(row.to)}`}</th>
+            <tr key={row.from} className={`${today >= row.from && today <= row.to ? 'is-today' : ''}${row.text === t('hours.closed') ? ' is-closed' : ''}`}>
+              <th scope="row">{everyDay ? t('hours.everyDay') : row.from === row.to ? dayName(row.from) : `${dayName(row.from)}–${dayName(row.to)}`}</th>
               <td>{row.text}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      {!props.hours.stable ? <p className="hours-note">Horaires des 7 prochains jours (jours fériés compris).</p> : null}
+      {!props.hours.stable ? <p className="hours-note">{t('hours.week')}</p> : null}
     </>
   );
 }
@@ -130,9 +132,9 @@ function Actions(props: { place: PlaceDetail }) {
     }
   };
   const links: { key: string; href: string; icon: string; label: string; external?: boolean }[] = [];
-  if (p.phone) links.push({ key: 'tel', href: `tel:${p.phone.replace(/[^+\d]/g, '')}`, icon: '📞', label: 'Appeler' });
-  if (p.website) links.push({ key: 'web', href: webUrl(p.website), icon: '🌐', label: 'Site web', external: true });
-  if (p.extra?.email) links.push({ key: 'mail', href: `mailto:${p.extra.email}`, icon: '✉️', label: 'E-mail' });
+  if (p.phone) links.push({ key: 'tel', href: `tel:${p.phone.replace(/[^+\d]/g, '')}`, icon: '📞', label: t('act.call') });
+  if (p.website) links.push({ key: 'web', href: webUrl(p.website), icon: '🌐', label: t('act.web'), external: true });
+  if (p.extra?.email) links.push({ key: 'mail', href: `mailto:${p.extra.email}`, icon: '✉️', label: t('act.mail') });
   if (p.extra?.instagram) links.push({ key: 'ig', href: socialUrl('instagram', p.extra.instagram), icon: '📸', label: 'Instagram', external: true });
   if (p.extra?.facebook) links.push({ key: 'fb', href: socialUrl('facebook', p.extra.facebook), icon: '👍', label: 'Facebook', external: true });
   return (
@@ -145,7 +147,7 @@ function Actions(props: { place: PlaceDetail }) {
       ))}
       <button type="button" className="action" onClick={share}>
         <span aria-hidden="true">↗</span>
-        {copied ? 'Lien copié' : 'Partager'}
+        {copied ? t('act.copied') : t('act.share')}
       </button>
     </div>
   );
@@ -158,7 +160,7 @@ function Sharing(props: { option: NonNullable<RoutesResponse['sharing']> }) {
   return (
     <div className="way-sharing">
       <p className="way-street">
-        🔑 {minutes(props.option.durationMin)} en car sharing · {distance(drive.distanceM)}
+        🔑 {t('sharing.way', { min: minutes(props.option.durationMin), dist: distance(drive.distanceM) })}
       </p>
       <ol className="legs">
         <li className="leg leg-walk">
@@ -166,9 +168,9 @@ function Sharing(props: { option: NonNullable<RoutesResponse['sharing']> }) {
             🚶
           </span>
           <span className="leg-text">
-            Marcher {minutes(walk.durationMin)} jusqu’à la station {station.name}
+            {t('sharing.walk', { min: minutes(walk.durationMin), name: station.name })}
             <br />
-            <small>{station.cars === null ? 'Voitures à réserver dans l’app' : station.cars > 0 ? `${station.cars} voiture${station.cars > 1 ? 's' : ''} à la station, à réserver dans l’app` : 'Aucune voiture à la station pour l’instant'}</small>
+            <small>{station.cars === null ? t('sharing.unknown') : station.cars > 0 ? t(station.cars > 1 ? 'sharing.many' : 'sharing.one', { n: station.cars }) : t('sharing.none')}</small>
           </span>
         </li>
         <li className="leg leg-ride leg-sharing">
@@ -176,22 +178,22 @@ function Sharing(props: { option: NonNullable<RoutesResponse['sharing']> }) {
             🚗
           </span>
           <span className="leg-text">
-            {parts ? minutes(parts.drivingMin) : minutes(drive.durationMin)} de route
-            {parts && parts.factor > 1.04 ? ` avec le trafic (×${parts.factor.toLocaleString('fr-CH')})` : ''}
+            {t('way.drive', { min: parts ? minutes(parts.drivingMin) : minutes(drive.durationMin) })}
+            {parts && parts.factor > 1.04 ? t('sharing.trafficShort', { f: parts.factor.toLocaleString(LOCALE) }) : ''}
             {parts ? (
               <>
                 <br />
-                <small>+ {parts.parkingMin} min pour se garer et marcher jusqu’à la porte</small>
+                <small>{t('way.park', { n: parts.parkingMin })}</small>
               </>
             ) : null}
           </span>
         </li>
       </ol>
       <p className="results-note">
-        La voiture se ramène à sa station.{' '}
+        {t('sharing.back')}{' '}
         {station.website ? (
           <a href={station.website} target="_blank" rel="noreferrer">
-            Réserver chez {station.brand ?? 'le fournisseur'}
+            {t('sharing.book', { brand: station.brand ?? t('sharing.provider') })}
           </a>
         ) : null}
       </p>
@@ -236,12 +238,12 @@ export const Detail = forwardRef<
   );
   const extras = detail
     ? [
-        YES.has(detail.takeaway ?? '') && '🥡 À l’emporter',
-        YES.has(detail.delivery ?? '') && '🛵 Livraison',
-        YES.has(detail.outdoorSeating ?? '') && '☀️ Terrasse',
-        YES.has(detail.vegetarian ?? '') && '🌱 Végétarien',
-        YES.has(detail.vegan ?? '') && '🌿 Vegan',
-        detail.wheelchair === 'yes' && '♿ Accessible',
+        YES.has(detail.takeaway ?? '') && `🥡 ${t('extra.takeaway')}`,
+        YES.has(detail.delivery ?? '') && `🛵 ${t('extra.delivery')}`,
+        YES.has(detail.outdoorSeating ?? '') && `☀️ ${t('extra.terrace')}`,
+        YES.has(detail.vegetarian ?? '') && `🌱 ${t('extra.vegetarian')}`,
+        YES.has(detail.vegan ?? '') && `🌿 ${t('extra.vegan')}`,
+        detail.wheelchair === 'yes' && `♿ ${t('extra.wheelchair')}`,
       ].filter((x): x is string => Boolean(x))
     : [];
 
@@ -250,7 +252,7 @@ export const Detail = forwardRef<
       <div className={`card detail${detail?.extra?.image ? ' has-hero' : ''}`}>
         {detail?.extra?.image ? <Picture className="hero" src={detail.extra.image} /> : null}
         <div className="detail-head">
-          <button type="button" className="back" onClick={props.onBack} aria-label="Retour à la liste">
+          <button type="button" className="back" onClick={props.onBack} aria-label={t('back')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M15 5l-7 7 7 7" />
             </svg>
@@ -284,7 +286,7 @@ export const Detail = forwardRef<
 
         {props.stopId ? <Departures stopId={props.stopId} /> : null}
 
-        <div className={`modes modes-${modes.length}`} role="tablist" aria-label="Comment y aller">
+        <div className={`modes modes-${modes.length}`} role="tablist" aria-label={t('howToGo')}>
           {modes.map((m) => (
             <button
               key={m}
@@ -306,42 +308,42 @@ export const Detail = forwardRef<
 
         <div className="way" role="tabpanel">
           {props.loading ? (
-            <p className="way-loading">Je calcule le chemin…</p>
+            <p className="way-loading">{t('way.loading')}</p>
           ) : props.error ? (
-            <p className="way-loading">Le calcul du chemin n'a pas marché. Réessaie.</p>
+            <p className="way-loading">{t('way.error')}</p>
           ) : props.mode === 'transit' ? (
             <Transit options={props.routes?.transit ?? []} chosen={props.departure} onChoose={props.onDeparture} typical={props.routes?.typicalTimetable ?? false} destination={r.name} />
           ) : props.mode === 'walk' ? (
             props.routes?.walk ? (
               <p className="way-street">
-                🚶 {minutes(props.routes.walk.durationMin)} à pied · {distance(props.routes.walk.distanceM)}
+                🚶 {t('way.walk', { min: minutes(props.routes.walk.durationMin), dist: distance(props.routes.walk.distanceM) })}
               </p>
             ) : (
-              <p className="way-street">Trop loin pour y aller à pied.</p>
+              <p className="way-street">{t('way.walkFar')}</p>
             )
           ) : props.mode === 'bike' ? (
             props.routes?.bike ? (
               <p className="way-street">
-                🚲 {minutes(props.routes.bike.durationMin)} à vélo · {distance(props.routes.bike.distanceM)}
+                🚲 {t('way.bike', { min: minutes(props.routes.bike.durationMin), dist: distance(props.routes.bike.distanceM) })}
               </p>
             ) : (
-              <p className="way-street">Trop loin pour y aller à vélo.</p>
+              <p className="way-street">{t('way.bikeFar')}</p>
             )
           ) : props.mode === 'sharing' && props.routes?.sharing ? (
             <Sharing option={props.routes.sharing} />
           ) : props.routes?.car ? (
             <p className="way-street">
-              🚗 {minutes(props.routes.car.durationMin)} en voiture · {distance(props.routes.car.distanceM)}
+              🚗 {t('way.car', { min: minutes(props.routes.car.durationMin), dist: distance(props.routes.car.distanceM) })}
               {props.routes.car.car ? (
                 <small className="way-detail">
-                  {minutes(props.routes.car.car.drivingMin)} de route
-                  {props.routes.car.car.factor > 1.04 ? ` avec le trafic de cette heure (×${props.routes.car.car.factor.toLocaleString('fr-CH')})` : ''} +{' '}
-                  {props.routes.car.car.parkingMin} min pour se garer et marcher jusqu’à la porte
+                  {t('way.drive', { min: minutes(props.routes.car.car.drivingMin) })}
+                  {props.routes.car.car.factor > 1.04 ? t('way.traffic', { f: props.routes.car.car.factor.toLocaleString(LOCALE) }) : ''}{' '}
+                  {t('way.park', { n: props.routes.car.car.parkingMin })}
                 </small>
               ) : null}
             </p>
           ) : (
-            <p className="way-street">Pas de route trouvée en voiture.</p>
+            <p className="way-street">{t('way.noCar')}</p>
           )}
         </div>
 
@@ -353,7 +355,7 @@ export const Detail = forwardRef<
                   📍
                 </span>
                 <div>
-                  <span className="info-label">Adresse</span>
+                  <span className="info-label">{t('info.address')}</span>
                   <p>{detail.address}</p>
                 </div>
               </div>
@@ -364,7 +366,7 @@ export const Detail = forwardRef<
                   🕐
                 </span>
                 <div>
-                  <span className="info-label">Horaires</span>
+                  <span className="info-label">{t('info.hours')}</span>
                   {detail.hours ? <Hours hours={detail.hours} /> : <p className="hours-raw">{detail.openingHours.replace(/;\s*/g, '\n')}</p>}
                 </div>
               </div>
@@ -375,7 +377,7 @@ export const Detail = forwardRef<
                   🩺
                 </span>
                 <div>
-                  <span className="info-label">Spécialité</span>
+                  <span className="info-label">{t('info.speciality')}</span>
                   <p>{detail.extra.speciality.replace(/_/g, ' ').replace(/;/g, ', ')}</p>
                 </div>
               </div>
@@ -403,21 +405,21 @@ export const Detail = forwardRef<
         ) : null}
         {detail && detail.kindKey !== 'address' ? (
           <p className="source">
-            Source : {detail.sources.map((x) => SOURCE_NAMES[x] ?? x).join(', ')}.
+            {t('source.list', { list: detail.sources.map((x) => SOURCE_NAMES[x] ?? x).join(', ') })}
             {detail.osmUrl ? (
               <>
                 {' '}
-                Une info manque ou est fausse ?{' '}
+                {t('source.wrong')}{' '}
                 <a href={detail.osmUrl} target="_blank" rel="noreferrer">
-                  Corriger sur OpenStreetMap
+                  {t('source.fix')}
                 </a>
               </>
             ) : (
               <>
                 {' '}
-                Absent d'OpenStreetMap :{' '}
+                {t('source.absent')}{' '}
                 <a href={`https://www.openstreetmap.org/#map=19/${r.lat}/${r.lon}`} target="_blank" rel="noreferrer">
-                  l'ajouter
+                  {t('source.add')}
                 </a>
               </>
             )}
@@ -429,11 +431,11 @@ export const Detail = forwardRef<
 });
 
 function Transit(props: { options: TransitOption[]; chosen: number; onChoose: (i: number) => void; typical: boolean; destination: string }) {
-  if (props.options.length === 0) return <p className="way-street">Pas de transports publics plus rapides que la marche dans l'heure et demie qui vient.</p>;
+  if (props.options.length === 0) return <p className="way-street">{t('transit.none')}</p>;
   const chosen = props.options[props.chosen] ?? props.options[0]!;
   return (
     <>
-      <ul className="departures" aria-label="Prochains départs">
+      <ul className="departures" aria-label={t('transit.next')}>
         {props.options.map((o, i) => (
           <li key={o.departure + i}>
             <button type="button" className={`departure${o === chosen ? ' is-on' : ''}`} aria-pressed={o === chosen} onClick={() => props.onChoose(i)}>
@@ -442,7 +444,7 @@ function Transit(props: { options: TransitOption[]; chosen: number; onChoose: (i
               </strong>
               <span>
                 {minutes(o.durationMin)}
-                {o.changes ? ` · ${o.changes} chang.` : ''}
+                {o.changes ? ` · ${t('transit.changes', { n: o.changes })}` : ''}
               </span>
             </button>
           </li>
@@ -456,12 +458,11 @@ function Transit(props: { options: TransitOption[]; chosen: number; onChoose: (i
             </span>
             {l.mode === 'walk' ? (
               <span className="leg-text">
-                Marcher {minutes(Math.max(1, l.durationMin))}
-                {` jusqu’à ${l.to && i < chosen.legs.length - 1 ? l.to : props.destination}`}
+                {t('transit.walk', { min: minutes(Math.max(1, l.durationMin)), to: l.to && i < chosen.legs.length - 1 ? l.to : props.destination })}
               </span>
             ) : (
               <span className="leg-text">
-                <span className="line-badge">{l.line?.name || l.line?.category || 'Ligne'}</span> {l.line?.headsign ? `direction ${l.line.headsign}` : ''}
+                <span className="line-badge">{l.line?.name || l.line?.category || t('transit.line')}</span> {l.line?.headsign ? t('transit.direction', { to: l.line.headsign }) : ''}
                 <br />
                 <small>
                   {clock(l.departure)} {l.from} → {clock(l.arrival)} {l.to}
@@ -471,7 +472,7 @@ function Transit(props: { options: TransitOption[]; chosen: number; onChoose: (i
           </li>
         ))}
       </ol>
-      {props.typical ? <p className="results-note">Horaire type : même jour et même heure dans l'horaire 2027.</p> : null}
+      {props.typical ? <p className="results-note">{t('note.typical')}</p> : null}
     </>
   );
 }

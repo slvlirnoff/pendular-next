@@ -140,6 +140,27 @@ app.get('/api/stops', async (c) => {
   }
 });
 
+/** Shared scooters, bikes and mopeds parked anywhere in a box (the map, from zoom 15), live: ?min=lat,lon&max=lat,lon. */
+app.get('/api/vehicles', async (c) => {
+  const box = (v: string | undefined) => {
+    const [a, b] = (v ?? '').split(',').map(Number);
+    return Number.isFinite(a) && Number.isFinite(b) ? ([a, b] as [number, number]) : null;
+  };
+  const min = box(c.req.query('min'));
+  const max = box(c.req.query('max'));
+  if (!min || !max) return c.json({ error: 'min and max needed (lat,lon)' }, 400);
+  if (max[0] - min[0] > 0.06 || max[1] - min[1] > 0.09) return c.json([]);
+  try {
+    // The 400 nearest the middle of the view, whoever operates them.
+    const mid = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2];
+    const d = (v: { lat: number; lon: number }) => (v.lat - mid[0]!) ** 2 + ((v.lon - mid[1]!) * 0.68) ** 2;
+    return c.json((await deps.sharing.vehicles(min, max)).sort((a, b) => d(a) - d(b)).slice(0, 400));
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: 'vehicles failed' }, 502);
+  }
+});
+
 /** A stop's next departures (its board): ?id=<stop id>. */
 app.get('/api/stops/departures', async (c) => {
   const id = c.req.query('id');
@@ -183,7 +204,9 @@ app.get('/api/geocode', async (c) => {
   if (q.length < 2) return c.json([]);
   const url = new URL('/api/v1/geocode', motisUrl);
   url.searchParams.set('text', q);
-  url.searchParams.set('language', 'fr');
+  // Names in the searcher's language where the data has them (Genève, Genf, Ginevra).
+  const lang = c.req.query('lang');
+  url.searchParams.set('language', lang && ['fr', 'de', 'it', 'en'].includes(lang) ? lang : 'fr');
   // ?type=stop: the stops only (the search bar's stops).
   const onlyStops = c.req.query('type') === 'stop';
   if (onlyStops) url.searchParams.set('type', 'STOP');

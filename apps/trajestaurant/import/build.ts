@@ -223,8 +223,10 @@ export interface OvertureRow {
   lon: number;
 }
 
-/** A car-sharing station of the national shared-mobility feed (import/carsharing.py). */
+/** A car-sharing or bike-sharing station of the national shared-mobility feed (import/carsharing.py). */
 export interface CarSharingRow {
+  /** What the station is for (car when absent: files written before bikes were kept). */
+  vehicle?: 'car' | 'bike';
   provider: string;
   provider_name: string;
   provider_url: string | null;
@@ -236,8 +238,15 @@ export interface CarSharingRow {
   rental_uri: string | null;
 }
 
-/** Short names of the car-sharing providers, as people say them. */
+/** Short names of the sharing providers, as people say them (a provider id starts with the key). */
 const SHARING_NAMES: Record<string, string> = {
+  velospot: 'Velospot',
+  donkey_: 'Donkey Republic',
+  nextbike_: 'nextbike',
+  pickebike_: 'PickeBike',
+  publibike: 'PubliBike',
+  liemobil_: 'LIEmobil',
+  epfl_: 'EPFL Bike',
   mobility: 'Mobility',
   '2em_cars': '2EM',
   edrivecarsharing: 'eDrive',
@@ -253,20 +262,22 @@ const SHARING_NAMES: Record<string, string> = {
  */
 export function carSharingPlace(r: CarSharingRow): Place | null {
   if (!Number.isFinite(r.lat) || !Number.isFinite(r.lon)) return null;
-  const brand = SHARING_NAMES[r.provider] ?? r.provider_name;
+  const bike = r.vehicle === 'bike';
+  const brand = SHARING_NAMES[r.provider] ?? Object.entries(SHARING_NAMES).find(([k]) => k.endsWith('_') && r.provider.startsWith(k))?.[1] ?? r.provider_name;
   const street = r.address?.split(',')[0]?.trim();
   const where = r.provider === '2em_cars' ? street || r.name : r.name || street;
   return {
     source: 'gbfs',
-    sourceId: `${r.provider}:${r.station_id}`,
+    // A station with both cars and bikes is two places: the bikes' id is marked.
+    sourceId: `${r.provider}:${r.station_id}${bike ? '#bike' : ''}`,
     sources: new Set(['gbfs']),
     name: where ? `${brand} · ${where}` : brand,
     kindKey: 'amenity',
-    kind: 'car_sharing',
+    kind: bike ? 'bicycle_rental' : 'car_sharing',
     lat: r.lat,
     lon: r.lon,
     tags: {
-      amenity: 'car_sharing',
+      amenity: bike ? 'bicycle_rental' : 'car_sharing',
       brand,
       operator: r.provider_name,
       website: clean(r.rental_uri) ?? clean(r.provider_url),
@@ -713,7 +724,7 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
       continue;
     }
     const place = osmPlace(f);
-    if (!place || (haveSharing && place.kind === 'car_sharing')) continue;
+    if (!place || (haveSharing && (place.kind === 'car_sharing' || place.kind === 'bicycle_rental'))) continue;
     places.push(place);
     grid.add(place);
     counts.osm!++;

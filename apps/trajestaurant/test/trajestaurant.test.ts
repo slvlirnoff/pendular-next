@@ -11,7 +11,7 @@ import { bestMode, leadMode, sortResults } from '../web/src/lib.js';
 import type { SearchResult } from '../src/api.js';
 import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
 import { clockOf, createTraffic, rushShare } from '../server/traffic.js';
-import { createCarSharing } from '../server/sharing.js';
+import { createCarSharing, providerName, vehicleKind } from '../server/sharing.js';
 import { weekHours } from '../server/open.js';
 import { departures, groupStops, modeOf } from '../server/stops.js';
 import { loadDensity } from '@pendular/engine';
@@ -369,6 +369,45 @@ describe('car sharing', () => {
     })) as unknown as typeof fetch;
     expect(await createCarSharing('someone@example.org', feed).cars('carvelo2go:1')).toBe(2);
     expect(await createCarSharing(undefined, feed).cars('carvelo2go:1')).toBeNull();
+    // The cargo bikes of the same station, for its bike-sharing place.
+    expect(await createCarSharing('someone@example.org', feed).bikes('carvelo2go:1#bike')).toBe(3);
+  });
+
+  it('lists the vehicles parked anywhere, not those at a station', async () => {
+    const feed = (async (url: string) => ({
+      ok: true,
+      status: 200,
+      json: async () =>
+        url.endsWith('lime_zurich/gbfs')
+          ? { data: { en: { feeds: [{ name: 'free_bike_status' }] } } }
+          : url.endsWith('/gbfs')
+            ? { systems: [{ id: 'lime_zurich' }] }
+            : url.endsWith('vehicle_types')
+              ? { data: { vehicle_types: [{ vehicle_type_id: 's', form_factor: 'scooter_standing', propulsion_type: 'electric' }, { vehicle_type_id: 'e', form_factor: 'bicycle', propulsion_type: 'electric_assist' }] } }
+              : {
+                  data: {
+                    bikes: [
+                      { bike_id: '1', lat: 47.37, lon: 8.54, vehicle_type_id: 's', current_range_meters: 22_400 },
+                      { bike_id: '2', lat: 47.371, lon: 8.541, vehicle_type_id: 'e', station_id: 'x' },
+                      { bike_id: '3', lat: 47.372, lon: 8.542, vehicle_type_id: 'e', is_reserved: true },
+                      { bike_id: '4', lat: 46.5, lon: 6.6, vehicle_type_id: 'e' },
+                    ],
+                  },
+                },
+      text: async () => '',
+    })) as unknown as typeof fetch;
+    const list = await createCarSharing('someone@example.org', feed).vehicles([47.36, 8.53], [47.38, 8.55]);
+    expect(list).toEqual([{ id: 'lime_zurich:1', provider: 'Lime', kind: 'scooter', lat: 47.37, lon: 8.54, rangeKm: 22 }]);
+    expect(vehicleKind({ form_factor: 'bicycle', propulsion_type: 'human' })).toBe('bike');
+    expect(vehicleKind({ form_factor: 'moped' })).toBe('moped');
+    expect(providerName('donkey_ge')).toBe('Donkey Republic');
+    expect(providerName('bird-zurich')).toBe('Bird');
+  });
+
+  it('makes a bike-sharing station of the feed a place of its own', () => {
+    const p = carSharingPlace({ vehicle: 'bike', provider: 'velospot', provider_name: 'Velospot', provider_url: null, station_id: '9', name: 'Moudon Gare', address: null, lat: 46.67, lon: 6.8, rental_uri: null })!;
+    expect(p).toMatchObject({ kind: 'bicycle_rental', sourceId: 'velospot:9#bike', name: 'Velospot · Moudon Gare' });
+    expect(carSharingPlace({ vehicle: 'bike', provider: 'donkey_ge', provider_name: 'Donkey', provider_url: null, station_id: '1', name: 'Plainpalais', address: null, lat: 46.2, lon: 6.14, rental_uri: null })!.name).toBe('Donkey Republic · Plainpalais');
   });
 });
 

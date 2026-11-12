@@ -138,6 +138,15 @@ addresses, stops and named places of MOTIS's geocoder, near the searcher first. 
 it close up with the places around it, and a card with the way there from the searcher
 (`/api/route`, `&adr=lat,lon,label` in the link).
 
+**Shared bikes and scooters**: the bike-sharing stations of the national shared-mobility feed
+(Velospot 1 684, Donkey Republic 832, nextbike 459, carvelo2go 297, PickeBike 125…; the stations
+one takes a bike from and brings it back to, not the parking zones of scooters) are places
+("Vélos en libre-service"), with the bikes there now in the list. The scooters, bikes and mopeds
+parked anywhere (Lime, Bird, Voi, Dott, Bolt, and the free bikes of the others) show live on the
+map from zoom 15 (`/api/vehicles`: the 400 nearest the middle of the view, each provider's
+vehicles fetched at most every minute and only where it operates), with their operator and range
+on a click. Both need SHAREDMOBILITY_CONTACT.
+
 **Stops**: public transport stops (MOTIS's timetable: one per station or stop, its platforms
 together, by its main mode 🚆 🚌 🚊 ⛴️ 🚡) show on the map from zoom 15 and in the search bar
 ("lucens gare"). A stop's card has its departure board: the next ten departures with their time,
@@ -154,6 +163,15 @@ places), one-tap actions (call, site, e-mail, Instagram, Facebook, share), and t
 read by the `opening_hours` library and laid out by day for the coming week ("lun.–ven.
 08:00–12:00, 13:30–18:30", today in bold, a night that goes past midnight on its evening's line,
 "sur rendez-vous" for the usual comments); hours it cannot read are shown as written.
+
+**Languages**: French, German, Italian and English (`web/src/i18n.ts` for the site's texts,
+`src/i18n/labels.ts` for the names of food types, kinds of places and searches; French is written
+in `src/foods.ts` and `src/kinds.ts`). The language comes from the link (`&lang=de`), else the one
+chosen before, else the browser's, else French; the picker (FR DE IT EN) is on the welcome screen
+and beside the searcher's place. Numbers, distances, days and times follow the language
+(de-CH: 5.2 km), and the geocoder answers in it where the data has names (Genf, Ginevra).
+Searching works in all four languages whatever the one shown: the synonyms of each food type and
+kind are in the four.
 
 Credits: © OpenStreetMap contributors, Overture Maps Foundation, All The Places, name-suggestion-index;
 routing MOTIS with the timetable of opentransportdata.swiss.
