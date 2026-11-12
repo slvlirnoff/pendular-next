@@ -218,9 +218,9 @@ describe('brands', () => {
   });
 
   it('looks far enough for a far branch, no further', () => {
-    expect(maxMinutes(400, 9_000)).toEqual({ walk: 60, car: 30, transit: 90 });
+    expect(maxMinutes(400, 9_000)).toEqual({ walk: 60, bike: 90, car: 30, transit: 90 });
     // The nearest IKEA from Lucens: 43 km.
-    expect(maxMinutes(43_000, 120_000)).toEqual({ walk: 60, car: 171, transit: 148 });
+    expect(maxMinutes(43_000, 120_000)).toEqual({ walk: 60, bike: 90, car: 171, transit: 148 });
   });
 });
 
