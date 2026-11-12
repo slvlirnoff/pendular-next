@@ -30,7 +30,8 @@ import { Logo } from './Welcome';
 
 const PAGE = 5;
 /** Shortcut rows show this many chips folded (a phone scrolls them sideways); the title opens the whole list. */
-const FOLDED = { wide: 3, narrow: 6 };
+/** Chips shown on a phone's row before its "+N" (the row scrolls sideways). */
+const FOLDED = 6;
 
 type ChipItem = { key: string; emoji: string; label: string; pick: () => void };
 
@@ -72,12 +73,63 @@ function ChipRow(props: { id: string; title: string; items: ChipItem[]; open: bo
             <span aria-hidden="true">{c.emoji}</span> {c.label}
           </button>
         ))}
-        {!props.open && hidden ? (
-          <button type="button" className="chip chip-more" onClick={props.onToggle} aria-label={t('chips.more', { n: hidden, title: props.title })}>
-            +{hidden}
-          </button>
-        ) : null}
       </div>
+    </div>
+  );
+}
+
+/**
+ * On a wide screen, the shortcuts as one card: a line per category, its first shortcuts as plain
+ * text fading out at the end of the line, and its count opening all of them in columns in the
+ * same card (one category at a time; the back button or ← closes it).
+ */
+function Categories(props: { rows: { id: string; title: string; items: ChipItem[] }[]; open: string | null; onToggle: (id: string) => void }) {
+  const open = props.rows.find((r) => r.id === props.open);
+  if (open) {
+    return (
+      <div className="card cats is-open" role="group" aria-label={open.title}>
+        <button type="button" className="cats-back" onClick={() => props.onToggle(open.id)} aria-label={t('chips.fold', { title: open.title })}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+          {open.title}
+          <span className="cats-count">{open.items.length}</span>
+        </button>
+        <ul className="cats-grid">
+          {open.items.map((c) => (
+            <li key={c.key}>
+              <button type="button" className="cats-item" onClick={c.pick}>
+                <span aria-hidden="true">{c.emoji}</span>
+                <span>{c.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+  return (
+    <div className="card cats">
+      {props.rows.map((r) => (
+        <div key={r.id} className="cats-row" role="group" aria-label={r.title}>
+          <button type="button" className="cats-name" onClick={() => props.onToggle(r.id)} aria-label={t('chips.all', { title: r.title, n: r.items.length })}>
+            {r.title}
+          </button>
+          <div className="cats-line">
+            {r.items.slice(0, 10).map((c) => (
+              <button key={c.key} type="button" className="cats-link" onClick={c.pick}>
+                <span aria-hidden="true">{c.emoji}</span> {c.label}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="cats-all" onClick={() => props.onToggle(r.id)} aria-label={t('chips.all', { title: r.title, n: r.items.length })}>
+            {r.items.length}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
@@ -170,7 +222,6 @@ export const SearchPanel = forwardRef<
     setOpenRow(rowId);
   };
   const wide = useWide();
-  const folded = wide ? FOLDED.wide : FOLDED.narrow;
   const rows: { id: string; title: string; items: ChipItem[] }[] = [
     { id: 'food', title: t('row.food'), items: FOODS.map((f) => ({ key: f.key, emoji: f.emoji, label: foodLabel(f.key), pick: () => props.onSearch(foodSearch(f.key)) })) },
     ...KIND_ROWS.map((row) => ({
@@ -411,12 +462,14 @@ export const SearchPanel = forwardRef<
           onPick={props.onPick}
           onHover={props.onHover}
         />
+      ) : wide ? (
+        <Categories rows={rows.filter((r) => r.items.length > 0)} open={openRow} onToggle={toggleRow} />
       ) : (
         <div className={`chip-rows${openRow ? ' has-open' : ''}`}>
           {rows
             .filter((r) => r.items.length > 0 && (!openRow || openRow === r.id))
             .map((r) => (
-              <ChipRow key={r.id} {...r} folded={folded} open={openRow === r.id} onToggle={() => toggleRow(r.id)} />
+              <ChipRow key={r.id} {...r} folded={FOLDED} open={openRow === r.id} onToggle={() => toggleRow(r.id)} />
             ))}
         </div>
       )}
