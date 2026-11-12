@@ -6,7 +6,7 @@ import { MapView, type Padding } from './components/MapView';
 import { PlacePicker } from './components/PlacePicker';
 import { SearchPanel, type SearchState } from './components/SearchPanel';
 import { Welcome } from './components/Welcome';
-import { api, bestMode, brandSearch, foodSearch, kindSearch, nameSearch, type Here, type Searched } from './lib';
+import { api, bestMode, brandSearch, foodSearch, kindSearch, nameSearch, type Here, type Searched, type Sort } from './lib';
 import { KIND_SEARCH_BY_KEY } from '../../src/kinds';
 
 const HERE_KEY = 'trajestaurant.here';
@@ -98,6 +98,7 @@ export function App() {
   const [routes, setRoutes] = useState<RoutesResponse | null>(null);
   const [routesState, setRoutesState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [mode, setMode] = useState<DetailMode>('walk');
+  const sortRef = useRef<Sort>('best');
   const [departure, setDeparture] = useState(0);
   const wide = useWide();
   const [searchRef, searchH] = useHeight();
@@ -197,7 +198,10 @@ export function App() {
         setSelected((s) => s ?? r.place);
         const listed = search.response?.results.find((x) => x.id === selectedId);
         const times = { walkMin: r.walk?.durationMin ?? null, transitMin: r.transit[0]?.durationMin ?? null, carMin: r.car?.durationMin ?? null };
-        setMode(bestMode(listed ?? times) ?? bestMode(times) ?? 'car');
+        // Sorted by one way (🚲, 🚗…): that way first, when there is one.
+        const sorted = sortRef.current;
+        const has = sorted === 'bike' ? r.bike : sorted === 'walk' ? r.walk : sorted === 'car' ? r.car : sorted === 'transit' ? r.transit[0] : null;
+        setMode(sorted !== 'best' && has ? sorted : (bestMode(listed ?? times) ?? bestMode(times) ?? 'car'));
       })
       .catch((e: Error) => {
         if (e.name !== 'AbortError') setRoutesState('error');
@@ -274,6 +278,9 @@ export function App() {
           onHover={setHovered}
           onChangePlace={() => setPicker(true)}
           onVisible={setVisible}
+          onSort={(s) => {
+            sortRef.current = s;
+          }}
         />
       )}
       {picker || (!here && !locating) ? (

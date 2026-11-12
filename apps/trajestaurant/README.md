@@ -2,7 +2,7 @@
 
 Find where to eat nearby (pizza, burger, sushi…), the nearest shop, service or place of a kind
 (pharmacy, hairdresser, doctor, vet, Bancomat, déchetterie, cobbler, fuel, cinema…), the nearest branch of a chain (Migros, IKEA, Manor,
-Dosenbach…) or a place by its name, and how to get there: on foot, by public transport or by car. Built on the Pendular infrastructure: the same MOTIS (streets and Swiss
+Dosenbach…) or a place by its name, and how to get there: on foot, by bike, by public transport or by car. Built on the Pendular infrastructure: the same MOTIS (streets and Swiss
 timetable), the same PostgreSQL, the same map style. French interface, phone first.
 
 Three screens: a welcome screen (sign-in comes later), a full map with a search bar and the list
@@ -64,6 +64,10 @@ A link can open a search directly: `/?ici=46.7085,6.8405,Lucens&food=burger`, `&
   one chain within 150 m count once (a store and its café), and so do places of one kind within
   80 m with similar names (one hairdresser seen by OSM and Overture).
 - **On foot**: one MOTIS matrix call for the places within 7 km (up to an hour).
+- **By bike**: one MOTIS matrix call (its bike network and speed) for the places within 25 km
+  (up to an hour and a half); the card gives the bike route. The bike has its own sort (🚲: by bike,
+  or by public transport beyond cycling distance) and tab; "le plus rapide" leaves it out, since
+  not everyone has a bike at hand. Lucens → Moudon (5.4 km): 22 min.
 - **By car**: one Valhalla matrix call (`VALHALLA_URL`), else MOTIS (long enough for the farthest
   place, up to three hours). Both agree within a minute (median difference 0.1 min on 40 pizzerias).
   Both give times on empty roads: as in Pendular, each time is slowed by the rush-hour factor of

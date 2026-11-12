@@ -305,6 +305,16 @@ describe('sorting', () => {
     expect(sortResults(list, 'best').map((x) => x.name)).toEqual(['Bea 70 m', 'Imaginatifs 830 m', 'Midi 480 m', 'Moudon']);
     expect(bestMode(list[0]!)).toBe('walk');
   });
+
+  it('sorts by bike, falling back on public transport beyond cycling distance; the quickest leaves the bike out', () => {
+    const withBike = (x: SearchResult, bikeMin: number | null) => ({ ...x, bikeMin }) as SearchResult;
+    const list = [withBike(r('Moudon', null, 31, 11, 5400), 22), withBike(r('Lucens', 9, null, 6, 480), 3), withBike(r('Lausanne', null, 45, 38, 26000), null)];
+    expect(sortResults(list, 'bike').map((x) => x.name)).toEqual(['Lucens', 'Moudon', 'Lausanne']);
+    expect(leadMode(list[2]!, 'bike')).toBe('transit');
+    expect(leadMode(list[0]!, 'bike')).toBe('bike');
+    // Not everyone has a bike at hand: "le plus rapide" stays with walking, public transport and the car.
+    expect(bestMode(withBike(r('Moudon', null, 31, 25, 5400), 22))).toBe('car');
+  });
 });
 
 describe('car times with traffic and parking', () => {

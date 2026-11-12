@@ -92,8 +92,9 @@ type Option =
   | { type: 'place'; r: PlaceSummary };
 
 const count = (n: number) => n.toLocaleString('fr-CH');
-const SORT_HINT: Record<'walk' | 'transit' | 'car', string> = {
+const SORT_HINT: Record<'walk' | 'bike' | 'transit' | 'car', string> = {
   walk: 'À pied, ou en transports publics quand c’est trop loin',
+  bike: 'À vélo, ou en transports publics quand c’est trop loin',
   transit: 'Sans voiture : transports publics ou à pied',
   car: 'En voiture',
 };
@@ -117,6 +118,8 @@ export const SearchPanel = forwardRef<
     onHover: (id: number | null) => void;
     onChangePlace: () => void;
     onVisible: (list: SearchResult[]) => void;
+    /** The list's order changed: a place opened next shows that way first (🚲 → the bike). */
+    onSort?: (s: Sort) => void;
   }
 >(function SearchPanel(props, ref) {
   const id = useId();
@@ -329,7 +332,10 @@ export const SearchPanel = forwardRef<
           list={visible}
           total={sorted.length}
           sort={sort}
-          onSort={setSort}
+          onSort={(s) => {
+            setSort(s);
+            props.onSort?.(s);
+          }}
           onMore={() => setShown((s) => s + PAGE)}
           onPick={props.onPick}
           onHover={props.onHover}
@@ -367,6 +373,7 @@ function Results(props: {
   const sorts: { key: Sort; label: string }[] = [
     { key: 'best', label: 'Le plus rapide' },
     { key: 'walk', label: MODE.walk.emoji },
+    { key: 'bike', label: MODE.bike.emoji },
     { key: 'transit', label: MODE.transit.emoji },
     { key: 'car', label: MODE.car.emoji },
   ];
@@ -446,7 +453,8 @@ function ResultRow(props: { r: SearchResult; searched: Searched; sort: Sort; onP
   const lead = leadMode(r, props.sort);
   const leadMin = lead ? timeOf(r, lead) : null;
   const open = openLabel(r.open);
-  const modes = (['walk', 'transit', 'car'] as const).filter((m) => timeOf(r, m) !== null);
+  // The bike's time when sorting by bike (four times on a line would crowd it).
+  const modes = (props.sort === 'bike' ? (['bike', 'walk', 'transit', 'car'] as const) : (['walk', 'transit', 'car'] as const)).filter((m) => timeOf(r, m) !== null);
   return (
     <li>
       <button

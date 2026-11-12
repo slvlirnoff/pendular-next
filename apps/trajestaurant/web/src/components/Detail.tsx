@@ -168,12 +168,15 @@ export const Detail = forwardRef<
   const foods = r.foods.map((k) => FOOD_BY_KEY.get(k)).filter((f) => f && !f.generic);
   const times: Record<DetailMode, number | null> = {
     walk: props.routes?.walk?.durationMin ?? null,
+    bike: props.routes?.bike?.durationMin ?? null,
     transit: props.routes?.transit[0]?.durationMin ?? null,
     car: props.routes?.car?.durationMin ?? null,
     sharing: props.routes?.sharing?.durationMin ?? null,
   };
-  // Car sharing shows as a fourth way only when a station with cars is near.
-  const modes: DetailMode[] = props.routes?.sharing ? ['walk', 'transit', 'car', 'sharing'] : ['walk', 'transit', 'car'];
+  // The bike within 25 km; car sharing only when a station with cars is near.
+  const modes: DetailMode[] = (['walk', 'bike', 'transit', 'car', 'sharing'] as DetailMode[]).filter(
+    (m) => m === 'walk' || m === 'transit' || m === 'car' || (m === 'bike' ? props.loading || Boolean(props.routes?.bike) : Boolean(props.routes?.sharing)),
+  );
   const extras = detail
     ? [
         YES.has(detail.takeaway ?? '') && '🥡 À l’emporter',
@@ -222,7 +225,7 @@ export const Detail = forwardRef<
 
         {detail ? <Actions place={detail} /> : null}
 
-        <div className={`modes${modes.length === 4 ? ' modes-4' : ''}`} role="tablist" aria-label="Comment y aller">
+        <div className={`modes modes-${modes.length}`} role="tablist" aria-label="Comment y aller">
           {modes.map((m) => (
             <button
               key={m}
@@ -256,6 +259,14 @@ export const Detail = forwardRef<
               </p>
             ) : (
               <p className="way-street">Trop loin pour y aller à pied.</p>
+            )
+          ) : props.mode === 'bike' ? (
+            props.routes?.bike ? (
+              <p className="way-street">
+                🚲 {minutes(props.routes.bike.durationMin)} à vélo · {distance(props.routes.bike.distanceM)}
+              </p>
+            ) : (
+              <p className="way-street">Trop loin pour y aller à vélo.</p>
             )
           ) : props.mode === 'sharing' && props.routes?.sharing ? (
             <Sharing option={props.routes.sharing} />

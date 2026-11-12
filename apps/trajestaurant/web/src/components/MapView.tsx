@@ -11,7 +11,7 @@ export interface Padding {
   right: number;
 }
 
-const COLORS: Record<DetailMode, string> = { walk: '#2563eb', transit: '#d93a24', car: '#334155', sharing: '#1d7348' };
+const COLORS: Record<DetailMode, string> = { walk: '#2563eb', bike: '#0e7490', transit: '#d93a24', car: '#334155', sharing: '#1d7348' };
 const SWITZERLAND: LngLatBoundsLike = [
   [5.95, 45.82],
   [10.49, 47.81],
@@ -24,6 +24,7 @@ function routeLines(routes: RoutesResponse | null, departure: number): Line[] {
   if (!routes) return [];
   const out: Line[] = [];
   if (routes.walk) out.push({ mode: 'walk', coords: routes.walk.geometry, label: minutes(routes.walk.durationMin) });
+  if (routes.bike) out.push({ mode: 'bike', coords: routes.bike.geometry, label: minutes(routes.bike.durationMin) });
   if (routes.car) out.push({ mode: 'car', coords: routes.car.geometry, label: minutes(routes.car.durationMin) });
   const t = routes.transit[departure] ?? routes.transit[0];
   if (t) out.push({ mode: 'transit', coords: t.legs.flatMap((l) => l.geometry), label: minutes(t.durationMin) });
@@ -35,6 +36,7 @@ function routeFeatures(routes: RoutesResponse | null, departure: number, mode: D
   const features: GeoJSON.Feature[] = [];
   if (routes) {
     if (routes.walk) features.push({ type: 'Feature', properties: { mode: 'walk', selected: mode === 'walk', dashed: true }, geometry: { type: 'LineString', coordinates: routes.walk.geometry } });
+    if (routes.bike) features.push({ type: 'Feature', properties: { mode: 'bike', selected: mode === 'bike', dashed: false }, geometry: { type: 'LineString', coordinates: routes.bike.geometry } });
     if (routes.car) features.push({ type: 'Feature', properties: { mode: 'car', selected: mode === 'car', dashed: false }, geometry: { type: 'LineString', coordinates: routes.car.geometry } });
     if (routes.sharing) {
       features.push({ type: 'Feature', properties: { mode: 'sharing', selected: mode === 'sharing', dashed: true }, geometry: { type: 'LineString', coordinates: routes.sharing.walk.geometry } });
@@ -182,7 +184,7 @@ export function MapView(props: {
         m.on('mouseleave', 'places', () => (m.getCanvas().style.cursor = ''));
         m.addSource('routes', { type: 'geojson', data: routeFeatures(null, 0, 'walk') });
         const sel: maplibregl.ExpressionSpecification = ['==', ['get', 'selected'], true];
-        const color: maplibregl.ExpressionSpecification = ['match', ['get', 'mode'], 'walk', COLORS.walk, 'car', COLORS.car, 'sharing', COLORS.sharing, COLORS.transit];
+        const color: maplibregl.ExpressionSpecification = ['match', ['get', 'mode'], 'walk', COLORS.walk, 'bike', COLORS.bike, 'car', COLORS.car, 'sharing', COLORS.sharing, COLORS.transit];
         m.addLayer({ id: 'routes-other', type: 'line', source: 'routes', filter: ['!', sel], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 3, 'line-opacity': 0.35 } });
         m.addLayer({ id: 'routes-casing', type: 'line', source: 'routes', filter: sel, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 9 } });
         m.addLayer({ id: 'routes-solid', type: 'line', source: 'routes', filter: ['all', sel, ['!', ['get', 'dashed']]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 5 } });
@@ -301,7 +303,7 @@ export function MapView(props: {
       labels.current = [];
       if (!props.selected) return;
       const lines = routeLines(props.routes, props.departure);
-      const shares: Record<DetailMode, number> = { walk: 0.45, transit: 0.6, car: 0.75, sharing: 0.3 };
+      const shares: Record<DetailMode, number> = { walk: 0.45, bike: 0.35, transit: 0.6, car: 0.75, sharing: 0.3 };
       for (const line of lines) {
         const at = pointAlong(line.coords, shares[line.mode]);
         if (!at) continue;

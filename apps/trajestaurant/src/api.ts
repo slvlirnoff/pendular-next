@@ -1,6 +1,6 @@
 /** What the Trajestaurant API answers: shared by the server and the site. */
 
-export type Mode = 'walk' | 'transit' | 'car';
+export type Mode = 'walk' | 'bike' | 'transit' | 'car';
 /** The ways shown for one place: also car sharing. */
 export type DetailMode = Mode | 'sharing';
 
@@ -36,6 +36,8 @@ export interface SearchResult extends PlaceSummary {
   /** A car-sharing station: the cars its provider reports there now (null: unknown). */
   cars?: number | null;
   walkMin: number | null;
+  /** By bike (MOTIS's bike network), for places within 25 km. */
+  bikeMin?: number | null;
   /** Door to door: traffic of the hour and parking included. */
   carMin: number | null;
   /** Leaving now with public transport, waiting included; null when walking is as fast or nothing goes. */
@@ -188,6 +190,7 @@ export interface SharingOption {
 export interface RoutesResponse {
   place: PlaceDetail;
   walk: StreetOption | null;
+  bike: StreetOption | null;
   car: StreetOption | null;
   /** By car sharing, when a station with cars is within a short walk. */
   sharing: SharingOption | null;

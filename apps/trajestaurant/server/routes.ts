@@ -3,12 +3,10 @@ import type { PlaceDetail, PlaceExtra, RouteLeg, RoutesResponse, SharingOption, 
 import type { Traffic } from './traffic.js';
 import { distanceM } from './estimate.js';
 import { openState, weekHours } from './open.js';
-import { sortFoods, type SearchDeps } from './search.js';
+import { MAX_BIKE_M, MAX_WALK_M, sortFoods, type SearchDeps } from './search.js';
 import { localNow, routingDate } from './timetable.js';
 import { clockOf, createTraffic } from './traffic.js';
 
-/** Walking is not offered beyond this straight-line distance, metres (about an hour and a half). */
-const MAX_WALK_M = 7_000;
 /** Departures looked for after now, minutes (a far branch may be reached on the next train only). */
 const TRANSIT_WINDOW_MIN = 120;
 const MAX_DEPARTURES = 4;
@@ -117,12 +115,12 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
 
   const clock = clockOf(local.date, local.time);
   const traffic = createTraffic(deps.density, clock.weekday, clock.minutes);
-  const street = (profile: 'walk' | 'car'): Promise<StreetOption | null> =>
+  const street = (profile: 'walk' | 'bike' | 'car'): Promise<StreetOption | null> =>
     (profile === 'car' ? deps.car.route(from, to) : deps.routing.street({ from, to, profile }))
       .then((r) => {
         if (!r || !r.geometry || r.geometry.length < 2) return null;
         const base = { distanceM: Math.round(r.distanceM), geometry: r.geometry };
-        if (profile === 'walk') return { ...base, durationMin: Math.max(1, Math.round(r.durationMin)) };
+        if (profile !== 'car') return { ...base, durationMin: Math.max(1, Math.round(r.durationMin)) };
         // By car: the traffic of this hour along the route, and parking at the place.
         const parts = traffic.car(r.durationMin, r.geometry, to);
         return { ...base, durationMin: parts.totalMin, car: parts };
@@ -132,8 +130,9 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
         return null;
       });
 
-  const [walk, car, transit, sharing] = await Promise.all([
+  const [walk, bike, car, transit, sharing] = await Promise.all([
     place.distanceM <= MAX_WALK_M ? street('walk') : Promise.resolve(null),
+    place.distanceM <= MAX_BIKE_M ? street('bike') : Promise.resolve(null),
     street('car'),
     deps.routing
       .transit({ from, to, date: day.date, window: { from: local.time, to: windowEnd }, by: 'depart' })
@@ -159,7 +158,7 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
 
   // Car sharing only where it helps: not when walking is as quick.
   const usefulSharing = sharing && (!walk || sharing.durationMin < walk.durationMin) ? sharing : null;
-  return { place, walk, car, sharing: usefulSharing, transit: options, typicalTimetable: day.typical };
+  return { place, walk, bike, car, sharing: usefulSharing, transit: options, typicalTimetable: day.typical };
 }
 
 /** Car-sharing stations are looked for within this walk of the searcher, metres. */

@@ -217,10 +217,11 @@ async function candidates(db: pg.Pool, target: Target, from: LatLon): Promise<Ro
  * found (a car covers a kilometre in about a minute on country roads; public transport needs the
  * nearest place within about twice that), no longer, since longer searches are slower.
  */
-export function maxMinutes(nearestM: number, farthestM: number): { walk: number; car: number; transit: number } {
+export function maxMinutes(nearestM: number, farthestM: number): { walk: number; bike: number; car: number; transit: number } {
   const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round(x)));
   return {
     walk: 60,
+    bike: 90,
     car: clamp((farthestM / 1000) * 1.3 + 15, 30, 180),
     transit: clamp((nearestM / 1000) * 2.5 + 40, 90, 180),
   };
@@ -242,7 +243,11 @@ export function oneBranch(rows: Row[], mainKind?: string, sameChain = false): Ro
   return kept.sort((a, b) => a.dist - b.dist);
 }
 
-/** Places of a food type, a chain or a name near a place, with the time to each on foot, by car and by public transport. */
+/** Straight-line distances beyond which walking and cycling are not looked for, metres. */
+export const MAX_WALK_M = 7_000;
+export const MAX_BIKE_M = 25_000;
+
+/** Places of a food type, a chain or a name near a place, with the time to each on foot, by bike, by car and by public transport. */
 export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLon, now = new Date()): Promise<SearchResponse> {
   let rows = await candidates(deps.db, target, from);
   if (target.type === 'brand' || target.type === 'name') {
@@ -262,7 +267,7 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
   const max = maxMinutes(Math.min(...dists), Math.max(...dists));
   const origin = `${from.lat.toFixed(4)},${from.lon.toFixed(4)}`;
   /** Minutes to each place, from the cache (a search after another reuses the places they share) or computed. */
-  const timed = async (profile: 'walk' | 'car', only: (i: number) => boolean, compute: (pts: LatLon[]) => Promise<(number | null)[]>) => {
+  const timed = async (profile: 'walk' | 'bike' | 'car', only: (i: number) => boolean, compute: (pts: LatLon[]) => Promise<(number | null)[]>) => {
     const out: (number | null)[] = points.map(() => null);
     const missing: number[] = [];
     points.forEach((_, i) => {
@@ -283,10 +288,14 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
     }
     return out;
   };
-  const [walk, car, stops] = await Promise.all([
+  const [walk, bike, car, stops] = await Promise.all([
     // Walking only to places within reach (an hour is about 5 km).
-    timed('walk', (i) => dists[i]! < 7_000, (pts) =>
+    timed('walk', (i) => dists[i]! < MAX_WALK_M, (pts) =>
       deps.routing.streetMatrix({ points: pts, anchor: from, profile: 'walk', direction: 'fromAnchor', maxMin: max.walk }).then((r) => r.map((x) => (x ? x.durationMin : null))),
+    ),
+    // Cycling to places within an hour and a half or so (about 25 km).
+    timed('bike', (i) => dists[i]! < MAX_BIKE_M, (pts) =>
+      deps.routing.streetMatrix({ points: pts, anchor: from, profile: 'bike', direction: 'fromAnchor', maxMin: max.bike }).then((r) => r.map((x) => (x ? x.durationMin : null))),
     ),
     timed('car', () => true, (pts) => deps.car.matrix(from, pts, max.car)),
     reachableStops(deps, from, day.date, local.time, max.transit).catch((e: unknown) => {
@@ -305,6 +314,7 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
     return {
       ...toSummary(r, now),
       walkMin,
+      bikeMin: bike[i] !== null && bike[i] !== undefined ? Math.round(bike[i]!) : null,
       carMin: car[i] !== null && car[i] !== undefined ? traffic.car(car[i]!, [[from.lon, from.lat], [r.lon, r.lat]], r).totalMin : null,
       transitMin: usefulTransit(transit[i] ?? null, walkMin),
     };

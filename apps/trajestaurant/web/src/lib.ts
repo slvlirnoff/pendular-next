@@ -87,6 +87,7 @@ export function openLabel(o: OpenState | null): { text: string; tone: 'open' | '
 export const MODE: Record<DetailMode, { emoji: string; label: string }> = {
   sharing: { emoji: '🔑', label: 'Car sharing' },
   walk: { emoji: '🚶', label: 'À pied' },
+  bike: { emoji: '🚲', label: 'Vélo' },
   transit: { emoji: '🚆', label: 'Transports publics' },
   car: { emoji: '🚗', label: 'Voiture' },
 };
@@ -94,7 +95,7 @@ export const MODE: Record<DetailMode, { emoji: string; label: string }> = {
 export type Sort = 'best' | Mode;
 
 export function timeOf(r: SearchResult, mode: Mode): number | null {
-  return mode === 'walk' ? r.walkMin : mode === 'car' ? r.carMin : r.transitMin;
+  return mode === 'walk' ? r.walkMin : mode === 'bike' ? (r.bikeMin ?? null) : mode === 'car' ? r.carMin : r.transitMin;
 }
 
 /** A walk this short is the way to go, whatever the car says (minutes). */
@@ -124,13 +125,16 @@ export function noCarMode(r: Pick<SearchResult, 'walkMin' | 'transitMin'>): Mode
 }
 
 /**
- * The way a sort puts forward for a place: "le plus rapide"; without a car (🚆); on foot, or by
- * public transport when it is too far to walk (🚶); by car.
+ * The way a sort puts forward for a place: "le plus rapide" (walking, public transport or the car:
+ * not everyone has a bike at hand); without a car (🚆); on foot or by bike, or by public transport
+ * when it is too far (🚶, 🚲); by car.
  */
 export function leadMode(r: SearchResult, sort: Sort): Mode | null {
   if (sort === 'best') return bestMode(r);
   if (sort === 'transit') return noCarMode(r);
   if (sort === 'walk') return r.walkMin !== null ? 'walk' : r.transitMin !== null ? 'transit' : null;
+  // By bike, or by public transport beyond 25 km.
+  if (sort === 'bike') return r.bikeMin != null ? 'bike' : r.transitMin !== null ? 'transit' : null;
   return timeOf(r, sort) !== null ? sort : null;
 }
 

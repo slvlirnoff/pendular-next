@@ -13,6 +13,8 @@
   --green-tint: #e3f2e9;
   --walk: #2563eb;
   --walk-tint: #e8effd;
+  --bike: #0e7490;
+  --bike-tint: #e0f4f7;
   --transit: #d93a24;
   --transit-tint: #fdece8;
   --car: #334155;
@@ -607,6 +609,10 @@ a {
   background: var(--walk-tint);
   color: var(--walk);
 }
+.mode-time.is-lead.mode-bike {
+  background: var(--bike-tint);
+  color: var(--bike);
+}
 .mode-time.is-lead.mode-transit {
   background: var(--transit-tint);
   color: var(--red-dark);
@@ -830,6 +836,10 @@ a {
   border-color: var(--walk);
   background: var(--walk-tint);
 }
+.mode-tab.is-on.mode-bike {
+  border-color: var(--bike);
+  background: var(--bike-tint);
+}
 .mode-tab.is-on.mode-transit {
   border-color: var(--transit);
   background: var(--transit-tint);
@@ -837,8 +847,19 @@ a {
 .modes-4 {
   grid-template-columns: repeat(4, 1fr);
 }
-.modes-4 .mode-tab-label {
+.modes-5 {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.modes-4 .mode-tab-label,
+.modes-5 .mode-tab-label {
   font-size: 10.5px;
+}
+.modes-5 .mode-tab {
+  padding: 8px 2px;
+}
+.modes-5 .mode-tab-time {
+  font-size: 15.5px;
 }
 .mode-tab.is-on.mode-sharing {
   border-color: var(--green);
@@ -1173,6 +1194,13 @@ a {
 }
 .route-label.mode-transit {
   color: var(--red-dark);
+}
+.route-label.mode-bike {
+  color: var(--bike);
+}
+.route-label.is-selected.mode-bike {
+  background: var(--bike);
+  color: var(--white);
 }
 .route-label.mode-car {
   color: var(--car);
