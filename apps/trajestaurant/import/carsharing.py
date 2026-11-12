@@ -14,6 +14,7 @@ scooters and bikes (Lime, Bird, Voi, Dott, Bolt).
 import json
 import os
 import sys
+import time
 import urllib.request
 
 BASE = 'https://gbfs.prod.sharedmobility.ch/v2/gbfs'
@@ -28,9 +29,18 @@ if '@' not in contact:
 headers = {'Authorization': contact, 'User-Agent': 'trajestaurant-data-pipeline'}
 
 
-def get(url):
-    with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=90) as r:
-        return json.load(r)
+def get(url, tries=5):
+    # The feed now and then leaves a request unanswered (one in a few dozen): a short timeout and
+    # a few tries get through where one long wait fails the whole download.
+    for attempt in range(tries):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=20) as r:
+                return json.load(r)
+        except (OSError, ValueError) as e:
+            if attempt == tries - 1:
+                raise
+            print(f'retry {url}: {e}', file=sys.stderr)
+            time.sleep(2 * (attempt + 1))
 
 
 out = sys.argv[1]

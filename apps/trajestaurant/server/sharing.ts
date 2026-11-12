@@ -19,6 +19,12 @@ export const BIKE_PROVIDERS = ['velospot', 'donkey_', 'nextbike_', 'carvelo2go',
 /** The feed refreshes its counts every minute; asking again within that is pointless. */
 const STATUS_TTL_MS = 2 * 60_000;
 const FREE_TTL_MS = 60_000;
+/** One asking of the feed gives up after this. */
+const FETCH_TIMEOUT_MS = 20_000;
+/** After a failed asking, the next one this much later. */
+const RETRY_MS = 30_000;
+/** Before anything is known (just after the start), how long an answer waits for the feed. */
+const FIRST_WAIT_MS = 1_500;
 /** What vehicle types are and the list of providers change rarely: asked again after a day. */
 const SLOW_TTL_MS = 24 * 3_600_000;
 
@@ -82,23 +88,41 @@ export function createCarSharing(contact: string | undefined, get: typeof fetch)
   if (!contact || !contact.includes('@')) return { live: false, cars: async () => null, bikes: async () => null, vehicles: async () => [] };
   const headers = { Authorization: contact };
   const call = async <T>(path: string): Promise<T> => {
-    const r = await get(`${BASE}${path ? `/${path}` : ''}`, { headers });
+    const r = await get(`${BASE}${path ? `/${path}` : ''}`, { headers, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!r.ok) throw new Error(`sharedmobility ${path} ${r.status}`);
     return (await r.json()) as T;
   };
-  /** A value asked for at most every ttl, forgotten when the asking fails. */
+  /**
+   * A value kept and refreshed in the background: an answer never waits for the feed. Once a
+   * value is known, it is given at once, and asked again behind the scenes when older than ttl;
+   * a failed asking keeps the value and tries again RETRY_MS later. Before the first value, a
+   * caller waits at most FIRST_WAIT_MS, then gets the fallback (the asking goes on).
+   */
   const cached = <T>(ttl: number) => {
-    const m = new Map<string, { at: number; v: Promise<T> }>();
+    const m = new Map<string, { at: number; value?: { v: T }; loading?: Promise<T> }>();
     return (key: string, load: () => Promise<T>, fallback: T): Promise<T> => {
-      const hit = m.get(key);
-      if (hit && Date.now() - hit.at < ttl) return hit.v;
-      const v = load().catch((e: unknown) => {
-        console.error('shared mobility', key, (e as Error).message);
-        m.delete(key);
-        return fallback;
-      });
-      m.set(key, { at: Date.now(), v });
-      return v;
+      let e = m.get(key);
+      if (!e) m.set(key, (e = { at: 0 }));
+      const entry = e;
+      if (Date.now() - entry.at >= ttl && !entry.loading) {
+        entry.loading = load()
+          .then((v) => {
+            entry.value = { v };
+            entry.at = Date.now();
+            return v;
+          })
+          .catch((err: unknown) => {
+            console.error('shared mobility', key, (err as Error).message);
+            entry.at = Date.now() - ttl + RETRY_MS;
+            return entry.value ? entry.value.v : fallback;
+          })
+          .finally(() => {
+            entry.loading = undefined;
+          });
+      }
+      if (entry.value) return Promise.resolve(entry.value.v);
+      const loading = entry.loading ?? Promise.resolve(fallback);
+      return Promise.race([loading, new Promise<T>((r) => setTimeout(() => r(fallback), FIRST_WAIT_MS).unref())]);
     };
   };
   const typesCache = cached<Map<string, VehicleType>>(SLOW_TTL_MS);
@@ -136,8 +160,17 @@ export function createCarSharing(contact: string | undefined, get: typeof fetch)
     const provider = key.slice(0, i);
     const known = what === 'car' ? SHARING_PROVIDERS.includes(provider) : BIKE_PROVIDERS.some((p) => provider.startsWith(p));
     if (!known) return null;
+    asked.add(provider);
     return (await countsOf(provider)).get(key.slice(i + 1))?.[what] ?? null;
   };
+  // The counts of the car-sharing providers, and of any provider asked for since the start, are
+  // kept fresh in the background: a place's card reads what is there.
+  const asked = new Set<string>(SHARING_PROVIDERS);
+  const refresh = () => {
+    for (const p of asked) void countsOf(p);
+  };
+  refresh();
+  setInterval(refresh, STATUS_TTL_MS).unref();
 
   // Free floating: the providers that list vehicles, their vehicles, and where each one operates.
   const systemsCache = cached<string[]>(SLOW_TTL_MS);

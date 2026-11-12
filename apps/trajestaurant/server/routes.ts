@@ -130,7 +130,7 @@ export async function routesToPlace(deps: SearchDeps, place: PlaceDetail, from: 
   const clock = clockOf(local.date, local.time);
   const traffic = createTraffic(deps.density, clock.weekday, clock.minutes);
   const street = (profile: 'walk' | 'bike' | 'car'): Promise<StreetOption | null> =>
-    (profile === 'car' ? deps.car.route(from, to) : deps.routing.street({ from, to, profile }))
+    deps[profile].route(from, to)
       .then((r) => {
         if (!r || !r.geometry || r.geometry.length < 2) return null;
         const base = { distanceM: Math.round(r.distanceM), geometry: r.geometry };
@@ -196,7 +196,7 @@ async function sharingOption(deps: SearchDeps, from: LatLon, to: LatLon, traffic
   const station = withCars.find((s) => (s.cars ?? 1) > 0);
   if (!station) return null;
   const at = { lat: station.lat, lon: station.lon };
-  const [walk, drive] = await Promise.all([deps.routing.street({ from, to: at, profile: 'walk' }), deps.car.route(at, to)]);
+  const [walk, drive] = await Promise.all([deps.walk.route(from, at), deps.car.route(at, to)]);
   if (!walk || !drive || !walk.geometry || drive.geometry.length < 2) return null;
   const parts = traffic.car(drive.durationMin, drive.geometry, to);
   const walkMin = Math.max(1, Math.round(walk.durationMin));

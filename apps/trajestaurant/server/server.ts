@@ -8,7 +8,7 @@ import { httpGet } from '../../api/src/httpGet.js';
 import type { PlaceHit, Target } from '../src/api.js';
 import { FOODS, FOOD_BY_KEY } from '../src/foods.js';
 import { KIND_SEARCH_BY_KEY } from '../src/kinds.js';
-import { motisCar, valhallaCar, withFallback } from './car.js';
+import { motisStreet, valhallaStreet, withFallback, type StreetRouter } from './car.js';
 import { createCarSharing } from './sharing.js';
 import { createPool } from './db.js';
 import { addressPlace, routesTo, routesToPlace } from './routes.js';
@@ -32,6 +32,10 @@ const routing = new MotisRouting({
 });
 // VALHALLA_URL (e.g. http://127.0.0.1:8002): car times and routes from Valhalla, MOTIS as the fallback.
 const valhallaUrl = process.env.VALHALLA_URL;
+/** Valhalla for a way of going when configured (fast: tens of milliseconds), MOTIS when not or when it fails. */
+function street(costing: 'auto' | 'pedestrian' | 'bicycle', profile: 'car' | 'walk' | 'bike'): StreetRouter {
+  return valhallaUrl ? withFallback(valhallaStreet(valhallaUrl, httpGet, costing), motisStreet(routing, profile)) : motisStreet(routing, profile);
+}
 const deps: SearchDeps = {
   db: createPool(),
   density: loadDensity(),
@@ -42,7 +46,9 @@ const deps: SearchDeps = {
   fetch: httpGet,
   timetable,
   routing,
-  car: valhallaUrl ? withFallback(valhallaCar(valhallaUrl, httpGet), motisCar(routing)) : motisCar(routing),
+  car: street('auto', 'car'),
+  walk: street('pedestrian', 'walk'),
+  bike: street('bicycle', 'bike'),
 };
 
 const app = new Hono();
@@ -252,7 +258,7 @@ app.get('*', serveStatic({ root: './web/dist', path: 'index.html' }));
 
 process.on('unhandledRejection', (e) => console.error('unhandled rejection', e));
 serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`trajestaurant api on :${info.port}, motis ${motisUrl}, car times from ${deps.car.name}`);
+  console.log(`trajestaurant api on :${info.port}, motis ${motisUrl}, car, walk and bike from ${deps.car.name}`);
   // The routing engines read their data from disk on first use: the first search would wait for
   // it (12 s measured for MOTIS). One search in the background warms them up.
   setTimeout(() => {

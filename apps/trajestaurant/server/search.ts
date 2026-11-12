@@ -20,6 +20,9 @@ export interface SearchDeps {
   routing: MotisRouting;
   /** Car times and routes: Valhalla when configured, else MOTIS (server/car.ts). */
   car: CarRouter;
+  /** On foot and by bike, the same way: Valhalla when configured, else MOTIS. */
+  walk: CarRouter;
+  bike: CarRouter;
   motisUrl: string;
   fetch: typeof fetch;
   timetable: TimetableRange;
@@ -290,13 +293,9 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
   };
   const [walk, bike, car, stops] = await Promise.all([
     // Walking only to places within reach (an hour is about 5 km).
-    timed('walk', (i) => dists[i]! < MAX_WALK_M, (pts) =>
-      deps.routing.streetMatrix({ points: pts, anchor: from, profile: 'walk', direction: 'fromAnchor', maxMin: max.walk }).then((r) => r.map((x) => (x ? x.durationMin : null))),
-    ),
+    timed('walk', (i) => dists[i]! < MAX_WALK_M, (pts) => deps.walk.matrix(from, pts, max.walk)),
     // Cycling to places within an hour and a half or so (about 25 km).
-    timed('bike', (i) => dists[i]! < MAX_BIKE_M, (pts) =>
-      deps.routing.streetMatrix({ points: pts, anchor: from, profile: 'bike', direction: 'fromAnchor', maxMin: max.bike }).then((r) => r.map((x) => (x ? x.durationMin : null))),
-    ),
+    timed('bike', (i) => dists[i]! < MAX_BIKE_M, (pts) => deps.bike.matrix(from, pts, max.bike)),
     timed('car', () => true, (pts) => deps.car.matrix(from, pts, max.car)),
     reachableStops(deps, from, day.date, local.time, max.transit).catch((e: unknown) => {
       console.error('one-to-all', e);
