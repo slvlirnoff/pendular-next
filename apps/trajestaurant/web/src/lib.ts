@@ -110,10 +110,26 @@ export function bestMode(r: Pick<SearchResult, 'walkMin' | 'carMin' | 'transitMi
   return ways.sort((a, b) => a[1] - b[1])[0]?.[0] ?? null;
 }
 
-/** Sorted by the way shown first (car with its parking), or by one way of going. */
+/**
+ * Without a car: public transport, or walking when it is as quick (public transport is only given
+ * when it beats walking, so a place next door has a walking time only).
+ */
+export function noCarMode(r: Pick<SearchResult, 'walkMin' | 'transitMin'>): Mode | null {
+  if (r.walkMin !== null && (r.transitMin === null || r.walkMin <= r.transitMin)) return 'walk';
+  return r.transitMin !== null ? 'transit' : null;
+}
+
+/** The way a sort puts forward for a place: "le plus rapide", without a car (🚆), on foot or by car. */
+export function leadMode(r: SearchResult, sort: Sort): Mode | null {
+  if (sort === 'best') return bestMode(r);
+  if (sort === 'transit') return noCarMode(r);
+  return timeOf(r, sort) !== null ? sort : null;
+}
+
+/** Sorted by the way shown first (car with its parking), by the way without a car, or by one way of going. */
 export function sortResults(list: SearchResult[], sort: Sort): SearchResult[] {
   const key = (r: SearchResult) => {
-    const m = sort === 'best' ? bestMode(r) : sort;
+    const m = leadMode(r, sort);
     const t = m ? timeOf(r, m) : null;
     if (t === null) return Infinity;
     return sort === 'best' && m === 'car' ? t + CAR_PARKING_MIN : t;

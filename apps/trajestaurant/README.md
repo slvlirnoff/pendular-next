@@ -66,7 +66,9 @@ A link can open a search directly: `/?ici=46.7085,6.8405,Lucens&food=burger`, `&
 - **A place**: the real routes: walk and the next departures within two hours (MOTIS), car
   (Valhalla, else MOTIS).
 - **Order** ("le plus rapide"): each place shows its quickest way, walking when it takes 12 minutes
-  or less; when ranking, the car counts 5 more minutes for parking and walking to the door.
+  or less; when ranking, the car counts 5 more minutes for parking and walking to the door. The 🚆
+  order is "without a car": public transport, or walking when it is as quick (the post office next
+  door comes first).
 - **Caches**: street times from a place are kept for an hour (a search for pizza, then for Italian
   food, computes only the places that are new), and the stops reached by public transport from a
   place for the minute. At start, one search in the background loads the routing engines' data.
@@ -86,12 +88,12 @@ opening_hours library in Swiss time.
 
 | Source | What it gives | Licence |
 | --- | --- | --- |
-| OpenStreetMap | 126 600 places: places to eat, shops, pharmacies, fuel, banks, fitness, hotels…; towns | ODbL |
+| OpenStreetMap | 132 700 places: places to eat, shops, pharmacies, fuel, banks, fitness, hotels…; towns. A place without a name is named after its operator (the Lucens post office: operator:fr=La Poste) or, for kinds one looks for, after its kind ("Pharmacie"), until another source gives its name | ODbL |
 | All The Places | 14 200 branches of 207 chains from their own store finders, 10 600 with opening hours: 6 300 complete OSM places (their hours replace OSM's), 7 300 are added | CC0 |
 | Overture Maps places | 49 000 places to eat: 19 000 add food types to known places, 22 400 are added (confidence ≥ 0.6, or lower with a phone or website). 59 000 shops, hairdressers, beauty salons and gyms with a confidence of 0.8 or more: 21 800 complete known places, 33 300 are added | CDLA-Permissive-2.0 (some Apache-2.0, CC0) |
 | Name Suggestion Index | The chains present in Switzerland: brand of places tagged with a name only ("Migros Lucens"), cuisine of chains, proper names | BSD-3-Clause |
 
-In all about 189 500 places, of which 1 712 chains with at least two places. Lucens, almost empty
+In all about 196 000 places, of which 1 715 chains with at least two places. Lucens, almost empty
 in OSM (three places within 3 km), now has Sherlock, Vesuvio, Grill House and the Café du Poids,
 from Overture. Other sources studied: `SOURCES.md` (in French).
 

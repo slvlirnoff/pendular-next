@@ -21,7 +21,7 @@ import { createReadStream, existsSync, readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { dirname, resolve } from 'node:path';
 import { classify } from '../src/foods.js';
-import { FOOD_KINDS, mainKind } from '../src/kinds.js';
+import { FOOD_KINDS, kindInfo, mainKind } from '../src/kinds.js';
 import { fold, sameName, searchKey } from '../src/text.js';
 import { distanceM } from '../server/estimate.js';
 import { createPool, DEFAULT_DATABASE_URL, ensureDatabase, SCHEMA } from '../server/db.js';
@@ -44,6 +44,8 @@ export interface Place {
   extraFoods: Set<string>;
   confidence?: number;
   matchedAtp?: boolean;
+  /** No name in the source: named after its operator or its kind ("La Poste", "Pharmacie"). */
+  unnamed?: boolean;
 }
 
 interface Feature {
@@ -116,15 +118,52 @@ function pickTags(p: Record<string, string>): Tags {
 }
 
 /** A place from an OSM feature, or null when it is not one Trajestaurant keeps (or has no name). */
+/**
+ * Kinds worth showing without a name: what they are is what one looks for (a pharmacy, a post
+ * office, a bakery). Not places to eat (an unnamed "Restaurant" helps nobody), not unknown shops,
+ * not swimming pools (mostly private garden pools).
+ */
+export function worthWithoutName(kindKey: string, kind: string): boolean {
+  if (kindKey === 'shop') return kind !== 'yes';
+  if (kindKey === 'amenity') return !FOOD_KINDS.has(kind) && kind !== 'bar' && kind !== 'pub';
+  if (kindKey === 'leisure') return kind !== 'swimming_pool';
+  if (kindKey === 'tourism') return kind !== 'hotel' && kind !== 'motel' && kind !== 'hostel' && kind !== 'attraction';
+  return false;
+}
+
+/**
+ * The name to show for an OSM place: its name, else its brand, else its operator (in French when
+ * given: the Lucens post office has only operator=Die Post, operator:fr=La Poste), else its kind
+ * for the kinds worth showing without a name. Null when none applies.
+ */
+export function osmName(p: Record<string, string>, kindKey: string, kind: string): { name: string; unnamed: boolean } | null {
+  const own = clean(p.name) ?? clean(p.brand);
+  if (own) return { name: own, unnamed: false };
+  const operator = clean(p['operator:fr']) ?? clean(p.operator);
+  if (operator) return { name: operator, unnamed: true };
+  if (worthWithoutName(kindKey, kind)) return { name: kindInfo(kindKey, kind).label, unnamed: true };
+  return null;
+}
+
 export function osmPlace(f: Feature): Place | null {
   const p = f.properties;
   const k = mainKind(p);
   if (!k || !f.id) return null;
-  const name = clean(p.name) ?? clean(p.brand);
-  if (!name) return null;
+  const named = osmName(p, k.kindKey, k.kind);
+  if (!named) return null;
   const c = centre(f.geometry);
   if (!c) return null;
-  return { source: 'osm', sourceId: osmObject(f.id), sources: new Set(['osm']), name, ...k, ...c, tags: pickTags(p), extraFoods: new Set() };
+  return {
+    source: 'osm',
+    sourceId: osmObject(f.id),
+    sources: new Set(['osm']),
+    name: named.name,
+    ...k,
+    ...c,
+    tags: pickTags(p),
+    extraFoods: new Set(),
+    ...(named.unnamed ? { unnamed: true } : {}),
+  };
 }
 
 /** A place from an All The Places feature (OSM-style tags; the street and number come as one). */
@@ -300,6 +339,11 @@ export { nameTokens, sameName } from '../src/text.js';
 
 /** Fills tags the place lacks; `prefer` tags replace what it has (opening hours from a store finder). */
 function absorb(into: Place, from: Place, prefer: string[] = []) {
+  // A place OSM knows without a name takes the name the other source gives it.
+  if (into.unnamed && !from.unnamed) {
+    into.name = from.name;
+    into.unnamed = false;
+  }
   for (const [k, v] of Object.entries(from.tags)) {
     if (!v || ['amenity', 'shop', 'leisure', 'tourism', 'office', 'name'].includes(k)) continue;
     if (!into.tags[k] || prefer.includes(k)) into.tags[k] = v;
@@ -323,6 +367,8 @@ export function matchAtp(grid: Grid, a: Place): Place | null {
   const same = grid.near(a.lat, a.lon, 200).filter(({ p }) => {
     if (p.source !== 'osm' || p.matchedAtp) return false;
     if (isFood(p) !== isFood(a) && p.kindKey !== a.kindKey) return false;
+    // An unnamed station of the same kind a few metres away is that branch (operator-only fuel stations).
+    if (p.unnamed && p.kindKey === a.kindKey && p.kind === a.kind && distanceM(p, a) <= 60) return true;
     return Boolean((wd && p.tags['brand:wikidata'] === wd) || (brand.length >= 3 && fold(`${p.tags.brand ?? ''} ${p.name}`).includes(brand)));
   });
   return (same.find(({ p }) => p.kindKey === a.kindKey && p.kind === a.kind) ?? same.find(({ p }) => p.kindKey === a.kindKey) ?? same[0])?.p ?? null;
@@ -339,9 +385,11 @@ export function matchOverture(grid: Grid, o: Place): Place | null {
 
 /** Overture shop → a shop (or other place not to eat) already known with a similar name nearby, if any. */
 export function matchOvertureShop(grid: Grid, o: Place): Place | null {
-  for (const { p } of grid.near(o.lat, o.lon, 120)) {
+  for (const { p, d } of grid.near(o.lat, o.lon, 120)) {
     if (p === o || isFoodish(p)) continue;
     if (sameName(p.name, o.name)) return p;
+    // OSM knows a pharmacy here but not its name: Overture's pharmacy within 60 m is that one.
+    if (p.unnamed && d <= 60 && p.kindKey === o.kindKey && p.kind === o.kind) return p;
   }
   return null;
 }

@@ -4,12 +4,12 @@ import { FOODS, FOOD_BY_KEY } from '../../../src/foods';
 import { KIND_SEARCHES, KIND_SEARCH_BY_KEY, kindInfo } from '../../../src/kinds';
 import {
   api,
-  bestMode,
   brandSearch,
   distance,
   foodSearch,
   kindLabel,
   kindSearch,
+  leadMode,
   MODE,
   minutes,
   nameSearch,
@@ -337,7 +337,8 @@ function Results(props: {
               type="button"
               role="radio"
               aria-checked={props.sort === s.key}
-              aria-label={s.key === 'best' ? undefined : `Trier : ${MODE[s.key].label}`}
+              aria-label={s.key === 'best' ? undefined : s.key === 'transit' ? 'Trier : sans voiture (transports publics ou à pied)' : `Trier : ${MODE[s.key].label}`}
+              title={s.key === 'transit' ? 'Sans voiture : transports publics ou à pied' : undefined}
               className={props.sort === s.key ? 'is-on' : ''}
               onClick={() => props.onSort(s.key)}
             >
@@ -394,8 +395,7 @@ function Results(props: {
 
 function ResultRow(props: { r: SearchResult; searched: Searched; sort: Sort; onPick: (r: PlaceSummary) => void; onHover: (id: number | null) => void }) {
   const { r } = props;
-  const best = bestMode(r);
-  const lead = props.sort === 'best' ? best : props.sort;
+  const lead = leadMode(r, props.sort);
   const leadMin = lead ? timeOf(r, lead) : null;
   const open = openLabel(r.open);
   const modes = (['walk', 'transit', 'car'] as const).filter((m) => timeOf(r, m) !== null);

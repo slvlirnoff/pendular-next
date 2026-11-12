@@ -7,6 +7,8 @@ import { atpPlace, brandFromName, centre, keepOverture, osmObject, osmPlace, ove
 import { KIND_SEARCHES, kindInfo, mainKind, matchKinds } from '../src/kinds.js';
 import { searchKey } from '../src/text.js';
 import { maxMinutes, onePlace, Ttl } from '../server/search.js';
+import { bestMode, leadMode, sortResults } from '../web/src/lib.js';
+import type { SearchResult } from '../src/api.js';
 import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
 
 describe('food types', () => {
@@ -113,6 +115,15 @@ describe('OSM import', () => {
     expect(c!.lon).toBeCloseTo(6.001, 6);
   });
 
+  it('names a place without a name after its operator, or its kind when that is what one looks for', () => {
+    const post = osmPlace({ id: 'n14138811681', geometry: { type: 'Point', coordinates: [6.8406, 46.7094] }, properties: { amenity: 'post_office', operator: 'Die Post', 'operator:fr': 'La Poste' } });
+    expect(post).toMatchObject({ name: 'La Poste', kind: 'post_office', unnamed: true });
+    expect(osmPlace({ id: 'n5', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'pharmacy' } })).toMatchObject({ name: 'Pharmacie', unnamed: true });
+    // Not an unnamed restaurant, nor a garden pool.
+    expect(osmPlace({ id: 'n6', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'restaurant' } })).toBeNull();
+    expect(osmPlace({ id: 'n7', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { leisure: 'swimming_pool' } })).toBeNull();
+  });
+
   it('keeps named places of the kinds it shows, with their address', () => {
     const place = osmPlace({
       id: 'n1',
@@ -123,7 +134,6 @@ describe('OSM import', () => {
     expect(place!.tags['addr:city']).toBe('Lucens');
     const shop = osmPlace({ id: 'w2', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { shop: 'shoes', brand: 'Dosenbach' } });
     expect(shop).toMatchObject({ name: 'Dosenbach', kindKey: 'shop', kind: 'shoes' });
-    expect(osmPlace({ id: 'n3', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'restaurant' } })).toBeNull();
     expect(osmPlace({ id: 'n4', geometry: { type: 'Point', coordinates: [6.84, 46.71] }, properties: { amenity: 'vending_machine', name: 'Robidog' } })).toBeNull();
   });
 
@@ -266,5 +276,22 @@ describe('kinds of shops and places', () => {
       ({ id, name, kind_key: 'shop', kind: 'hairdresser', brand: null, brand_key: null, sources, town: 'Lucens', lat, lon: 6.84, opening_hours: null, foods: [], dist: lat * 1000 }) as Parameters<typeof onePlace>[0][number];
     const out = onePlace([row('1', 'Coiffure Sandra', 46.7, ['osm']), row('2', 'Sandra Coiffure', 46.7002, ['overture']), row('3', 'Bea coiffure', 46.7001, ['osm'])]);
     expect(out.map((r) => r.name).sort()).toEqual(['Bea coiffure', 'Coiffure Sandra']);
+  });
+});
+
+describe('sorting', () => {
+  const r = (name: string, walkMin: number | null, transitMin: number | null, carMin: number | null, distanceM: number) =>
+    ({ name, walkMin, transitMin, carMin, distanceM }) as unknown as SearchResult;
+
+  it('counts walking as going without a car in the public transport sort', () => {
+    const list = [r('Poste Moudon', null, 31, 6, 5335), r('La Poste Lucens', 2, null, 1, 105), r('Poste Romont', null, 92, 11, 6164)];
+    expect(sortResults(list, 'transit').map((x) => x.name)).toEqual(['La Poste Lucens', 'Poste Moudon', 'Poste Romont']);
+    expect(leadMode(list[1]!, 'transit')).toBe('walk');
+  });
+
+  it('shows a short walk first, and counts parking for the car', () => {
+    const list = [r('Midi 480 m', 9, null, 1, 480), r('Bea 70 m', 2, null, 1, 70), r('Imaginatifs 830 m', 16, null, 2, 830), r('Moudon', null, 40, 5, 5500)];
+    expect(sortResults(list, 'best').map((x) => x.name)).toEqual(['Bea 70 m', 'Imaginatifs 830 m', 'Midi 480 m', 'Moudon']);
+    expect(bestMode(list[0]!)).toBe('walk');
   });
 });
