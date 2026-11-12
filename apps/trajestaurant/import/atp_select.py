@@ -11,6 +11,9 @@ import json
 import os
 import sys
 
+# The country whose spiders are read (ISO code): Switzerland unless TRAJ_COUNTRY says otherwise.
+COUNTRY = os.environ.get('TRAJ_COUNTRY', 'CH').upper()
+
 KEEP = (
     'shop/',
     'amenity/restaurant', 'amenity/fast_food', 'amenity/cafe', 'amenity/ice_cream', 'amenity/bar', 'amenity/pub',
@@ -29,13 +32,13 @@ for f in sorted(os.listdir(stats_dir)):
             s = json.load(h)
     except (OSError, ValueError):
         continue
-    if s.get('atp/country/CH', 0) <= 0:
+    if s.get(f'atp/country/{COUNTRY}', 0) <= 0:
         continue
     if not any(k.startswith('atp/brand_wikidata/') for k in s):
         continue
     cats = [k.split('/', 2)[2] for k in s if k.startswith('atp/category/')]
     if not any(c.startswith(KEEP) for c in cats):
         continue
-    picked.append((s['atp/country/CH'], f[:-5]))
+    picked.append((s[f'atp/country/{COUNTRY}'], f[:-5]))
 for _, spider in sorted(picked, reverse=True):
     print(spider)

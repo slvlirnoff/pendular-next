@@ -9,6 +9,7 @@ S3 bucket (only the row groups inside the Swiss bounding box are fetched, about 
 """
 import json
 import os
+import re
 import sys
 import urllib.request
 
@@ -19,6 +20,14 @@ here = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(here, 'overture-categories.json')) as f:
     categories = sorted(json.load(f)['categories'])
 listed = ', '.join("'" + c.replace("'", "''") + "'" for c in categories)
+# Switzerland, unless TRAJ_COUNTRY (an ISO code) and TRAJ_BBOX (lon_min,lat_min,lon_max,lat_max)
+# say otherwise: there, places without a country inside the box count too.
+COUNTRY = os.environ.get('TRAJ_COUNTRY', 'CH').upper()
+if not re.fullmatch(r'[A-Z]{2}', COUNTRY):
+    sys.exit('TRAJ_COUNTRY: a two-letter country code')
+BOX = os.environ.get('TRAJ_BBOX')
+X0, Y0, X1, Y1 = (float(v) for v in BOX.split(',')) if BOX else (5.95, 45.81, 10.50, 47.81)
+in_country = f"coalesce(addresses[1].country, '{COUNTRY}') = '{COUNTRY}'" if BOX else f"addresses[1].country = '{COUNTRY}'"
 release = json.load(urllib.request.urlopen('https://stac.overturemaps.org/catalog.json', timeout=60))['latest']
 
 con = duckdb.connect()
@@ -33,8 +42,8 @@ rows = con.sql(f"""
          addresses[1].freeform AS street, addresses[1].postcode AS postcode, addresses[1].locality AS locality,
          sources[1].dataset AS dataset, ST_X(geometry) AS lon, ST_Y(geometry) AS lat
   FROM read_parquet('s3://overturemaps-us-west-2/release/{release}/theme=places/type=place/*.parquet')
-  WHERE bbox.xmin BETWEEN 5.95 AND 10.50 AND bbox.ymin BETWEEN 45.81 AND 47.81
-    AND addresses[1].country = 'CH'
+  WHERE bbox.xmin BETWEEN {X0} AND {X1} AND bbox.ymin BETWEEN {Y0} AND {Y1}
+    AND {in_country}
     AND coalesce(operating_status, 'open') <> 'permanently_closed'
     AND (taxonomy.hierarchy[1] = 'food_and_drink'
          OR (confidence >= 0.8 AND (taxonomy.hierarchy[1] = 'shopping' OR taxonomy.primary IN ({listed}))))

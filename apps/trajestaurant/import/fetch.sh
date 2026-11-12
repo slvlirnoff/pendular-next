@@ -11,7 +11,9 @@
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../../.." && pwd)"
-out="$root/data/build/trajestaurant/src"; mkdir -p "$out"
+# Another region: TRAJ_OUT (where the files go), TRAJ_COUNTRY (ISO code) and TRAJ_BBOX
+# (lon_min,lat_min,lon_max,lat_max) for All The Places and Overture.
+out="${TRAJ_OUT:-$root/data/build/trajestaurant/src}"; mkdir -p "$out"
 UA="trajestaurant-data-pipeline"
 NSI_VERSION="${NSI_VERSION:-8.0.20261101}"
 
@@ -27,18 +29,19 @@ nsi() {
 atp() {
   local base="https://alltheplaces-data.openaddresses.io/runs"
   local run; run="$(curl -fsSL -A "$UA" https://data.alltheplaces.xyz/runs/latest.json | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_id"])')"
-  local dir="$out/atp-$run"; mkdir -p "$dir/stats" "$dir/ch"
-  # Which spiders have places in Switzerland: each spider's stats count its places per country.
+  local cc; cc="$(echo "${TRAJ_COUNTRY:-CH}" | tr '[:upper:]' '[:lower:]')"
+  local dir="$out/atp-$run"; mkdir -p "$dir/stats" "$dir/$cc"
+  # Which spiders have places in the country (Switzerland by default): each spider's stats count its places per country.
   curl -fsSL -A "$UA" "$base/$run/stats/_results.json" \
     | python3 -c 'import json,sys; [print(r["spider"]) for r in json.load(sys.stdin)["results"] if r["features"] > 0]' > "$dir/spiders.txt"
   xargs -P 32 -I{} sh -c "[ -s '$dir/stats/{}.json' ] || curl -fsS -m 60 -A '$UA' -o '$dir/stats/{}.json' '$base/$run/stats/{}.json' || true" < "$dir/spiders.txt"
-  python3 "$here/atp_select.py" "$dir/stats" > "$dir/ch-spiders.txt"
-  echo "atp $run: $(wc -l < "$dir/ch-spiders.txt") spiders with Swiss places"
-  # Each spider's file, keeping its Swiss places only (one GeoJSON feature per line).
-  xargs -P 8 -I{} sh -c "[ -s '$dir/ch/{}.geojsonseq' ] || { curl -fsS -m 900 -A '$UA' '$base/$run/output/{}.geojson' | python3 '$here/atp_filter.py' > '$dir/ch/{}.part' && mv '$dir/ch/{}.part' '$dir/ch/{}.geojsonseq'; } || echo 'failed: {}' >&2" < "$dir/ch-spiders.txt"
-  cat "$dir"/ch/*.geojsonseq > "$out/atp.geojsonseq.part" && mv "$out/atp.geojsonseq.part" "$out/atp.geojsonseq"
+  python3 "$here/atp_select.py" "$dir/stats" > "$dir/$cc-spiders.txt"
+  echo "atp $run: $(wc -l < "$dir/$cc-spiders.txt") spiders with places in ${TRAJ_COUNTRY:-CH}"
+  # Each spider's file, keeping the country's places only (one GeoJSON feature per line).
+  xargs -P 8 -I{} sh -c "[ -s '$dir/$cc/{}.geojsonseq' ] || { curl -fsS -m 900 -A '$UA' '$base/$run/output/{}.geojson' | python3 '$here/atp_filter.py' > '$dir/$cc/{}.part' && mv '$dir/$cc/{}.part' '$dir/$cc/{}.geojsonseq'; } || echo 'failed: {}' >&2" < "$dir/$cc-spiders.txt"
+  cat "$dir/$cc"/*.geojsonseq > "$out/atp.geojsonseq.part" && mv "$out/atp.geojsonseq.part" "$out/atp.geojsonseq"
   echo "$run" > "$out/atp-run.txt"
-  echo "atp: $(wc -l < "$out/atp.geojsonseq") Swiss places"
+  echo "atp: $(wc -l < "$out/atp.geojsonseq") places"
 }
 
 overture() {

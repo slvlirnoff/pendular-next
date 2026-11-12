@@ -1,10 +1,17 @@
-"""Keeps the Swiss places of one All The Places spider file (GeoJSON on stdin, one feature per line).
+"""Keeps the places of one country of one All The Places spider file (GeoJSON on stdin, one
+feature per line): Switzerland, or TRAJ_COUNTRY (an ISO code) within TRAJ_BBOX.
 
-Writes one feature per line. A place is Swiss when its address says CH; a place without a country
-is kept when it lies inside the Swiss bounding box (the import drops what is far from any Swiss town).
+Writes one feature per line. A place is in the country when its address says so (and, with
+TRAJ_BBOX, lies in that box); a place without a country is kept when it lies inside the box (the
+Swiss one by default; the import drops what is far from any town).
 """
 import json
+import os
 import sys
+
+COUNTRY = os.environ.get('TRAJ_COUNTRY', 'CH').upper()
+BOX = os.environ.get('TRAJ_BBOX')  # lon_min,lat_min,lon_max,lat_max
+X0, Y0, X1, Y1 = (float(v) for v in BOX.split(',')) if BOX else (5.95, 45.81, 10.5, 47.81)
 
 for line in sys.stdin:
     line = line.strip().rstrip(',')
@@ -20,5 +27,6 @@ for line in sys.stdin:
         continue
     country = (p.get('addr:country') or '').upper()
     lon, lat = g['coordinates'][:2]
-    if country == 'CH' or (not country and 5.95 <= lon <= 10.5 and 45.81 <= lat <= 47.81):
+    inside = X0 <= lon <= X1 and Y0 <= lat <= Y1
+    if (country == COUNTRY and (inside or not BOX)) or (not country and inside):
         sys.stdout.write(json.dumps({'id': f.get('id'), 'geometry': g, 'properties': p}, ensure_ascii=False) + '\n')
