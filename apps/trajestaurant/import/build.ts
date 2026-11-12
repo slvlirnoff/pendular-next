@@ -27,7 +27,7 @@ import { distanceM } from '../server/estimate.js';
 import { createPool, DEFAULT_DATABASE_URL, ensureDatabase, SCHEMA } from '../server/db.js';
 
 type Tags = Record<string, string | undefined>;
-type Source = 'osm' | 'atp' | 'overture';
+type Source = 'osm' | 'atp' | 'overture' | 'gbfs';
 
 export interface Place {
   source: Source;
@@ -199,6 +199,59 @@ export interface OvertureRow {
   locality: string | null;
   lat: number;
   lon: number;
+}
+
+/** A car-sharing station of the national shared-mobility feed (import/carsharing.py). */
+export interface CarSharingRow {
+  provider: string;
+  provider_name: string;
+  provider_url: string | null;
+  station_id: string;
+  name: string;
+  address: string | null;
+  lat: number;
+  lon: number;
+  rental_uri: string | null;
+}
+
+/** Short names of the car-sharing providers, as people say them. */
+const SHARING_NAMES: Record<string, string> = {
+  mobility: 'Mobility',
+  '2em_cars': '2EM',
+  edrivecarsharing: 'eDrive',
+  quickrent: 'Quickrent',
+  sponti: 'Sponti-Car',
+  share_birrer_ch: 'Birrer Share',
+  carvelo2go: 'carvelo2go',
+};
+
+/**
+ * A car-sharing station: named "Mobility · Lucens Gare". 2EM stations (private cars) are named
+ * after the car ("velo 1995"): their street stands for them instead.
+ */
+export function carSharingPlace(r: CarSharingRow): Place | null {
+  if (!Number.isFinite(r.lat) || !Number.isFinite(r.lon)) return null;
+  const brand = SHARING_NAMES[r.provider] ?? r.provider_name;
+  const street = r.address?.split(',')[0]?.trim();
+  const where = r.provider === '2em_cars' ? street || r.name : r.name || street;
+  return {
+    source: 'gbfs',
+    sourceId: `${r.provider}:${r.station_id}`,
+    sources: new Set(['gbfs']),
+    name: where ? `${brand} · ${where}` : brand,
+    kindKey: 'amenity',
+    kind: 'car_sharing',
+    lat: r.lat,
+    lon: r.lon,
+    tags: {
+      amenity: 'car_sharing',
+      brand,
+      operator: r.provider_name,
+      website: clean(r.rental_uri) ?? clean(r.provider_url),
+      'addr:street': clean(street),
+    },
+    extraFoods: new Set(),
+  };
 }
 
 /** OSM key and value for an Overture category; null for places that are not to eat (wineries…). */
@@ -386,7 +439,9 @@ export function matchOverture(grid: Grid, o: Place): Place | null {
 /** Overture shop → a shop (or other place not to eat) already known with a similar name nearby, if any. */
 export function matchOvertureShop(grid: Grid, o: Place): Place | null {
   for (const { p, d } of grid.near(o.lat, o.lon, 120)) {
-    if (p === o || isFoodish(p)) continue;
+    // A shop is matched with a shop, a pharmacy with a pharmacy: not with the car-sharing
+    // station or the bank next door that shares a word of its name ("… Bahnhof").
+    if (p === o || isFoodish(p) || p.kindKey !== o.kindKey) continue;
     if (sameName(p.name, o.name)) return p;
     // OSM knows a pharmacy here but not its name: Overture's pharmacy within 60 m is that one.
     if (p.unnamed && d <= 60 && p.kindKey === o.kindKey && p.kind === o.kind) return p;
@@ -508,9 +563,13 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
   const places: Place[] = [];
   const towns: Built['towns'] = [];
   const counts: Record<string, number> = {
+    carSharing: 0,
     osm: 0, atpMatched: 0, atpAdded: 0, overtureMatched: 0, overtureAdded: 0, overtureDropped: 0, overtureShopsMatched: 0, overtureShopsAdded: 0, nsiBrands: 0,
   };
 
+  // Car-sharing stations from the national feed replace OSM's (it knows every station of each provider).
+  const sharingFile = resolve(srcDir, 'carsharing.jsonl');
+  const haveSharing = existsSync(sharingFile);
   for await (const line of lines(osmFile)) {
     const f = JSON.parse(line) as Feature;
     const p = f.properties;
@@ -520,10 +579,20 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
       continue;
     }
     const place = osmPlace(f);
-    if (!place) continue;
+    if (!place || (haveSharing && place.kind === 'car_sharing')) continue;
     places.push(place);
     grid.add(place);
     counts.osm!++;
+  }
+
+  if (haveSharing) {
+    for await (const line of lines(sharingFile)) {
+      const p = carSharingPlace(JSON.parse(line) as CarSharingRow);
+      if (!p) continue;
+      places.push(p);
+      grid.add(p);
+      counts.carSharing!++;
+    }
   }
 
   const atpFile = resolve(srcDir, 'atp.geojsonseq');

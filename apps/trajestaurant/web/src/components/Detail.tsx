@@ -1,10 +1,58 @@
 import { forwardRef } from 'react';
-import type { Mode, PlaceSummary, RoutesResponse, Target, TransitOption } from '../../../src/api';
+import type { DetailMode, PlaceSummary, RoutesResponse, Target, TransitOption } from '../../../src/api';
 import { FOOD_BY_KEY } from '../../../src/foods';
 import { clock, distance, kindLabel, legEmoji, MODE, minutes, openLabel, placeEmoji } from '../lib';
 
 const YES = new Set(['yes', 'only', 'designated']);
-const SOURCE_NAMES: Record<string, string> = { osm: 'OpenStreetMap', atp: 'All The Places', overture: 'Overture Maps' };
+const SOURCE_NAMES: Record<string, string> = { osm: 'OpenStreetMap', atp: 'All The Places', overture: 'Overture Maps', gbfs: 'sharedmobility.ch' };
+
+/** Car sharing: walk to the station, drive (traffic and parking in), and the car goes back to its station. */
+function Sharing(props: { option: NonNullable<RoutesResponse['sharing']> }) {
+  const { station, walk, drive } = props.option;
+  const parts = drive.car;
+  return (
+    <div className="way-sharing">
+      <p className="way-street">
+        🔑 {minutes(props.option.durationMin)} en car sharing · {distance(drive.distanceM)}
+      </p>
+      <ol className="legs">
+        <li className="leg leg-walk">
+          <span className="leg-icon" aria-hidden="true">
+            🚶
+          </span>
+          <span className="leg-text">
+            Marcher {minutes(walk.durationMin)} jusqu’à la station {station.name}
+            <br />
+            <small>{station.cars === null ? 'Voitures à réserver dans l’app' : station.cars > 0 ? `${station.cars} voiture${station.cars > 1 ? 's' : ''} à la station, à réserver dans l’app` : 'Aucune voiture à la station pour l’instant'}</small>
+          </span>
+        </li>
+        <li className="leg leg-ride leg-sharing">
+          <span className="leg-icon" aria-hidden="true">
+            🚗
+          </span>
+          <span className="leg-text">
+            {parts ? minutes(parts.drivingMin) : minutes(drive.durationMin)} de route
+            {parts && parts.factor > 1.04 ? ` avec le trafic (×${parts.factor.toLocaleString('fr-CH')})` : ''}
+            {parts ? (
+              <>
+                <br />
+                <small>+ {parts.parkingMin} min pour se garer et marcher jusqu’à la porte</small>
+              </>
+            ) : null}
+          </span>
+        </li>
+      </ol>
+      <p className="results-note">
+        La voiture se ramène à sa station.{' '}
+        {station.website ? (
+          <a href={station.website} target="_blank" rel="noreferrer">
+            Réserver chez {station.brand ?? 'le fournisseur'}
+          </a>
+        ) : null}
+      </p>
+    </div>
+  );
+}
 
 /** One restaurant: how to get there (tabs per mode) and what is known about it. */
 export const Detail = forwardRef<
@@ -16,9 +64,9 @@ export const Detail = forwardRef<
     routes: RoutesResponse | null;
     loading: boolean;
     error: boolean;
-    mode: Mode;
+    mode: DetailMode;
     departure: number;
-    onMode: (m: Mode) => void;
+    onMode: (m: DetailMode) => void;
     onDeparture: (i: number) => void;
     onBack: () => void;
   }
@@ -27,11 +75,14 @@ export const Detail = forwardRef<
   const detail = props.routes?.place;
   const open = openLabel(r.open);
   const foods = r.foods.map((k) => FOOD_BY_KEY.get(k)).filter((f) => f && !f.generic);
-  const times: Record<Mode, number | null> = {
+  const times: Record<DetailMode, number | null> = {
     walk: props.routes?.walk?.durationMin ?? null,
     transit: props.routes?.transit[0]?.durationMin ?? null,
     car: props.routes?.car?.durationMin ?? null,
+    sharing: props.routes?.sharing?.durationMin ?? null,
   };
+  // Car sharing shows as a fourth way only when a station with cars is near.
+  const modes: DetailMode[] = props.routes?.sharing ? ['walk', 'transit', 'car', 'sharing'] : ['walk', 'transit', 'car'];
   const extras = detail
     ? [
         YES.has(detail.takeaway ?? '') && '🥡 À l’emporter',
@@ -76,8 +127,8 @@ export const Detail = forwardRef<
           </div>
         ) : null}
 
-        <div className="modes" role="tablist" aria-label="Comment y aller">
-          {(['walk', 'transit', 'car'] as const).map((m) => (
+        <div className={`modes${modes.length === 4 ? ' modes-4' : ''}`} role="tablist" aria-label="Comment y aller">
+          {modes.map((m) => (
             <button
               key={m}
               type="button"
@@ -111,6 +162,8 @@ export const Detail = forwardRef<
             ) : (
               <p className="way-street">Trop loin pour y aller à pied.</p>
             )
+          ) : props.mode === 'sharing' && props.routes?.sharing ? (
+            <Sharing option={props.routes.sharing} />
           ) : props.routes?.car ? (
             <p className="way-street">
               🚗 {minutes(props.routes.car.durationMin)} en voiture · {distance(props.routes.car.distanceM)}

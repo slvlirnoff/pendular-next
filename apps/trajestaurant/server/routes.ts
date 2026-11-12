@@ -1,5 +1,6 @@
 import type { Itinerary, LatLon } from '@pendular/engine';
-import type { PlaceDetail, RouteLeg, RoutesResponse, StreetOption, TransitOption } from '../src/api.js';
+import type { PlaceDetail, RouteLeg, RoutesResponse, SharingOption, StreetOption, TransitOption } from '../src/api.js';
+import type { Traffic } from './traffic.js';
 import { distanceM } from './estimate.js';
 import { openState } from './open.js';
 import { sortFoods, type SearchDeps } from './search.js';
@@ -128,7 +129,7 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
         return null;
       });
 
-  const [walk, car, transit] = await Promise.all([
+  const [walk, car, transit, sharing] = await Promise.all([
     place.distanceM <= MAX_WALK_M ? street('walk') : Promise.resolve(null),
     street('car'),
     deps.routing
@@ -137,6 +138,12 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
         console.error('transit route', e);
         return [] as Itinerary[];
       }),
+    place.kind === 'car_sharing'
+      ? Promise.resolve(null)
+      : sharingOption(deps, from, to, traffic).catch((e: unknown) => {
+          console.error('car sharing', e);
+          return null;
+        }),
   ]);
 
   // Only trips that use a vehicle, and only those that beat walking.
@@ -147,5 +154,40 @@ export async function routesTo(deps: SearchDeps, id: number, from: LatLon, now =
     .slice(0, MAX_DEPARTURES)
     .map((it) => ({ departure: it.departure, arrival: it.arrival, durationMin: it.durationMin, changes: it.changes, legs: toLegs(it) }));
 
-  return { place, walk, car, transit: options, typicalTimetable: day.typical };
+  // Car sharing only where it helps: not when walking is as quick.
+  const usefulSharing = sharing && (!walk || sharing.durationMin < walk.durationMin) ? sharing : null;
+  return { place, walk, car, sharing: usefulSharing, transit: options, typicalTimetable: day.typical };
+}
+
+/** Car-sharing stations are looked for within this walk of the searcher, metres. */
+const SHARING_RADIUS_M = 1_200;
+
+/**
+ * By car sharing: the nearest station with cars within a short walk, the walk there, the drive
+ * from it (with the traffic of the hour and parking at the place). Null when none is near.
+ */
+async function sharingOption(deps: SearchDeps, from: LatLon, to: LatLon, traffic: Traffic): Promise<SharingOption | null> {
+  const r = await deps.db.query<{ id: string; name: string; brand: string | null; website: string | null; source: string; source_id: string; lat: number; lon: number }>(
+    `select p.id, p.name, p.brand, p.website, p.source, p.source_id, st_y(p.geom::geometry) as lat, st_x(p.geom::geometry) as lon
+     from place p cross join (select st_setsrid(st_makepoint($2, $1), 4326)::geography as g) o
+     where p.kind = 'car_sharing' and st_dwithin(p.geom, o.g, $3)
+     order by p.geom <-> o.g limit 6`,
+    [from.lat, from.lon, SHARING_RADIUS_M],
+  );
+  if (r.rows.length === 0) return null;
+  const withCars = await Promise.all(r.rows.map(async (s) => ({ ...s, cars: s.source === 'gbfs' ? await deps.sharing.cars(s.source_id) : null })));
+  // The nearest station with cars; one whose cars are unknown when the feed is not there.
+  const station = withCars.find((s) => (s.cars ?? 1) > 0);
+  if (!station) return null;
+  const at = { lat: station.lat, lon: station.lon };
+  const [walk, drive] = await Promise.all([deps.routing.street({ from, to: at, profile: 'walk' }), deps.car.route(at, to)]);
+  if (!walk || !drive || !walk.geometry || drive.geometry.length < 2) return null;
+  const parts = traffic.car(drive.durationMin, drive.geometry, to);
+  const walkMin = Math.max(1, Math.round(walk.durationMin));
+  return {
+    station: { id: Number(station.id), name: station.name, brand: station.brand, lat: station.lat, lon: station.lon, cars: station.cars, website: station.website },
+    walk: { durationMin: walkMin, distanceM: Math.round(walk.distanceM), geometry: walk.geometry },
+    drive: { durationMin: parts.totalMin, distanceM: Math.round(drive.distanceM), geometry: drive.geometry, car: parts },
+    durationMin: walkMin + parts.totalMin,
+  };
 }

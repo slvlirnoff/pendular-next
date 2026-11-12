@@ -29,6 +29,8 @@ const GENERIC = new Set(
     'garage autogarage carrosserie auto pneus fleurs fleuriste blumen optique opticien optik bijouterie horlogerie kiosque kiosk',
     'boutique shop store magasin laden atelier studio center centre cabinet agence epicerie fitness sport sports mode',
     'cave vins vin wein librairie papeterie animalerie quincaillerie electricite sanitaire',
+    // Where a place is, shared by its neighbours ("Café de la Gare", "k kiosk Bahnhof").
+    'gare bahnhof stazione station buffet',
     // Words that join names.
     'la le les l du de des d the and et und zum zur chez au aux sa ag gmbh sarl s a',
   ].join(' ').split(' '),

@@ -24,6 +24,7 @@ const KINDS: Record<string, KindInfo> = {
   'amenity=post_office': { emoji: '📮', label: 'Poste' },
   'amenity=cinema': { emoji: '🎬', label: 'Cinéma' },
   'amenity=car_rental': { emoji: '🚙', label: 'Location de voitures' },
+  'amenity=car_sharing': { emoji: '🔑', label: 'Car sharing' },
   'amenity=theatre': { emoji: '🎭', label: 'Théâtre' },
   'amenity=library': { emoji: '📚', label: 'Bibliothèque' },
   'amenity=marketplace': { emoji: '🧺', label: 'Marché' },
@@ -164,7 +165,7 @@ export const FOOD_KINDS = new Set(['restaurant', 'fast_food', 'cafe', 'ice_cream
 /** Which tagged places are kept: shops of any kind, and these values of the other keys. */
 export const KEPT: Record<string, Set<string> | 'any'> = {
   shop: 'any',
-  amenity: new Set([...FOOD_KINDS, 'pub', 'bar', 'pharmacy', 'fuel', 'bank', 'post_office', 'cinema', 'car_rental', 'theatre', 'library', 'marketplace', 'doctors', 'dentist', 'clinic']),
+  amenity: new Set([...FOOD_KINDS, 'pub', 'bar', 'pharmacy', 'fuel', 'bank', 'post_office', 'cinema', 'car_rental', 'car_sharing', 'theatre', 'library', 'marketplace', 'doctors', 'dentist', 'clinic']),
   leisure: new Set(['fitness_centre', 'sports_centre', 'bowling_alley', 'escape_game', 'trampoline_park', 'water_park', 'amusement_arcade', 'ice_rink', 'swimming_pool']),
   tourism: new Set(['hotel', 'motel', 'hostel', 'museum', 'zoo', 'theme_park', 'attraction']),
   office: new Set(['employment_agency', 'insurance', 'estate_agent']),
@@ -246,6 +247,7 @@ export const KIND_SEARCHES: KindSearch[] = [
   { key: 'hotel', emoji: '🏨', label: 'Hôtel', kinds: ['tourism=hotel', 'tourism=motel', 'tourism=hostel'], synonyms: ['hotel', 'hotels', 'motel', 'auberge', 'auberge de jeunesse', 'hostel', 'dormir', 'nuit', 'albergo', 'jugendherberge'] },
   { key: 'bibliotheque', emoji: '📚', label: 'Bibliothèque', kinds: ['amenity=library'], synonyms: ['bibliotheque', 'library', 'bibliothek', 'biblioteca', 'ludotheque'] },
   { key: 'marche', emoji: '🧺', label: 'Marché', kinds: ['amenity=marketplace'], synonyms: ['marche', 'market', 'markt', 'mercato', 'marche paysan'] },
+  { key: 'car-sharing', emoji: '🔑', label: 'Car sharing', kinds: ['amenity=car_sharing'], synonyms: ['car sharing', 'carsharing', 'autopartage', 'voiture partagee', 'voitures partagees', 'partage de voiture', 'mobility', 'auto teilen', 'auto in condivisione', '2em', 'sponti'] },
   { key: 'location-voiture', emoji: '🚙', label: 'Location de voitures', kinds: ['amenity=car_rental'], synonyms: ['location de voiture', 'location voiture', 'louer une voiture', 'car rental', 'autovermietung', 'noleggio auto'] },
 ];
 

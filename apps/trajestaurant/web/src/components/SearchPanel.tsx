@@ -459,6 +459,9 @@ function ResultRow(props: { r: SearchResult; searched: Searched; sort: Sort; onP
             {byType(props.searched) ? (r.town ? `${r.town} · ` : '') : `${kindLabel(r)} · `}
             {distance(r.distanceM)}
             {open ? <span className={`open open-${open.tone}`}>{open.text}</span> : null}
+            {r.kind === 'car_sharing' && r.cars !== undefined && r.cars !== null ? (
+              <span className={`cars${r.cars > 0 ? '' : ' cars-none'}`}>🔑 {r.cars > 0 ? `${r.cars} voiture${r.cars > 1 ? 's' : ''}` : 'aucune voiture'}</span>
+            ) : null}
           </span>
           <span className="result-modes">
             {modes.length === 0 ? <span className="mode-time is-none">Trop loin pour aujourd'hui</span> : null}

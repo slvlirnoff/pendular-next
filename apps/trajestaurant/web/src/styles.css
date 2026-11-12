@@ -708,6 +708,13 @@ a {
 .open-closed {
   color: var(--red-dark);
 }
+.cars {
+  font-weight: 650;
+  color: var(--green);
+}
+.cars-none {
+  color: var(--muted);
+}
 .open-unknown {
   color: var(--muted);
 }
@@ -826,6 +833,29 @@ a {
 .mode-tab.is-on.mode-transit {
   border-color: var(--transit);
   background: var(--transit-tint);
+}
+.modes-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+.modes-4 .mode-tab-label {
+  font-size: 10.5px;
+}
+.mode-tab.is-on.mode-sharing {
+  border-color: var(--green);
+  background: var(--green-tint);
+}
+.leg-sharing .leg-icon {
+  background: var(--green-tint);
+}
+.leg-sharing:not(:last-child)::after {
+  background: var(--green);
+}
+.route-label.mode-sharing {
+  color: var(--green);
+}
+.route-label.is-selected.mode-sharing {
+  background: var(--green);
+  color: var(--white);
 }
 .mode-tab.is-on.mode-car {
   border-color: var(--car);

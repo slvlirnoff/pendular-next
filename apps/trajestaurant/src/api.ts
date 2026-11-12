@@ -1,6 +1,8 @@
 /** What the Trajestaurant API answers: shared by the server and the site. */
 
 export type Mode = 'walk' | 'transit' | 'car';
+/** The ways shown for one place: also car sharing. */
+export type DetailMode = Mode | 'sharing';
 
 /** Open or closed at a given time, from the OSM opening hours. */
 export interface OpenState {
@@ -31,6 +33,8 @@ export interface PlaceSummary {
 }
 
 export interface SearchResult extends PlaceSummary {
+  /** A car-sharing station: the cars its provider reports there now (null: unknown). */
+  cars?: number | null;
   walkMin: number | null;
   /** Door to door: traffic of the hour and parking included. */
   carMin: number | null;
@@ -136,10 +140,24 @@ export interface TransitOption {
   legs: RouteLeg[];
 }
 
+/**
+ * Car sharing there: walk to the nearest station with cars, drive (traffic and parking in), and
+ * bring the car back to its station afterwards (Mobility and the others are round trips).
+ */
+export interface SharingOption {
+  station: { id: number; name: string; brand: string | null; lat: number; lon: number; cars: number | null; website: string | null };
+  walk: StreetOption;
+  drive: StreetOption;
+  /** Walk, drive and parking. */
+  durationMin: number;
+}
+
 export interface RoutesResponse {
   place: PlaceDetail;
   walk: StreetOption | null;
   car: StreetOption | null;
+  /** By car sharing, when a station with cars is within a short walk. */
+  sharing: SharingOption | null;
   /** The next departures, earliest first. */
   transit: TransitOption[];
   typicalTimetable: boolean;

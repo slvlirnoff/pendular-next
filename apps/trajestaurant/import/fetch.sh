@@ -3,8 +3,10 @@
 #   - Name Suggestion Index (brands: proper names, Wikidata ids, cuisine of the chains)
 #   - All The Places: every spider with places in Switzerland, its Swiss places only
 #   - Overture Maps places: food and drink in Switzerland (needs python3 with duckdb)
+#   - car-sharing stations from the national shared-mobility feed (needs SHAREDMOBILITY_CONTACT,
+#     a contact e-mail address the feed asks for; skipped without it)
 #
-#   bash import/fetch.sh [nsi|atp|overture|all]
+#   bash import/fetch.sh [nsi|atp|overture|carsharing|all]
 # A failed download never replaces a good file (written to .part, moved on success).
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -41,10 +43,19 @@ overture() {
   echo "overture: $(wc -l < "$out/overture.jsonl") places"
 }
 
+carsharing() {
+  if [ -z "${SHAREDMOBILITY_CONTACT:-}" ]; then
+    echo "carsharing: SHAREDMOBILITY_CONTACT not set, skipped (the feed needs a contact e-mail address)" >&2
+    return 0
+  fi
+  python3 "$here/carsharing.py" "$out/carsharing.jsonl.part" && mv "$out/carsharing.jsonl.part" "$out/carsharing.jsonl"
+}
+
 case "${1:-all}" in
   nsi) nsi ;;
   atp) atp ;;
   overture) overture ;;
-  all) nsi; overture; atp ;;
-  *) echo "usage: fetch.sh [nsi|atp|overture|all]" >&2; exit 1 ;;
+  carsharing) carsharing ;;
+  all) nsi; overture; atp; carsharing ;;
+  *) echo "usage: fetch.sh [nsi|atp|overture|carsharing|all]" >&2; exit 1 ;;
 esac

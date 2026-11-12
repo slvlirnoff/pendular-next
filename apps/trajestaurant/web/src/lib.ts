@@ -1,4 +1,4 @@
-import type { BrandHit, Mode, OpenState, PlaceHit, PlaceSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion, Target } from '../../src/api';
+import type { BrandHit, DetailMode, Mode, OpenState, PlaceHit, PlaceSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion, Target } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
 import { KIND_SEARCH_BY_KEY, kindInfo } from '../../src/kinds';
 
@@ -84,7 +84,8 @@ export function openLabel(o: OpenState | null): { text: string; tone: 'open' | '
 }
 
 
-export const MODE: Record<Mode, { emoji: string; label: string }> = {
+export const MODE: Record<DetailMode, { emoji: string; label: string }> = {
+  sharing: { emoji: '🔑', label: 'Car sharing' },
   walk: { emoji: '🚶', label: 'À pied' },
   transit: { emoji: '🚆', label: 'Transports publics' },
   car: { emoji: '🚗', label: 'Voiture' },

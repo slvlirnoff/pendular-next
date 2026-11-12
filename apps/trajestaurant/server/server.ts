@@ -9,6 +9,7 @@ import type { PlaceHit, Target } from '../src/api.js';
 import { FOODS, FOOD_BY_KEY } from '../src/foods.js';
 import { KIND_SEARCH_BY_KEY } from '../src/kinds.js';
 import { motisCar, valhallaCar, withFallback } from './car.js';
+import { createCarSharing } from './sharing.js';
 import { createPool } from './db.js';
 import { routesTo } from './routes.js';
 import { placesIn, popularBrands, searchPlaces, suggest, type SearchDeps } from './search.js';
@@ -33,6 +34,9 @@ const valhallaUrl = process.env.VALHALLA_URL;
 const deps: SearchDeps = {
   db: createPool(),
   density: loadDensity(),
+  // SHAREDMOBILITY_CONTACT: the contact e-mail address the shared-mobility feed asks for (cars at
+  // the car-sharing stations); without it, stations are shown without their cars.
+  sharing: createCarSharing(process.env.SHAREDMOBILITY_CONTACT, fetch),
   motisUrl,
   fetch: httpGet,
   timetable,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { MapPlaces, Mode, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
+import type { DetailMode, MapPlaces, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
 import { distanceTo, MODE, minutes, placeEmoji, type Here } from '../lib';
 
 export interface Padding {
@@ -11,13 +11,13 @@ export interface Padding {
   right: number;
 }
 
-const COLORS: Record<Mode, string> = { walk: '#2563eb', transit: '#d93a24', car: '#334155' };
+const COLORS: Record<DetailMode, string> = { walk: '#2563eb', transit: '#d93a24', car: '#334155', sharing: '#1d7348' };
 const SWITZERLAND: LngLatBoundsLike = [
   [5.95, 45.82],
   [10.49, 47.81],
 ];
 
-type Line = { mode: Mode; coords: [number, number][]; label: string };
+type Line = { mode: DetailMode; coords: [number, number][]; label: string };
 
 /** The lines of each way there: walk, car, and the chosen public transport departure. */
 function routeLines(routes: RoutesResponse | null, departure: number): Line[] {
@@ -27,14 +27,19 @@ function routeLines(routes: RoutesResponse | null, departure: number): Line[] {
   if (routes.car) out.push({ mode: 'car', coords: routes.car.geometry, label: minutes(routes.car.durationMin) });
   const t = routes.transit[departure] ?? routes.transit[0];
   if (t) out.push({ mode: 'transit', coords: t.legs.flatMap((l) => l.geometry), label: minutes(t.durationMin) });
+  if (routes.sharing) out.push({ mode: 'sharing', coords: [...routes.sharing.walk.geometry, ...routes.sharing.drive.geometry], label: minutes(routes.sharing.durationMin) });
   return out;
 }
 
-function routeFeatures(routes: RoutesResponse | null, departure: number, mode: Mode) {
+function routeFeatures(routes: RoutesResponse | null, departure: number, mode: DetailMode) {
   const features: GeoJSON.Feature[] = [];
   if (routes) {
     if (routes.walk) features.push({ type: 'Feature', properties: { mode: 'walk', selected: mode === 'walk', dashed: true }, geometry: { type: 'LineString', coordinates: routes.walk.geometry } });
     if (routes.car) features.push({ type: 'Feature', properties: { mode: 'car', selected: mode === 'car', dashed: false }, geometry: { type: 'LineString', coordinates: routes.car.geometry } });
+    if (routes.sharing) {
+      features.push({ type: 'Feature', properties: { mode: 'sharing', selected: mode === 'sharing', dashed: true }, geometry: { type: 'LineString', coordinates: routes.sharing.walk.geometry } });
+      features.push({ type: 'Feature', properties: { mode: 'sharing', selected: mode === 'sharing', dashed: false }, geometry: { type: 'LineString', coordinates: routes.sharing.drive.geometry } });
+    }
     const t = routes.transit[departure] ?? routes.transit[0];
     for (const l of t?.legs ?? []) {
       features.push({
@@ -107,11 +112,11 @@ export function MapView(props: {
   hovered: number | null;
   selected: PlaceSummary | null;
   routes: RoutesResponse | null;
-  mode: Mode;
+  mode: DetailMode;
   departure: number;
   padding: Padding;
   onPick: (r: PlaceSummary) => void;
-  onMode: (m: Mode) => void;
+  onMode: (m: DetailMode) => void;
 }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -177,7 +182,7 @@ export function MapView(props: {
         m.on('mouseleave', 'places', () => (m.getCanvas().style.cursor = ''));
         m.addSource('routes', { type: 'geojson', data: routeFeatures(null, 0, 'walk') });
         const sel: maplibregl.ExpressionSpecification = ['==', ['get', 'selected'], true];
-        const color: maplibregl.ExpressionSpecification = ['match', ['get', 'mode'], 'walk', COLORS.walk, 'car', COLORS.car, COLORS.transit];
+        const color: maplibregl.ExpressionSpecification = ['match', ['get', 'mode'], 'walk', COLORS.walk, 'car', COLORS.car, 'sharing', COLORS.sharing, COLORS.transit];
         m.addLayer({ id: 'routes-other', type: 'line', source: 'routes', filter: ['!', sel], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 3, 'line-opacity': 0.35 } });
         m.addLayer({ id: 'routes-casing', type: 'line', source: 'routes', filter: sel, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 9 } });
         m.addLayer({ id: 'routes-solid', type: 'line', source: 'routes', filter: ['all', sel, ['!', ['get', 'dashed']]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 5 } });
@@ -287,7 +292,7 @@ export function MapView(props: {
       labels.current = [];
       if (!props.selected) return;
       const lines = routeLines(props.routes, props.departure);
-      const shares: Record<Mode, number> = { walk: 0.45, transit: 0.6, car: 0.75 };
+      const shares: Record<DetailMode, number> = { walk: 0.45, transit: 0.6, car: 0.75, sharing: 0.3 };
       for (const line of lines) {
         const at = pointAlong(line.coords, shares[line.mode]);
         if (!at) continue;

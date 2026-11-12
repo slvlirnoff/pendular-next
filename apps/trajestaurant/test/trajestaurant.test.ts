@@ -3,7 +3,7 @@ import { classify, FOODS, matchFoods } from '../src/foods.js';
 import { fold } from '../src/text.js';
 import { transitToPlaces, usefulTransit } from '../server/estimate.js';
 import { referenceMonday, routingDate } from '../server/timetable.js';
-import { atpPlace, brandFromName, centre, keepOverture, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, sameName, type Brands } from '../import/build.js';
+import { atpPlace, brandFromName, carSharingPlace, centre, keepOverture, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, sameName, type Brands } from '../import/build.js';
 import { KIND_SEARCHES, kindInfo, mainKind, matchKinds } from '../src/kinds.js';
 import { searchKey } from '../src/text.js';
 import { maxMinutes, onePlace, Ttl } from '../server/search.js';
@@ -11,6 +11,7 @@ import { bestMode, leadMode, sortResults } from '../web/src/lib.js';
 import type { SearchResult } from '../src/api.js';
 import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
 import { clockOf, createTraffic, rushShare } from '../server/traffic.js';
+import { createCarSharing } from '../server/sharing.js';
 import { loadDensity } from '@pendular/engine';
 
 describe('food types', () => {
@@ -275,7 +276,7 @@ describe('kinds of shops and places', () => {
 
   it('shows a shop two sources place a few metres apart once, two shops of a mall twice', () => {
     const row = (id: string, name: string, lat: number, sources: string[]) =>
-      ({ id, name, kind_key: 'shop', kind: 'hairdresser', brand: null, brand_key: null, sources, town: 'Lucens', lat, lon: 6.84, opening_hours: null, foods: [], dist: lat * 1000 }) as Parameters<typeof onePlace>[0][number];
+      ({ id, name, kind_key: 'shop', kind: 'hairdresser', brand: null, brand_key: null, sources, source: 'osm', source_id: `n${id}`, town: 'Lucens', lat, lon: 6.84, opening_hours: null, foods: [], dist: lat * 1000 }) as Parameters<typeof onePlace>[0][number];
     const out = onePlace([row('1', 'Coiffure Sandra', 46.7, ['osm']), row('2', 'Sandra Coiffure', 46.7002, ['overture']), row('3', 'Bea coiffure', 46.7001, ['osm'])]);
     expect(out.map((r) => r.name).sort()).toEqual(['Bea coiffure', 'Coiffure Sandra']);
   });
@@ -331,5 +332,30 @@ describe('car times with traffic and parking', () => {
     const cityNight = night.car(10, [[6.6295, 46.5206], [6.627, 46.507]], { lat: 46.507, lon: 6.627 });
     expect(cityNight.factor).toBeLessThan(city.factor);
     expect(cityNight.factor).toBeGreaterThan(1);
+  });
+});
+
+describe('car sharing', () => {
+  it('names a station after its provider and place, a 2EM car after its street', () => {
+    const base = { provider_url: 'https://www.mobility.ch', rental_uri: null, lat: 46.708, lon: 6.842 };
+    const mobility = carSharingPlace({ ...base, provider: 'mobility', provider_name: 'Mobility', station_id: '70844', name: 'Lucens Gare', address: null });
+    expect(mobility).toMatchObject({ source: 'gbfs', sourceId: 'mobility:70844', name: 'Mobility · Lucens Gare', kind: 'car_sharing' });
+    expect(mobility!.tags.brand).toBe('Mobility');
+    const twoEm = carSharingPlace({ ...base, provider: '2em_cars', provider_name: '2EM Car Sharing', station_id: '70', name: ' velo 1995', address: 'Rue de la Serre 11, 2000 Neuchâtel, Suisse' });
+    expect(twoEm!.name).toBe('2EM · Rue de la Serre 11');
+  });
+
+  it('counts the cars at a station from the feed, and nothing without a contact address', async () => {
+    const feed = (async (url: string) => ({
+      ok: true,
+      status: 200,
+      json: async () =>
+        url.endsWith('vehicle_types')
+          ? { data: { vehicle_types: [{ vehicle_type_id: 'c', form_factor: 'car' }, { vehicle_type_id: 'b', form_factor: 'cargo_bicycle' }] } }
+          : { data: { stations: [{ station_id: '1', vehicle_types_available: [{ vehicle_type_id: 'c', count: 2 }, { vehicle_type_id: 'b', count: 3 }] }] } },
+      text: async () => '',
+    })) as unknown as typeof fetch;
+    expect(await createCarSharing('someone@example.org', feed).cars('carvelo2go:1')).toBe(2);
+    expect(await createCarSharing(undefined, feed).cars('carvelo2go:1')).toBeNull();
   });
 });

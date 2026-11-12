@@ -24,6 +24,7 @@ leaves out icons that would overlap; a click opens the place).
 | `import/osm.sh` | Extracts the places from the Swiss OSM extract, then runs `build.ts` |
 | `import/build.ts` | Merges the four sources and loads them into PostgreSQL (places, food types, chains, towns) |
 | `server/` | Hono API on port 8789; also serves the built site. `car.ts`: car times and routes from Valhalla or MOTIS |
+| `server/sharing.ts` | Cars at the car-sharing stations, live from sharedmobility.ch |
 | `scripts/valhalla.sh` | Builds the Valhalla road tiles and runs Valhalla with Docker (optional, faster car times) |
 | `web/` | The site (Vite, React, MapLibre) |
 | `SOURCES.md` | Other data sources studied (Overture, Foursquare, All The Places, open government data…), in French |
@@ -38,17 +39,19 @@ PostgreSQL with PostGIS (`apt install postgresql-16-postgis-3`), and Python 3 wi
 data/scripts/fetch.sh                                   # once: OSM, timetable, MOTIS
 (cd data/motis && ./bin/motis import -c config.yml -d data)
 scripts/dev.sh                                          # PostgreSQL on 5433 and MOTIS on 8080 (and Pendular)
-bash apps/trajestaurant/import/fetch.sh                 # NSI, Overture (10 s), All The Places (2 min)
+SHAREDMOBILITY_CONTACT=<e-mail> bash apps/trajestaurant/import/fetch.sh   # NSI, Overture (10 s), All The Places (2 min), car sharing
 pnpm --filter @pendular/trajestaurant import:osm        # creates the database "trajestaurant" (about 1 minute)
 bash apps/trajestaurant/scripts/valhalla.sh build && bash apps/trajestaurant/scripts/valhalla.sh start   # optional
-VALHALLA_URL=http://127.0.0.1:8002 pnpm --filter @pendular/trajestaurant dev:server   # API on http://127.0.0.1:8789
+SHAREDMOBILITY_CONTACT=<e-mail> VALHALLA_URL=http://127.0.0.1:8002 pnpm --filter @pendular/trajestaurant dev:server   # API on :8789
 pnpm --filter @pendular/trajestaurant dev:web           # site on http://127.0.0.1:5174
 ```
 
 Production: `pnpm --filter @pendular/trajestaurant build`, then `pnpm --filter @pendular/trajestaurant start`
 serves the site and the API on port 8789. Settings: `DATABASE_URL` (default
 `postgres://pendular@127.0.0.1:5433/trajestaurant`), `MOTIS_URL`, `VALHALLA_URL` (none: car times
-from MOTIS), `PORT`.
+from MOTIS), `SHAREDMOBILITY_CONTACT` (the contact e-mail address the national shared-mobility feed
+asks for in its Authorization header; never in the repository: without it there are no car-sharing
+stations at import and no cars counted at run time), `PORT`.
 
 A link can open a search directly: `/?ici=46.7085,6.8405,Lucens&food=burger`, `&kind=pharmacie`,
 `&brand=ikea` (a chain by its name in lower case) or `&name=mix image`, and `&r=<id>` for a place.
@@ -79,6 +82,13 @@ A link can open a search directly: `/?ici=46.7085,6.8405,Lucens&food=burger`, `&
   takes 12 minutes or less. The 🚆
   order is "without a car": public transport, or walking when it is as quick (the post office next
   door comes first); the 🚶 order walks where one can and takes public transport beyond.
+- **Car sharing**: the stations of the providers with cars in the national shared-mobility feed
+  (GBFS v2, sharedmobility.ch: Mobility 1 851, 2EM 1 743, Quickrent, eDrive, Sponti-Car, Birrer,
+  carvelo2go; not myBuxi, an on-demand minibus) are places of their own ("Car sharing", searched by
+  kind or by provider), with the cars the provider reports there now (fetched at most every two
+  minutes; a car still has to be booked in the provider's app). A place's card adds a fourth way
+  when a station with cars is within 1.2 km of the searcher and it beats walking: the walk to the
+  station, the drive with traffic and parking; the car goes back to its station.
 - **Caches**: street times from a place are kept for an hour (a search for pizza, then for Italian
   food, computes only the places that are new), and the stops reached by public transport from a
   place for the minute. At start, one search in the background loads the routing engines' data.

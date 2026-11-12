@@ -5,6 +5,7 @@ import { FOOD_BY_KEY, FOOD_ORDER, matchFoods } from '../src/foods.js';
 import { KIND_SEARCH_BY_KEY, matchKinds } from '../src/kinds.js';
 import { sameName, searchKey } from '../src/text.js';
 import type { CarRouter } from './car.js';
+import type { CarSharing } from './sharing.js';
 import { distanceM, transitToPlaces, usefulTransit, type StopReach } from './estimate.js';
 import { openState } from './open.js';
 import { localNow, routingDate, TIMEZONE, type TimetableRange } from './timetable.js';
@@ -14,6 +15,8 @@ export interface SearchDeps {
   db: pg.Pool;
   /** Residents and jobs around each point: traffic and parking for car times (Pendular's). */
   density: DensityIndex;
+  /** Cars at the car-sharing stations, live (server/sharing.ts). */
+  sharing: CarSharing;
   routing: MotisRouting;
   /** Car times and routes: Valhalla when configured, else MOTIS (server/car.ts). */
   car: CarRouter;
@@ -40,6 +43,8 @@ interface Row {
   brand: string | null;
   brand_key: string | null;
   sources: string[];
+  source: string;
+  source_id: string;
   town: string | null;
   lat: number;
   lon: number;
@@ -49,7 +54,7 @@ interface Row {
 }
 
 const SUMMARY = `
-  p.id, p.name, p.kind_key, p.kind, p.brand, p.brand_key, p.sources, p.town, st_y(p.geom::geometry) as lat, st_x(p.geom::geometry) as lon, p.opening_hours,
+  p.id, p.name, p.kind_key, p.kind, p.brand, p.brand_key, p.sources, p.source, p.source_id, p.town, st_y(p.geom::geometry) as lat, st_x(p.geom::geometry) as lon, p.opening_hours,
   array(select food from place_food f2 where f2.place_id = p.id) as foods,
   st_distance(p.geom, o.g) as dist`;
 const ORIGIN = `cross join (select st_setsrid(st_makepoint($2, $1), 4326)::geography as g) o`;
@@ -304,6 +309,12 @@ export async function searchPlaces(deps: SearchDeps, target: Target, from: LatLo
       transitMin: usefulTransit(transit[i] ?? null, walkMin),
     };
   });
+  // Car-sharing stations: the cars there now.
+  await Promise.all(
+    rows.map(async (r, i) => {
+      if (r.kind === 'car_sharing' && r.source === 'gbfs') results[i]!.cars = await deps.sharing.cars(r.source_id);
+    }),
+  );
   results.sort((a, b) => bestMinutes(a) - bestMinutes(b) || a.distanceM - b.distanceM);
   return { target, label, results, typicalTimetable: day.typical };
 }

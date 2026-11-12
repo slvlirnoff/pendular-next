@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Mode, PlaceSummary, RoutesResponse, SearchResult } from '../../src/api';
+import type { DetailMode, PlaceSummary, RoutesResponse, SearchResult } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
 import { Detail } from './components/Detail';
 import { MapView, type Padding } from './components/MapView';
@@ -97,7 +97,7 @@ export function App() {
   const [selectedId, setSelectedId] = useState<number | null>(initial.current.place);
   const [routes, setRoutes] = useState<RoutesResponse | null>(null);
   const [routesState, setRoutesState] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [mode, setMode] = useState<Mode>('walk');
+  const [mode, setMode] = useState<DetailMode>('walk');
   const [departure, setDeparture] = useState(0);
   const wide = useWide();
   const [searchRef, searchH] = useHeight();
