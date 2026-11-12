@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Mode, RestaurantSummary, RoutesResponse, SearchResult } from '../../src/api';
 import { FOOD_BY_KEY } from '../../src/foods';
 import { Detail } from './components/Detail';
@@ -40,20 +40,22 @@ function writeUrl(s: { here: Here | null; food: string | null; restaurant: numbe
   else history.replaceState(null, '', url);
 }
 
-function useHeight(ref: React.RefObject<HTMLElement>, deps: unknown[]): number {
+/** A ref for a panel and its height, kept up to date from the moment the panel appears. */
+function useHeight(): [(el: HTMLElement | null) => void, number] {
   const [h, setH] = useState(0);
-  useLayoutEffect(() => {
-    const el = ref.current;
+  const observer = useRef<ResizeObserver | null>(null);
+  const ref = useCallback((el: HTMLElement | null) => {
+    observer.current?.disconnect();
+    observer.current = null;
     if (!el) {
       setH(0);
       return;
     }
-    const ro = new ResizeObserver(() => setH(el.getBoundingClientRect().height));
-    ro.observe(el);
+    observer.current = new ResizeObserver(() => setH(el.getBoundingClientRect().height));
+    observer.current.observe(el);
     setH(el.getBoundingClientRect().height);
-    return () => ro.disconnect();
-  }, deps); // eslint-disable-line react-hooks/exhaustive-deps
-  return h;
+  }, []);
+  return [ref, h];
 }
 
 function useWide(): boolean {
@@ -84,10 +86,8 @@ export function App() {
   const [mode, setMode] = useState<Mode>('walk');
   const [departure, setDeparture] = useState(0);
   const wide = useWide();
-  const searchRef = useRef<HTMLElement>(null);
-  const detailRef = useRef<HTMLElement>(null);
-  const searchH = useHeight(searchRef, [started, selectedId]);
-  const detailH = useHeight(detailRef, [started, selectedId]);
+  const [searchRef, searchH] = useHeight();
+  const [detailRef, detailH] = useHeight();
 
   const placeHere = useCallback((h: Here) => {
     setHere(h);
