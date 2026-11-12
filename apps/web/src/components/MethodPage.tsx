@@ -1,13 +1,17 @@
 import { useI18n, type Key } from '../i18n/index.js';
 
-const SOURCES: { name: string; href: string; desc: Key }[] = [
+const SOURCES: { name: string; href?: string; desc: Key }[] = [
   { name: 'opentransportdata.swiss', href: 'https://opentransportdata.swiss', desc: 'm.src.otd' },
   { name: 'OpenStreetMap', href: 'https://www.openstreetmap.org', desc: 'm.src.osm' },
   { name: 'MOTIS', href: 'https://motis-project.de', desc: 'm.src.motis' },
+  { name: 'NOVA (LINDAS)', href: 'https://lindas.admin.ch', desc: 'm.src.nova' },
   { name: 'Mobilis', href: 'https://www.mobilis-vaud.ch', desc: 'm.src.mobilis' },
+  { name: 'Frimobil, unireso, Onde Verte, Libero, ZVV, Léman Pass', desc: 'm.src.networks' },
   { name: 'Alliance SwissPass', href: 'https://www.allianceswisspass.ch', desc: 'm.src.asp' },
   { name: 'mobitool', href: 'https://www.mobitool.ch', desc: 'm.src.mobitool' },
   { name: 'TCS', href: 'https://www.tcs.ch', desc: 'm.src.tcs' },
+  { name: 'OFS / BFS', href: 'https://www.bfs.admin.ch', desc: 'm.src.bfs' },
+  { name: 'sharedmobility.ch', href: 'https://sharedmobility.ch', desc: 'm.src.shared' },
   { name: 'lausanne.ch', href: 'https://www.lausanne.ch', desc: 'm.src.lausanne' },
   { name: 'SBB', href: 'https://digital.sbb.ch', desc: 'm.src.sbb' },
   { name: 'OpenFreeMap / OpenMapTiles', href: 'https://openfreemap.org', desc: 'm.src.ofm' },
@@ -34,6 +38,7 @@ export function MethodPage(props: { searchHref: string; onBack: () => void }) {
         <h2 id="m-scope">{t('m.scope.h')}</h2>
         <p>{t('m.scope.p1')}</p>
         <p>{t('m.scope.p2')}</p>
+        <p>{t('m.scope.p3')}</p>
       </section>
 
       <section aria-labelledby="m-cost">
@@ -42,9 +47,15 @@ export function MethodPage(props: { searchHref: string; onBack: () => void }) {
         <p>{t('m.cost.trips.p')}</p>
         <h3>{t('m.cost.pt.h')}</h3>
         <p>{t('m.cost.pt.p')}</p>
+        <p>{t('m.cost.pt.zones')}</p>
+        <p>{t('m.cost.pt.route')}</p>
+        <p>{t('m.cost.pt.cheaper')}</p>
         <h3>{t('m.cost.car.h')}</h3>
         <p>{t('m.cost.car.p')}</p>
         <p>{t('m.cost.car.time')}</p>
+        <h3>{t('m.cost.bike.h')}</h3>
+        <p>{t('m.cost.bike.p')}</p>
+        <p>{t('m.cost.shared.p')}</p>
       </section>
 
       <section aria-labelledby="m-labels">
@@ -70,7 +81,13 @@ export function MethodPage(props: { searchHref: string; onBack: () => void }) {
           <li>{t('m.options.i3')}</li>
           <li>{t('m.options.i4')}</li>
           <li>{t('m.options.i5')}</li>
+          <li>{t('m.options.i6')}</li>
         </ul>
+      </section>
+
+      <section aria-labelledby="m-return">
+        <h2 id="m-return">{t('m.return.h')}</h2>
+        <p>{t('m.return.p')}</p>
       </section>
 
       <section aria-labelledby="m-co2">
@@ -86,6 +103,10 @@ export function MethodPage(props: { searchHref: string; onBack: () => void }) {
           <li>{t('m.limits.i3')}</li>
           <li>{t('m.limits.i4')}</li>
           <li>{t('m.limits.i5')}</li>
+          <li>{t('m.limits.i6')}</li>
+          <li>{t('m.limits.i7')}</li>
+          <li>{t('m.limits.i8')}</li>
+          <li>{t('m.limits.i9')}</li>
         </ul>
       </section>
 
@@ -94,9 +115,7 @@ export function MethodPage(props: { searchHref: string; onBack: () => void }) {
         <ul className="bullets">
           {SOURCES.map((s) => (
             <li key={s.name}>
-              <a href={s.href}>
-                {s.name}
-              </a>
+              {s.href ? <a href={s.href}>{s.name}</a> : s.name}
               {' – '}
               {t(s.desc)}
             </li>
