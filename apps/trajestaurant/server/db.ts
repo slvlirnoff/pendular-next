@@ -1,6 +1,8 @@
 import pg from 'pg';
+import { REGION } from './region.js';
 
-export const DEFAULT_DATABASE_URL = 'postgres://pendular@127.0.0.1:5433/trajestaurant';
+/** The local database of scripts/dev.sh, one per region (trajestaurant, trolleybuffet). */
+export const DEFAULT_DATABASE_URL = `postgres://pendular@127.0.0.1:5433/${REGION.defaults.database}`;
 
 /**
  * Places (to eat, shops, and other places one goes to), the food types of those that serve food,
@@ -64,7 +66,7 @@ create table if not exists place_food (
 );
 create index if not exists place_food_food on place_food (food, place_id);
 
--- Chains: every brand with at least two places in Switzerland.
+-- Chains: every brand with at least two places in the region.
 create table if not exists brand (
   key text primary key,
   name text not null,

@@ -1,4 +1,5 @@
 import type { BrandHit, Departure, DeparturesResponse, DetailMode, Mode, OpenState, PlaceHit, PlaceSummary, RoutesResponse, SearchResponse, SearchResult, Suggestion, Target } from '../../src/api';
+import { REGION } from './region';
 import { FOOD_BY_KEY } from '../../src/foods';
 import { KIND_SEARCH_BY_KEY, kindInfo } from '../../src/kinds';
 import { foodLabel, kindName, LANG, LOCALE, searchLabel, t } from './i18n';
@@ -77,7 +78,7 @@ export function distance(m: number): string {
 }
 
 export function clock(iso: string): string {
-  return new Intl.DateTimeFormat(LOCALE, { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso));
+  return new Intl.DateTimeFormat(LOCALE, { timeZone: REGION.timezone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso));
 }
 
 /** A day's name, 0 Sunday … 6 Saturday (7 January 2024 was a Sunday). */
@@ -158,7 +159,7 @@ export function sortResults(list: SearchResult[], sort: Sort): SearchResult[] {
 }
 
 /** A departure's mode → pictogram. */
-export const DEPARTURE_EMOJI: Record<Departure['mode'], string> = { rail: '🚆', tram: '🚊', metro: '🚇', bus: '🚌', boat: '⛴️', cableway: '🚡', funicular: '🚞', other: '🚏' };
+export const DEPARTURE_EMOJI: Record<Departure['mode'], string> = { rail: '🚆', tram: '🚊', metro: '🚇', trolleybus: '🚎', bus: '🚌', boat: '⛴️', cableway: '🚡', funicular: '🚞', other: '🚏' };
 
 /** A stop's pictogram: its main mode's (a station with buses is a station). */
 export function stopEmoji(modes: Departure['mode'][] | undefined): string {

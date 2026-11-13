@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import type { BrandHit, PlaceHit, PlaceSummary, SearchResponse, SearchResult, Suggestion } from '../../../src/api';
-import { FOODS, FOOD_BY_KEY } from '../../../src/foods';
+import { REGION } from '../region';
+import { FOODS, FOOD_BY_KEY, foodIn } from '../../../src/foods';
 import { KIND_SEARCHES, KIND_SEARCH_BY_KEY, kindInfo } from '../../../src/kinds';
 import { searchKey } from '../../../src/text';
 import { count, foodLabel, kindName, searchLabel, t } from '../i18n';
@@ -223,7 +224,7 @@ export const SearchPanel = forwardRef<
   };
   const wide = useWide();
   const rows: { id: string; title: string; items: ChipItem[] }[] = [
-    { id: 'food', title: t('row.food'), items: FOODS.map((f) => ({ key: f.key, emoji: f.emoji, label: foodLabel(f.key), pick: () => props.onSearch(foodSearch(f.key)) })) },
+    { id: 'food', title: t('row.food'), items: FOODS.filter((f) => foodIn(f, REGION.country)).map((f) => ({ key: f.key, emoji: f.emoji, label: foodLabel(f.key), pick: () => props.onSearch(foodSearch(f.key)) })) },
     ...KIND_ROWS.map((row) => ({
       id: row.id,
       title: row.title,

@@ -4,17 +4,20 @@ export function fold(s: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/ß/g, 'ss')
-    .replace(/[’'`´]/g, "'")
+    .replace(/[’'`´ʼ]/g, "'")
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim();
 }
 
+/** Anything but letters and digits, of any script (Latin, Cyrillic…). */
+const NOT_WORD = /[^\p{L}\p{N}]+/gu;
+/** In Ukrainian the apostrophe is part of the word (Пʼятничани, сім'я): it is left out, not a space. */
+const IN_WORD_APOSTROPHE = /(\p{Script=Cyrillic})'(?=\p{Script=Cyrillic})/gu;
+
 /** The form names are searched by: folded, punctuation as spaces ("Mix-Image" → "mix image"). */
 export function searchKey(s: string): string {
-  return fold(s)
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
+  return fold(s).replace(IN_WORD_APOSTROPHE, '$1').replace(NOT_WORD, ' ').trim();
 }
 
 /** Words that say what a place is rather than which one it is. */
@@ -43,20 +46,24 @@ const GENERIC = new Set(
     'la le les l du de des d the and et und zum zur chez au aux sa ag gmbh sarl s a',
     'di del della dei da il lo e am im an der die das den dem bei beim von vom en y',
     'podologie podologia pedicure fusspflege massage massagen massages studio institut',
+    // Ukrainian, as searchKey writes them (ї → і, й → и, the apostrophe left out: кавʼярня → кавярня).
+    'ресторан ресторація кафе кавярня кава піцерія піца бар паб пивбар ідальня закусочна бістро гриль шаурма шаурмічна кебаб бургерна бургер суші',
+    'магазин маркет супермаркет мінімаркет гіпермаркет крамниця кіоск аптека перукарня салон краси краса барбершоп студія ательє маистерня бутик',
+    'пекарня кондитерська мясна продукти оптика квіти сто автосервіс шиномонтаж автомиика сервіс центр тц трц торговии торговельнии ринок',
+    'клініка медичнии стоматологія лікар лікарня ветклініка готель хостел вокзал станція тов фоп пп та на до із зі біля від для',
   ].join(' ').split(' '),
 );
 
 export function nameTokens(name: string): string[] {
-  return fold(name)
-    .replace(/[^a-z0-9]+/g, ' ')
+  return searchKey(name)
     .split(' ')
     .filter((w) => w.length > 1 && !GENERIC.has(w));
 }
 
 /** Whether two names are those of one place: shared distinctive words, or one name inside the other. */
 export function sameName(a: string, b: string, placeWords?: ReadonlySet<string>): boolean {
-  const fa = fold(a).replace(/[^a-z0-9]+/g, ' ').trim();
-  const fb = fold(b).replace(/[^a-z0-9]+/g, ' ').trim();
+  const fa = searchKey(a);
+  const fb = searchKey(b);
   if (fa === fb) return true;
   const ta = new Set(nameTokens(a));
   const tb = new Set(nameTokens(b));

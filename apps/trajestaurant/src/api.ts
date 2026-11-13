@@ -248,7 +248,7 @@ export interface Departure {
   /** From now (or from now on the typical timetable's day). */
   minutes: number;
   delayMin?: number;
-  mode: 'rail' | 'tram' | 'metro' | 'bus' | 'boat' | 'cableway' | 'funicular' | 'other';
+  mode: 'rail' | 'tram' | 'metro' | 'trolleybus' | 'bus' | 'boat' | 'cableway' | 'funicular' | 'other';
   /** Line or train: "R8", "475", "IC 1". */
   line: string;
   direction: string;

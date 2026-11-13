@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { REGION } from './region.js';
 
 /**
  * The routing engine holds one timetable year (data/motis/config.yml: `first_day`, `num_days`).
@@ -11,7 +12,7 @@ export interface TimetableRange {
   days: number;
 }
 
-export const TIMEZONE = 'Europe/Zurich';
+export const TIMEZONE = REGION.timezone;
 
 const DAY_MS = 86_400_000;
 const toDay = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10));
@@ -46,7 +47,7 @@ export function routingDate(localDate: string, r: TimetableRange): { date: strin
   return { date: toIso(monday + offset * DAY_MS), typical: true };
 }
 
-/** Local date ("YYYY-MM-DD") and time ("HH:MM") of an instant in Switzerland. */
+/** Local date ("YYYY-MM-DD") and time ("HH:MM") of an instant in the region. */
 export function localNow(at = new Date()): { date: string; time: string } {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: TIMEZONE,

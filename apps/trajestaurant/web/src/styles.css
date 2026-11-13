@@ -26,6 +26,14 @@
   color-scheme: light;
 }
 
+/* Тролейбуфет (Vinnytsia): trolleybus blue instead of Trajestaurant's red (src/regions.ts). */
+:root[data-region='vinnytsia'] {
+  --red: #1e5aa8;
+  --red-dark: #17468a;
+  --red-tint: #e8f0fb;
+  --red-tint-2: #c9dbf3;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -1323,6 +1331,9 @@ a {
 }
 .dep-bus {
   background: #1e3a8a;
+}
+.dep-trolleybus {
+  background: #1e5aa8;
 }
 .dep-tram,
 .dep-metro {

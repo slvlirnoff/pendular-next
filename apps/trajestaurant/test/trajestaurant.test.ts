@@ -15,6 +15,9 @@ import { createCarSharing, providerName, vehicleKind } from '../server/sharing.j
 import { weekHours } from '../server/open.js';
 import { departures, groupStops, modeOf } from '../server/stops.js';
 import { loadDensity } from '@pendular/engine';
+import { inBox, regionName, regionOf, REGIONS } from '../src/regions.js';
+import { renderPage } from '../src/page.js';
+import { nameTokens } from '../src/text.js';
 
 describe('food types', () => {
   it('reads the OSM cuisine, several values included', () => {
@@ -592,5 +595,62 @@ describe('stops and their departures', () => {
       { time: '16:44', minutes: 8, mode: 'rail', line: 'R9', direction: 'Murten/Morat', track: '1' },
       { time: '16:48', minutes: 14, delayMin: 2, mode: 'bus', line: '361', direction: 'Epalinges, Croisettes' },
     ]);
+  });
+});
+
+describe('regions', () => {
+  it('chooses the edition by REGION, Switzerland by default, and refuses an unknown one', () => {
+    expect(regionOf(undefined).id).toBe('ch');
+    expect(regionOf('vinnytsia').country).toBe('ua');
+    expect(() => regionOf('atlantis')).toThrow(/unknown region/);
+  });
+
+  it('names each edition in its languages', () => {
+    expect(regionName(REGIONS.vinnytsia, 'uk')).toBe('Тролейбуфет');
+    expect(regionName(REGIONS.vinnytsia, 'en')).toBe('Trolleybuffet');
+    expect(regionName(REGIONS.ch, 'de')).toBe('Trajestaurant');
+  });
+
+  it('gives each edition its own ports and database, to run side by side', () => {
+    const [a, b] = [REGIONS.ch.defaults, REGIONS.vinnytsia.defaults];
+    expect(a.port).not.toBe(b.port);
+    expect(a.webPort).not.toBe(b.webPort);
+    expect(a.database).not.toBe(b.database);
+  });
+
+  it('takes positions inside its area only', () => {
+    expect(inBox(REGIONS.vinnytsia.area, 49.233, 28.468)).toBe(true);
+    expect(inBox(REGIONS.vinnytsia.area, 46.52, 6.63)).toBe(false);
+    expect(inBox(REGIONS.ch.area, 46.52, 6.63)).toBe(true);
+  });
+
+  it('writes the edition into the page', () => {
+    const html = '<html lang="{{LANG}}"><meta name="region" content="{{REGION}}"><meta name="theme-color" content="{{THEME}}"><meta name="description" content="{{DESCRIPTION}}"><title>{{TITLE}}</title>';
+    const page = renderPage(html, REGIONS.vinnytsia);
+    expect(page).toContain('lang="uk"');
+    expect(page).toContain('content="vinnytsia"');
+    expect(page).toContain('<title>Тролейбуфет</title>');
+    expect(page).not.toContain('{{');
+  });
+});
+
+describe('names in Cyrillic', () => {
+  it('keeps Cyrillic letters in search keys and name tokens', () => {
+    expect(searchKey('Піца Челентано')).toBe('піца челентано');
+    // The Ukrainian apostrophe is part of the word, in any of its forms.
+    expect(searchKey("П'ятничани")).toBe(searchKey('Пʼятничани'));
+    expect(nameTokens('Аптека Доброго Дня')).toContain('доброго');
+  });
+
+  it('tells different Cyrillic names apart (they used to fold to nothing and all match)', () => {
+    expect(sameName('Сільпо', 'АТБ')).toBe(false);
+    expect(sameName('Аптека Доброго Дня', 'Аптека Доброго дня')).toBe(true);
+  });
+
+  it('gives foods by country: Swiss cuisine in Switzerland, Ukrainian in Ukraine', () => {
+    expect(classify({ amenity: 'restaurant', cuisine: 'regional' })).toContain('suisse');
+    expect(classify({ amenity: 'restaurant', cuisine: 'regional' }, 'ua')).toEqual(expect.arrayContaining(['ukrainien']));
+    expect(classify({ amenity: 'restaurant', cuisine: 'regional' }, 'ua')).not.toContain('suisse');
+    expect(classify({ amenity: 'restaurant', name: 'Вареники у Галі' }, 'ua')).toContain('ukrainien');
   });
 });

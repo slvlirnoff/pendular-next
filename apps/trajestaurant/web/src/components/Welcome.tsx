@@ -1,4 +1,6 @@
+import { regionName } from '../../../src/regions';
 import { LANG, LANGS, setLang, t } from '../i18n';
+import { REGION } from '../region';
 export function Logo(props: { size?: number; tone?: 'red' | 'white' }) {
   const size = props.size ?? 40;
   const pin = props.tone === 'white' ? '#ffffff' : 'var(--red)';
@@ -44,7 +46,7 @@ export function Welcome(props: { onStart: () => void; locating: boolean }) {
           <Logo size={88} tone="white" />
         </div>
         <p className="welcome-hello">{t('welcome.hello')}</p>
-        <h1 className="welcome-title">Trajestaurant</h1>
+        <h1 className="welcome-title">{regionName(REGION, LANG)}</h1>
         <p className="welcome-lede">{t('welcome.lede')}</p>
         <div className="welcome-actions">
           <button type="button" className="btn btn-white" onClick={props.onStart} disabled={props.locating}>
@@ -57,7 +59,7 @@ export function Welcome(props: { onStart: () => void; locating: boolean }) {
         <LangPicker className="welcome-langs" />
       </div>
       <footer className="welcome-foot">
-        <span>trajestaurant.ch</span>
+        {REGION.domain && <span>{REGION.domain}</span>}
         <span>{t('credits.places')}</span>
       </footer>
     </main>

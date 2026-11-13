@@ -1,0 +1,123 @@
+# Trajestaurant: one site per region side by side, sharing one PostgreSQL (a database per region),
+# one MOTIS and one Valhalla holding both regions. See TRAJESTAURANT.md.
+#
+#   docker compose -f compose.trajestaurant.yml up -d
+#
+#   127.0.0.1:8789   Trajestaurant (Switzerland)        REGION=ch          database trajestaurant
+#   127.0.0.1:8790   Тролейбуфет · Trolleybuffet (Vinnytsia)  REGION=vinnytsia   database trolleybuffet
+#
+# Another region is one more `site-…` service with its REGION and PORT. A region can also have a
+# MOTIS or a Valhalla of its own: point its MOTIS_URL / VALHALLA_URL (and MOTIS_CONFIG) at it.
+name: trajestaurant
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+x-site: &site
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile.trajestaurant
+  image: trajestaurant:local
+  restart: unless-stopped
+  depends_on:
+    postgres: { condition: service_healthy }
+    motis: { condition: service_healthy }
+  mem_limit: 512m
+  volumes:
+    # The shared MOTIS's configuration: the days its timetable covers.
+    - ${MOTIS_DIR:-../data/motis-ch-vinnytsia}/config.yml:/motis/config.yml:ro
+  read_only: true
+  tmpfs: ["/tmp"]
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  logging: *logging
+
+x-site-env: &site-env
+  MOTIS_URL: http://motis:8080
+  MOTIS_CONFIG: /motis/config.yml
+  VALHALLA_URL: http://valhalla:8002
+
+services:
+  site-ch:
+    <<: *site
+    environment:
+      <<: *site-env
+      REGION: ch
+      PORT: "8789"
+      DATABASE_URL: postgres://pendular:${PGPASSWORD:-pendular}@postgres:5432/trajestaurant
+      # Cars at the car-sharing stations (sharedmobility.ch asks for a contact e-mail address).
+      SHAREDMOBILITY_CONTACT: ${SHAREDMOBILITY_CONTACT:-}
+    ports: ["${BIND:-127.0.0.1}:8789:8789"]
+
+  site-vinnytsia:
+    <<: *site
+    environment:
+      <<: *site-env
+      REGION: vinnytsia
+      PORT: "8790"
+      DATABASE_URL: postgres://pendular:${PGPASSWORD:-pendular}@postgres:5432/trolleybuffet
+    ports: ["${BIND:-127.0.0.1}:8790:8790"]
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pendular
+      POSTGRES_PASSWORD: ${PGPASSWORD:-pendular}
+      POSTGRES_DB: postgres
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    # Published on the host's loopback for the imports (apps/trajestaurant/import/osm.sh).
+    ports: ["127.0.0.1:5434:5432"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "pendular", "-d", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  # One MOTIS for both regions: apps/trajestaurant/scripts/motis.sh import ch vinnytsia, with
+  # MOTIS_HOST=0.0.0.0 MOTIS_PORT=8080 so that it listens inside its container.
+  motis:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.motis
+      args:
+        MOTIS_VERSION: ${MOTIS_VERSION:-v2.11.4}
+    image: pendular-motis:local
+    restart: unless-stopped
+    expose: ["8080"]
+    mem_limit: 2g
+    volumes:
+      - type: bind
+        source: ${MOTIS_DIR:-../data/motis-ch-vinnytsia}/data
+        target: /data
+        read_only: true
+        bind: { create_host_path: false }
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    logging: *logging
+
+  # One Valhalla for both regions: apps/trajestaurant/scripts/valhalla.sh build ch vinnytsia.
+  valhalla:
+    image: ghcr.io/valhalla/valhalla:latest
+    restart: unless-stopped
+    command: ["valhalla_service", "/data/valhalla.json", "2"]
+    expose: ["8002"]
+    mem_limit: 512m
+    volumes:
+      - type: bind
+        source: ${VALHALLA_DIR:-../data/build/valhalla-ch-vinnytsia}
+        target: /data
+        read_only: true
+        bind: { create_host_path: false }
+    logging: *logging
+
+volumes:
+  pgdata:

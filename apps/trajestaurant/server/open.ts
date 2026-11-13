@@ -1,10 +1,12 @@
 import opening_hours from 'opening_hours';
 import type { DayHours, OpenState, WeekHours } from '../src/api.js';
+import { REGION } from './region.js';
 
 /**
  * Open or closed at an instant, from an OSM `opening_hours` value. The library reads dates in the
- * process's local time, so the server runs with TZ=Europe/Zurich (server/tz.ts). Public holidays
- * are those of the canton of Vaud; a value the library cannot read gives null.
+ * process's local time, so the server runs in the region's time zone (server/tz.ts). Public holidays
+ * are the region's (in Switzerland, those of the canton of Vaud); a value the library cannot read
+ * gives null.
  */
 const cache = new Map<string, opening_hours | null>();
 
@@ -13,7 +15,7 @@ function parse(value: string, lat: number, lon: number): opening_hours | null {
   if (hit !== undefined) return hit;
   let oh: opening_hours | null = null;
   try {
-    oh = new opening_hours(value, { lat, lon, address: { country_code: 'ch', state: 'Vaud' } });
+    oh = new opening_hours(value, { lat, lon, address: { country_code: REGION.country, state: REGION.holidayState ?? '' } });
   } catch {
     oh = null;
   }

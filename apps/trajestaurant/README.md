@@ -13,6 +13,31 @@ food types, shops, health, services, well-known chains. When nothing is searched
 around from zoom 14 on (`/api/map/places`, at most 600, places to eat and chains first; the map
 leaves out icons that would overlap; a click opens the place).
 
+## Editions: one per region
+
+The same code runs one edition per region, chosen with `REGION` (`src/regions.ts`): its name,
+languages, country (public holidays, brands, foods), time zone, map, area, and the defaults that let
+editions run side by side on one machine (port, database, MOTIS).
+
+| REGION | Edition | Languages | API / site (dev) | Database | MOTIS |
+| --- | --- | --- | --- | --- | --- |
+| `ch` (default) | Trajestaurant | fr, de, it, en | 8789 / 5174 | `trajestaurant` | Pendular's, :8080 |
+| `vinnytsia` | Тролейбуфет · Trolleybuffet (trolleybus + buffet: Vinnytsia is a city of trams and trolleybuses) | uk, en | 8790 / 5175 | `trolleybuffet` | its own, :8081 (`scripts/motis.sh`) |
+
+```sh
+bash scripts/run.sh ch            # Trajestaurant on http://127.0.0.1:5174
+bash scripts/run.sh vinnytsia     # Тролейбуфет on http://127.0.0.1:5175
+REGION=vinnytsia bash import/osm.sh   # its places (tools/vinnytsia/fetch.sh first)
+```
+
+The site is built once for every edition: the server writes the region into the page
+(`src/page.ts`; vite does the same in development). Names are compared in any script (Cyrillic
+included: `searchKey`, `nameTokens`, the Ukrainian apostrophe inside words). Foods can belong to a
+country (`countries`: Swiss cuisine and fondue in Switzerland, Ukrainian cuisine in Ukraine).
+Outside Switzerland there is no grid of residents and jobs (car times on free roads, 5 min to
+park) and no live shared vehicles. Deployment side by side, with one PostgreSQL, one MOTIS and one
+Valhalla for both: `deploy/TRAJESTAURANT.md`.
+
 ## Layout
 
 | Path | What |

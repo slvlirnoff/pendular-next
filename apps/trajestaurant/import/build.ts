@@ -12,7 +12,7 @@
  *     which classify poorly (garages as "home goods stores"): a name that says what a place is
  *     wins over the category, and a place nobody else has is kept only when its dataset and
  *     category mostly agree with OSM on the places both know (overtureTrust).
- *  4. Name Suggestion Index (import/fetch.sh nsi): the brands present in Switzerland. It names the
+ *  4. Name Suggestion Index (import/fetch.sh nsi): the brands present in the region's country. It names the
  *     brand of a place tagged with the name only ("Migros Lucens" → Migros), gives chains their
  *     cuisine (McDonald's → burger) and brands their proper names.
  *
@@ -20,6 +20,9 @@
  * places gone from every source are removed.
  *
  *   tsx import/build.ts <osm.geojsonseq> [--src data/build/trajestaurant/src]
+ *
+ * REGION (src/regions.ts, Switzerland by default) gives the country and the database
+ * (trajestaurant, trolleybuffet); DATABASE_URL overrides the database.
  */
 import { createReadStream, existsSync, readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
@@ -29,6 +32,10 @@ import { FOOD_KINDS, KIND_KEYS, KIND_SEARCHES, kindGroup, kindInfo, mainKind } f
 import { fold, nameTokens, sameName, searchKey } from '../src/text.js';
 import { distanceM } from '../server/estimate.js';
 import { createPool, DEFAULT_DATABASE_URL, ensureDatabase, SCHEMA } from '../server/db.js';
+import { REGION } from '../server/region.js';
+
+/** The region's country (REGION, src/regions.ts): its brands in the Name Suggestion Index, its foods. */
+const COUNTRY = REGION.country;
 
 type Tags = Record<string, string | undefined>;
 type Source = 'osm' | 'atp' | 'overture' | 'gbfs';
@@ -411,7 +418,7 @@ export function overturePlace(r: OvertureRow): Place | null {
     'addr:city': clean(r.locality),
   };
   const cuisine = overtureCuisines([r.category, ...(r.alternates ?? [])]).join(';');
-  const foods = FOOD_KINDS.has(k.kind) && k.kindKey === 'amenity' ? classify({ amenity: k.kind, name, cuisine }) : [];
+  const foods = FOOD_KINDS.has(k.kind) && k.kindKey === 'amenity' ? classify({ amenity: k.kind, name, cuisine }, COUNTRY) : [];
   return {
     source: 'overture', sourceId: r.id, sources: new Set(['overture']), name, ...k, lat: r.lat, lon: r.lon, tags,
     extraFoods: new Set(foods), confidence: r.confidence ?? 0,
@@ -656,7 +663,7 @@ export function loadNsi(file: string): Brands {
     for (const it of items) {
       const inc = it.locationSet?.include ?? [];
       const exc = it.locationSet?.exclude ?? [];
-      if (!(inc.includes('ch') || inc.includes('001')) || exc.includes('ch')) continue;
+      if (!(inc.includes(COUNTRY) || inc.includes('001')) || exc.includes(COUNTRY)) continue;
       const wd = it.tags['brand:wikidata'];
       if (!wd) continue;
       const names = [properName(it.displayName), it.tags.brand, it.tags.name, ...(it.matchNames ?? [])].filter((x): x is string => Boolean(x));
@@ -664,8 +671,8 @@ export function loadNsi(file: string): Brands {
       if (!kinds) byWikidata.set(wd, (kinds = new Map()));
       const k = `${key}=${value}`;
       const known = kinds.get(k);
-      // An entry for Switzerland itself wins over a worldwide one.
-      if (!known || inc.includes('ch')) {
+      // An entry for the country itself wins over a worldwide one.
+      if (!known || inc.includes(COUNTRY)) {
         kinds.set(k, { name: properName(it.displayName), cuisine: it.tags.cuisine ?? known?.cuisine, kindKey: key, kind: value, aliases: [...new Set([...(known?.aliases ?? []), ...names.map(fold)])] });
       }
       for (const n of names) byName.set(`${k}|${fold(n)}`, wd);
@@ -935,7 +942,7 @@ export function loadBrandLogos(file: string): Map<string, string> {
 export function foodsOf(p: Place): string[] {
   if (!isFood(p)) return [...p.extraFoods];
   const tags: Tags = { ...p.tags, amenity: p.kindKey === 'amenity' ? p.kind : p.tags.amenity, name: p.name };
-  return [...new Set([...classify(tags), ...p.extraFoods])];
+  return [...new Set([...classify(tags, COUNTRY), ...p.extraFoods])];
 }
 
 export function brandKey(p: Place): string | null {

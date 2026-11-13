@@ -3,7 +3,8 @@ import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { DetailMode, FreeVehicle, MapPlaces, MapStop, PlaceHit, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
 import { distanceTo, MODE, minutes, placeEmoji, stopEmoji, type Here } from '../lib';
-import { t } from '../i18n';
+import { LANG, t } from '../i18n';
+import { REGION } from '../region';
 
 export interface Padding {
   top: number;
@@ -13,10 +14,21 @@ export interface Padding {
 }
 
 const COLORS: Record<DetailMode, string> = { walk: '#2563eb', bike: '#0e7490', transit: '#d93a24', car: '#334155', sharing: '#1d7348' };
-const SWITZERLAND: LngLatBoundsLike = [
-  [5.95, 45.82],
-  [10.49, 47.81],
-];
+/**
+ * The base map's place and street names in one language: the name in it when the map has one
+ * (name:uk), else the local name (Ukrainian) or its Latin form (English).
+ */
+function labelsIn(m: maplibregl.Map, lang: string) {
+  const name: maplibregl.ExpressionSpecification = ['coalesce', ['get', `name:${lang}`], ['get', lang === 'en' ? 'name:latin' : 'name'], ['get', 'name']];
+  for (const l of m.getStyle().layers ?? []) {
+    if (l.type !== 'symbol') continue;
+    const field = JSON.stringify(m.getLayoutProperty(l.id, 'text-field') ?? '');
+    if (field.includes('name:nonlatin') || field.includes('name_en')) m.setLayoutProperty(l.id, 'text-field', name);
+  }
+}
+
+/** The map when the site opens: the region's (Switzerland, Vinnytsia). */
+const START: LngLatBoundsLike = REGION.view;
 
 type Line = { mode: DetailMode; coords: [number, number][]; label: string };
 
@@ -175,7 +187,7 @@ export function MapView(props: {
     const m = new maplibregl.Map({
       container: el.current,
       style: '/map/pwt-light.json',
-      bounds: SWITZERLAND,
+      bounds: START,
       attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false,
@@ -186,6 +198,7 @@ export function MapView(props: {
     m.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: t('credits.map') }), 'bottom-right');
     ready.current = new Promise((resolve) =>
       m.on('load', () => {
+        if (REGION.labelsInLanguage) labelsIn(m, LANG);
         // The places around, under the routes: an emoji icon, the name when zoomed in. The map
         // leaves out icons that would overlap, places to eat and chains winning.
         m.addSource('places', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });

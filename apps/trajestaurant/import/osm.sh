@@ -1,17 +1,30 @@
 #!/usr/bin/env bash
-# Trajestaurant: places to eat, shops and other places one goes to, from the Swiss OpenStreetMap
-# extract (data/raw/switzerland.osm.pbf, fetched by data/scripts/fetch.sh osm), merged with the
-# other sources (import/fetch.sh) and loaded into PostgreSQL by import/build.ts.
-# Needs the osmium command-line tool. DATABASE_URL defaults to the local database of scripts/dev.sh.
+# Trajestaurant: places to eat, shops and other places one goes to, from the region's
+# OpenStreetMap extract, merged with the other sources (import/fetch.sh) and loaded into
+# PostgreSQL by import/build.ts. Needs the osmium command-line tool. DATABASE_URL defaults to the
+# region's local database of scripts/dev.sh (src/regions.ts).
 #
-#   pnpm --filter @pendular/trajestaurant import:osm
+#   pnpm --filter @pendular/trajestaurant import:osm                    # Switzerland
+#   REGION=vinnytsia pnpm --filter @pendular/trajestaurant import:osm   # Vinnytsia (Тролейбуфет)
+#
+# The extract (OSM_PBF) and the folder of the other sources (TRAJ_OUT/src) by region:
+#   ch         data/raw/switzerland.osm.pbf (data/scripts/fetch.sh osm), data/build/trajestaurant
+#   vinnytsia  data/raw/vinnytsia_oblast.osm.pbf, data/build/vinnytsia (tools/vinnytsia/fetch.sh)
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../../.." && pwd)"
-pbf="${OSM_PBF:-$root/data/raw/switzerland.osm.pbf}"
-[ -f "$pbf" ] || pbf="$root/data/raw/switzerland-raw.osm.pbf"
-[ -f "$pbf" ] || { echo "no OSM extract: run data/scripts/fetch.sh osm" >&2; exit 1; }
-out="$root/data/build/trajestaurant"; mkdir -p "$out"
+case "${REGION:-ch}" in
+  ch)
+    pbf="${OSM_PBF:-$root/data/raw/switzerland.osm.pbf}"
+    [ -f "$pbf" ] || pbf="$root/data/raw/switzerland-raw.osm.pbf"
+    out="${TRAJ_OUT:-$root/data/build/trajestaurant}" ;;
+  vinnytsia)
+    pbf="${OSM_PBF:-$root/data/raw/vinnytsia_oblast.osm.pbf}"
+    out="${TRAJ_OUT:-$root/data/build/vinnytsia}" ;;
+  *) echo "unknown REGION ${REGION}" >&2; exit 1 ;;
+esac
+[ -f "$pbf" ] || { echo "no OSM extract $pbf: run data/scripts/fetch.sh osm or tools/vinnytsia/fetch.sh osm" >&2; exit 1; }
+mkdir -p "$out"
 
 # Food places, shops, services and other places one goes to (points, buildings and areas), any
 # place of a brand, and the towns and villages that name where they are. src/kinds.ts (mainKind)
@@ -35,4 +48,4 @@ osmium export "$out/food.osm.pbf" -f geojsonseq --format-option=print_record_sep
   --add-unique-id=type_id --geometry-types=point,polygon \
   -o "$out/food.geojsonseq" --overwrite --no-progress
 echo "extracted $(wc -l < "$out/food.geojsonseq") features from $(basename "$pbf")"
-cd "$here/.." && pnpm exec tsx import/build.ts "$out/food.geojsonseq"
+cd "$here/.." && pnpm exec tsx import/build.ts "$out/food.geojsonseq" --src "$out/src"

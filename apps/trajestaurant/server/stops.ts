@@ -51,10 +51,12 @@ export function groupStops(list: MotisStop[]): MapStop[] {
   return [...byParent.values()].map(({ own: _own, ...s }) => ({ ...s, modes: s.modes.sort((a, b) => MODE_ORDER.indexOf(a) - MODE_ORDER.indexOf(b)) }));
 }
 
-const MODE_ORDER = ['rail', 'tram', 'metro', 'bus', 'boat', 'cableway', 'funicular', 'other'];
+const MODE_ORDER = ['rail', 'tram', 'metro', 'trolleybus', 'bus', 'boat', 'cableway', 'funicular', 'other'];
 
 /** MOTIS's mode (REGIONAL_RAIL, BUS…) → the few the board tells apart. */
-export function modeOf(m: string): Departure['mode'] {
+export function modeOf(m: string, routeType?: number): Departure['mode'] {
+  // MOTIS counts trolleybuses as buses; the timetable's route type tells them apart (GTFS 11, 800).
+  if (routeType === 11 || routeType === 800) return 'trolleybus';
   if (/RAIL|TRAIN|SUBURBAN/.test(m)) return 'rail';
   if (m === 'TRAM') return 'tram';
   if (m === 'SUBWAY' || m === 'METRO') return 'metro';
@@ -67,6 +69,7 @@ export function modeOf(m: string): Departure['mode'] {
 
 interface MotisStopTime {
   mode: string;
+  routeType?: number;
   routeShortName?: string;
   displayName?: string;
   tripShortName?: string;
@@ -109,7 +112,7 @@ export async function departures(deps: Pick<SearchDeps, 'motisUrl' | 'fetch' | '
       time: hhmm(scheduled),
       minutes: Math.max(0, Math.round((Date.parse(p.departure) - at.getTime()) / 60_000)),
       ...(s.realTime && delayMin > 0 ? { delayMin } : {}),
-      mode: modeOf(s.mode),
+      mode: modeOf(s.mode, s.routeType),
       line: s.routeShortName || s.displayName || s.tripShortName || '',
       direction: s.headsign ?? '',
       ...(p.track || p.scheduledTrack ? { track: p.track ?? p.scheduledTrack } : {}),

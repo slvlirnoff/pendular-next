@@ -1,12 +1,13 @@
 import './tz.js';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { Hono } from 'hono';
-import { loadDensity, MotisRouting, type LatLon } from '@pendular/engine';
+import { Hono, type Context } from 'hono';
+import { densityFromFile, loadDensity, MotisRouting, type DensityIndex, type LatLon } from '@pendular/engine';
 import { httpGet } from '../../api/src/httpGet.js';
 import type { PlaceHit, Target } from '../src/api.js';
-import { FOODS, FOOD_BY_KEY } from '../src/foods.js';
+import { FOODS, FOOD_BY_KEY, foodIn } from '../src/foods.js';
 import { KIND_SEARCH_BY_KEY } from '../src/kinds.js';
 import { motisStreet, valhallaStreet, withFallback, type StreetRouter } from './car.js';
 import { createCarSharing } from './sharing.js';
@@ -16,11 +17,19 @@ import { departures, mapStops, modeOf } from './stops.js';
 import { placesIn, popularBrands, searchPlaces, suggest, type SearchDeps } from './search.js';
 import { searchKey } from '../src/text.js';
 import { readTimetableRange, referenceMonday, TIMEZONE } from './timetable.js';
+import { REGION } from './region.js';
+import { inBox } from '../src/regions.js';
+import { renderPage } from '../src/page.js';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
-const motisUrl = process.env.MOTIS_URL ?? 'http://127.0.0.1:8080';
-const port = Number(process.env.PORT ?? 8789);
-const timetable = readTimetableRange(process.env.MOTIS_CONFIG ?? resolve(ROOT, 'data/motis/config.yml'));
+// REGION (src/regions.ts) gives the defaults; the environment overrides them.
+const motisUrl = process.env.MOTIS_URL ?? REGION.defaults.motisUrl;
+const port = Number(process.env.PORT ?? REGION.defaults.port);
+const timetable = readTimetableRange(process.env.MOTIS_CONFIG ?? resolve(ROOT, REGION.defaults.motisConfig));
+/** Pendular's grid of residents and jobs where there is one (Switzerland); elsewhere none: car times on free roads, short parking. */
+const density: DensityIndex = REGION.density
+  ? loadDensity()
+  : densityFromFile({ format: 'pendular-density/1', cellM: 1000, e0: 0, n0: 0, width: 1, radiusM: 1000, sources: { residents: { name: 'none', year: 0 }, jobs: null }, key: [], res: [] });
 
 const routing = new MotisRouting({
     baseUrl: motisUrl,
@@ -38,10 +47,10 @@ function street(costing: 'auto' | 'pedestrian' | 'bicycle', profile: 'car' | 'wa
 }
 const deps: SearchDeps = {
   db: createPool(),
-  density: loadDensity(),
+  density,
   // SHAREDMOBILITY_CONTACT: the contact e-mail address the shared-mobility feed asks for (cars at
   // the car-sharing stations); without it, stations are shown without their cars.
-  sharing: createCarSharing(process.env.SHAREDMOBILITY_CONTACT, fetch),
+  sharing: createCarSharing(REGION.sharedMobility ? process.env.SHAREDMOBILITY_CONTACT : undefined, fetch),
   motisUrl,
   fetch: httpGet,
   timetable,
@@ -53,17 +62,17 @@ const deps: SearchDeps = {
 
 const app = new Hono();
 
-/** A position from the query (?lat=…&lon=…), inside Switzerland and around. */
+/** A position from the query (?lat=…&lon=…), inside the region's area. */
 function position(lat: string | undefined, lon: string | undefined): LatLon | null {
   const a = Number(lat);
   const b = Number(lon);
-  if (!Number.isFinite(a) || !Number.isFinite(b) || a < 45 || a > 48.5 || b < 5 || b > 11.5) return null;
+  if (!Number.isFinite(a) || !Number.isFinite(b) || !inBox(REGION.area, a, b)) return null;
   return { lat: a, lon: b };
 }
 
 app.get('/api/health', async (c) => {
   const n = await deps.db.query<{ n: string }>('select count(*) as n from place').catch(() => null);
-  return c.json({ ok: n !== null, places: Number(n?.rows[0]?.n ?? 0), timetable });
+  return c.json({ ok: n !== null, region: REGION.id, places: Number(n?.rows[0]?.n ?? 0), timetable });
 });
 
 /** Every food type, with how many places in the data have it. */
@@ -73,7 +82,7 @@ app.get('/api/foods', async (c) => {
     const r = await deps.db.query<{ food: string; n: string }>('select food, count(*) as n from place_food group by food');
     foodCounts = new Map(r.rows.map((x) => [x.food, Number(x.n)]));
   }
-  return c.json(FOODS.map((f) => ({ key: f.key, emoji: f.emoji, label: f.label, generic: f.generic === true, count: foodCounts!.get(f.key) ?? 0 })));
+  return c.json(FOODS.filter((f) => foodIn(f, REGION.country)).map((f) => ({ key: f.key, emoji: f.emoji, label: f.label, generic: f.generic === true, count: foodCounts!.get(f.key) ?? 0 })));
 });
 
 /** What is being typed in the search bar: food types and restaurant names. */
@@ -252,18 +261,24 @@ app.get('/api/geocode', async (c) => {
   return c.json(hits);
 });
 
-// The built site (production): vite build writes web/dist.
+// The built site (production): vite build writes web/dist; its page names the region (src/page.ts).
+const pageFile = resolve(import.meta.dirname, '../web/dist/index.html');
+const page = existsSync(pageFile) ? renderPage(readFileSync(pageFile, 'utf8'), REGION) : null;
+const sendPage = (c: Context) => (page ? c.html(page) : c.text('the site is not built: pnpm build', 404));
+app.get('/', (c) => sendPage(c));
+app.get('/index.html', (c) => sendPage(c));
 app.use('/*', serveStatic({ root: './web/dist' }));
-app.get('*', serveStatic({ root: './web/dist', path: 'index.html' }));
+app.get('*', (c) => sendPage(c));
 
 process.on('unhandledRejection', (e) => console.error('unhandled rejection', e));
 serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`trajestaurant api on :${info.port}, motis ${motisUrl}, car, walk and bike from ${deps.car.name}`);
+  console.log(`${REGION.id} (${Object.values(REGION.name)[0]}) on :${info.port}, motis ${motisUrl}, car, walk and bike from ${deps.car.name}, ${TIMEZONE}`);
   // The routing engines read their data from disk on first use: the first search would wait for
   // it (12 s measured for MOTIS). One search in the background warms them up.
   setTimeout(() => {
     const started = Date.now();
-    searchPlaces(deps, { type: 'food', key: 'restaurant' }, { lat: 46.948, lon: 7.4474 })
+    const [[w, s], [e, n]] = REGION.view;
+    searchPlaces(deps, { type: 'food', key: 'restaurant' }, { lat: (s + n) / 2, lon: (w + e) / 2 })
       .then(() => console.log(`warmed up in ${Date.now() - started} ms`))
       .catch((e: unknown) => console.error('warm-up', e));
   }, 500);
