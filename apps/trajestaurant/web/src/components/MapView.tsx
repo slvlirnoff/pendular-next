@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSource, type LngLatBoundsLike } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { DetailMode, FreeVehicle, MapPlaces, MapStop, PlaceHit, PlaceSummary, RoutesResponse, Target } from '../../../src/api';
-import { distanceTo, MODE, minutes, placeEmoji, stopEmoji, type Here } from '../lib';
+import { distanceTo, MODE, minutes, placeEmoji, stopEmoji, type Here, placeName } from '../lib';
 import { LANG, t } from '../i18n';
 import { REGION } from '../region';
 
@@ -330,7 +330,7 @@ export function MapView(props: {
             type: 'FeatureCollection',
             features: d.places.map((p) => ({
               type: 'Feature' as const,
-              properties: { id: p.id, name: p.name, icon: `place:${placeEmoji(p, null)}`, rank: p.foods.length ? 0 : p.brand ? 1 : 2 },
+              properties: { id: p.id, name: placeName(p), icon: `place:${placeEmoji(p, null)}`, rank: p.foods.length ? 0 : p.brand ? 1 : 2 },
               geometry: { type: 'Point' as const, coordinates: [p.lon, p.lat] },
             })),
           });
@@ -458,7 +458,7 @@ export function MapView(props: {
         markers.current.set(r.id, x);
       }
       x.el.textContent = placeEmoji(r, props.target);
-      x.el.setAttribute('aria-label', `${r.name}${r.town ? `, ${r.town}` : ''}`);
+      x.el.setAttribute('aria-label', `${placeName(r)}${r.town ? `, ${r.town}` : ''}`);
       x.el.classList.toggle('is-selected', props.selected?.id === r.id);
       x.el.classList.toggle('is-hovered', props.hovered === r.id);
       x.pin.classList.toggle('is-selected', props.selected?.id === r.id);

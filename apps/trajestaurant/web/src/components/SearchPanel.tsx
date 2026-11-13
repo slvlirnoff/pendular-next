@@ -6,7 +6,7 @@ import { KIND_SEARCHES, KIND_SEARCH_BY_KEY, kindInfo } from '../../../src/kinds'
 import { searchKey } from '../../../src/text';
 import { count, foodLabel, kindName, searchLabel, t } from '../i18n';
 import { LangPicker } from './Welcome';
-import { api, brandSearch, distance, distanceTo, foodSearch, kindLabel, kindSearch, leadMode, MODE, minutes, nameSearch, openLabel, placeEmoji, sortResults, stopEmoji, timeOf, type Here, type Searched, type Sort, UNIT } from '../lib';
+import { api, brandSearch, distance, distanceTo, foodSearch, kindLabel, kindSearch, leadMode, MODE, minutes, nameSearch, openLabel, placeEmoji, sortResults, stopEmoji, timeOf, type Here, type Searched, type Sort, UNIT, placeName } from '../lib';
 import { Logo } from './Welcome';
 
 const PAGE = 5;
@@ -416,7 +416,7 @@ export const SearchPanel = forwardRef<
                   </>
                 ) : (
                   <>
-                    <strong>{o.r.name}</strong>
+                    <strong>{placeName(o.r)}</strong>
                     <small>
                       {kindLabel(o.r)}
                       {o.r.town ? ` · ${o.r.town}` : ''}
@@ -576,7 +576,7 @@ function ResultRow(props: { r: SearchResult; searched: Searched; sort: Sort; onP
         </span>
         <span className="result-main">
           <span className="result-name">
-            {r.name}
+            {placeName(r)}
             {!byType(props.searched) && r.town && !r.name.includes(r.town) ? <span className="result-town"> {r.town}</span> : null}
           </span>
           <span className="result-meta">

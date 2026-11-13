@@ -612,6 +612,128 @@ export function keepOverture(o: Pick<Place, 'confidence' | 'tags'>): boolean {
   return c >= 0.6 || (c >= 0.4 && (phone || web)) || (c >= 0.25 && phone && web);
 }
 
+/** Words that say a place is a pharmacy or a drugstore, in the regions' languages. */
+const PHARMACY_WORD = /аптек|фарм|pharm|apothe|apotek|farmac|drog/;
+
+/**
+ * Overture lists as pharmacies shops and firms that are not: in Ukraine the mobile operator
+ * Київстар, the supermarkets Фора, the butcher's М'ясомаркет (Microsoft's data); in Switzerland
+ * pharmaceutical companies, pest control, a café. A pharmacy only Overture knows is kept when its
+ * name says so, or when another source knows a pharmacy of that name (a chain's branch: Подорожник).
+ */
+export function plausiblePharmacy(name: string, known: ReadonlySet<string>): boolean {
+  return PHARMACY_WORD.test(fold(name)) || known.has(chainKey(name));
+}
+
+/** What tells a chain by its name: the name's own words, without the kind's ("Аптека") nor a branch number ("№2"). */
+export const chainKey = (name: string): string =>
+  nameTokens(name)
+    .filter((t) => !/^\d+$/.test(t))
+    .join(' ');
+
+/** Kinds that are institutions, not businesses: places of one name among them are not a chain. */
+const NOT_CHAINS = new Set(['amenity=townhall', 'amenity=courthouse', 'amenity=police', 'amenity=hospital', 'amenity=library', 'amenity=marketplace', 'office=government', 'office=diplomatic']);
+/** Sites that host many businesses' pages: sharing one says nothing. */
+const HOSTS = /facebook|instagram|google|tiktok|linktr|t\.me|viber|youtube|wix|business\.site|prom\.ua|olx|booking|tripadvisor|local\.ch|search\.ch/;
+
+function siteOf(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const host = new URL(/^https?:/.test(url) ? url : `https://${url}`).hostname.replace(/^www\./, '');
+    return HOSTS.test(host) ? null : host;
+  } catch {
+    return null;
+  }
+}
+
+function topCount<T>(xs: T[]): [T | undefined, number] {
+  const m = new Map<T, number>();
+  for (const x of xs) m.set(x, (m.get(x) ?? 0) + 1);
+  return [...m.entries()].sort((a, b) => b[1] - a[1])[0] ?? [undefined, 0];
+}
+
+/**
+ * Chains the brand sources do not know, from names (REGION.localChains). Places without a brand are
+ * grouped by their name's own words (chainKey: "Аптека «Подорожник»" and "Подорожник", "Нова Пошта
+ * №2" and "Нова Пошта №14" are one).
+ *  - A group whose words are those of a brand already known for the same family of places (food,
+ *    shops, amenities…) joins it: Подорожник, Нова Пошта, Грош.
+ *  - Otherwise three places or more, three in four of one family, are a chain when something says
+ *    they are one business: a website a fifth of them share (Солодка Мрія: vzfk.com.ua), or most of
+ *    them within 15 km of one another, mostly of one trade (Домашній маркет, 22 in Vinnytsia;
+ *    Філіжанка's cafés and coffee shops). A common name repeated across a region with mixed kinds
+ *    ("Вікторія", "Престиж") is not.
+ * The chain is named after its branches' most common name without a number.
+ */
+/** Trades whose branches mix kinds: a coffee chain has cafés and shops, a confectioner's shops and cafés. */
+const TRADE: Record<string, string> = {
+  'amenity=cafe': 'coffee', 'shop=coffee': 'coffee', 'shop=tea': 'coffee',
+  'shop=pastry': 'sweets', 'shop=confectionery': 'sweets', 'shop=bakery': 'sweets', 'craft=bakery': 'sweets', 'shop=chocolate': 'sweets', 'amenity=ice_cream': 'sweets',
+};
+
+export function localChains(places: Place[]): { joined: number; chains: number; places: number } {
+  const trade = (p: Place) => TRADE[`${p.kindKey}=${p.kind}`] ?? kindGroup(p.kindKey, p.kind);
+  const family = (p: Place) => (TRADE[`${p.kindKey}=${p.kind}`] || (p.kindKey === 'amenity' && FOOD_KINDS.has(p.kind)) ? 'food' : p.kindKey);
+  const known = new Map<string, { brand: string; wd?: string }>();
+  for (const p of places) {
+    const k = p.tags.brand ? chainKey(p.tags.brand) : '';
+    // One with a Wikidata id wins: the brand of the Name Suggestion Index.
+    if (k && (!known.get(`${family(p)}|${k}`)?.wd || p.tags['brand:wikidata'])) known.set(`${family(p)}|${k}`, { brand: p.tags.brand!, wd: p.tags['brand:wikidata'] });
+  }
+  // A brand tag without its Wikidata id ("Домашній маркет") is that brand's.
+  for (const p of places) {
+    if (!p.tags.brand || p.tags['brand:wikidata']) continue;
+    const b = known.get(`${family(p)}|${chainKey(p.tags.brand)}`);
+    if (b?.wd) {
+      p.tags.brand = b.brand;
+      p.tags['brand:wikidata'] = b.wd;
+    }
+  }
+  const groups = new Map<string, Place[]>();
+  for (const p of places) {
+    if (p.tags.brand || p.tags['brand:wikidata'] || NOT_CHAINS.has(`${p.kindKey}=${p.kind}`)) continue;
+    // A place named after its kind ("Pharmacie") has no name to tell a chain by.
+    if (p.unnamed && p.name === kindInfo(p.kindKey, p.kind).label) continue;
+    const k = chainKey(p.name);
+    if (k.length < 4) continue;
+    let g = groups.get(k);
+    if (!g) groups.set(k, (g = []));
+    g.push(p);
+  }
+  let joined = 0;
+  let chains = 0;
+  let inChains = 0;
+  for (const [k, group] of groups) {
+    const rest: Place[] = [];
+    for (const p of group) {
+      const b = known.get(`${family(p)}|${k}`);
+      if (!b) {
+        rest.push(p);
+        continue;
+      }
+      p.tags.brand = b.brand;
+      if (b.wd) p.tags['brand:wikidata'] = b.wd;
+      joined++;
+    }
+    if (rest.length < 3) continue;
+    const [fam, n] = topCount(rest.map(family));
+    if (n / rest.length < 0.75) continue;
+    const members = rest.filter((p) => family(p) === fam);
+    const sites = topCount(members.map((p) => siteOf(p.tags.website)).filter((s): s is string => s !== null))[1];
+    const byLat = [...members].sort((a, b) => a.lat - b.lat);
+    const byLon = [...members].sort((a, b) => a.lon - b.lon);
+    const mid = { lat: byLat[members.length >> 1]!.lat, lon: byLon[members.length >> 1]!.lon };
+    const near = members.filter((p) => distanceM(p, mid) <= 15_000).length;
+    const oneKind = topCount(members.map(trade))[1] / members.length >= 0.75;
+    if (!((sites >= 2 && sites / members.length >= 0.2) || (near >= 3 && near / members.length >= 0.5 && oneKind))) continue;
+    const name = topCount(members.map((p) => p.name).filter((x) => !/\d/.test(x)))[0] ?? topCount(members.map((p) => p.name))[0]!;
+    for (const p of members) p.tags.brand = name;
+    chains++;
+    inChains += members.length;
+  }
+  return { joined, chains, places: inChains };
+}
+
 // ---------------------------------------------------------------------------------------------
 // Name Suggestion Index
 // ---------------------------------------------------------------------------------------------
@@ -797,8 +919,15 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
       unique.push(o);
     }
     const trusted = overtureTrust(grid, unique);
+    // The pharmacies the other sources know, by name: a chain's branch only Overture has is one too.
+    const pharmacyNames = new Set(places.filter((p) => p.kindKey === 'amenity' && p.kind === 'pharmacy').flatMap((p) => [chainKey(p.name), chainKey(p.tags.brand ?? '')]).filter(Boolean));
     for (const o of unique) {
       if (!isFoodish(o)) {
+        // Not a pharmacy (Київстар, Фора): neither added nor given to an unnamed pharmacy nearby.
+        if (o.kindKey === 'amenity' && o.kind === 'pharmacy' && !plausiblePharmacy(o.name, pharmacyNames)) {
+          counts.overtureShopsUntrusted!++;
+          continue;
+        }
         // Shops and services come with a confidence of 0.8 or more (import/overture.py).
         const m = matchOvertureShop(grid, o);
         if (m) {
@@ -843,6 +972,12 @@ export async function build(osmFile: string, srcDir: string): Promise<Built> {
       if (nsi?.cuisine && !p.tags.cuisine) p.tags.cuisine = nsi.cuisine;
       if (nsi) p.tags.brand = nsi.name;
     }
+  }
+  if (REGION.localChains) {
+    const found = localChains(places);
+    counts.chainJoined = found.joined;
+    counts.chainNew = found.chains;
+    counts.chainPlaces = found.places;
   }
   return { places, towns, counts, nsi: brands };
 }

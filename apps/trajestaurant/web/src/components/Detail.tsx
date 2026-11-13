@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useState } from 'react';
 import type { DeparturesResponse, DetailMode, PlaceDetail, PlaceSummary, RoutesResponse, Target, TransitOption, WeekHours } from '../../../src/api';
 import { FOOD_BY_KEY } from '../../../src/foods';
-import { api, clock, DEPARTURE_EMOJI, distance, kindLabel, legEmoji, MODE, minutes, openLabel, placeEmoji } from '../lib';
+import { api, clock, DEPARTURE_EMOJI, distance, kindLabel, legEmoji, MODE, minutes, openLabel, placeEmoji, placeName } from '../lib';
 import { LOCALE, t } from '../i18n';
 
 const YES = new Set(['yes', 'only', 'designated']);
@@ -119,7 +119,7 @@ function Actions(props: { place: PlaceDetail }) {
   const p = props.place;
   const [copied, setCopied] = useState(false);
   const share = async () => {
-    const data = { title: p.name, url: window.location.href };
+    const data = { title: placeName(p), url: window.location.href };
     try {
       if (navigator.share) await navigator.share(data);
       else {
@@ -248,7 +248,7 @@ export const Detail = forwardRef<
     : [];
 
   return (
-    <section ref={ref} className="panel panel-detail" aria-label={r.name}>
+    <section ref={ref} className="panel panel-detail" aria-label={placeName(r)}>
       <div className={`card detail${detail?.extra?.image ? ' has-hero' : ''}`}>
         {detail?.extra?.image ? <Picture className="hero" src={detail.extra.image} /> : null}
         <div className="detail-head">
@@ -262,7 +262,7 @@ export const Detail = forwardRef<
             <span className="emoji-fallback">{placeEmoji(r, props.target)}</span>
           </span>
           <div className="detail-title">
-            <h2>{r.name}</h2>
+            <h2>{placeName(r)}</h2>
             <p>
               {kindLabel(r)}
               {r.brand && !r.name.toLowerCase().includes(r.brand.toLowerCase()) ? ` ${r.brand}` : ''}
@@ -312,7 +312,7 @@ export const Detail = forwardRef<
           ) : props.error ? (
             <p className="way-loading">{t('way.error')}</p>
           ) : props.mode === 'transit' ? (
-            <Transit options={props.routes?.transit ?? []} chosen={props.departure} onChoose={props.onDeparture} typical={props.routes?.typicalTimetable ?? false} destination={r.name} />
+            <Transit options={props.routes?.transit ?? []} chosen={props.departure} onChoose={props.onDeparture} typical={props.routes?.typicalTimetable ?? false} destination={placeName(r)} />
           ) : props.mode === 'walk' ? (
             props.routes?.walk ? (
               <p className="way-street">

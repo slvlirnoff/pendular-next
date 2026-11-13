@@ -3,11 +3,11 @@ import { classify, FOODS, matchFoods } from '../src/foods.js';
 import { fold } from '../src/text.js';
 import { transitToPlaces, usefulTransit } from '../server/estimate.js';
 import { referenceMonday, routingDate } from '../server/timetable.js';
-import { atpPlace, bankAtm, extraOf, pictureUrl, brandFromName, carSharingPlace, centre, Grid, keepOverture, kindFromName, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, overtureTrust, sameName, type Brands, type OvertureRow, type Place } from '../import/build.js';
+import { chainKey, localChains, plausiblePharmacy, atpPlace, bankAtm, extraOf, pictureUrl, brandFromName, carSharingPlace, centre, Grid, keepOverture, kindFromName, osmObject, osmPlace, overtureCuisines, overtureKind, overturePlace, overtureTrust, sameName, type Brands, type OvertureRow, type Place } from '../import/build.js';
 import { KIND_SEARCHES, kindGroup, kindInfo, mainKind, matchKinds } from '../src/kinds.js';
 import { searchKey } from '../src/text.js';
 import { maxMinutes, onePlace, Ttl } from '../server/search.js';
-import { bestMode, leadMode, sortResults } from '../web/src/lib.js';
+import { bestMode, leadMode, placeName, sortResults } from '../web/src/lib.js';
 import type { SearchResult } from '../src/api.js';
 import { valhallaCar, withFallback, type CarRouter } from '../server/car.js';
 import { clockOf, createTraffic, rushShare } from '../server/traffic.js';
@@ -652,5 +652,51 @@ describe('names in Cyrillic', () => {
     expect(classify({ amenity: 'restaurant', cuisine: 'regional' }, 'ua')).toEqual(expect.arrayContaining(['ukrainien']));
     expect(classify({ amenity: 'restaurant', cuisine: 'regional' }, 'ua')).not.toContain('suisse');
     expect(classify({ amenity: 'restaurant', name: 'Вареники у Галі' }, 'ua')).toContain('ukrainien');
+  });
+});
+
+describe('chains found from names', () => {
+  const at = (id: number, name: string, tags: Record<string, string>, lat: number, lon: number, website?: string) =>
+    osmPlace({ id: `n${id}`, geometry: { type: 'Point', coordinates: [lon, lat] }, properties: { name, ...tags, ...(website ? { website } : {}) } })!;
+
+  it('reads a chain by its own words, without the kind or the branch number', () => {
+    expect(chainKey('Аптека "Подорожник"')).toBe(chainKey('Подорожник'));
+    expect(chainKey('Нова Пошта №2')).toBe(chainKey('Нова Пошта №14'));
+    expect(chainKey('Солодка Мрія')).toBe('солодка мрія');
+  });
+
+  it('joins a known brand, and groups a local chain sharing a website or one town', () => {
+    const places = [
+      at(1, 'Подорожник', { amenity: 'pharmacy', brand: 'Подорожник', 'brand:wikidata': 'Q1' }, 49.23, 28.46),
+      at(2, 'Аптека «Подорожник»', { amenity: 'pharmacy' }, 49.24, 28.47),
+      at(3, 'Солодка Мрія', { shop: 'pastry' }, 49.23, 28.46, 'https://vzfk.com.ua/'),
+      at(4, 'Солодка мрія', { shop: 'confectionery' }, 49.25, 28.5, 'https://vzfk.com.ua'),
+      at(5, 'Солодка Мрія', { shop: 'pastry' }, 49.0, 28.9),
+      at(6, 'Солодка Мрія', { shop: 'pastry' }, 49.24, 28.44),
+      // One name in three towns far apart and three kinds: a common name, not a chain.
+      at(7, 'Вікторія', { shop: 'convenience' }, 49.23, 28.46),
+      at(8, 'Вікторія', { shop: 'clothes' }, 48.7, 29.2),
+      at(9, 'Вікторія', { shop: 'hairdresser' }, 49.5, 27.9),
+    ];
+    const found = localChains(places);
+    expect(places[1]!.tags).toMatchObject({ brand: 'Подорожник', 'brand:wikidata': 'Q1' });
+    expect(places.slice(2, 6).map((p) => p.tags.brand)).toEqual(['Солодка Мрія', 'Солодка Мрія', 'Солодка Мрія', 'Солодка Мрія']);
+    expect(places.slice(6).map((p) => p.tags.brand)).toEqual([undefined, undefined, undefined]);
+    expect(found).toEqual({ joined: 1, chains: 1, places: 4 });
+  });
+
+  it('keeps an Overture pharmacy only when it looks like one', () => {
+    const known = new Set([chainKey('Подорожник')]);
+    expect(plausiblePharmacy('Аптека №5', known)).toBe(true);
+    expect(plausiblePharmacy('TopPharm Apotheke Moudon', known)).toBe(true);
+    expect(plausiblePharmacy('Drogerie Frey', known)).toBe(true);
+    expect(plausiblePharmacy('Подорожник', known)).toBe(true);
+    expect(plausiblePharmacy('Київстар', known)).toBe(false);
+    expect(plausiblePharmacy('Renon Désinfection SA', known)).toBe(false);
+  });
+
+  it("shows a place known without a name under its kind, in the reader's language", () => {
+    expect(placeName({ name: 'Pharmacie', kindKey: 'amenity', kind: 'pharmacy' })).toBe('Pharmacie');
+    expect(placeName({ name: 'Солодка Мрія', kindKey: 'shop', kind: 'pastry' })).toBe('Солодка Мрія');
   });
 });

@@ -210,3 +210,11 @@ export function placeEmoji(r: Pick<PlaceSummary, 'foods' | 'kindKey' | 'kind'>, 
 export function kindLabel(r: Pick<PlaceSummary, 'kindKey' | 'kind'>): string {
   return kindName(r.kindKey, r.kind);
 }
+
+/**
+ * A place's name. A place known without a name (a pharmacy, a car wash) is named after its kind,
+ * in French by the import: it is shown in the reader's language.
+ */
+export function placeName(r: Pick<PlaceSummary, 'name' | 'kindKey' | 'kind'>): string {
+  return r.name === kindInfo(r.kindKey, r.kind).label ? kindName(r.kindKey, r.kind) : r.name;
+}

@@ -43,6 +43,12 @@ export interface Region {
   density: boolean;
   /** Shared cars, bikes and scooters live from sharedmobility.ch (SHAREDMOBILITY_CONTACT): Switzerland only. */
   sharedMobility: boolean;
+  /**
+   * Chains found from names (import/build.ts localChains), where the Name Suggestion Index and All
+   * The Places know few of them (Vinnytsia's «Солодка Мрія», «Ковбаскофф»). Not in Switzerland:
+   * they know its chains, and its inns share names without being one ("Bären", "Hirschen").
+   */
+  localChains: boolean;
   defaults: {
     port: number;
     /** The development site (vite), which forwards /api to the port above. */
@@ -84,6 +90,7 @@ export const REGIONS: Record<RegionId, Region> = {
     themeColor: '#d93a24',
     density: true,
     sharedMobility: true,
+    localChains: false,
     defaults: { port: 8789, webPort: 5174, database: 'trajestaurant', motisUrl: 'http://127.0.0.1:8080', motisConfig: 'data/motis/config.yml' },
     strings: {},
   },
@@ -111,6 +118,7 @@ export const REGIONS: Record<RegionId, Region> = {
     labelsInLanguage: true,
     density: false,
     sharedMobility: false,
+    localChains: true,
     defaults: { port: 8790, webPort: 5175, database: 'trolleybuffet', motisUrl: 'http://127.0.0.1:8081', motisConfig: 'data/motis-vinnytsia/config.yml' },
     strings: {
       'search.placeholder': { en: 'Pizza, pharmacy, ATB…' },

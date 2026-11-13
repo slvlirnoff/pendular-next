@@ -154,6 +154,24 @@ place (30 % for health categories, which OSM tags unevenly), or, for categories 
 such places, 60 % for the dataset as a whole. Microsoft's "home_goods_store" agreed for 15 %, meta's
 "furniture_store" for 85 %, Microsoft's "veterinarian" for 92 %.
 
+A pharmacy only Overture knows is kept when its name says so (аптека, pharmacie, Apotheke,
+Drogerie…) or when another source knows a pharmacy of that name: Microsoft's data lists as
+pharmacies in Ukraine the mobile operator Київстар, the supermarkets Фора and butcher's shops, in
+Switzerland pharmaceutical firms and pest control (58 there, 42 in Vinnytsia).
+
+**Chains found from names** (`localChains`, editions with `localChains`: Vinnytsia), where the Name
+Suggestion Index and All The Places know few local chains. Places without a brand are grouped by
+their name's own words (`chainKey`: without the kind's words nor a branch number, so «Аптека
+"Подорожник"» is Подорожник and «Нова Пошта №2» Нова Пошта). A group whose words are a brand's
+already known joins it; otherwise three places or more of one family (food, with cafés, coffee and
+tea shops, bakeries and confectioners together; shops; amenities…) are a chain when a fifth of them
+share a website or most are within 15 km of one another and of one trade. In Vinnytsia: 190 places
+join a known brand (Подорожник 87 → 111, Нова Пошта, Грош, O'CAKE), 60 new chains of 296 places
+(Солодка Мрія 21, Ковбаскофф 11, Coffee Boroda 9, Філіжанка 7…), and a name repeated across the
+oblast in mixed kinds ("Вікторія", "Престиж") stays a name. Not in Switzerland, whose inns share
+names without being one ("Bären": 118, "Hirschen": 125). A place known without a name is named after
+its kind by the import, in French; the site shows the kind in the reader's language.
+
 In all about 242 600 places, of which 1 856 chains with at least two places. Lucens, almost empty
 in OSM (three places within 3 km), now has Sherlock, Vesuvio, Grill House and the Café du Poids,
 from Overture. Other sources studied: `SOURCES.md` (in French).
