@@ -65,16 +65,19 @@ export function distanceTo(a: { lat: number; lon: number }, b: { lat: number; lo
   return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
 }
 
+/** Units: min, h, m, km; in Ukrainian хв, год, м, км. */
+export const UNIT = LANG === 'uk' ? { min: 'хв', h: 'год', m: 'м', km: 'км' } : { min: 'min', h: 'h', m: 'm', km: 'km' };
+
 export function minutes(m: number): string {
-  if (m < 60) return `${m} min`;
+  if (m < 60) return `${m} ${UNIT.min}`;
   const h = Math.floor(m / 60);
   const r = m % 60;
-  return r ? `${h} h ${String(r).padStart(2, '0')}` : `${h} h`;
+  return r ? `${h} ${UNIT.h} ${String(r).padStart(2, '0')}` : `${h} ${UNIT.h}`;
 }
 
 export function distance(m: number): string {
-  if (m < 950) return `${Math.max(10, Math.round(m / 10) * 10)} m`;
-  return `${(m / 1000).toLocaleString(LOCALE, { maximumFractionDigits: m < 9500 ? 1 : 0 })} km`;
+  if (m < 950) return `${Math.max(10, Math.round(m / 10) * 10)} ${UNIT.m}`;
+  return `${(m / 1000).toLocaleString(LOCALE, { maximumFractionDigits: m < 9500 ? 1 : 0 })} ${UNIT.km}`;
 }
 
 export function clock(iso: string): string {

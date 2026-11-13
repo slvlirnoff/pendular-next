@@ -1,22 +1,23 @@
 import { FOOD_BY_KEY } from '../../src/foods';
 import { FOOD_LABELS, KIND_LABELS, SEARCH_LABELS } from '../../src/i18n/labels';
 import { KIND_SEARCH_BY_KEY, kindInfo } from '../../src/kinds';
+import { regionName } from '../../src/regions';
+import { REGION } from './region';
 
 /**
- * The site in French (as written), German, Italian, English and Ukrainian. The language comes from the link
- * (?lang=de), else the one chosen before, else the browser's, else French; changing it reloads
- * the page.
+ * The site in the edition's languages (src/regions.ts): French (as written), German, Italian and
+ * English in Switzerland; Ukrainian and English in Vinnytsia. The language comes from the link
+ * (?lang=en), else the one chosen before, else the browser's, else the edition's first; changing
+ * it reloads the page.
  */
 export type Lang = 'fr' | 'de' | 'it' | 'en' | 'uk';
-export const LANGS: { key: Lang; name: string }[] = [
-  { key: 'uk', name: 'Українська' },
-  { key: 'fr', name: 'Français' },
-  { key: 'de', name: 'Deutsch' },
-  { key: 'it', name: 'Italiano' },
-  { key: 'en', name: 'English' },
-];
+const NAMES: Record<Lang, string> = { fr: 'Français', de: 'Deutsch', it: 'Italiano', en: 'English', uk: 'Українська' };
+/** The edition's languages, in its order. */
+export const LANGS: { key: Lang; name: string }[] = REGION.langs.map((key) => ({ key, name: NAMES[key] }));
+/** The edition's first language: the one a link without ?lang= is in. */
+export const DEFAULT_LANG: Lang = REGION.langs[0]!;
 const STORE = 'trajestaurant.lang';
-const isLang = (v: unknown): v is Lang => v === 'fr' || v === 'de' || v === 'it' || v === 'en' || v === 'uk';
+const isLang = (v: unknown): v is Lang => typeof v === 'string' && (REGION.langs as string[]).includes(v);
 
 function detect(): Lang {
   try {
@@ -31,13 +32,16 @@ function detect(): Lang {
     const short = l.slice(0, 2).toLowerCase();
     if (isLang(short)) return short;
   }
-  return 'fr';
+  return DEFAULT_LANG;
 }
 
-export const LANG: Lang = typeof location === 'undefined' ? 'fr' : detect();
+export const LANG: Lang = typeof location === 'undefined' ? DEFAULT_LANG : detect();
 /** The locale for numbers, dates and the geocoder's names. */
 export const LOCALE = { fr: 'fr-CH', de: 'de-CH', it: 'it-CH', en: 'en-GB', uk: 'uk-UA' }[LANG];
-if (typeof document !== 'undefined') document.documentElement.lang = LANG;
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = LANG;
+  document.title = regionName(REGION, LANG);
+}
 
 export function setLang(l: Lang) {
   try {
@@ -46,7 +50,7 @@ export function setLang(l: Lang) {
     // Kept in the link only.
   }
   const u = new URL(location.href);
-  if (l === 'fr') u.searchParams.delete('lang');
+  if (l === DEFAULT_LANG) u.searchParams.delete('lang');
   else u.searchParams.set('lang', l);
   location.replace(u.toString());
 }
@@ -248,7 +252,7 @@ export type Key = keyof typeof S;
 
 /** A text of the site in the current language, {name} replaced by its value. */
 export function t(key: Key, vars?: Record<string, string | number>): string {
-  let s = S[key][LANG];
+  let s = REGION.strings[key]?.[LANG] ?? S[key][LANG];
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
   return s;
 }

@@ -116,6 +116,9 @@ export const REGIONS: Record<RegionId, Region> = {
       'search.placeholder': { en: 'Pizza, pharmacy, ATB…' },
       'picker.placeholder': { en: 'Vinnytsia, railway station, street…' },
       'sugg.brand': { en: 'Chain · {kind} · {count} in the region' },
+      // No traffic data here: free-flowing roads, and a few minutes to park.
+      'note.car': { uk: 'Машина: без заторів, з часом на паркування.', en: 'Car: free-flowing roads, the time to park included.' },
+      'note.typical': { uk: 'Типовий розклад: той самий день тижня й час у чинному розкладі.', en: 'Typical timetable: same day and time in the current timetable.' },
       'credits.places': {
         uk: 'Місця © OpenStreetMap, Overture, All The Places',
         en: 'Places © OpenStreetMap, Overture, All The Places',

@@ -25,7 +25,8 @@ const FLOATING: [string, number, number][] = [
   ['🌮', 10, 62],
   ['🍦', 84, 58],
   ['🍜', 70, 84],
-  ['🫕', 18, 86],
+  // Fondue in Switzerland, varenyky in Ukraine.
+  [REGION.country === 'ua' ? '🥟' : '🫕', 18, 86],
   ['🍗', 44, 4],
   ['🧋', 50, 92],
 ];

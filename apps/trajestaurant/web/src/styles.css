@@ -4,6 +4,7 @@
   --red-dark: #b02c19;
   --red-tint: #fdece8;
   --red-tint-2: #f8d3cb;
+  --red-glow: #ef5a3f;
   --ink: #1f1a17;
   --muted: #625a55;
   --line: #ebe5e0;
@@ -28,6 +29,7 @@
 
 /* Тролейбуфет (Vinnytsia): trolleybus blue instead of Trajestaurant's red (src/regions.ts). */
 :root[data-region='vinnytsia'] {
+  --red-glow: #3d86d6;
   --red: #1e5aa8;
   --red-dark: #17468a;
   --red-tint: #e8f0fb;
@@ -135,7 +137,7 @@ a {
   flex-direction: column;
   overflow: hidden;
   color: var(--white);
-  background: radial-gradient(120% 80% at 50% 0%, #ef5a3f 0%, var(--red) 45%, var(--red-dark) 100%);
+  background: radial-gradient(120% 80% at 50% 0%, var(--red-glow) 0%, var(--red) 45%, var(--red-dark) 100%);
 }
 .welcome-body {
   position: relative;

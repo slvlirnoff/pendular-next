@@ -8,7 +8,7 @@ import { SearchPanel, type SearchState } from './components/SearchPanel';
 import { Welcome } from './components/Welcome';
 import { api, bestMode, brandSearch, distanceTo, foodSearch, kindSearch, nameSearch, type Here, type Searched, type Sort } from './lib';
 import { KIND_SEARCH_BY_KEY } from '../../src/kinds';
-import { LANG, t } from './i18n';
+import { DEFAULT_LANG, LANG, t } from './i18n';
 
 const HERE_KEY = 'trajestaurant.here';
 
@@ -75,7 +75,7 @@ function writeUrl(s: { here: Here | null; searched: Searched | null; place: numb
     if (s.address.stopId) p.set('stop', s.address.stopId);
   }
   // A link shared in another language than French opens in it.
-  if (LANG !== 'fr') p.set('lang', LANG);
+  if (LANG !== DEFAULT_LANG) p.set('lang', LANG);
   const url = `${location.pathname}${p.size ? `?${p.toString()}` : ''}`;
   if (url === `${location.pathname}${location.search}`) return;
   if (push) history.pushState(step ?? null, '', url);

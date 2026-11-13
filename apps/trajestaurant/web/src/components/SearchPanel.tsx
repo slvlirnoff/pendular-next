@@ -6,27 +6,7 @@ import { KIND_SEARCHES, KIND_SEARCH_BY_KEY, kindInfo } from '../../../src/kinds'
 import { searchKey } from '../../../src/text';
 import { count, foodLabel, kindName, searchLabel, t } from '../i18n';
 import { LangPicker } from './Welcome';
-import {
-  api,
-  brandSearch,
-  distance,
-  distanceTo,
-  foodSearch,
-  kindLabel,
-  kindSearch,
-  leadMode,
-  MODE,
-  minutes,
-  nameSearch,
-  openLabel,
-  placeEmoji,
-  sortResults,
-  stopEmoji,
-  timeOf,
-  type Here,
-  type Searched,
-  type Sort,
-} from '../lib';
+import { api, brandSearch, distance, distanceTo, foodSearch, kindLabel, kindSearch, leadMode, MODE, minutes, nameSearch, openLabel, placeEmoji, sortResults, stopEmoji, timeOf, type Here, type Searched, type Sort, UNIT } from '../lib';
 import { Logo } from './Welcome';
 
 const PAGE = 5;
@@ -624,7 +604,7 @@ function ResultRow(props: { r: SearchResult; searched: Searched; sort: Sort; onP
           {leadMin !== null ? (
             <>
               <strong>{leadMin}</strong>
-              <small>min</small>
+              <small>{UNIT.min}</small>
             </>
           ) : (
             <small>—</small>
