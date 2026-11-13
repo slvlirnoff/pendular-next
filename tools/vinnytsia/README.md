@@ -6,27 +6,86 @@ opendata.gov.ua, which does not answer from outside Ukraine. `build_gtfs.py` mak
 
 | Source | What it gives |
 | --- | --- |
-| OpenStreetMap (oblast extract, openstreetmap.fr) | Each line in each direction as a PTv2 route: its stops in order and the ways it runs on: stops, shapes, distances |
-| [depo.vn.ua](https://depo.vn.ua/route/bytable/tram), the operator КП «Вінницька транспортна компанія» | Trams, trolleybuses, buses: first and last departure and interval per line and direction, working days and weekends apart |
-| [depo.vn.ua, share taxis](https://depo.vn.ua/content/marshrutnoe-taksi) | The lines with a letter (1А, 2Б…): first and last departures and the range of their interval, or every departure (the lines to the villages) |
+| [vn.rozklad.in.ua](https://vn.rozklad.in.ua/), the timetables posted at the stops | Trams, trolleybuses, city and suburban buses (58 lines): each direction's stops in order with the minutes from the first one, and every departure on working days and on weekends, with the low-floor runs and the runs to the depot marked |
+| OpenStreetMap (oblast extract, openstreetmap.fr) | Where the stops are, and each line's route in each direction (PTv2): its shape |
+| [depo.vn.ua, share taxis](https://depo.vn.ua/content/marshrutnoe-taksi), the operator КП «Вінницька транспортна компанія» | The share taxis rozklad does not have (1А, 2Б…): first and last departures and the range of their interval, or every departure |
 
-The trips are frequencies (`exact_times=0`, "every 12 min from 06:01 to 22:56") as the operator
-publishes them, except the share taxis whose every departure is listed. The time between stops
-is not published: it is the distance along the route (never less than the straight line × 1.2)
-at a commercial speed per mode, stops included: tram 16 km/h, trolleybus 17, bus 19, share taxi
-21. Working days are Monday to Friday; Ukraine's public holidays are not days off under martial
-law, so there are no exceptions.
+**rozklad's lines** (56 of its 58) are exact: a trip for each departure, the time at each stop as
+posted. Each stop is put at OSM's stop of the same name, the one making the shortest way from stop
+to stop, each hop no faster than 48 km/h for the minutes between them, those of the line's own OSM
+route preferred (`locate`). Names are compared word by word, renamed schools and streets' former
+names allowed for ("Школа-коледж №29" is "Ліцей № 29", "вул. Дьогтянецька (Лізи Чайкіної)" is "Вул.
+Дьогтянецька"; "Ринок «Вишенька»" is not "Вул. Вишенька"). A stop OSM does not have, or that would
+make a detour, stays out of the trip (the report lists them): 2,084 of the 2,424 stops of the
+timetables are placed. The line's OSM route is its shape when every stop lies within 150 m of it
+(57 of the 116 directions; the others have no shape).
+
+- A run marked as going to the depot is a whole trip, its headsign ending "(у депо)": where it
+  leaves the line is not published.
+- Underlined (low-floor) runs are `wheelchair_accessible=1`; the other runs of trams and
+  trolleybuses `2`; buses `0` (rozklad marks no low-floor bus).
+- Stops "на вимогу" (on request) have `pickup_type` and `drop_off_type` 3: tell the driver.
+
+**The share taxis** (17 lines) are laid on OSM's route of the line, matched by number and ends: the
+time between stops is the distance along the route (never less than the straight line × 1.2) at
+a commercial speed, stops included (19 km/h where OSM maps the line as a bus, 21 as a share taxi),
+and the trips are frequencies (`exact_times=0`: the first and last departures, every so many
+minutes, the middle of the range depo.vn.ua gives), except on the lines to the villages, whose
+every departure is listed.
+
+Working days are Monday to Friday; Ukraine's public holidays are not days off under martial law,
+so there are no exceptions. The feed starts on the day the timetables start (1 November 2026).
 
 ```bash
 bash tools/vinnytsia/fetch.sh            # OSM extract, GTFS (+ check), rail GTFS, places
-bash tools/vinnytsia/fetch.sh gtfs       # the GTFS only (depo.vn.ua's pages are kept in src/depo)
+bash tools/vinnytsia/fetch.sh gtfs       # the GTFS only (rozklad's and depo's pages are kept in src/)
 bash tools/vinnytsia/fetch.sh places     # Overture, All The Places, NSI
 ```
 
-Output in `data/build/vinnytsia/`: `vinnytsia-gtfs.zip`, `vinnytsia-gtfs-report.json` (each OSM
-route and the operator's runs it was matched with, and what was not matched), and in `src/`:
+Output in `data/build/vinnytsia/`: `vinnytsia-gtfs.zip`, `vinnytsia-gtfs-report.json` (the lines
+each source knows and where each line of the GTFS comes from; per direction of rozklad, the OSM
+route used and the stops not placed; the share taxis matched and not), and in `src/`:
 `ukrzaliznytsia.gtfs.zip` (national rail, a community feed listed by Transitous: 17 trains a day
-at Vinnytsia, valid to December 2027), and the places below.
+at Vinnytsia, valid to December 2027), and the places below. Delete `src/rozklad` or `src/depo`
+to read the current timetables again.
+
+## What the GTFS holds (November 2026)
+
+73 lines, 568 stops, 5,415 trips (5,251 from rozklad), checked by `check_gtfs.py` (references,
+times and distances in order, frequencies, speeds, stops within 150 m of their shape): no error,
+no warning. Median trip 39 min.
+
+- **Trams** (6): 1–6.
+- **Trolleybuses** (20): 1–7, 9–20, 22.
+- **Buses** (30): 1, 2, 4–9, 11, 14, 16, 19, 19А, 19Б, 20–22, 24, 27, 30, 30А, 30Б, 32, and the
+  suburban 115, 138, 138с, 170, СОС, ГА, КОР.
+- **Share taxis** (17, from depo.vn.ua and OSM): 1А, 2А, 2Б, 3А, 3Б, 5А, 7А, 9А, 10А, 11Б, 12А, 16А,
+  17А, 18А, 22А, 23А, 31А.
+
+The lines each source knows:
+
+| | rozklad | depo.vn.ua | OSM route |
+| --- | --- | --- | --- |
+| Trams 1–6, trolleybuses 1–7, 9–13, 15, buses 1, 2, 5–8, 11, 14, 16, 19, 24 | ✓ | ✓ | ✓ |
+| Trolleybuses 14, 16–20, 22, buses 4, 20, 21, 27, 30, 32, 19А, 19Б, 30А, 30Б | ✓ | ✓ | |
+| Buses 9, 22, 115, 137, 138, 138с, 170, М.К., СОС, ГА, КОР | ✓ | | |
+| Share taxis 1А, 2А, 2Б, 3А, 3Б, 5А, 7А, 9А, 10А, 11Б, 12А, 16А, 17А, 18А, 22А, 23А, 31А | | ✓ | ✓ |
+| Share taxis 8А, 8Б, 14А, 20А, 21А, 28А, 34А | | ✓ | |
+| Trolleybuses 6а, 8, buses 13А, 17, 25, 29А, 32А, share taxi 17Б | | | ✓ |
+
+**Missing**:
+- The share taxis 8А, 8Б, 14А, 20А, 21А, 28А, 34А: depo.vn.ua gives only their ends and times,
+  and OSM has no route for them (mapping them in OSM, PTv2, would bring them in).
+- Buses 137 and М.К.: three stops each, their town end ("Вінниця АС-1") not in OSM.
+- OSM's routes that no operator lists any more (trolleybuses 6а and 8, buses 13А, 17, 25, 29А, 32А,
+  share taxi 17Б).
+
+**Also tried**:
+- The operator's stop-by-stop timetable (depo.vn.ua/route): a Drupal form that did not answer
+  outside a browser session.
+- The live map of КП «Вінницякартсервіс» (map.et.vn.ua): routes, stops and vehicle positions over
+  socket.io, for private use only by its terms.
+- EasyWay: behind a bot challenge, data by agreement only.
 
 ## Places (November 2026)
 
@@ -42,31 +101,10 @@ OSM is by far the fullest here. Overture holds few places in Ukraine, most at lo
 its categories are less sure than in Switzerland (a butcher's as a pharmacy): the confidence and
 category checks of the Trajestaurant import would want calibrating again on this region.
 
-## What the GTFS holds (November 2026)
-
-46 lines, 541 stops, 274 trips (90 route directions × day types; 143 as frequencies), checked by
-`check_gtfs.py` (references, times and distances in order, frequencies, speeds, stops within
-150 m of their shape): no error, no warning. Median trip 26 min.
-
-- **Trams** (5): 1, 3, 4, 5, 6.
-- **Trolleybuses** (13): 1–7, 9–13, 15.
-- **Buses and share taxis** (28): 1, 1А, 2, 2А, 2Б, 3А, 3Б, 5, 5А, 6, 7, 7А, 8, 9А, 10А, 11, 11Б,
-  12А, 14, 16, 16А, 17А, 18А, 19, 22А, 23А, 24, 31А.
-
-**Missing** — the operator runs them but OSM has no route for them yet (they would be added by
-mapping them in OSM, PTv2): tram 2 (its current path), trolleybuses 14, 16, 17, 18, 19, 20, 22,
-buses 4, 20, 21, 22, 27, 30, 32, share taxis 8А, 8Б, 14А, 19А, 19Б, 20А, 21А, 28А, 30А, 30Б, 34А.
-OSM's routes the operator no longer lists are left out: trolleybuses 6а and 8, buses 13А, 17, 25,
-29А, 32А, share taxi 17Б, tram 2's old path. A few OSM routes are incomplete (bus 22А: three
-stops).
-
-**Also tried**: the operator's stop-by-stop timetable (depo.vn.ua/route, a Drupal form that did
-not answer outside a browser session); the live map of КП «Вінницякартсервіс» (map.et.vn.ua:
-routes, stops and vehicle positions over socket.io, for private use only by its terms); EasyWay
-(behind a bot challenge, data by agreement only).
-
 ## Licences
 
 The stops, routes and shapes come from OpenStreetMap: the GTFS is a database derived from it, under
-the ODbL (attribution: © OpenStreetMap contributors). The departures and intervals are the
-operator's published timetable facts (depo.vn.ua); `attributions.txt` names both.
+the ODbL (attribution: © OpenStreetMap contributors). The departures, the minutes between stops and
+the intervals are published timetable facts (vn.rozklad.in.ua, whose robots.txt allows any reader,
+and depo.vn.ua); `attributions.txt` names all three. The pages are read one at a time, half a
+second apart, and kept: a build reads them once.

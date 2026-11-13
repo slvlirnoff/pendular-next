@@ -4,8 +4,9 @@
 #   bash tools/vinnytsia/fetch.sh [osm|gtfs|places|all]
 #
 #   osm     the OpenStreetMap extract of the Vinnytsia oblast (openstreetmap.fr, ~45 MB, daily)
-#   gtfs    the city GTFS built from OSM and depo.vn.ua (build_gtfs.py, then check_gtfs.py), and
-#           the national rail GTFS (Ukrzaliznytsia, community feed listed by Transitous)
+#   gtfs    the city GTFS built from vn.rozklad.in.ua, OSM and depo.vn.ua (build_gtfs.py, then
+#           check_gtfs.py), and the national rail GTFS (Ukrzaliznytsia, community feed listed by
+#           Transitous)
 #   places  Overture, All The Places and the Name Suggestion Index for the oblast, through
 #           apps/trajestaurant/import/fetch.sh (TRAJ_COUNTRY=UA, TRAJ_BBOX = the oblast), and every
 #           Overture place of the oblast, unfiltered (overture_places.py)
@@ -30,8 +31,9 @@ osm() {
 
 gtfs() {
   [ -f "$raw/vinnytsia_oblast.osm.pbf" ] || osm
-  # depo.vn.ua's pages are kept (src/depo): delete them to read the current timetables again.
-  python3 "$here/build_gtfs.py" --osm "$raw/vinnytsia_oblast.osm.pbf" --out "$out/vinnytsia-gtfs.zip" --cache "$src/depo"
+  # rozklad's and depo.vn.ua's pages are kept (src/rozklad, src/depo): delete them to read the
+  # current timetables again.
+  python3 "$here/build_gtfs.py" --osm "$raw/vinnytsia_oblast.osm.pbf" --out "$out/vinnytsia-gtfs.zip" --cache "$src/depo" --rozklad "$src/rozklad"
   python3 "$here/check_gtfs.py" "$out/vinnytsia-gtfs.zip"
   curl -fsSL --retry 4 -A "$UA" -o "$src/ukrzaliznytsia.gtfs.zip.part" https://jbb.ghsq.de/gtfs/ua-ukrzaliznytsya.gtfs.zip
   mv "$src/ukrzaliznytsia.gtfs.zip.part" "$src/ukrzaliznytsia.gtfs.zip"

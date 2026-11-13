@@ -60,6 +60,7 @@ def main(path):
             errors.append(f"stop_times: unknown trip {st['trip_id']}")
         by_trip[st['trip_id']].append(st)
     durations, fast, far = [], [], []
+    off_shape = {}  # (shape, stop): metres from the shape
     for tid, sts in by_trip.items():
         sts.sort(key=lambda s: int(s['stop_sequence']))
         if len(sts) < 2:
@@ -73,16 +74,22 @@ def main(path):
             pa, pb = stops[a['stop_id']], stops[b['stop_id']]
             d = metres((float(pa['stop_lat']), float(pa['stop_lon'])), (float(pb['stop_lat']), float(pb['stop_lon'])))
             dt = secs(b['arrival_time']) - secs(a['departure_time'])
+            # Times given to the minute (as timetables print them): a hop of "1 min" can be 1:59.
+            if a['departure_time'].endswith(':00') and b['arrival_time'].endswith(':00'):
+                dt += 59
             if dt > 0 and d / dt * 3.6 > 80:
                 fast.append(f"{tid}: {pa['stop_name']} → {pb['stop_name']} {d:.0f} m in {dt} s")
         durations.append((secs(sts[-1]['arrival_time']) - secs(sts[0]['departure_time'])) / 60)
-        shape = shapes.get(trips.get(tid, {}).get('shape_id'))
-        if shape:
+        shape_id = trips.get(tid, {}).get('shape_id')
+        if shape_id in shapes:
             for st in sts:
-                p = stops[st['stop_id']]
-                q = (float(p['stop_lat']), float(p['stop_lon']))
-                if min(metres(q, (s[1], s[2])) for s in shape) > 150:
-                    far.append(f"{tid}: {p['stop_name']} ({st['stop_id']})")
+                key = (shape_id, st['stop_id'])
+                if key not in off_shape:
+                    p = stops[st['stop_id']]
+                    q = (float(p['stop_lat']), float(p['stop_lon']))
+                    off_shape[key] = min(metres(q, (s[1], s[2])) for s in shapes[shape_id])
+                if off_shape[key] > 150:
+                    far.append(f"{tid}: {stops[st['stop_id']]['stop_name']} ({st['stop_id']})")
     for tid in trips:
         if tid not in by_trip:
             errors.append(f'trip {tid}: no stop times')
