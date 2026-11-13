@@ -59,7 +59,7 @@ def main(path):
         if st['trip_id'] not in trips:
             errors.append(f"stop_times: unknown trip {st['trip_id']}")
         by_trip[st['trip_id']].append(st)
-    durations, fast, far = [], [], []
+    durations, fast, far, unshaped = [], [], [], set()
     off_shape = {}  # (shape, stop): metres from the shape
     for tid, sts in by_trip.items():
         sts.sort(key=lambda s: int(s['stop_sequence']))
@@ -80,6 +80,9 @@ def main(path):
             if dt > 0 and d / dt * 3.6 > 80:
                 fast.append(f"{tid}: {pa['stop_name']} → {pb['stop_name']} {d:.0f} m in {dt} s")
         durations.append((secs(sts[-1]['arrival_time']) - secs(sts[0]['departure_time'])) / 60)
+        # Continuous stopping is along the trip's shape: without one, it is undefined.
+        if not trips.get(tid, {}).get('shape_id') and any(st.get(k) not in (None, '', '1') for st in sts for k in ('continuous_pickup', 'continuous_drop_off')):
+            unshaped.add(tid)
         shape_id = trips.get(tid, {}).get('shape_id')
         if shape_id in shapes:
             for st in sts:
@@ -102,6 +105,8 @@ def main(path):
         warnings.append(f'{len(fast)} hops faster than 80 km/h, e.g. ' + '; '.join(fast[:3]))
     if far:
         warnings.append(f'{len(far)} stop times more than 150 m from their shape, e.g. ' + '; '.join(far[:3]))
+    if unshaped:
+        errors.append(f'{len(unshaped)} trips with continuous stopping but no shape, e.g. {sorted(unshaped)[0]}')
     long_ = [d for d in durations if d > 120]
     if long_:
         warnings.append(f'{len(long_)} trips longer than two hours')

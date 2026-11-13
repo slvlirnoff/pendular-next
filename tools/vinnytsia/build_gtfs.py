@@ -593,6 +593,17 @@ OSM_MODE = {'tram': 'tram', 'trol': 'trolleybus', 'avt': 'bus'}
 ON_REQUEST = re.compile(r'на вимогу', re.I)
 # How far a stop may lie from its line's OSM route for the route to be its shape.
 SHAPE_M = 150
+# The share taxis (маршрутні таксі: a number of one or two digits and a letter, 1А, 19Б) stop
+# anywhere on their way: flagged down, and asked to stop. GTFS says so with continuous stopping
+# (continuous_pickup 0: board anywhere; continuous_drop_off 3: tell the driver), along the trip's
+# shape: a trip without one keeps its stops only.
+SHARE_TAXI = re.compile(r'\d{1,2}[А-ЯІЇЄҐ]')
+
+
+def flag_anywhere(mode: str, ref: str, shape_id: str) -> dict:
+    if mode == 'avt' and shape_id and SHARE_TAXI.fullmatch(ref):
+        return {'continuous_pickup': 0, 'continuous_drop_off': 3}
+    return {'continuous_pickup': '', 'continuous_drop_off': ''}
 
 
 def main():
@@ -704,6 +715,9 @@ def main():
         headsign = ends[-1] if len(ends) > 1 else d.stops[-1][2]
         for i, sp in kept:
             add_stop(sp.id, d.stops[i][2] if sp.village else sp.name, sp.pos)
+        anywhere = flag_anywhere(d.mode, ref, shape_id)
+        if SHARE_TAXI.fullmatch(ref) and d.mode == 'avt':
+            entry['flag_anywhere'] = bool(shape_id)
         for service, deps in (('WD', d.working), ('WE', d.weekend)):
             seen: Counter = Counter()
             for dep in deps:
@@ -720,7 +734,7 @@ def main():
                     t = hms(dep.minute + d.stops[i][1])
                     request = 3 if ON_REQUEST.search(d.stops[i][2]) else ''
                     stop_times.append({'trip_id': trip_id, 'arrival_time': t, 'departure_time': t, 'stop_id': sp.id, 'stop_sequence': k,
-                                       'pickup_type': request, 'drop_off_type': request,
+                                       'pickup_type': request, 'drop_off_type': request, **anywhere,
                                        'shape_dist_traveled': f'{along[k]:.1f}' if shape_id else ''})
 
     # 2. The other lines (the share taxis): OSM's route, depo.vn.ua's first and last departures and
@@ -768,7 +782,7 @@ def main():
             trip_id = f'{shape_id}-{service}'
             base = {'route_id': route_id, 'service_id': service, 'trip_id': trip_id, 'trip_headsign': run.stops[-1], 'shape_id': shape_id, 'wheelchair_accessible': 0}
             block = [{'trip_id': trip_id, 'arrival_time': hms(off), 'departure_time': hms(off), 'stop_id': sid, 'stop_sequence': k,
-                      'pickup_type': '', 'drop_off_type': '', 'shape_dist_traveled': f'{a:.1f}'}
+                      'pickup_type': '', 'drop_off_type': '', **flag_anywhere(MODES[r.mode], r.ref, shape_id), 'shape_dist_traveled': f'{a:.1f}'}
                      for k, ((sid, _, _), a, off) in enumerate(zip(r.pts, along, elapsed))]
             if run.times:
                 # Every departure listed: the trip's times shifted to each (exact times).

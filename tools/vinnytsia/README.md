@@ -33,6 +33,14 @@ and the trips are frequencies (`exact_times=0`: the first and last departures, e
 minutes, the middle of the range depo.vn.ua gives), except on the lines to the villages, whose
 every departure is listed.
 
+**Share taxis stop anywhere on their way**: flagged down, or asked to stop. That is GTFS's
+continuous stopping on a fixed route (`continuous_pickup=0`: board anywhere along the shape;
+`continuous_drop_off=3`: tell the driver), set on the share taxis' trips that have a shape (the 17
+lines above; 19А, 19Б, 30А and 30Б have no OSM route, so no shape: they keep their stops only).
+Not GTFS-Flex: Flex is for service on demand (zones, booking, detours off a route), and these run
+a fixed route on a timetable. Few journey planners use continuous stopping (MOTIS reads Flex but
+not it): there, the share taxis are boarded at their stops.
+
 Working days are Monday to Friday; Ukraine's public holidays are not days off under martial law,
 so there are no exceptions. The feed starts on the day the timetables start (1 November 2026).
 
